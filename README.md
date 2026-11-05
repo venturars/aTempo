@@ -8,9 +8,9 @@ Marco de referencia para la definición y desarrollo del producto.
 
 ## 1. Propósito del documento
 
-Este documento establece la visión, el alcance inicial, los usuarios, la estructura funcional y las decisiones de producto de aTempo. Su objetivo es servir como referencia compartida para continuar el trabajo de definición funcional, diseño y desarrollo.
-
-La siguiente etapa recomendada es convertir esta constitución en un PRD funcional, definiendo pantalla por pantalla las acciones y reglas de cada rol, sin fijar todavía tecnologías definitivas.
+> Este documento establece la visión, el alcance inicial, los usuarios, la estructura funcional y las decisiones de producto de aTempo. Su objetivo es servir como referencia compartida para continuar el trabajo de definición funcional, diseño y desarrollo.
+>
+> La siguiente etapa recomendada es convertir esta constitución en un PRD funcional, definiendo pantalla por pantalla las acciones y reglas de cada rol, sin fijar todavía tecnologías definitivas.
 
 ## 2. Visión del producto
 
@@ -137,6 +137,70 @@ Las integraciones se incorporarán progresivamente, aunque se contemplan desde e
 - Modo claro y oscuro.
 - Personalización de la apariencia.
 - Preferencias por usuario.
+
+### 7.6. Sistema de estados de asistencia
+
+Se propone incorporar un sistema estandarizado de estados
+para identificar la situación de cada alumno durante
+una sesión de clase.
+
+#### Estados de asistencia
+
+| Estado | Descripción |
+|---|---|
+| Pendiente | Asistencia todavía no registrada. |
+| Presente | Alumno que ha asistido puntualmente. |
+| Retraso | Alumno que ha llegado después del inicio. |
+| Ausente | Alumno que no ha asistido a la sesión. |
+| Salida anticipada | Alumno que abandona la sesión antes de finalizar. |
+
+#### Estados de los justificantes
+
+Los justificantes tendrán un ciclo de vida independiente
+del estado de asistencia:
+
+- No presentado.
+- Pendiente de revisión.
+- Aprobado.
+- Rechazado.
+
+Una ausencia justificada seguirá conservando el registro
+original de ausencia, pero se identificará como justificada
+en las estadísticas y los informes.
+
+#### Reglas de negocio
+
+- Cada alumno tendrá un registro de asistencia por sesión.
+- El estado inicial será Pendiente.
+- El profesor podrá registrar y corregir la asistencia.
+- Se almacenará la hora de entrada y salida cuando corresponda.
+- Los retrasos deberán permitir calcular el tiempo transcurrido
+  desde el inicio de la sesión.
+- Las salidas anticipadas deberán registrar la hora de salida.
+- Los alumnos podrán solicitar correcciones de sus registros,
+  pero no modificarlos directamente.
+- Las modificaciones deberán conservar un historial de auditoría.
+- Las ausencias justificadas y no justificadas deberán
+  diferenciarse en las estadísticas.
+
+#### Gestión de permisos
+
+- Profesor: registrar y corregir estados de asistencia.
+- Alumno: consultar su historial y solicitar correcciones.
+- Administrador de la organización: consultar registros,
+  revisar justificantes y supervisar incidencias.
+
+#### Objetivos
+
+- Unificar los criterios de registro de asistencia.
+- Evitar inconsistencias entre profesores y administradores.
+- Facilitar el cálculo de porcentajes de asistencia.
+- Mejorar la generación de estadísticas e informes.
+- Garantizar la trazabilidad de las modificaciones.
+
+Queda pendiente definir los umbrales de retraso,
+las reglas de cálculo de asistencia y los criterios
+de aprobación de justificantes.
 
 ## 8. Tempito — mascota virtual
 
