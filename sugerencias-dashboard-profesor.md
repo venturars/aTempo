@@ -26,28 +26,29 @@ El profesor suele consultar el Dashboard con la clase a punto de empezar o ya en
 │  [Cerrar sesión]              │    últimos 5 jueves          │
 │                               │  [Ver evidencia] [Revisada]  │
 │  Lista en vivo:               ├──────────────────────────────┤
-│   ✓ Ana     09:02             │ 4. INCIDENCIAS PENDIENTES    │
-│   ⏰ Luis    09:35            │  · 2 justificantes           │
-│   – Marta   Pendiente         │  · 1 corrección solicitada   │
-├───────────────────────────────┤  [Ir a Incidencias]          │
-│ 2. PRÓXIMAS CLASES            │                              │
-│  Hoy 12:00    Redes · Aula 2  │                              │
+│   ✓ Ana     09:02             │ 4. AVISOS E INCIDENCIAS      │
+│   ⏰ Luis    09:35            │  · Marta: mañana llegará     │
+│   – Marta   Pendiente         │    20 min tarde              │
+├───────────────────────────────┤  · 2 justificantes           │
+│ 2. PRÓXIMAS CLASES            │  · 1 corrección solicitada   │
+│  Hoy 12:00    Redes · Aula 2  │  [Ir a Incidencias]          │
 │  Mañana 09:00 BBDD · Aula 3   │                              │
 │  Vie 10:00   Redes (cancelada)│                              │
+│  [Cancelar clase]             │                              │
 └───────────────────────────────┴──────────────────────────────┘
                                               💬 Chatbot
 ```
 
-La sesión activa ocupa el mayor espacio porque es la tarea principal. Las alertas quedan al lado para verlas sin tapar la lista. Las incidencias son solo un resumen que lleva a su pantalla. El chatbot está disponible como pide la sección 5.2.
+La sesión activa ocupa el mayor espacio porque es la tarea principal. Las alertas quedan al lado para verlas sin tapar la lista. El bloque de avisos e incidencias muestra los avisos de los alumnos y un resumen que lleva a la pantalla de incidencias. El chatbot está disponible como pide la sección 5.2.
 
 ## 3. Qué hay detrás de cada bloque
 
 | Bloque | Fuente de los datos | Quién los crea | Cuándo se actualiza |
 | --- | --- | --- | --- |
 | Sesión activa / próxima | Sesión y registros de asistencia | Administrador (sesión), alumno y profesor (registros) | Con cada registro |
-| Próximas clases | Sesiones asignadas al profesor | Administrador, en Cursos y calendario | Al cambiar el calendario |
+| Próximas clases | Sesiones asignadas al profesor | Administrador, en Cursos y calendario; el profesor puede cancelarlas | Al cambiar el calendario |
 | Alertas predictivas | Historial de sesiones cerradas | Cálculo automático | Al cerrar una sesión |
-| Incidencias pendientes | Justificantes y solicitudes de corrección | Alumno | Con cada solicitud o resolución |
+| Avisos e incidencias | Avisos, justificantes y solicitudes de corrección | Alumno | Con cada aviso, solicitud o resolución |
 
 ### 3.1. Sesión activa / próxima
 
@@ -63,7 +64,16 @@ Muestra la sesión en curso o, si no hay ninguna, la siguiente. Una sesión pasa
 
 El Dashboard no guarda una copia de los horarios. Consulta las sesiones del profesor en una ventana de tiempo, por ejemplo 7 días, ordenadas por fecha.
 
-La fuente de verdad es Cursos y calendario. Si el administrador cancela o retrasa una clase, el cambio aparece aquí y se genera la notificación correspondiente (sección 7.2 del README). El profesor solo consulta estos datos.
+La fuente de verdad es Cursos y calendario. Si el administrador cancela o retrasa una clase, el cambio aparece aquí y se genera la notificación correspondiente (sección 7.2 del README).
+
+**Cancelar una clase:** el profesor elige una próxima clase, pulsa `Cancelar clase` e indica el motivo.
+
+- La sesión pasa a `cancelada` en Cursos y calendario.
+- Los alumnos matriculados reciben una notificación.
+- La sesión no cuenta para la asistencia ni para las alertas.
+- Queda guardado quién la canceló, cuándo y por qué.
+
+El profesor no cambia horarios desde aquí: esa gestión sigue en Cursos y calendario.
 
 ### 3.3. Alertas predictivas
 
@@ -102,9 +112,14 @@ X es la mediana de los retrasos que cumplen la regla. Se usa la mediana porque u
 
 La salida anticipada podría añadirse como tercera regla en una versión posterior.
 
-### 3.4. Incidencias pendientes
+### 3.4. Avisos e incidencias
 
-Es un contador de justificantes en `Pendiente de revisión` y de solicitudes de corrección sin resolver. El detalle y las acciones están en la pantalla Incidencias y justificantes.
+**Avisos del alumno:** desde su Dashboard, el alumno puede avisar con antelación de que llegará tarde o de que no asistirá. Por ejemplo: "Mañana llegaré 20 minutos tarde". El aviso indica la sesión y, si es un retraso, los minutos previstos.
+
+- El profesor lo ve en este bloque hasta que termina esa sesión.
+- Es solo informativo: no cambia el registro de asistencia ni sustituye a un justificante.
+
+**Incidencias:** es un contador de justificantes en `Pendiente de revisión` y de solicitudes de corrección sin resolver. El detalle y las acciones están en la pantalla Incidencias y justificantes.
 
 ## 4. Decisiones que necesita este Dashboard
 
