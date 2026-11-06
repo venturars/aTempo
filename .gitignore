@@ -1,0 +1,54 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Compilación de Electron y Vite
+out/
+dist/
+release/
+*.tsbuildinfo
+
+# Base local de SQLite
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+
+# Secretos
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+
+# Cachés y logs
+.eslintcache
+.cache/
+.vite/
+*.log*
+npm-debug.log*
+pnpm-debug.log*
+builder-debug.yml
+builder-effective-config.yaml
+
+# Pruebas
+test-results/
+playwright-report/
+blob-report/
+coverage/
+playwright/.cache/
+
+# Netlify
+.netlify
+
+# Sistema
+.DS_Store
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editores. Se versiona desktop/.vscode
+.idea/
+*.swp
+*.swo
