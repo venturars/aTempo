@@ -1,0 +1,60 @@
+@import 'tailwindcss';
+@plugin "daisyui";
+@plugin "daisyui/theme" {
+  name: 'atempo';
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: #ffffff;
+  --color-base-200: #acc9e1;
+  --color-base-300: #87af99;
+  --color-base-content: #1c1917;
+  --color-primary: #359170;
+  --color-primary-content: #ffffff;
+  --color-secondary: #417849;
+  --color-secondary-content: #ffffff;
+  --color-accent: #3116f2;
+  --color-accent-content: #ffffff;
+  --color-neutral: #87af99;
+  --color-neutral-content: #1c1917;
+  --color-info: #3116f2;
+  --color-info-content: #ffffff;
+  --color-success: #417849;
+  --color-success-content: #ffffff;
+  --color-warning: #87af99;
+  --color-warning-content: #1c1917;
+  --color-error: #1c1917;
+  --color-error-content: #ffffff;
+
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #acc9e1;
+  color: #1c1917;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.login-field {
+  border-color: #87af99;
+}
+
+.login-field:focus {
+  outline: 2px solid #3116f2;
+  outline-offset: 2px;
+}
