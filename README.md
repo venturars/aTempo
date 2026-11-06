@@ -163,43 +163,7 @@ Las predicciones se distribuirán en las pantallas donde aporten valor; no const
 | Datos y evidencias                    | Registro de asistencia, trazabilidad de cambios, metadatos y mecanismos de integridad verificable. |
 | IA                                    | RAG limitado a información del sistema y datos autorizados, con mejora mediante feedback.          |
 
-## 11. Stack propuesto para el MVP
-
-Propuesta para el MVP. Cada pieza es open source o tiene un plan gratuito comprobado.
-
-### 11.1. Frontend — Next.js + TypeScript + Tailwind, como PWA
-
-Los tres roles son formularios, tablas y un QR, así que una sola web sirve para todos, también en el portátil de clase. TypeScript detecta errores antes de la revisión cuando hay varias personas en el mismo código. Tailwind da un sistema de estilos compartido. Como PWA, el alumno la añade al móvil sin tiendas de aplicaciones.
-
-### 11.2. Backend y datos — Supabase (Postgres, Auth, RLS y Realtime)
-
-La base, el login y los permisos van en un solo sitio. Row Level Security aplica "un profesor solo ve sus cursos" en la propia base de datos. Realtime actualiza la lista de asistencia en vivo. El plan gratuito incluye miembros ilimitados, 500 MB y 50.000 usuarios al mes. El proyecto se pausa tras una semana sin actividad.
-
-### 11.3. Asistencia — QR rotativo
-
-Un QR fijo se puede pasar en una foto. Uno que cambia cada 30 segundos, firmado con la sesión y la hora, deja de valer. No hace falta hardware ni un servicio externo, y funciona en el proyector y en una pantalla compartida.
-
-### 11.4. Exportaciones — pdf-lib + CSV
-
-Los informes tienen que poder salir con los campos de la sección 12. pdf-lib y CSV son MIT y los generan en la propia app.
-
-### 11.5. Hosting — Cloudflare Workers con static assets
-
-Aloja la PWA con uso comercial permitido en el plan gratuito, sin coste por colaborador, y con el adaptador de Next.js que documenta Cloudflare (vinext). La app se sirve como shell y los datos van del navegador a Supabase.
-
-### 11.6. Código y CI — GitHub
-
-El equipo necesita ramas protegidas y revisión obligatoria en cada PR. Actions corre las comprobaciones sin coste si el repositorio sigue público.
-
-### 11.7. Avisos — webhooks + Brevo
-
-Un webhook de salida cubre Slack, Discord y Telegram con una sola implementación. Brevo envía el correo de los avisos de la sección 7.2, con 300 correos al día en el plan gratuito.
-
-### 11.8. Predicciones
-
-Los avisos de la sección 9 son reglas sobre los registros, como cuatro faltas en los últimos cinco jueves. Se calculan en Postgres con los datos que ya están.
-
-## 12. Seguridad y principios de confianza
+## 11. Seguridad y principios de confianza
 
 - El registro de asistencia debe dejar evidencia de entrada, permanencia y salida cuando corresponda.
 - Registrar una acción no equivale por sí solo a demostrar presencia durante toda la sesión.
@@ -208,7 +172,7 @@ Los avisos de la sección 9 son reglas sobre los registros, como cuatro faltas e
 - Los informes y exportaciones deben poder incluir identificadores, periodo, fecha de generación, versión, hash de integridad e identificador de quien los genera.
 - Los patrones de asistencia son informativos y deben revisarse por personas; no deben convertirse automáticamente en sanciones.
 
-## 13. Decisiones de producto consolidadas
+## 12. Decisiones de producto consolidadas
 
 - No habrá una pantalla independiente de Informes; sus responsabilidades se repartirán en el resto de pantallas.
 - Cursos y calendario se agrupan en una única área.
@@ -220,15 +184,51 @@ Los avisos de la sección 9 son reglas sobre los registros, como cuatro faltas e
 - Perfil y notificaciones del alumno se gestionan desde Settings.
 - Los juegos de asistencia estarán presentes en la estructura, con tipos concretos pendientes de definición.
 
-## 14. Decisiones pendientes
+## 13. Decisiones pendientes
 
-- Definir los mecanismos concretos de asistencia: QR, comprobaciones periódicas e integraciones con videoconferencia. El stack propuesto (sección 11) sugiere el QR rotativo para el MVP.
+- Definir los mecanismos concretos de asistencia: QR, comprobaciones periódicas e integraciones con videoconferencia.
 - Definir si el cumplimiento se calcula por horas, por sesiones o con ambos criterios.
 - Definir el nivel de certificación requerido: registro auditable o certificación criptográfica avanzada.
 - Definir los tipos de juegos y sus reglas.
 - Definir las reglas de Tempito y el tratamiento de ausencias justificadas.
 - Detallar las acciones, permisos y reglas de cada pantalla en el PRD funcional.
 
-## 15. Próximo paso
+## 14. Próximo paso
 
-Usar este documento como fuente de verdad para desarrollar el PRD funcional de aTempo, pantalla por pantalla, definiendo funcionalidades exactas, acciones por rol y reglas de negocio antes de elegir tecnologías definitivas. El mecanismo de asistencia propuesto para el MVP es el QR rotativo de la sección 11.
+Usar este documento como fuente de verdad para desarrollar el PRD funcional de aTempo, pantalla por pantalla, definiendo funcionalidades exactas, acciones por rol y reglas de negocio antes de elegir tecnologías definitivas.
+
+## 15. Stack propuesto para el MVP
+
+Propuesta para el MVP. Cada pieza es open source o tiene un plan gratuito comprobado.
+
+### 15.1. Frontend — Next.js + TypeScript + Tailwind, como PWA
+
+Los tres roles son formularios, tablas y un QR, así que una sola web sirve para todos, también en el portátil de clase. TypeScript detecta errores antes de la revisión cuando hay varias personas en el mismo código. Tailwind da un sistema de estilos compartido. Como PWA, el alumno la añade al móvil sin tiendas de aplicaciones.
+
+### 15.2. Backend y datos — Supabase (Postgres, Auth, RLS y Realtime)
+
+La base, el login y los permisos van en un solo sitio. Row Level Security aplica "un profesor solo ve sus cursos" en la propia base de datos. Realtime actualiza la lista de asistencia en vivo. El plan gratuito incluye miembros ilimitados, 500 MB y 50.000 usuarios al mes. El proyecto se pausa tras una semana sin actividad.
+
+### 15.3. Asistencia — QR rotativo
+
+Un QR fijo se puede pasar en una foto. Uno que cambia cada 30 segundos, firmado con la sesión y la hora, deja de valer. No hace falta hardware ni un servicio externo, y funciona en el proyector y en una pantalla compartida.
+
+### 15.4. Exportaciones — pdf-lib + CSV
+
+Los informes tienen que poder salir con los campos de la sección 11. pdf-lib y CSV son MIT y los generan en la propia app.
+
+### 15.5. Hosting — Cloudflare Workers con static assets
+
+Aloja la PWA con uso comercial permitido en el plan gratuito, sin coste por colaborador, y con el adaptador de Next.js que documenta Cloudflare (vinext). La app se sirve como shell y los datos van del navegador a Supabase.
+
+### 15.6. Código y CI — GitHub
+
+El equipo necesita ramas protegidas y revisión obligatoria en cada PR. Actions corre las comprobaciones sin coste si el repositorio sigue público.
+
+### 15.7. Avisos — webhooks + Brevo
+
+Un webhook de salida cubre Slack, Discord y Telegram con una sola implementación. Brevo envía el correo de los avisos de la sección 7.2, con 300 correos al día en el plan gratuito.
+
+### 15.8. Predicciones
+
+Los avisos de la sección 9 son reglas sobre los registros, como cuatro faltas en los últimos cinco jueves. Se calculan en Postgres con los datos que ya están.
