@@ -196,3 +196,29 @@ Las predicciones se distribuirán en las pantallas donde aporten valor; no const
 ## 14. Próximo paso
 
 Usar este documento como fuente de verdad para desarrollar el PRD funcional de aTempo, pantalla por pantalla, definiendo funcionalidades exactas, acciones por rol y reglas de negocio antes de elegir tecnologías definitivas.
+
+## 15. Puntos de mejora propuestos
+
+Estas propuestas ayudan a acotar un primer producto viable. Sus reglas concretas deben validarse en el PRD con profesores, alumnos y administradores.
+
+1. **Definir un flujo de asistencia verificable.** Describir cómo se abre y cierra una sesión, cómo registra su presencia el alumno y cómo confirma o corrige el profesor. Evaluar un código QR de corta duración como opción inicial, junto con un procedimiento manual para incidencias o falta de conexión. Un QR por sí solo no acredita permanencia durante toda la clase.
+2. **Hacer visible el estado de cada registro.** Distinguir presencia confirmada, retraso, salida anticipada, ausencia y solicitud de corrección pendiente. Mostrar a cada rol el motivo y la fecha de los cambios, con permisos explícitos para aprobarlos.
+3. **Acordar el cálculo de asistencia antes de implementar informes.** Fijar si el porcentaje se calcula por sesiones, minutos o ambos; cómo se tratan las clases canceladas, las ausencias justificadas y las sesiones parcialmente asistidas; y qué umbrales requieren aviso.
+4. **Priorizar un alcance inicial pequeño.** Empezar por organizaciones, cursos, horarios, sesiones, registro de asistencia, justificantes, auditoría y exportación básica. Incorporar después integraciones, predicciones, chatbot, juegos y Tempito cuando el flujo principal esté validado.
+5. **Diseñar la separación de organizaciones desde el inicio.** Cada consulta, exportación y archivo debe respetar la organización y el rol del usuario. Definir conservación de datos, acceso a justificantes y trazabilidad antes de operar con datos reales.
+
+## 16. Stack tecnológico candidato
+
+Es una propuesta para evaluar tras el PRD y un prototipo del flujo de asistencia; **no representa tecnología ya implementada ni una decisión definitiva**.
+
+| Capa | Propuesta | Motivo |
+| --- | --- | --- |
+| Web de administración y alumnado | React, TypeScript y Vite | Permiten construir interfaces por rol y compartir componentes y validaciones. |
+| Escritorio del profesor | Tauri con React y TypeScript | Reutiliza parte de la interfaz web y permite empaquetarla como aplicación de escritorio. Conviene probar antes las necesidades reales de integración con el sistema operativo. |
+| API y reglas de negocio | Node.js, TypeScript y NestJS | Centraliza permisos, sesiones, asistencia, justificantes y auditoría en una API. |
+| Base de datos | PostgreSQL | Modela relaciones entre organizaciones, cursos, sesiones y registros; admite transacciones y políticas de acceso por fila si se necesitan. |
+| Archivos | Almacenamiento de objetos compatible con S3 | Guarda justificantes y exportaciones fuera de la base de datos, con acceso controlado desde la API. |
+| Autenticación | Proveedor compatible con OpenID Connect | Facilita inicio de sesión y gestión de identidades; los permisos de cada rol se verifican también en la API. |
+| Calidad y despliegue | Vitest, Playwright, contenedores y CI en GitHub Actions | Pruebas de reglas y recorridos críticos, más despliegues reproducibles. |
+
+El primer prototipo debería comprobar el registro de asistencia, las correcciones y la separación entre organizaciones. Las piezas de IA, analítica predictiva, integraciones y certificación criptográfica se elegirían después según sus requisitos y coste operativo.
