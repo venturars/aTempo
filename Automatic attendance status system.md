@@ -1,6 +1,18 @@
 # Automatic attendance status system
 
-Se propone incorporar un sistema estandarizado de estados para identificar la situación de cada alumno durante una sesión de clase.
+Se propone incorporar un sistema estandarizado de estados para identificar la situación de cada alumno durante una sesión de clase. 
+
+```mermaid
+stateDiagram-v2
+    [*] --> Pendiente
+    Pendiente --> Presente
+    Pendiente --> Retraso
+    Pendiente --> Ausente
+    Presente --> SalidaAnticipada
+    Retraso --> SalidaAnticipada
+    Ausente --> AusenciaJustificada: Justificante aprobado
+    AusenciaJustificada --> Ausente: Justificante rechazado
+```
 
 ## Estados de asistencia
 
@@ -11,6 +23,7 @@ Se propone incorporar un sistema estandarizado de estados para identificar la si
 | Retraso | Alumno que ha llegado después del inicio. |
 | Ausente | Alumno que no ha asistido a la sesión. |
 | Salida anticipada | Alumno que abandona la sesión antes de finalizar. |
+
 
 ## Estados de los justificantes
 
