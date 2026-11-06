@@ -8,9 +8,9 @@ Marco de referencia para la definición y desarrollo del producto.
 
 ## 1. Propósito del documento
 
-> Este documento establece la visión, el alcance inicial, los usuarios, la estructura funcional y las decisiones de producto de aTempo. Su objetivo es servir como referencia compartida para continuar el trabajo de definición funcional, diseño y desarrollo.
->
-> La siguiente etapa recomendada es convertir esta constitución en un PRD funcional, definiendo pantalla por pantalla las acciones y reglas de cada rol, sin fijar todavía tecnologías definitivas.
+Este documento establece la visión, el alcance inicial, los usuarios, la estructura funcional y las decisiones de producto de aTempo. Su objetivo es servir como referencia compartida para continuar el trabajo de definición funcional, diseño y desarrollo.
+
+La siguiente etapa recomendada es convertir esta constitución en un PRD funcional, definiendo pantalla por pantalla las acciones y reglas de cada rol, sin fijar todavía tecnologías definitivas.
 
 ## 2. Visión del producto
 
@@ -137,10 +137,6 @@ Las integraciones se incorporarán progresivamente, aunque se contemplan desde e
 - Modo claro y oscuro.
 - Personalización de la apariencia.
 - Preferencias por usuario.
-
-### 7.6. Sistema de estados de asistencia
-
-El detalle de estados, justificantes, reglas de negocio y permisos está en [Automatic attendance status system.md](./Automatic%20attendance%20status%20system.md).
 
 ## 8. Tempito — mascota virtual
 
