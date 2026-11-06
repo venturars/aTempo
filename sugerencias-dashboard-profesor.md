@@ -34,6 +34,7 @@ El profesor suele consultar el Dashboard con la clase a punto de empezar o ya en
 │  Hoy 12:00    Redes · Aula 2  │  [Ir a Incidencias]          │
 │  Mañana 09:00 BBDD · Aula 3   │                              │
 │  Vie 10:00   Redes (cancelada)│                              │
+│  [Avisar retraso]             │                              │
 │  [Cancelar clase]             │                              │
 └───────────────────────────────┴──────────────────────────────┘
                                               💬 Chatbot
@@ -46,7 +47,7 @@ La sesión activa ocupa el mayor espacio porque es la tarea principal. Las alert
 | Bloque | Fuente de los datos | Quién los crea | Cuándo se actualiza |
 | --- | --- | --- | --- |
 | Sesión activa / próxima | Sesión y registros de asistencia | Administrador (sesión), alumno y profesor (registros) | Con cada registro |
-| Próximas clases | Sesiones asignadas al profesor | Administrador, en Cursos y calendario; el profesor puede cancelarlas | Al cambiar el calendario |
+| Próximas clases | Sesiones asignadas al profesor | Administrador, en Cursos y calendario; el profesor puede cancelarlas o avisar de un retraso | Al cambiar el calendario |
 | Alertas predictivas | Historial de sesiones cerradas | Cálculo automático | Al cerrar una sesión |
 | Avisos e incidencias | Avisos, justificantes y solicitudes de corrección | Alumno | Con cada aviso, solicitud o resolución |
 
@@ -73,7 +74,11 @@ La fuente de verdad es Cursos y calendario. Si el administrador cancela o retras
 - La sesión no cuenta para la asistencia ni para las alertas.
 - Queda guardado quién la canceló, cuándo y por qué.
 
-El profesor no cambia horarios desde aquí: esa gestión sigue en Cursos y calendario.
+**Avisar de un retraso:** el profesor elige una próxima clase, pulsa `Avisar retraso` e indica los minutos. Por ejemplo: "Hoy empezaré 15 minutos tarde".
+
+- Los alumnos matriculados reciben una notificación.
+- La clase no cambia: el horario sigue igual en Cursos y calendario.
+- En esa sesión, los retrasos de los alumnos se miden desde la hora avisada. Así nadie aparece como retrasado por esperar al profesor.
 
 ### 3.3. Alertas predictivas
 
