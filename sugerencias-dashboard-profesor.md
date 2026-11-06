@@ -4,8 +4,6 @@ Propuesta para organizar el Dashboard de la aplicación de escritorio del profes
 
 Todo lo que aparece aquí es una propuesta para revisar en equipo. Los nombres y datos de los ejemplos son ficticios, y los umbrales son valores iniciales que habrá que validar.
 
-**Relación con otras propuestas:** los estados de asistencia y de justificantes son los que propone el PR #1, todavía sin aprobar. Si cambian, habrá que actualizar este documento.
-
 ## 1. Objetivo de la pantalla
 
 El profesor suele consultar el Dashboard con la clase a punto de empezar o ya en marcha. Por eso la pantalla debe responder rápido a tres preguntas:
@@ -22,7 +20,7 @@ El profesor suele consultar el Dashboard con la clase a punto de empezar o ya en
 ├───────────────────────────────┬──────────────────────────────┤
 │ 1. SESIÓN ACTIVA / PRÓXIMA    │ 3. ALERTAS PREDICTIVAS       │
 │  Bases de datos · 09:00-11:00 │  ⚠ Ana suele llegar unos     │
-│  Presentes 18 · Retrasos 2    │    30 min tarde los jueves   │
+│  Presentes 20 (2 tarde)       │    30 min tarde los jueves   │
 │  Pendientes 4                 │    (5 de las últimas 6)      │
 │  [Abrir sesión] [Mostrar QR]  │  ⚠ Luis faltó 4 de los       │
 │  [Cerrar sesión]              │    últimos 5 jueves          │
@@ -35,7 +33,7 @@ El profesor suele consultar el Dashboard con la clase a punto de empezar o ya en
 │ 2. PRÓXIMAS CLASES            │                              │
 │  Hoy 12:00    Redes · Aula 2  │                              │
 │  Mañana 09:00 BBDD · Aula 3   │                              │
-│  Vie 10:00    Redes (cancelada)│                             │
+│  Vie 10:00   Redes (cancelada)│                              │
 └───────────────────────────────┴──────────────────────────────┘
                                               💬 Chatbot
 ```
@@ -58,6 +56,7 @@ Muestra la sesión en curso o, si no hay ninguna, la siguiente. Una sesión pasa
 - **Al abrir la sesión**, cada alumno matriculado empieza en `Pendiente`.
 - **Durante la clase**, los registros actualizan la lista en vivo y los contadores.
 - **Al cerrar la sesión**, quien siga en `Pendiente` pasa a `Ausente`. Así no se marca a nadie como ausente antes de tiempo.
+- **Si se aprueba un justificante**, esa sesión pasa a contar como ausencia justificada y deja de contar como ausencia.
 - **Después del cierre**, cualquier cambio se hace como corrección y conserva quién, cuándo y por qué (sección 11 del README).
 
 ### 3.2. Próximas clases
@@ -89,7 +88,7 @@ X es la mediana de los retrasos que cumplen la regla. Se usa la mediana porque u
 
 **Datos que no cuentan:**
 
-- Ausencias con justificante aprobado o pendiente de revisión.
+- Ausencias justificadas, con el justificante aprobado o pendiente de revisión.
 - Sesiones canceladas.
 - Franjas con menos sesiones cerradas de las que pide la regla.
 
@@ -115,24 +114,25 @@ Estas propuestas responden a puntos de la sección 13 del README que afectan a l
 
 1. El profesor abre la sesión y su aplicación muestra un QR que cambia cada 30 segundos.
 2. El alumno lo escanea desde el portal, con su sesión iniciada, y se registra su entrada.
-3. Al final de la clase, el profesor muestra el QR de salida.
-4. Si un alumno no puede escanear, el profesor lo registra a mano indicando el motivo.
+3. Si un alumno no puede escanear, el profesor lo registra a mano indicando el motivo.
 
-El QR de salida es necesario porque registrar la entrada no demuestra la presencia durante toda la sesión (sección 11 del README).
+**Limitaciones:**
 
-**Limitación:** el QR rotativo dificulta reutilizar una foto antigua, pero un alumno presente aún podría enviarlo en directo a otra persona. Por eso debe presentarse como registro auditable, no como prueba absoluta. En clases online es menos fiable.
+- Un único registro de entrada no demuestra la presencia durante toda la sesión (sección 11 del README). Lo aceptamos en esta primera versión para mantenerla simple.
+- El QR rotativo dificulta reutilizar una foto antigua, pero un alumno presente aún podría enviarlo en directo a otra persona. Por eso debe presentarse como registro auditable, no como prueba absoluta. En clases online es menos fiable.
 
-### 4.2. Cumplimiento por horas
+### 4.2. Cumplimiento por sesiones
 
-Proponemos guardar los minutos reales y calcular el cumplimiento por horas, porque una sesión con 30 minutos de retraso no debería contar igual que una completa. El número de sesiones se muestra como dato adicional.
+Proponemos calcular la asistencia por sesiones, sin contar minutos. Si el alumno ha estado en la sesión, cuenta como presente, aunque haya llegado tarde.
 
-- **Minutos asistidos:** desde la entrada hasta la salida, dentro del horario de la clase.
-- **Ejemplo:** en una clase de 09:00 a 11:00, entrar a las 09:30 y salir a las 11:00 son 90 de 120 minutos, un 75 %.
-- **Sin QR de salida:** se crea una incidencia para que la resuelva el profesor.
+- **Fórmula:** sesiones con presencia / (sesiones cerradas − ausencias justificadas).
+- **Ausencias justificadas:** no cuentan como ausencias, así que no reducen el porcentaje.
+- **Ejemplo:** de 20 sesiones cerradas, un alumno tiene 2 ausencias justificadas y asiste a 16. Su asistencia es 16 de 18, un 89 %.
+- **Hora de entrada:** se guarda para detectar retrasos habituales, pero no afecta al porcentaje.
 
 ## 5. Preguntas para el equipo
 
-1. ¿Cuántos minutos de retraso se toleran antes de pasar a `Retraso`? El PR #1 también lo deja pendiente.
-2. ¿Las ausencias justificadas restan de las horas exigidas o solo se muestran aparte?
-3. ¿Son adecuados los umbrales iniciales de las alertas?
-4. ¿Debe funcionar el QR igual en clases online o necesitan otro mecanismo hasta tener integraciones?
+1. ¿A partir de cuántos minutos se marca una entrada como retraso?
+2. ¿Son adecuados los umbrales iniciales de las alertas?
+3. ¿Debe funcionar el QR igual en clases online o necesitan otro mecanismo hasta tener integraciones?
+4. ¿Hará falta comprobar la permanencia en una versión posterior?
