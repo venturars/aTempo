@@ -2,8 +2,6 @@
 
 Se propone incorporar un sistema estandarizado de estados para identificar la situación de cada alumno durante una sesión de clase.
 
-Este documento complementa el [documento de constitución](./README.md) de aTempo.
-
 ## Estados de asistencia
 
 | Estado | Descripción |
