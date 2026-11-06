@@ -108,18 +108,11 @@ Es un contador de justificantes en `Pendiente de revisión` y de solicitudes de 
 
 ## 4. Decisiones que necesita este Dashboard
 
-Estas propuestas responden a puntos de la sección 13 del README que afectan a la pantalla.
+Estos puntos de la sección 13 del README afectan a la pantalla.
 
-### 4.1. Registro por QR rotativo
+### 4.1. Registro por QR
 
-1. El profesor abre la sesión y su aplicación muestra un QR que cambia cada 30 segundos.
-2. El alumno lo escanea desde el portal, con su sesión iniciada, y se registra su entrada.
-3. Si un alumno no puede escanear, el profesor lo registra a mano indicando el motivo.
-
-**Limitaciones:**
-
-- Un único registro de entrada no demuestra la presencia durante toda la sesión (sección 11 del README). Lo aceptamos en esta primera versión para mantenerla simple.
-- El QR rotativo dificulta reutilizar una foto antigua, pero un alumno presente aún podría enviarlo en directo a otra persona. Por eso debe presentarse como registro auditable, no como prueba absoluta. En clases online es menos fiable.
+El registro por QR ya está decidido por el equipo. En el Dashboard aparece como la acción `Mostrar QR` del bloque de sesión activa.
 
 ### 4.2. Cumplimiento por sesiones
 
@@ -129,10 +122,3 @@ Proponemos calcular la asistencia por sesiones, sin contar minutos. Si el alumno
 - **Ausencias justificadas:** no cuentan como ausencias, así que no reducen el porcentaje.
 - **Ejemplo:** de 20 sesiones cerradas, un alumno tiene 2 ausencias justificadas y asiste a 16. Su asistencia es 16 de 18, un 89 %.
 - **Hora de entrada:** se guarda para detectar retrasos habituales, pero no afecta al porcentaje.
-
-## 5. Preguntas para el equipo
-
-1. ¿A partir de cuántos minutos se marca una entrada como retraso?
-2. ¿Son adecuados los umbrales iniciales de las alertas?
-3. ¿Debe funcionar el QR igual en clases online o necesitan otro mecanismo hasta tener integraciones?
-4. ¿Hará falta comprobar la permanencia en una versión posterior?
