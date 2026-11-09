@@ -26,12 +26,15 @@
             He descubierto algo nuevo. ¿Exploramos juntas?
           </p>
         </div>
-        <div class="mascot-stage">
+        <div class="mascot-stage wears-glasses" data-mascot-stage>
           <img
             src="../assets/mascot/tempito.jpg"
             alt="Tempito, mascota turquesa con dos hojitas"
             data-expression="curious"
           />
+          <span class="wear wear-hat"></span>
+          <span class="wear wear-glasses"></span>
+          <span class="wear wear-scarf"></span>
         </div>
       </section>
 
@@ -83,20 +86,20 @@
 
       <section class="card" style="margin-top: 16px">
         <h2>Inventario</h2>
-        <p class="muted">Objetos desbloqueados. La personalización llega después.</p>
+        <p class="muted">Pulsa un objeto desbloqueado para ponérselo.</p>
         <div class="inventory">
-          <div class="item">
+          <button class="item is-equipped" type="button" data-item="glasses">
             <div class="dot glasses"></div>
             Gafas
-          </div>
-          <div class="item">
+          </button>
+          <button class="item" type="button" data-item="hat">
             <div class="dot hat"></div>
             Sombrero
-          </div>
-          <div class="item locked">
+          </button>
+          <button class="item locked" type="button" data-item="bag" disabled>
             <div class="dot bag"></div>
             Mochila
-          </div>
+          </button>
         </div>
       </section>
     </div>
@@ -107,5 +110,6 @@
       <a href="misiones.html">Misiones</a>
       <a href="personalizacion.html">Personalización</a>
     </nav>
+    <script src="../inventory.js"></script>
   </body>
 </html>

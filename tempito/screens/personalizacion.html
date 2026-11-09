@@ -19,43 +19,46 @@
           <p class="kicker">Personalización</p>
           <h1>El armario de Lucía</h1>
           <p class="lead">
-            Aquí se vestirá a Tempito cuando el diseño esté aprobado. Ahora
-            solo se muestra el inventario.
+            Pulsa un objeto desbloqueado para ponérselo o quitárselo. Mochila y
+            bosque siguen bloqueados.
           </p>
         </div>
-        <div class="mascot-stage compact">
+        <div class="mascot-stage compact wears-glasses" data-mascot-stage>
           <img
             src="../assets/mascot/tempito.jpg"
             alt="Tempito, mascota turquesa con dos hojitas"
             data-expression="curious"
           />
+          <span class="wear wear-hat"></span>
+          <span class="wear wear-glasses"></span>
+          <span class="wear wear-scarf"></span>
         </div>
       </section>
 
       <section class="card">
         <h2>Inventario</h2>
-        <p class="muted">Desbloqueados y pendientes. No se equipan todavía.</p>
+        <p class="muted">Prototipo: se ve puesto, no se guarda.</p>
         <div class="inventory">
-          <div class="item">
+          <button class="item is-equipped" type="button" data-item="glasses">
             <div class="dot glasses"></div>
             Gafas
-          </div>
-          <div class="item">
+          </button>
+          <button class="item" type="button" data-item="hat">
             <div class="dot hat"></div>
             Sombrero
-          </div>
-          <div class="item">
+          </button>
+          <button class="item" type="button" data-item="scarf">
             <div class="dot scarf"></div>
             Bufanda
-          </div>
-          <div class="item locked">
+          </button>
+          <button class="item locked" type="button" data-item="bag" disabled>
             <div class="dot bag"></div>
             Mochila
-          </div>
-          <div class="item locked">
+          </button>
+          <button class="item locked" type="button" data-item="forest" disabled>
             <div class="dot forest"></div>
             Bosque
-          </div>
+          </button>
         </div>
       </section>
     </div>
@@ -66,5 +69,6 @@
       <a href="misiones.html">Misiones</a>
       <a class="is-active" href="personalizacion.html">Personalización</a>
     </nav>
+    <script src="../inventory.js"></script>
   </body>
 </html>

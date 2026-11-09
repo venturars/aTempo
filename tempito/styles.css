@@ -141,6 +141,7 @@ h2 {
 }
 
 .mascot-stage {
+  position: relative;
   display: grid;
   place-items: center;
   min-height: 240px;
@@ -252,15 +253,63 @@ h2 {
 
 .item {
   background: var(--bg);
+  border: 2px solid transparent;
   border-radius: 16px;
   padding: 14px 10px;
   text-align: center;
   font-size: 0.82rem;
   font-weight: 600;
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
 }
 
 .item.locked {
   opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.item.is-equipped {
+  border-color: var(--teal);
+  background: var(--teal-soft);
+}
+
+.wear {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.mascot-stage.wears-hat .wear-hat,
+.mascot-stage.wears-glasses .wear-glasses,
+.mascot-stage.wears-scarf .wear-scarf {
+  opacity: 1;
+}
+
+.wear-hat {
+  top: 10%;
+  width: 42%;
+  height: 18%;
+  background: var(--lavender);
+  border-radius: 40% 40% 12% 12%;
+}
+
+.wear-glasses {
+  top: 42%;
+  width: 46%;
+  height: 8%;
+  border: 3px solid var(--text);
+  border-left: 0;
+  border-right: 0;
+  border-radius: 8px;
+}
+
+.wear-scarf {
+  bottom: 18%;
+  width: 38%;
+  height: 10%;
+  background: var(--yellow);
+  border-radius: 999px;
 }
 
 .dot {
