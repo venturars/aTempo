@@ -23,4 +23,4 @@ Cada pantalla nueva no vuelve a importarlo. El documento abre en oscuro:
 <html data-theme="atempo-oscuro">
 ```
 
-Los otros valores están en `rules.md`. Tailwind y DaisyUI son las dependencias que este archivo necesita. El tema ya fija el botón a 36 px (30 px en `sm`, 44 px en táctil), el campo a 38 px, la fila a 56 px y los tamaños de texto. Con Vite, las fuentes salen en el build. El CLI de Tailwind deja la ruta `./fonts` y no las copia.
+Los otros valores están en `rules.md`. Tailwind y DaisyUI son las dependencias que este archivo necesita. El tema ya fija el botón a 36 px (30 px en `sm`, 44 px en táctil), el campo a 38 px, la fila a 56 px y los tamaños de texto. Con Vite, las fuentes salen en el build. El CLI de Tailwind deja la ruta `./fonts` y no las copia. `npm run build:guia` regenera `reference/guia.css` desde `reference/entry.css`.

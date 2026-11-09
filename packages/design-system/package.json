@@ -5,6 +5,9 @@
   "exports": {
     "./theme.css": "./theme.css"
   },
+  "scripts": {
+    "build:guia": "tailwindcss -i reference/entry.css -o reference/guia.css && node -e \"const fs=require('fs');const p='reference/guia.css';fs.writeFileSync(p,fs.readFileSync(p,'utf8').replaceAll('url(\\\"./fonts/','url(\\\"../fonts/'))\""
+  },
   "peerDependencies": {
     "daisyui": "^5.0.0",
     "tailwindcss": "^4.0.0"
