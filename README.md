@@ -65,6 +65,18 @@ Los informes y exportaciones estarán disponibles dentro de Cursos y calendario,
 
 El chatbot estará disponible desde todas las pantallas.
 
+#### Propuesta en revisión: correcciones de asistencia
+
+Se propone una pantalla dentro de Incidencias y justificantes para revisar las
+solicitudes de corrección del alumnado. Muestra la sesión, el registro original,
+el cambio solicitado y el motivo. El profesor podría aceptar o rechazar dejando
+constancia de su decisión, sin perder el registro original.
+
+El [documento de propuesta](docs/proposals/attendance-review.md) recoge el flujo
+y las preguntas para el equipo. El [boceto interactivo](design/attendance-review/index.html)
+usa datos ficticios. Los permisos y la obligatoriedad del motivo se validarán
+con Ventura antes de definir la implementación.
+
 ### 5.3. Alumno — aplicación web
 
 | Pantalla      | Contenido                                                                                    |

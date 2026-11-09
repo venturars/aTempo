@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Revisiones de asistencia · aTempo</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #fafafa;
+        color: #222;
+        font:
+          16px/1.5 system-ui,
+          sans-serif;
+      }
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      button:disabled {
+        cursor: default;
+        opacity: 0.5;
+      }
+      button:focus-visible,
+      textarea:focus-visible,
+      select:focus-visible {
+        outline: 3px solid #777;
+        outline-offset: 3px;
+      }
+      header,
+      main,
+      footer {
+        max-width: 1160px;
+        margin: auto;
+        padding: 24px 32px;
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      header strong {
+        font-size: 24px;
+      }
+      header span {
+        color: #666;
+      }
+      h1 {
+        font-size: 36px;
+        line-height: 1.2;
+        margin: 16px 0 8px;
+      }
+      h2 {
+        font-size: 24px;
+        line-height: 1.3;
+        margin: 0 0 8px;
+      }
+      h3 {
+        font-size: 16px;
+        margin: 24px 0 8px;
+      }
+      p {
+        margin: 8px 0 16px;
+      }
+      .muted {
+        color: #666;
+      }
+      .tabs {
+        display: flex;
+        gap: 24px;
+        margin: 28px 0;
+      }
+      .tabs button {
+        border: 0;
+        padding: 8px 0;
+        background: none;
+        color: #666;
+      }
+      .tabs button[aria-pressed="true"] {
+        color: #222;
+        font-weight: 650;
+        text-decoration: underline;
+        text-underline-offset: 8px;
+      }
+      .workspace {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 48px;
+        min-height: 390px;
+      }
+      #queue {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      #queue li {
+        margin-bottom: 8px;
+      }
+      .request {
+        display: block;
+        text-align: left;
+        width: 100%;
+        padding: 20px;
+        border: 0;
+        background: transparent;
+        border-radius: 5px;
+      }
+      .request[aria-current="true"] {
+        background: #e9e9e9;
+      }
+      .request strong,
+      .request span {
+        display: block;
+      }
+      .request span {
+        font-size: 14px;
+        color: #666;
+        margin-top: 4px;
+      }
+      .detail {
+        padding: 12px 0;
+      }
+      dl {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin: 28px 0;
+      }
+      dt {
+        font-size: 14px;
+        color: #666;
+      }
+      dd {
+        margin: 4px 0 0;
+        font-size: 20px;
+      }
+      .reason {
+        max-width: 55ch;
+      }
+      button.primary,
+      button.secondary {
+        padding: 11px 18px;
+        border-radius: 5px;
+        border: 1px solid #aaa;
+        background: transparent;
+      }
+      button.primary {
+        background: #252525;
+        color: white;
+        border-color: #252525;
+      }
+      .actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 28px;
+      }
+      #notice {
+        min-height: 24px;
+      }
+      #history {
+        margin-top: 28px;
+      }
+      #history p {
+        font-size: 15px;
+      }
+      footer {
+        margin-top: 36px;
+        color: #666;
+        font-size: 14px;
+      }
+      footer details {
+        margin-top: 20px;
+      }
+      footer label {
+        display: block;
+        margin: 16px 0 4px;
+      }
+      select {
+        padding: 8px;
+        background: white;
+        border: 1px solid #999;
+        border-radius: 4px;
+      }
+      dialog {
+        width: min(520px, calc(100% - 32px));
+        padding: 32px;
+        border: 1px solid #aaa;
+        border-radius: 8px;
+      }
+      dialog::backdrop {
+        background: #0005;
+      }
+      textarea {
+        display: block;
+        width: 100%;
+        min-height: 120px;
+        margin-top: 8px;
+        padding: 12px;
+        border: 1px solid #999;
+        border-radius: 4px;
+      }
+      dialog label {
+        display: block;
+        margin-top: 24px;
+      }
+      dialog .actions {
+        justify-content: flex-end;
+      }
+      #error {
+        color: #222;
+        font-weight: 600;
+      }
+      body [hidden] {
+        display: none !important;
+      }
+      @media (max-width: 700px) {
+        header,
+        main,
+        footer {
+          padding: 20px;
+        }
+        h1 {
+          font-size: 30px;
+        }
+        .workspace {
+          grid-template-columns: 1fr;
+          gap: 24px;
+        }
+        #queue {
+          display: flex;
+          overflow: auto;
+          gap: 8px;
+        }
+        #queue li {
+          min-width: 220px;
+          flex: 1;
+        }
+        .request {
+          height: 100%;
+        }
+        .detail {
+          padding: 8px 0;
+        }
+        dl {
+          gap: 16px;
+        }
+        .actions {
+          flex-wrap: wrap;
+        }
+        dialog {
+          padding: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header><strong>aTempo</strong><span>Profesor · Boceto</span></header>
+    <main>
+      <h1>Revisiones de asistencia</h1>
+      <p class="muted">AI Engineer · Solicitudes del alumnado</p>
+      <div class="tabs" aria-label="Filtrar solicitudes">
+        <button id="pending" aria-pressed="true">Pendientes</button
+        ><button id="resolved" aria-pressed="false">Resueltas</button>
+      </div>
+      <p id="notice" role="status" aria-live="polite"></p>
+      <div class="workspace" id="workspace">
+        <ul id="queue" aria-label="Solicitudes"></ul>
+        <section class="detail" id="detail" aria-labelledby="student"></section>
+      </div>
+    </main>
+    <footer>
+      Datos ficticios. Las decisiones del boceto se reinician al recargar.
+      <details>
+        <summary>Estados para revisar</summary>
+        <label for="scenario">Estado de la pantalla</label
+        ><select id="scenario">
+          <option value="normal">Con solicitudes</option>
+          <option value="empty">Sin solicitudes</option>
+          <option value="loading">Cargando</option>
+          <option value="error">Error de carga</option>
+        </select>
+      </details>
+    </footer>
+    <dialog id="decision">
+      <form id="decision-form">
+        <h2 id="decision-title">Resolver solicitud</h2>
+        <p id="decision-description"></p>
+        <label for="decision-reason">Motivo de la decisión</label
+        ><textarea id="decision-reason" required></textarea>
+        <p id="error" role="alert"></p>
+        <div class="actions">
+          <button type="button" class="secondary" id="cancel">Cancelar</button
+          ><button type="submit" class="primary" id="confirm">Confirmar</button>
+        </div>
+      </form>
+    </dialog>
+    <script>
+      const requests = [
+        {
+          id: 1,
+          name: "Lucía Torres",
+          date: "9 nov · 09:00–12:00",
+          original: "Ausente",
+          requested: "Presente",
+          reason:
+            "Estuve en clase, pero mi teléfono perdió la conexión al registrar la entrada.",
+        },
+        {
+          id: 2,
+          name: "Daniel Martín",
+          date: "9 nov · 09:00–12:00",
+          original: "Retraso",
+          requested: "Presente",
+          reason:
+            "Entré al aula antes de las nueve. Pude registrar la entrada unos minutos después.",
+        },
+        {
+          id: 3,
+          name: "Nora Ruiz",
+          date: "6 nov · 09:00–12:00",
+          original: "Ausente",
+          requested: "Presente",
+          reason:
+            "Asistí a la sesión online y mi entrada no aparece en el registro.",
+        },
+      ];
+      let selectedId = 1;
+      let filter = "pending";
+      let action = null;
+      const queue = document.querySelector("#queue");
+      const detail = document.querySelector("#detail");
+      const notice = document.querySelector("#notice");
+      const dialog = document.querySelector("#decision");
+      function addText(parent, tag, text) {
+        const node = document.createElement(tag);
+        node.textContent = text;
+        parent.append(node);
+        return node;
+      }
+      function render() {
+        queue.replaceChildren();
+        detail.replaceChildren();
+        notice.textContent = "";
+        const scenario = document.querySelector("#scenario").value;
+        document
+          .querySelector("#pending")
+          .setAttribute("aria-pressed", String(filter === "pending"));
+        document
+          .querySelector("#resolved")
+          .setAttribute("aria-pressed", String(filter === "resolved"));
+        if (scenario !== "normal") {
+          const messages = {
+            empty: "No hay solicitudes pendientes.",
+            loading: "Cargando solicitudes…",
+            error: "No se pudieron cargar las solicitudes.",
+          };
+          notice.textContent = messages[scenario];
+          if (scenario === "error") {
+            const retry = addText(detail, "button", "Reintentar");
+            retry.className = "secondary";
+            retry.onclick = () => {
+              document.querySelector("#scenario").value = "normal";
+              render();
+            };
+          }
+          return;
+        }
+        const visible = requests.filter((item) =>
+          filter === "pending" ? !item.decision : !!item.decision,
+        );
+        if (!visible.length) {
+          notice.textContent =
+            filter === "pending"
+              ? "No hay solicitudes pendientes."
+              : "Todavía no hay solicitudes resueltas.";
+          return;
+        }
+        let selected = visible.find((item) => item.id === selectedId);
+        if (!selected) {
+          selected = visible[0];
+          selectedId = selected.id;
+        }
+        for (const item of visible) {
+          const li = document.createElement("li");
+          const button = document.createElement("button");
+          button.className = "request";
+          button.setAttribute("aria-current", String(item.id === selectedId));
+          addText(button, "strong", item.name);
+          addText(button, "span", item.date);
+          addText(
+            button,
+            "span",
+            item.decision
+              ? item.decision.label
+              : "Solicita corregir su asistencia",
+          );
+          button.onclick = () => {
+            selectedId = item.id;
+            render();
+          };
+          li.append(button);
+          queue.append(li);
+        }
+        const heading = addText(detail, "h2", selected.name);
+        heading.id = "student";
+        addText(detail, "p", selected.date).className = "muted";
+        const dl = document.createElement("dl");
+        for (const [label, value] of [
+          ["Registro original", selected.original],
+          ["Corrección solicitada", selected.requested],
+        ]) {
+          const group = document.createElement("div");
+          addText(group, "dt", label);
+          addText(group, "dd", value);
+          dl.append(group);
+        }
+        detail.append(dl);
+        addText(detail, "h3", "Motivo del alumno");
+        addText(detail, "p", selected.reason).className = "reason";
+        if (selected.decision) {
+          const history = document.createElement("section");
+          history.id = "history";
+          addText(history, "h3", selected.decision.label);
+          addText(history, "p", selected.decision.reason);
+          addText(
+            history,
+            "p",
+            "Profesor de ejemplo · " + selected.decision.time,
+          ).className = "muted";
+          addText(
+            history,
+            "p",
+            selected.decision.accepted
+              ? "Estado resultante: " + selected.requested
+              : "Se mantiene el estado original: " + selected.original,
+          );
+          detail.append(history);
+          return;
+        }
+        const actions = document.createElement("div");
+        actions.className = "actions";
+        for (const [label, accepted] of [
+          ["Aceptar corrección", true],
+          ["Rechazar solicitud", false],
+        ]) {
+          const button = addText(actions, "button", label);
+          button.className = accepted ? "primary" : "secondary";
+          button.onclick = () => openDecision(selected, accepted);
+        }
+        detail.append(actions);
+      }
+      function openDecision(item, accepted) {
+        action = { id: item.id, accepted };
+        document.querySelector("#decision-form").reset();
+        document.querySelector("#error").textContent = "";
+        document.querySelector("#decision-title").textContent = accepted
+          ? "Aceptar corrección"
+          : "Rechazar solicitud";
+        document.querySelector("#decision-description").textContent = accepted
+          ? item.name + ": " + item.original + " → " + item.requested
+          : item.name + ": se mantendrá " + item.original + ".";
+        dialog.showModal();
+        document.querySelector("#decision-reason").focus();
+      }
+      document.querySelector("#decision-form").onsubmit = (event) => {
+        event.preventDefault();
+        const reason = document.querySelector("#decision-reason").value.trim();
+        if (!reason) {
+          document.querySelector("#error").textContent =
+            "Escribe el motivo de tu decisión.";
+          return;
+        }
+        const item = requests.find((item) => item.id === action.id);
+        item.decision = {
+          accepted: action.accepted,
+          label: action.accepted
+            ? "Corrección aceptada"
+            : "Solicitud rechazada",
+          reason,
+          time: new Date().toLocaleString("es-ES"),
+        };
+        selectedId = item.id;
+        filter = "resolved";
+        dialog.close();
+        render();
+        document.querySelector("#student").tabIndex = -1;
+        document.querySelector("#student").focus();
+      };
+      document.querySelector("#cancel").onclick = () => dialog.close();
+      document.querySelector("#pending").onclick = () => {
+        filter = "pending";
+        render();
+      };
+      document.querySelector("#resolved").onclick = () => {
+        filter = "resolved";
+        render();
+      };
+      document.querySelector("#scenario").onchange = render;
+      render();
+    </script>
+  </body>
+</html>
