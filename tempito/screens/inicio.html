@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Inicio — Tempito</title>
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <p class="brand">Tempito</p>
+        <p class="level-pill">Nivel 3</p>
+        <a class="profile" href="personalizacion.html">Perfil</a>
+      </header>
+
+      <section class="hero">
+        <div>
+          <p class="kicker">Inicio</p>
+          <h1>Hola, Lucía</h1>
+          <p class="lead">
+            Tempito te acompaña en aTempo. Hoy está curioso y listo para
+            explorar.
+          </p>
+          <p class="quote">
+            He descubierto algo nuevo. ¿Exploramos juntas?
+          </p>
+        </div>
+        <div class="mascot-stage">
+          <img
+            src="../assets/mascot/tempito.jpg"
+            alt="Tempito, mascota turquesa con dos hojitas"
+            data-expression="curious"
+          />
+        </div>
+      </section>
+
+      <div class="grid">
+        <section class="card">
+          <h2>Estado de ánimo</h2>
+          <p class="muted">Solo visual. No cambia notas ni asistencia.</p>
+          <div class="moods">
+            <span class="mood">Contento</span>
+            <span class="mood is-active">Curioso</span>
+            <span class="mood">Emocionado</span>
+            <span class="mood">Tranquilo</span>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Experiencia</h2>
+          <p class="muted">Nivel 3 · Mini Tempito</p>
+          <div class="xp-row">
+            <span>240 XP</span>
+            <span>300 XP</span>
+          </div>
+          <div class="bar" aria-label="Progreso de experiencia">
+            <span></span>
+          </div>
+          <p class="note muted">Faltan 60 XP para el siguiente nivel.</p>
+        </section>
+      </div>
+
+      <section class="card" style="margin-top: 16px">
+        <h2>Misiones activas</h2>
+        <article class="mission">
+          <div class="mission-head">
+            <span>Organiza tu semana</span>
+            <span class="xp-badge">20 XP</span>
+          </div>
+          <p class="muted">Consulta las próximas sesiones del calendario.</p>
+          <p class="status">En curso · 1 de 1 semana</p>
+        </article>
+        <article class="mission">
+          <div class="mission-head">
+            <span>Explorador de aTempo</span>
+            <span class="xp-badge">30 XP</span>
+          </div>
+          <p class="muted">Descubre una funcionalidad nueva de la plataforma.</p>
+          <p class="status">En curso · 0 de 1</p>
+        </article>
+      </section>
+
+      <section class="card" style="margin-top: 16px">
+        <h2>Inventario</h2>
+        <p class="muted">Objetos desbloqueados. La personalización llega después.</p>
+        <div class="inventory">
+          <div class="item">
+            <div class="dot glasses"></div>
+            Gafas
+          </div>
+          <div class="item">
+            <div class="dot hat"></div>
+            Sombrero
+          </div>
+          <div class="item locked">
+            <div class="dot bag"></div>
+            Mochila
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <nav class="nav" aria-label="Pantallas de Tempito">
+      <a class="is-active" href="inicio.html">Inicio</a>
+      <a href="evolucion.html">Evolución</a>
+      <a href="misiones.html">Misiones</a>
+      <a href="personalizacion.html">Personalización</a>
+    </nav>
+  </body>
+</html>
