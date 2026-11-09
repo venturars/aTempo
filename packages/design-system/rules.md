@@ -18,7 +18,7 @@ La app se construye con DaisyUI 5. Los colores, el radio y la fuente salen de `t
 - La hora es 24 h, `09:00`. La fecha es `09/11/2026`. Un porcentaje es `85 %`.
 - Las acciones destructivas van en gris. El rojo relleno solo aparece al confirmar, y la frase dice qué va a pasar.
 - El ítem de navegación activo y el filtro elegido son `bg-primary/10 text-primary`, sin barra de color.
-- Los iconos son Phosphor, peso duotone, a 18 px en la navegación.
+- Los iconos son Heroicons. Solid en la navegación, outline en las acciones, a 20 px. Quitar un chip usa el outline a 16 px.
 - Una estadística usa `primary`. Si hay otra serie, es el mismo color más claro, no un color nuevo. Un juego tampoco trae su paleta. `secondary` queda para Justificada y `accent` no se usa.
 
 ## No hacer
