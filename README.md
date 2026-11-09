@@ -205,7 +205,7 @@ La app todavía no está empezada. El sistema visual queda en el repositorio ant
 
 Hay dos temas. La app abre en oscuro índigo. El otro es el claro índigo. En Settings, cada usuario elige. Si no hay elección, sigue en oscuro.
 
-El significado de un estado no cambia con el tema. Presente es verde, retraso es ámbar, ausente es rojo, salida es azul y pendiente es neutro. El color va siempre con texto.
+El significado de un estado no cambia con el tema. Presente es verde, retraso es ámbar, ausente es rojo, salida es azul y pendiente es neutro. Una ausencia justificada no es ausente: lleva su palabra y el color secondary. Cómo cuenta en Tempito sigue abierto. El color va siempre con texto.
 
 La interfaz sigue tres referencias, sin copiarlas enteras:
 

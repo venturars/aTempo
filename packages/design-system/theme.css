@@ -9,6 +9,16 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
+/* Tamaños de rules.md. 20, 16 y 14 ya son text-xl, text-base y text-sm. */
+@theme {
+  --text-2xl: 1.75rem;
+  --text-2xl--line-height: 1.25;
+  --text-meta: 0.8125rem;
+  --text-meta--line-height: 1.4;
+  --text-xs: 0.6875rem;
+  --text-xs--line-height: 1.35;
+}
+
 /* Dos temas. La app abre en oscuro índigo (atempo-oscuro). El otro es el claro índigo. */
 
 @plugin "daisyui/theme" {
@@ -46,7 +56,12 @@
 /* Tipografía por tema. cv11 y ss01 son de Inter. */
 [data-theme="atempo-oscuro"]    { --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.01em; }
 [data-theme="atempo-claro"]     { --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif; }
-body { font-family: var(--font-sans); font-feature-settings: "tnum"; }
+body {
+  font-family: var(--font-sans);
+  font-feature-settings: "tnum";
+  background-color: var(--color-base-200);
+  color: var(--color-base-content);
+}
 [data-theme="atempo-claro"] body { font-feature-settings: "cv11", "ss01", "tnum"; }
 
 /* Solo mientras Settings cambia el tema. Si va en todo el documento, anula las animaciones de DaisyUI. */
@@ -68,6 +83,26 @@ html.theme-switching *::after {
 .btn-sm { height: 30px; min-height: 30px; }
 .input:where(:not(.input-xs, .input-sm, .input-lg, .input-xl)),
 .select:where(:not(.select-xs, .select-sm, .select-lg, .select-xl)) { height: 38px; min-height: 38px; }
+
+/* El portal del alumno se usa con el dedo. 36 px se queda corto. */
+@media (pointer: coarse) {
+  .btn:where(:not(.btn-xs, .btn-lg, .btn-xl)),
+  .btn-sm,
+  .input:where(:not(.input-xs, .input-lg, .input-xl)),
+  .select:where(:not(.select-xs, .select-lg, .select-xl)) {
+    height: 44px;
+    min-height: 44px;
+  }
+}
+
+.table :where(thead, tbody) :where(tr) { min-height: 56px; }
+.table :where(th) {
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 
 /* Estados → badge badge-soft: Presente success · Retraso warning · Ausente error · Salida info · Pendiente neutral */
 

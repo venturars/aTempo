@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="atempo-oscuro" class="scroll-smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>aTempo · sistema visual</title>
+  <script>
+    try {
+      var temaGuardado = localStorage.getItem("atempo-guia-theme");
+      if (temaGuardado === "atempo-claro" || temaGuardado === "atempo-oscuro") {
+        document.documentElement.dataset.theme = temaGuardado;
+      }
+    } catch (error) {}
+  </script>
+  <link rel="stylesheet" href="guia.css">
+</head>
+<body>
+  <svg class="absolute size-0 overflow-hidden" aria-hidden="true">
+<symbol id="i-house" viewBox="0 0 256 256"><path d="M216,120v96H152V152H104v64H40V120a8,8,0,0,1,2.34-5.66l80-80a8,8,0,0,1,11.32,0l80,80A8,8,0,0,1,216,120Z" opacity="0.2"/><path d="M219.31,108.68l-80-80a16,16,0,0,0-22.62,0l-80,80A15.87,15.87,0,0,0,32,120v96a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V160h32v56a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V120A15.87,15.87,0,0,0,219.31,108.68ZM208,208H160V152a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8v56H48V120l80-80,80,80Z"/></symbol>
+<symbol id="i-calendar-blank" viewBox="0 0 256 256"><path d="M216,48V88H40V48a8,8,0,0,1,8-8H208A8,8,0,0,1,216,48Z" opacity="0.2"/><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z"/></symbol>
+<symbol id="i-users" viewBox="0 0 256 256"><path d="M136,108A52,52,0,1,1,84,56,52,52,0,0,1,136,108Z" opacity="0.2"/><path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"/></symbol>
+<symbol id="i-chart-bar" viewBox="0 0 256 256"><path d="M208,40V208H152V40Z" opacity="0.2"/><path d="M224,200h-8V40a8,8,0,0,0-8-8H152a8,8,0,0,0-8,8V80H96a8,8,0,0,0-8,8v40H48a8,8,0,0,0-8,8v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16ZM160,48h40V200H160ZM104,96h40V200H104ZM56,144H88v56H56Z"/></symbol>
+<symbol id="i-game-controller" viewBox="0 0 256 256"><path d="M216.86,207.57a28,28,0,0,1-24.66-7.77L150.09,152H172a51.94,51.94,0,0,0,51.2-61h0l16.36,84.17A28,28,0,0,1,216.86,207.57Z" opacity="0.2"/><path d="M176,112H152a8,8,0,0,1,0-16h24a8,8,0,0,1,0,16ZM104,96H96V88a8,8,0,0,0-16,0v8H72a8,8,0,0,0,0,16h8v8a8,8,0,0,0,16,0v-8h8a8,8,0,0,0,0-16ZM241.48,200.65a36,36,0,0,1-54.94,4.81c-.12-.12-.24-.24-.35-.37L146.48,160h-37L69.81,205.09l-.35.37A36.08,36.08,0,0,1,44,216,36,36,0,0,1,8.56,173.75a.68.68,0,0,1,0-.14L24.93,89.52A59.88,59.88,0,0,1,83.89,40H172a60.08,60.08,0,0,1,59,49.25c0,.06,0,.12,0,.18l16.37,84.17a.68.68,0,0,1,0,.14A35.74,35.74,0,0,1,241.48,200.65ZM172,144a44,44,0,0,0,0-88H83.89A43.9,43.9,0,0,0,40.68,92.37l0,.13L24.3,176.59A20,20,0,0,0,58,194.3l41.92-47.59a8,8,0,0,1,6-2.71Zm59.7,32.59-8.74-45A60,60,0,0,1,172,160h-4.2L198,194.31a20.09,20.09,0,0,0,17.46,5.39,20,20,0,0,0,16.23-23.11Z"/></symbol>
+<symbol id="i-gear" viewBox="0 0 256 256"><path d="M207.86,123.18l16.78-21a99.14,99.14,0,0,0-10.07-24.29l-26.7-3a81,81,0,0,0-6.81-6.81l-3-26.71a99.43,99.43,0,0,0-24.3-10l-21,16.77a81.59,81.59,0,0,0-9.64,0l-21-16.78A99.14,99.14,0,0,0,77.91,41.43l-3,26.7a81,81,0,0,0-6.81,6.81l-26.71,3a99.43,99.43,0,0,0-10,24.3l16.77,21a81.59,81.59,0,0,0,0,9.64l-16.78,21a99.14,99.14,0,0,0,10.07,24.29l26.7,3a81,81,0,0,0,6.81,6.81l3,26.71a99.43,99.43,0,0,0,24.3,10l21-16.77a81.59,81.59,0,0,0,9.64,0l21,16.78a99.14,99.14,0,0,0,24.29-10.07l3-26.7a81,81,0,0,0,6.81-6.81l26.71-3a99.43,99.43,0,0,0,10-24.3l-16.77-21A81.59,81.59,0,0,0,207.86,123.18ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z" opacity="0.2"/><path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.6,107.6,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.29,107.29,0,0,0-26.25-10.86,8,8,0,0,0-7.06,1.48L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.94,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.6,107.6,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.94,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06Zm-16.1-6.5a73.93,73.93,0,0,1,0,8.68,8,8,0,0,0,1.74,5.48l14.19,17.73a91.57,91.57,0,0,1-6.23,15L187,173.11a8,8,0,0,0-5.1,2.64,74.11,74.11,0,0,1-6.14,6.14,8,8,0,0,0-2.64,5.1l-2.51,22.58a91.32,91.32,0,0,1-15,6.23l-17.74-14.19a8,8,0,0,0-5-1.75h-.48a73.93,73.93,0,0,1-8.68,0,8.06,8.06,0,0,0-5.48,1.74L100.45,215.8a91.57,91.57,0,0,1-15-6.23L82.89,187a8,8,0,0,0-2.64-5.1,74.11,74.11,0,0,1-6.14-6.14,8,8,0,0,0-5.1-2.64L46.43,170.6a91.32,91.32,0,0,1-6.23-15l14.19-17.74a8,8,0,0,0,1.74-5.48,73.93,73.93,0,0,1,0-8.68,8,8,0,0,0-1.74-5.48L40.2,100.45a91.57,91.57,0,0,1,6.23-15L69,82.89a8,8,0,0,0,5.1-2.64,74.11,74.11,0,0,1,6.14-6.14A8,8,0,0,0,82.89,69L85.4,46.43a91.32,91.32,0,0,1,15-6.23l17.74,14.19a8,8,0,0,0,5.48,1.74,73.93,73.93,0,0,1,8.68,0,8.06,8.06,0,0,0,5.48-1.74L155.55,40.2a91.57,91.57,0,0,1,15,6.23L173.11,69a8,8,0,0,0,2.64,5.1,74.11,74.11,0,0,1,6.14,6.14,8,8,0,0,0,5.1,2.64l22.58,2.51a91.32,91.32,0,0,1,6.23,15l-14.19,17.74A8,8,0,0,0,199.87,123.66Z"/></symbol>
+<symbol id="i-bell" viewBox="0 0 256 256"><path d="M208,192H48a8,8,0,0,1-6.88-12C47.71,168.6,56,139.81,56,104a72,72,0,0,1,144,0c0,35.82,8.3,64.6,14.9,76A8,8,0,0,1,208,192Z" opacity="0.2"/><path d="M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216ZM48,184c7.7-13.24,16-43.92,16-80a64,64,0,1,1,128,0c0,36.05,8.28,66.73,16,80Z"/></symbol>
+<symbol id="i-magnifying-glass" viewBox="0 0 256 256"><path d="M192,112a80,80,0,1,1-80-80A80,80,0,0,1,192,112Z" opacity="0.2"/><path d="M229.66,218.34,179.6,168.28a88.21,88.21,0,1,0-11.32,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></symbol>
+<symbol id="i-plus" viewBox="0 0 256 256"><path d="M216,56V200a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V56A16,16,0,0,1,56,40H200A16,16,0,0,1,216,56Z" opacity="0.2"/><path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/></symbol>
+<symbol id="i-dots-three" viewBox="0 0 256 256"><path d="M240,96v64a16,16,0,0,1-16,16H32a16,16,0,0,1-16-16V96A16,16,0,0,1,32,80H224A16,16,0,0,1,240,96Z" opacity="0.2"/><path d="M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128Zm56-12a12,12,0,1,0,12,12A12,12,0,0,0,196,116ZM60,116a12,12,0,1,0,12,12A12,12,0,0,0,60,116Z"/></symbol>
+<symbol id="i-caret-down" viewBox="0 0 256 256"><path d="M208,96l-80,80L48,96Z" opacity="0.2"/><path d="M215.39,92.94A8,8,0,0,0,208,88H48a8,8,0,0,0-5.66,13.66l80,80a8,8,0,0,0,11.32,0l80-80A8,8,0,0,0,215.39,92.94ZM128,164.69,67.31,104H188.69Z"/></symbol>
+<symbol id="i-caret-right" viewBox="0 0 256 256"><path d="M176,128,96,208V48Z" opacity="0.2"/><path d="M181.66,122.34l-80-80A8,8,0,0,0,88,48V208a8,8,0,0,0,13.66,5.66l80-80A8,8,0,0,0,181.66,122.34ZM104,188.69V67.31L164.69,128Z"/></symbol>
+<symbol id="i-caret-left" viewBox="0 0 256 256"><path d="M160,48V208L80,128Z" opacity="0.2"/><path d="M163.06,40.61a8,8,0,0,0-8.72,1.73l-80,80a8,8,0,0,0,0,11.32l80,80A8,8,0,0,0,168,208V48A8,8,0,0,0,163.06,40.61ZM152,188.69,91.31,128,152,67.31Z"/></symbol>
+<symbol id="i-x" viewBox="0 0 256 256"><path d="M216,56V200a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V56A16,16,0,0,1,56,40H200A16,16,0,0,1,216,56Z" opacity="0.2"/><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></symbol>
+<symbol id="i-check" viewBox="0 0 256 256"><path d="M232,56V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56Z" opacity="0.2"/><path d="M205.66,85.66l-96,96a8,8,0,0,1-11.32,0l-40-40a8,8,0,0,1,11.32-11.32L104,164.69l90.34-90.35a8,8,0,0,1,11.32,11.32Z"/></symbol>
+<symbol id="i-file" viewBox="0 0 256 256"><path d="M208,88H152V32Z" opacity="0.2"/><path d="M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Z"/></symbol>
+<symbol id="i-lock-simple" viewBox="0 0 256 256"><path d="M216,96V208a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V96a8,8,0,0,1,8-8H208A8,8,0,0,1,216,96Z" opacity="0.2"/><path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Z"/></symbol>
+<symbol id="i-chat-circle" viewBox="0 0 256 256"><path d="M224,128A96,96,0,0,1,79.93,211.11h0L42.54,223.58a8,8,0,0,1-10.12-10.12l12.47-37.39h0A96,96,0,1,1,224,128Z" opacity="0.2"/><path d="M128,24A104,104,0,0,0,36.18,176.88L24.83,210.93a16,16,0,0,0,20.24,20.24l34.05-11.35A104,104,0,1,0,128,24Zm0,192a87.87,87.87,0,0,1-44.06-11.81,8,8,0,0,0-6.54-.67L40,216,52.47,178.6a8,8,0,0,0-.66-6.54A88,88,0,1,1,128,216Z"/></symbol>
+<symbol id="i-upload-simple" viewBox="0 0 256 256"><path d="M216,48V208H40V48A16,16,0,0,1,56,32H200A16,16,0,0,1,216,48Z" opacity="0.2"/><path d="M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0ZM93.66,77.66,120,51.31V144a8,8,0,0,0,16,0V51.31l26.34,26.35a8,8,0,0,0,11.32-11.32l-40-40a8,8,0,0,0-11.32,0l-40,40A8,8,0,0,0,93.66,77.66Z"/></symbol>
+<symbol id="i-arrow-square-out" viewBox="0 0 256 256"><path d="M184,80V208a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H176A8,8,0,0,1,184,80Z" opacity="0.2"/><path d="M224,104a8,8,0,0,1-16,0V59.32l-66.33,66.34a8,8,0,0,1-11.32-11.32L196.68,48H152a8,8,0,0,1,0-16h64a8,8,0,0,1,8,8Zm-40,24a8,8,0,0,0-8,8v72H48V80h72a8,8,0,0,0,0-16H48A16,16,0,0,0,32,80V208a16,16,0,0,0,16,16H176a16,16,0,0,0,16-16V136A8,8,0,0,0,184,128Z"/></symbol>
+<symbol id="i-list" viewBox="0 0 256 256"><path d="M216,64V192H40V64Z" opacity="0.2"/><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"/></symbol>
+<symbol id="i-squares-four" viewBox="0 0 256 256"><path d="M112,56v48a8,8,0,0,1-8,8H56a8,8,0,0,1-8-8V56a8,8,0,0,1,8-8h48A8,8,0,0,1,112,56Zm88-8H152a8,8,0,0,0-8,8v48a8,8,0,0,0,8,8h48a8,8,0,0,0,8-8V56A8,8,0,0,0,200,48Zm-96,96H56a8,8,0,0,0-8,8v48a8,8,0,0,0,8,8h48a8,8,0,0,0,8-8V152A8,8,0,0,0,104,144Zm96,0H152a8,8,0,0,0-8,8v48a8,8,0,0,0,8,8h48a8,8,0,0,0,8-8V152A8,8,0,0,0,200,144Z" opacity="0.2"/><path d="M200,136H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,200,136Zm0,64H152V152h48v48ZM104,40H56A16,16,0,0,0,40,56v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,104,40Zm0,64H56V56h48v48Zm96-64H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,200,40Zm0,64H152V56h48v48Zm-96,32H56a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,104,136Zm0,64H56V152h48v48Z"/></symbol>
+<symbol id="i-download-simple" viewBox="0 0 256 256"><path d="M216,48V208H40V48A16,16,0,0,1,56,32H200A16,16,0,0,1,216,48Z" opacity="0.2"/><path d="M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z"/></symbol>
+<symbol id="i-eye" viewBox="0 0 256 256"><path d="M128,56C48,56,16,128,16,128s32,72,112,72,112-72,112-72S208,56,128,56Zm0,112a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z" opacity="0.2"/><path d="M247.31,124.76c-.35-.79-8.82-19.58-27.65-38.41C194.57,61.26,162.88,48,128,48S61.43,61.26,36.34,86.35C17.51,105.18,9,124,8.69,124.76a8,8,0,0,0,0,6.5c.35.79,8.82,19.57,27.65,38.4C61.43,194.74,93.12,208,128,208s66.57-13.26,91.66-38.34c18.83-18.83,27.3-37.61,27.65-38.4A8,8,0,0,0,247.31,124.76ZM128,192c-30.78,0-57.67-11.19-79.93-33.25A133.47,133.47,0,0,1,25,128,133.33,133.33,0,0,1,48.07,97.25C70.33,75.19,97.22,64,128,64s57.67,11.19,79.93,33.25A133.46,133.46,0,0,1,231.05,128C223.84,141.46,192.43,192,128,192Zm0-112a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Z"/></symbol>
+<symbol id="i-clock" viewBox="0 0 256 256"><path d="M224,128a96,96,0,1,1-96-96A96,96,0,0,1,224,128Z" opacity="0.2"/><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z"/></symbol>
+<symbol id="i-warning-circle" viewBox="0 0 256 256"><path d="M224,128a96,96,0,1,1-96-96A96,96,0,0,1,224,128Z" opacity="0.2"/><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-8-80V80a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,172Z"/></symbol>
+<symbol id="i-envelope" viewBox="0 0 256 256"><path d="M224,56l-96,88L32,56Z" opacity="0.2"/><path d="M224,48H32a8,8,0,0,0-8,8V192a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A8,8,0,0,0,224,48Zm-96,85.15L52.57,64H203.43ZM98.71,128,40,181.81V74.19Zm11.84,10.85,12,11.05a8,8,0,0,0,10.82,0l12-11.05,58,53.15H52.57ZM157.29,128,216,74.18V181.82Z"/></symbol>
+<symbol id="i-student" viewBox="0 0 256 256"><path d="M224,64,128,96,32,64l96-32Z" opacity="0.2"/><path d="M226.53,56.41l-96-32a8,8,0,0,0-5.06,0l-96,32a8,8,0,0,0-5.4,6.75A5,5,0,0,0,24,64v80a8,8,0,0,0,16,0V75.1L73.59,86.29a64,64,0,0,0,20.65,88.05c-18,7.06-33.56,19.83-44.94,37.29a8,8,0,1,0,13.4,8.74C77.77,197.25,101.57,184,128,184s50.23,13.25,65.3,36.37a8,8,0,0,0,13.4-8.74c-11.38-17.46-27-30.23-44.94-37.29a64,64,0,0,0,20.65-88l44.12-14.7a8,8,0,0,0,0-15.18ZM176,120A48,48,0,1,1,89.35,91.55l36.12,12a8,8,0,0,0,5.06,0l36.12-12A47.89,47.89,0,0,1,176,120ZM128,87.57,57.3,64,128,40.43,198.7,64Z"/></symbol>
+  </svg>
+
+  <div class="drawer md:drawer-open min-h-screen">
+    <input id="guia-nav" type="checkbox" class="drawer-toggle">
+    <div class="drawer-content">
+      <header class="flex items-center gap-3 p-4 md:hidden">
+        <label for="guia-nav" class="btn btn-square bg-base-100 border-0" aria-label="Abrir menú">
+          <svg class="size-4" aria-hidden="true"><use href="#i-list"></use></svg>
+        </label>
+        <span class="text-sm font-semibold">Sistema de diseño</span>
+      </header>
+
+      <main class="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-6 p-4 md:p-6">
+        <div id="g0" class="scroll-mt-6">
+          <p class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Fundamentos</p>
+        </div>
+
+        <section id="color" class="flex scroll-mt-6 flex-col gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Color</h2>
+          <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div class="overflow-hidden rounded-box bg-base-100 shadow-sm">
+              <div class="h-16 bg-primary"></div>
+              <div class="flex flex-col gap-2 p-4">
+                <span class="text-sm font-medium">primary</span>
+                <div class="h-6 rounded-field bg-primary/20"></div>
+              </div>
+            </div>
+            <div class="overflow-hidden rounded-box bg-base-100 shadow-sm">
+              <div class="h-16 bg-secondary"></div>
+              <div class="flex flex-col gap-2 p-4">
+                <span class="text-sm font-medium">secondary</span>
+                <div class="h-6 rounded-field bg-secondary/20"></div>
+              </div>
+            </div>
+            <div class="overflow-hidden rounded-box bg-base-100 shadow-sm">
+              <div class="h-16 bg-success"></div>
+              <div class="flex flex-col gap-2 p-4">
+                <span class="text-sm font-medium">success</span>
+                <div class="h-6 rounded-field bg-success/20"></div>
+              </div>
+            </div>
+            <div class="overflow-hidden rounded-box bg-base-100 shadow-sm">
+              <div class="h-16 bg-warning"></div>
+              <div class="flex flex-col gap-2 p-4">
+                <span class="text-sm font-medium">warning</span>
+                <div class="h-6 rounded-field bg-warning/20"></div>
+              </div>
+            </div>
+            <div class="overflow-hidden rounded-box bg-base-100 shadow-sm">
+              <div class="h-16 bg-error"></div>
+              <div class="flex flex-col gap-2 p-4">
+                <span class="text-sm font-medium">error</span>
+                <div class="h-6 rounded-field bg-error/20"></div>
+              </div>
+            </div>
+            <div class="overflow-hidden rounded-box bg-base-100 shadow-sm">
+              <div class="h-16 bg-info"></div>
+              <div class="flex flex-col gap-2 p-4">
+                <span class="text-sm font-medium">info</span>
+                <div class="h-6 rounded-field bg-info/20"></div>
+              </div>
+            </div>
+            <div class="overflow-hidden rounded-box bg-base-100 shadow-sm">
+              <div class="h-16 bg-neutral"></div>
+              <div class="flex flex-col gap-2 p-4">
+                <span class="text-sm font-medium">neutral</span>
+                <div class="h-6 rounded-field bg-neutral/20"></div>
+              </div>
+            </div>
+            <div class="overflow-hidden rounded-box bg-base-100 shadow-sm">
+              <div class="h-16 bg-base-200 ring-1 ring-base-300 ring-inset"></div>
+              <div class="flex flex-col gap-2 p-4">
+                <span class="text-sm font-medium">base</span>
+                <div class="h-6 rounded-field bg-base-300"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="tipografia" class="flex scroll-mt-6 flex-col gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Tipografía</h2>
+          <div class="card bg-base-100 shadow-sm">
+            <div class="card-body gap-4 p-4">
+              <div class="flex items-baseline justify-between gap-4">
+                <p class="text-2xl font-semibold">Título</p>
+                <p class="text-meta text-base-content/60">28</p>
+              </div>
+              <div class="flex items-baseline justify-between gap-4">
+                <p class="text-xl font-semibold">Tarjeta</p>
+                <p class="text-meta text-base-content/60">20</p>
+              </div>
+              <div class="flex items-baseline justify-between gap-4">
+                <p class="text-base font-semibold">Sección</p>
+                <p class="text-meta text-base-content/60">16</p>
+              </div>
+              <div class="flex items-baseline justify-between gap-4">
+                <p class="text-sm font-medium">Nombre</p>
+                <p class="text-meta text-base-content/60">14</p>
+              </div>
+              <div class="flex items-baseline justify-between gap-4">
+                <p class="text-sm">Cuerpo</p>
+                <p class="text-meta text-base-content/60">14</p>
+              </div>
+              <div class="flex items-baseline justify-between gap-4">
+                <p class="text-meta">Meta</p>
+                <p class="text-meta text-base-content/60">13</p>
+              </div>
+              <div class="flex items-baseline justify-between gap-4">
+                <p class="text-xs font-semibold uppercase tracking-widest">Cabecera</p>
+                <p class="text-meta text-base-content/60">11</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="espacio" class="flex scroll-mt-6 flex-col gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Espacio · radio · elevación</h2>
+          <div class="card bg-base-100 shadow-sm">
+            <div class="card-body gap-6 p-4">
+              <div class="flex items-end gap-4">
+                <div class="flex flex-col items-center gap-2">
+                  <div class="size-2 rounded-field bg-primary"></div>
+                  <span class="text-meta text-base-content/60">8</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                  <div class="size-3 rounded-field bg-primary"></div>
+                  <span class="text-meta text-base-content/60">12</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                  <div class="size-4 rounded-field bg-primary"></div>
+                  <span class="text-meta text-base-content/60">16</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                  <div class="size-6 rounded-field bg-primary"></div>
+                  <span class="text-meta text-base-content/60">24</span>
+                </div>
+              </div>
+              <div class="flex flex-wrap items-end gap-4">
+                <div class="flex flex-col items-center gap-2">
+                  <div class="size-16 rounded-field bg-primary/20"></div>
+                  <span class="text-meta text-base-content/60">8</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                  <div class="size-16 rounded-box bg-primary/20"></div>
+                  <span class="text-meta text-base-content/60">16</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                  <div class="size-16 rounded-selector bg-primary/20"></div>
+                  <span class="text-meta text-base-content/60">píldora</span>
+                </div>
+              </div>
+              <div class="flex flex-wrap gap-4">
+                <div class="flex w-36 flex-col gap-2 rounded-box bg-base-100 p-4 shadow-sm ring-1 ring-base-300 ring-inset">
+                  <span class="text-sm font-medium">tarjeta</span>
+                  <span class="text-meta text-base-content/60">sombra suave</span>
+                </div>
+                <div class="flex w-36 flex-col gap-2 rounded-box bg-base-100 p-4 shadow-xl">
+                  <span class="text-sm font-medium">flotante</span>
+                  <span class="text-meta text-base-content/60">sombra alta</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="estados" class="flex scroll-mt-6 flex-col gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Estados</h2>
+          <div class="grid gap-4 md:grid-cols-2">
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body gap-3 p-4">
+                <h3 class="text-sm font-semibold">Asistencia</h3>
+                <div class="flex flex-wrap gap-2">
+                  <span class="badge badge-soft badge-neutral">Pendiente</span>
+                  <span class="badge badge-soft badge-success">Presente</span>
+                  <span class="badge badge-soft badge-warning">Retraso</span>
+                  <span class="badge badge-soft badge-error">Ausente</span>
+                  <span class="badge badge-soft badge-info">Salida</span>
+                  <span class="badge badge-soft badge-secondary">Justificada</span>
+                </div>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body gap-3 p-4">
+                <h3 class="text-sm font-semibold">Justificante</h3>
+                <div class="flex flex-wrap gap-2">
+                  <span class="badge badge-soft badge-neutral">No presentado</span>
+                  <span class="badge badge-soft badge-warning">Pendiente de revisión</span>
+                  <span class="badge badge-soft badge-success">Aprobado</span>
+                  <span class="badge badge-soft badge-error">Rechazado</span>
+                </div>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body gap-3 p-4">
+                <h3 class="text-sm font-semibold">Sesión</h3>
+                <div class="flex flex-wrap gap-2">
+                  <span class="badge badge-soft badge-info">Programada</span>
+                  <span class="badge badge-soft badge-success gap-2">
+                    <span class="size-1.5 animate-pulse rounded-full bg-success" aria-hidden="true"></span>
+                    Abierta
+                  </span>
+                  <span class="badge badge-soft badge-neutral">Cerrada</span>
+                  <span class="badge badge-soft badge-error">Cancelada</span>
+                </div>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body gap-3 p-4">
+                <h3 class="text-sm font-semibold">Riesgo</h3>
+                <div class="flex flex-wrap gap-2">
+                  <span class="badge badge-soft badge-success">Bajo</span>
+                  <span class="badge badge-soft badge-warning">Medio</span>
+                  <span class="badge badge-soft badge-error">Alto</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div id="g1" class="scroll-mt-6">
+          <p class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Controles</p>
+        </div>
+
+        <section id="botones" class="flex scroll-mt-6 flex-col gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Botones</h2>
+          <div class="card bg-base-100 shadow-sm">
+            <div class="card-body gap-4 p-4">
+              <div class="flex flex-wrap items-center gap-3">
+                <button type="button" class="btn btn-primary">Abrir sesión</button>
+                <button type="button" class="btn border-0 bg-primary/10 text-primary">Marcar</button>
+                <button type="button" class="btn border-0 bg-base-200">Cerrar sesión</button>
+                <button type="button" class="btn border-0 bg-base-200">Exportar</button>
+                <button type="button" class="btn btn-ghost">Cancelar</button>
+                <button type="button" class="btn border-0 bg-base-200">Eliminar</button>
+                <button type="button" class="btn border-0 bg-base-200" disabled>Deshabilitado</button>
+                <button type="button" class="btn btn-primary">
+                  <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+                  Guardando
+                </button>
+              </div>
+              <div class="flex flex-wrap items-center gap-3">
+                <button type="button" class="btn btn-sm btn-primary">Pequeño</button>
+                <button type="button" class="btn btn-primary">Medio</button>
+                <button type="button" class="btn btn-lg btn-primary">Grande</button>
+                <button type="button" class="btn border-0 bg-base-200">
+                  <svg class="size-4" aria-hidden="true"><use href="#i-plus"></use></svg>
+                  Más
+                </button>
+                <button type="button" class="btn btn-primary">
+                  <svg class="size-4" aria-hidden="true"><use href="#i-plus"></use></svg>
+                  Nueva sesión
+                </button>
+                <div class="join rounded-field bg-base-200 p-1" data-pick="segment">
+                  <button type="button" class="btn btn-sm join-item border-0 bg-base-100 shadow-sm" data-item aria-pressed="true">
+                    <svg class="size-4" aria-hidden="true"><use href="#i-list"></use></svg>
+                    Lista
+                  </button>
+                  <button type="button" class="btn btn-sm join-item border-0 bg-transparent text-base-content/60" data-item aria-pressed="false">
+                    <svg class="size-4" aria-hidden="true"><use href="#i-squares-four"></use></svg>
+                    Cuadrícula
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="formularios" class="flex scroll-mt-6 flex-col gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Formularios</h2>
+          <div class="card bg-base-100 shadow-sm">
+            <div class="card-body grid gap-4 p-4 md:grid-cols-2">
+              <label class="flex flex-col gap-2">
+                <span class="text-sm font-medium">Nombre del curso</span>
+                <input class="input border-0 bg-base-200" value="Historia del Arte II">
+              </label>
+              <label class="flex flex-col gap-2">
+                <span class="text-sm font-medium">Aula</span>
+                <select class="select border-0 bg-base-200">
+                  <option>Aula 2.4</option>
+                  <option>Aula 1.1</option>
+                </select>
+              </label>
+              <label class="flex flex-col gap-2">
+                <span class="text-sm font-medium">Buscar</span>
+                <input class="input border-0 bg-base-200" type="search" placeholder="Buscar estudiante o curso">
+              </label>
+              <label class="flex flex-col gap-2">
+                <span class="text-sm font-medium">Hora de inicio</span>
+                <input class="input border-0 bg-base-200 tabular-nums" value="09:00">
+              </label>
+              <label class="flex flex-col gap-2">
+                <span class="text-sm font-medium">Correo</span>
+                <input class="input border-0 bg-base-200" type="email" value="lucia.fernandez@">
+              </label>
+              <label class="flex flex-col gap-2">
+                <span class="text-sm font-medium" id="dni-label">DNI</span>
+                <input id="dni" class="input input-error border-0 bg-base-200 tabular-nums" value="1234567" aria-invalid="true" aria-describedby="dni-error" aria-labelledby="dni-label">
+                <span id="dni-error" class="text-sm text-error">Falta la letra</span>
+              </label>
+              <label class="flex flex-col gap-2 md:col-span-2">
+                <span class="text-sm font-medium">Motivo de la corrección</span>
+                <textarea class="textarea border-0 bg-base-200" rows="3" placeholder="Motivo del cambio"></textarea>
+              </label>
+              <div class="md:col-span-2">
+                <label class="flex cursor-pointer flex-col items-center gap-2 rounded-box bg-base-200 px-4 py-6 text-center">
+                  <svg class="size-6" aria-hidden="true"><use href="#i-upload-simple"></use></svg>
+                  <span class="text-sm">Arrastra el PDF o la foto</span>
+                  <span class="text-sm font-medium">Justificante</span>
+                  <input class="sr-only" type="file" accept="application/pdf,image/*">
+                </label>
+              </div>
+              <label class="flex items-center justify-between gap-4">
+                <span class="text-sm">Recordatorio 10 min antes</span>
+                <input class="toggle toggle-primary" type="checkbox" checked>
+              </label>
+              <label class="flex items-center justify-between gap-4">
+                <span class="text-sm">Cierre automático</span>
+                <input class="toggle toggle-primary" type="checkbox">
+              </label>
+              <label class="flex items-center gap-3 text-sm">
+                <input class="checkbox" type="checkbox" checked>
+                Permitir justificantes
+              </label>
+              <label class="flex items-center gap-3 text-sm">
+                <input class="checkbox" type="checkbox" checked>
+                Contar retrasos como ausencia
+              </label>
+              <div class="flex flex-col gap-2 md:col-span-2" role="radiogroup" aria-label="Cómo contar la asistencia">
+                <label class="flex items-center gap-3 text-sm">
+                  <input class="radio" type="radio" name="contar" checked>
+                  Por sesiones
+                </label>
+                <label class="flex items-center gap-3 text-sm">
+                  <input class="radio" type="radio" name="contar">
+                  Por horas
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="menus-y-ayudas" class="flex scroll-mt-6 flex-col gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Menús y ayudas</h2>
+          <div class="grid gap-4 lg:grid-cols-2">
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body flex-row flex-wrap items-start gap-4 p-4">
+                <div class="dropdown">
+                  <button type="button" tabindex="0" class="btn btn-primary">Marcar</button>
+                  <ul tabindex="0" class="dropdown-content menu z-20 w-56 rounded-box bg-base-100 p-2 shadow-sm">
+                    <li><button type="button">Marcar presente</button></li>
+                    <li><button type="button">Marcar retraso</button></li>
+                    <li><button type="button">Salida anticipada</button></li>
+                    <li><button type="button">Ver perfil</button></li>
+                    <li><button type="button">Enviar aviso</button></li>
+                    <li><button type="button" class="text-error">Eliminar de la sesión</button></li>
+                  </ul>
+                </div>
+                <div class="tooltip" data-tip="Certificada · hash verificado">
+                  <span class="badge badge-soft badge-neutral">Cerrada</span>
+                </div>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body gap-3 p-4">
+                <div class="flex flex-wrap gap-4 text-sm">
+                  <a class="link link-primary" href="#menus-y-ayudas">Enlace</a>
+                  <a class="link link-primary underline" href="#menus-y-ayudas">Enlace hover</a>
+                  <a class="link link-primary inline-flex items-center gap-2" href="#menus-y-ayudas">
+                    Enlace externo
+                    <svg class="size-4" aria-hidden="true"><use href="#i-arrow-square-out"></use></svg>
+                  </a>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <span class="inline-flex items-center gap-1 rounded-selector bg-base-200 py-1 pr-1 pl-3 text-sm">
+                    Historia
+                    <button type="button" class="btn btn-ghost btn-xs btn-square" data-quitar aria-label="Quitar Historia">
+                      <svg class="size-3" aria-hidden="true"><use href="#i-x"></use></svg>
+                    </button>
+                  </span>
+                  <span class="inline-flex items-center gap-1 rounded-selector bg-base-200 py-1 pr-1 pl-3 text-sm">
+                    Arte
+                    <button type="button" class="btn btn-ghost btn-xs btn-square" data-quitar aria-label="Quitar Arte">
+                      <svg class="size-3" aria-hidden="true"><use href="#i-x"></use></svg>
+                    </button>
+                  </span>
+                  <span class="inline-flex items-center gap-1 rounded-selector bg-base-200 py-1 pr-1 pl-3 text-sm">
+                    Mañana
+                    <button type="button" class="btn btn-ghost btn-xs btn-square" data-quitar aria-label="Quitar Mañana">
+                      <svg class="size-3" aria-hidden="true"><use href="#i-x"></use></svg>
+                    </button>
+                  </span>
+                  <span class="inline-flex items-center gap-1 rounded-selector bg-base-200 py-1 pr-1 pl-3 text-sm">
+                    Presencial
+                    <button type="button" class="btn btn-ghost btn-xs btn-square" data-quitar aria-label="Quitar Presencial">
+                      <svg class="size-3" aria-hidden="true"><use href="#i-x"></use></svg>
+                    </button>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm lg:col-span-2">
+              <div class="card-body gap-3 p-4">
+                <label class="input border-0 bg-base-200">
+                  <svg class="size-4 opacity-60" aria-hidden="true"><use href="#i-magnifying-glass"></use></svg>
+                  <span class="sr-only">Buscar</span>
+                  <input class="grow" type="search" value="Die" aria-label="Buscar">
+                  <kbd class="kbd kbd-sm">esc</kbd>
+                </label>
+                <ul class="menu p-0">
+                  <li>
+                    <button type="button" class="flex items-center gap-3">
+                      <span class="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">DM</span>
+                      <span class="flex flex-1 flex-col items-start">
+                        <span class="text-sm"><span class="font-semibold">Die</span>go Morales</span>
+                        <span class="text-meta text-base-content/60">Historia del Arte II</span>
+                      </span>
+                    </button>
+                  </li>
+                  <li>
+                    <button type="button" class="flex items-center gap-3">
+                      <span class="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">DR</span>
+                      <span class="flex flex-1 flex-col items-start">
+                        <span class="text-sm"><span class="font-semibold">Die</span>go Ruiz</span>
+                        <span class="text-meta text-base-content/60">Estética Contemporánea</span>
+                      </span>
+                    </button>
+                  </li>
+                  <li>
+                    <button type="button" class="flex items-center gap-3">
+                      <span class="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">DL</span>
+                      <span class="flex flex-1 flex-col items-start">
+                        <span class="text-sm"><span class="font-semibold">Die</span>go Lamas</span>
+                        <span class="text-meta text-base-content/60">Seminario de Tesis</span>
+                      </span>
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div id="g2" class="scroll-mt-6">
+          <p class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Navegación</p>
+        </div>
+
+        <section id="navegacion" class="flex scroll-mt-6 flex-col gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Navegación</h2>
+          <div class="grid items-start gap-4 lg:grid-cols-[15rem_1fr]">
+            <aside class="flex flex-col gap-1 rounded-box bg-base-100 p-3 shadow-sm">
+              <div class="mb-2 flex items-center justify-between gap-2 px-2">
+                <img data-logo="card" src="assets/logo-noche-card.svg" alt="aTempo" class="h-7 w-auto">
+                <button type="button" class="btn btn-square btn-sm border-0 bg-base-200" aria-label="Cerrar menú">
+                  <svg class="size-4" aria-hidden="true"><use href="#i-caret-left"></use></svg>
+                </button>
+              </div>
+              <a class="flex items-center gap-3 rounded-field bg-primary/10 px-3 py-2 text-sm font-medium text-primary" href="#navegacion" aria-current="page">
+                <svg class="size-4.5 shrink-0" aria-hidden="true"><use href="#i-house"></use></svg>
+                Dashboard
+              </a>
+              <a class="flex items-center gap-3 rounded-field px-3 py-2 text-sm" href="#navegacion">
+                <svg class="size-4.5 shrink-0" aria-hidden="true"><use href="#i-warning-circle"></use></svg>
+                <span class="flex-1">Incidencias y justificantes</span>
+                <span class="badge badge-primary badge-sm">3</span>
+              </a>
+              <a class="flex items-center gap-3 rounded-field px-3 py-2 text-sm" href="#navegacion">
+                <svg class="size-4.5 shrink-0" aria-hidden="true"><use href="#i-chart-bar"></use></svg>
+                Estadísticas
+              </a>
+              <a class="flex items-center gap-3 rounded-field px-3 py-2 text-sm" href="#navegacion">
+                <svg class="size-4.5 shrink-0" aria-hidden="true"><use href="#i-game-controller"></use></svg>
+                Juegos
+              </a>
+              <div class="my-2 border-t border-base-300"></div>
+              <a class="flex items-center gap-3 rounded-field px-3 py-2 text-sm" href="#ajustes">
+                <svg class="size-4.5 shrink-0" aria-hidden="true"><use href="#i-gear"></use></svg>
+                Settings
+              </a>
+              <div class="mt-2 flex items-center gap-3 px-3 py-2">
+                <span class="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">PR</span>
+                <span class="flex flex-col">
+                  <span class="text-sm font-medium">Paula Rivas</span>
+                  <span class="text-meta text-base-content/60">Profesora</span>
+                </span>
+              </div>
+            </aside>
+
+            <div class="flex flex-col gap-4">
+              <div class="card bg-base-100 shadow-sm">
+                <div class="card-body gap-4 p-4">
+                  <div class="flex flex-wrap items-center gap-3">
+                    <div class="breadcrumbs text-sm">
+                      <ul>
+                        <li><a href="#cursos-y-personas">Cursos</a></li>
+                        <li>Historia del Arte II</li>
+                      </ul>
+                    </div>
+                    <label class="input ml-auto border-0 bg-base-200">
+                      <svg class="size-4 opacity-60" aria-hidden="true"><use href="#i-magnifying-glass"></use></svg>
+                      <input type="search" placeholder="Buscar" aria-label="Buscar">
+                    </label>
+                    <button type="button" class="indicator btn btn-square border-0 bg-base-200" aria-label="Avisos">
+                      <span class="indicator-item badge badge-primary badge-xs"></span>
+                      <svg class="size-4" aria-hidden="true"><use href="#i-bell"></use></svg>
+                      <span class="sr-only">Hay avisos</span>
+                    </button>
+                    <span class="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">PR</span>
+                  </div>
+                  <div role="tablist" class="tabs tabs-border" data-pick="tab">
+                    <button type="button" role="tab" class="tab tab-active" data-item aria-selected="true">Asistencia</button>
+                    <button type="button" role="tab" class="tab" data-item aria-selected="false">Alumnos</button>
+                    <button type="button" role="tab" class="tab" data-item aria-selected="false">Calendario</button>
+                    <button type="button" role="tab" class="tab" data-item aria-selected="false">Settings</button>
+                  </div>
+                  <div class="flex flex-wrap gap-2" data-pick="soft">
+                    <button type="button" class="btn btn-sm rounded-full border-0 bg-primary/10 text-primary" data-item aria-pressed="true">Todos</button>
+                    <button type="button" class="btn btn-sm rounded-full border-0 bg-base-200" data-item aria-pressed="false">Pendientes</button>
+                    <button type="button" class="btn btn-sm rounded-full border-0 bg-base-200" data-item aria-pressed="false">Incidencias</button>
+                    <span class="inline-flex items-center gap-1 rounded-selector bg-base-200 py-1 pr-1 pl-3 text-sm">
+                      Jueves
+                      <button type="button" class="btn btn-ghost btn-xs btn-square" data-quitar aria-label="Quitar Jueves">
+                        <svg class="size-3" aria-hidden="true"><use href="#i-x"></use></svg>
+                      </button>
+                    </span>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-3">
+                    <div class="join" data-pick="page">
+                      <button type="button" class="btn btn-sm join-item border-0 bg-base-200">Anterior</button>
+                      <button type="button" class="btn btn-sm join-item border-0 bg-primary/10 text-primary" data-item aria-current="page">1</button>
+                      <button type="button" class="btn btn-sm join-item border-0 bg-base-200" data-item>2</button>
+                      <button type="button" class="btn btn-sm join-item border-0 bg-base-200" data-item>3</button>
+                      <span class="btn btn-sm join-item pointer-events-none border-0 bg-base-200">…</span>
+                      <button type="button" class="btn btn-sm join-item border-0 bg-base-200" data-item>12</button>
+                      <button type="button" class="btn btn-sm join-item border-0 bg-base-200">Siguiente</button>
+                    </div>
+                    <span class="text-meta text-base-content/60 tabular-nums">1–20 de 240</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card max-w-sm bg-base-100 shadow-sm">
+                <div class="card-body gap-4 p-4">
+                  <div class="flex items-center justify-between">
+                    <button type="button" class="btn btn-square btn-sm border-0 bg-base-200" aria-label="Menú">
+                      <svg class="size-4" aria-hidden="true"><use href="#i-list"></use></svg>
+                    </button>
+                    <span class="text-sm font-semibold">Hoy</span>
+                    <span class="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">LF</span>
+                  </div>
+                  <div class="h-16 rounded-box bg-base-200"></div>
+                  <nav class="flex items-end justify-between gap-2" aria-label="Alumno">
+                    <a class="flex flex-col items-center gap-1 text-primary" href="#navegacion" aria-current="page">
+                      <svg class="size-4.5" aria-hidden="true"><use href="#i-house"></use></svg>
+                      <span class="text-xs">Dashboard</span>
+                    </a>
+                    <a class="flex flex-col items-center gap-1 text-base-content/60" href="#navegacion">
+                      <svg class="size-4.5" aria-hidden="true"><use href="#i-calendar-blank"></use></svg>
+                      <span class="text-xs">Mis cursos</span>
+                    </a>
+                    <a class="flex flex-col items-center gap-1 text-base-content/60" href="#navegacion">
+                      <svg class="size-4.5" aria-hidden="true"><use href="#i-file"></use></svg>
+                      <span class="text-xs">Justificantes</span>
+                    </a>
+                    <a class="flex flex-col items-center gap-1 text-base-content/60" href="#navegacion">
+                      <svg class="size-4.5" aria-hidden="true"><use href="#i-game-controller"></use></svg>
+                      <span class="text-xs">Juegos</span>
+                    </a>
+                    <a class="flex flex-col items-center gap-1 text-base-content/60" href="#ajustes">
+                      <svg class="size-4.5" aria-hidden="true"><use href="#i-gear"></use></svg>
+                      <span class="text-xs">Settings</span>
+                    </a>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div id="g3" class="scroll-mt-6">
+          <p class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Datos</p>
+        </div>
+
+        <section id="tablas-y-filas" class="flex scroll-mt-6 flex-col gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Tablas y filas</h2>
+          <div class="card min-w-0 w-full bg-base-100 shadow-sm">
+            <div class="card-body min-w-0 gap-4 p-4">
+              <div class="flex items-center gap-3">
+                <h3 class="text-base font-semibold">Estudiantes</h3>
+                <span class="text-meta text-base-content/60 tabular-nums">24</span>
+                <button type="button" class="btn btn-ghost btn-sm ml-auto">Ver todos</button>
+              </div>
+              <div class="min-w-0 overflow-x-auto">
+                <table class="table w-max min-w-full">
+                  <thead>
+                    <tr>
+                      <th>
+                        <label class="sr-only" for="sel-all">Seleccionar todos</label>
+                        <input id="sel-all" class="checkbox" type="checkbox">
+                      </th>
+                      <th>Estudiante</th>
+                      <th>Entrada</th>
+                      <th>Estado</th>
+                      <th>Asistencia</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr class="bg-primary/10">
+                      <td><input class="checkbox" type="checkbox" data-row checked aria-label="Seleccionar a Lucía Fernández"></td>
+                      <td>
+                        <div class="flex items-center gap-3">
+                          <span class="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">LF</span>
+                          <span class="flex flex-col">
+                            <span class="text-sm font-medium">Lucía Fernández</span>
+                            <span class="text-meta text-base-content/60">lucia.fernandez@uni.es</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="tabular-nums">09:02</td>
+                      <td><span class="badge badge-soft badge-success">Presente</span></td>
+                      <td>
+                        <div class="flex items-center gap-2">
+                          <progress class="progress progress-success w-16" value="96" max="100" aria-label="96 %"></progress>
+                          <span class="text-sm whitespace-nowrap tabular-nums">96 %</span>
+                        </div>
+                      </td>
+                      <td><button type="button" class="btn btn-sm border-0 bg-base-200">Cambiar</button></td>
+                    </tr>
+                    <tr>
+                      <td><input class="checkbox" type="checkbox" data-row aria-label="Seleccionar a Mateo García"></td>
+                      <td>
+                        <div class="flex items-center gap-3">
+                          <span class="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">MG</span>
+                          <span class="flex flex-col">
+                            <span class="text-sm font-medium">Mateo García</span>
+                            <span class="text-meta text-base-content/60">mateo.garcia@uni.es</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="tabular-nums">09:18</td>
+                      <td><span class="badge badge-soft badge-warning">Retraso</span></td>
+                      <td>
+                        <div class="flex items-center gap-2">
+                          <progress class="progress progress-warning w-16" value="71" max="100" aria-label="71 %"></progress>
+                          <span class="text-sm whitespace-nowrap tabular-nums">71 %</span>
+                        </div>
+                      </td>
+                      <td><button type="button" class="btn btn-sm border-0 bg-base-200">Cambiar</button></td>
+                    </tr>
+                    <tr>
+                      <td><input class="checkbox" type="checkbox" data-row aria-label="Seleccionar a Valentina Ruiz"></td>
+                      <td>
+                        <div class="flex items-center gap-3">
+                          <span class="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">VR</span>
+                          <span class="flex flex-col">
+                            <span class="text-sm font-medium">Valentina Ruiz</span>
+                            <span class="text-meta text-base-content/60">valentina.ruiz@uni.es</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td>—</td>
+                      <td><span class="badge badge-soft badge-neutral">Pendiente</span></td>
+                      <td>
+                        <div class="flex items-center gap-2">
+                          <progress class="progress progress-success w-16" value="88" max="100" aria-label="88 %"></progress>
+                          <span class="text-sm whitespace-nowrap tabular-nums">88 %</span>
+                        </div>
+                      </td>
+                      <td><button type="button" class="btn btn-sm btn-primary">Marcar</button></td>
+                    </tr>
+                    <tr>
+                      <td><input class="checkbox" type="checkbox" data-row aria-label="Seleccionar a Diego Morales"></td>
+                      <td>
+                        <div class="flex items-center gap-3">
+                          <span class="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">DM</span>
+                          <span class="flex flex-col">
+                            <span class="text-sm font-medium">Diego Morales</span>
+                            <span class="text-meta text-base-content/60">diego.morales@uni.es</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td>—</td>
+                      <td><span class="badge badge-soft badge-error">Ausente</span></td>
+                      <td>
+                        <div class="flex items-center gap-2">
+                          <progress class="progress progress-error w-16" value="52" max="100" aria-label="52 %"></progress>
+                          <span class="text-sm whitespace-nowrap tabular-nums">52 %</span>
+                        </div>
+                      </td>
+                      <td><button type="button" class="btn btn-sm border-0 bg-base-200">Cambiar</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div id="bulk" class="flex flex-wrap items-center gap-3 rounded-box bg-base-content px-4 py-3 text-base-100">
+                <span id="bulk-label" class="text-sm font-medium">1 seleccionado</span>
+                <button type="button" class="btn btn-sm btn-primary">Marcar presente</button>
+                <button type="button" class="btn btn-sm border-0 bg-base-100 text-base-content">Exportar</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="tarjetas" class="flex scroll-mt-6 flex-col gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Tarjetas</h2>
+          <div class="grid gap-4 lg:grid-cols-2">
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body gap-4 p-4">
+                <div class="flex items-start justify-between gap-3">
+                  <h3 class="text-xl font-semibold">Historia del Arte II</h3>
+                  <span class="badge badge-soft badge-success gap-2">
+                    <span class="size-1.5 animate-pulse rounded-full bg-success" aria-hidden="true"></span>
+                    Abierta
+                  </span>
+                </div>
+                <p class="text-meta text-base-content/60">10/11/2026 · 09:00–10:30 · Aula 2.4</p>
+                <div class="flex items-center gap-3">
+                  <span class="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">LF</span>
+                  <span class="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">MG</span>
+                  <span class="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">VR</span>
+                  <span class="flex size-8 items-center justify-center rounded-full bg-base-200 text-xs">+21</span>
+                </div>
+                <div class="flex flex-col gap-2">
+                  <span class="text-sm tabular-nums">18 / 24 presentes</span>
+                  <progress class="progress progress-success w-full" value="18" max="24" aria-label="18 de 24 presentes"></progress>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <button type="button" class="btn border-0 bg-base-200">Exportar</button>
+                  <button type="button" class="btn border-0 bg-base-200">Cerrar sesión</button>
+                </div>
+              </div>
+            </div>
+            <div class="grid gap-4 sm:grid-cols-3">
+              <div class="card bg-base-100 shadow-sm">
+                <div class="card-body gap-2 p-4">
+                  <span class="text-meta text-base-content/60">Asistencia</span>
+                  <span class="text-2xl font-semibold tabular-nums">92 %</span>
+                  <span class="text-sm tabular-nums">3 %</span>
+                </div>
+              </div>
+              <div class="card bg-base-100 shadow-sm">
+                <div class="card-body gap-2 p-4">
+                  <span class="text-meta text-base-content/60">Retrasos</span>
+                  <span class="text-2xl font-semibold tabular-nums">7</span>
+                  <span class="text-sm tabular-nums">2</span>
+                </div>
+              </div>
+              <div class="card bg-base-100 shadow-sm">
+                <div class="card-body gap-2 p-4">
+                  <span class="text-meta text-base-content/60">En riesgo</span>
+                  <span class="text-2xl font-semibold tabular-nums">3</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card bg-base-100 shadow-sm">
+            <div class="card-body gap-3 p-4">
+              <h3 class="text-sm font-semibold">Esta semana</h3>
+              <div class="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                <div class="flex flex-col gap-1 rounded-box bg-success/10 p-3">
+                  <span class="text-xs text-base-content/60">Lun</span>
+                  <span class="text-sm font-medium">Historia</span>
+                  <span class="text-meta tabular-nums">09:00</span>
+                </div>
+                <div class="flex flex-col gap-1 rounded-box bg-primary/10 p-3 text-primary">
+                  <span class="text-xs">Mar</span>
+                  <span class="text-sm font-medium">Historia</span>
+                  <span class="text-meta tabular-nums">09:00</span>
+                </div>
+                <div class="flex flex-col gap-1 rounded-box bg-base-200 p-3">
+                  <span class="text-xs text-base-content/60">Mié</span>
+                </div>
+                <div class="flex flex-col gap-1 rounded-box bg-info/10 p-3">
+                  <span class="text-xs text-base-content/60">Jue</span>
+                  <span class="text-sm font-medium">Estética</span>
+                  <span class="text-meta tabular-nums">12:00</span>
+                </div>
+                <div class="flex flex-col gap-1 rounded-box bg-error/10 p-3">
+                  <span class="text-xs text-base-content/60">Vie</span>
+                  <span class="text-sm font-medium">Seminario</span>
+                  <span class="text-sm text-error">Cancelada</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="calendario-y-datos" class="flex scroll-mt-6 flex-col gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Calendario y datos</h2>
+          <div class="grid gap-4 lg:grid-cols-3">
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body gap-3 p-4">
+                <div class="flex items-center justify-between gap-2">
+                  <h3 class="text-sm font-semibold">Noviembre 2026</h3>
+                  <div class="flex gap-2">
+                    <button type="button" class="btn btn-square btn-sm border-0 bg-base-200" aria-label="Mes anterior">
+                      <svg class="size-4" aria-hidden="true"><use href="#i-caret-left"></use></svg>
+                    </button>
+                    <button type="button" class="btn btn-square btn-sm border-0 bg-base-200" aria-label="Mes siguiente">
+                      <svg class="size-4" aria-hidden="true"><use href="#i-caret-right"></use></svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-base-content/60">
+                  <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
+                </div>
+                <div class="grid grid-cols-7 gap-1">
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums text-base-content/60">28</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums text-base-content/60">29</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums text-base-content/60">30</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">1</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">2</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">3<span class="absolute bottom-1 size-1 rounded-full bg-primary" aria-hidden="true"></span></button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">4</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">5<span class="absolute bottom-1 size-1 rounded-full bg-primary" aria-hidden="true"></span></button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">6</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">7</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">8</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">9</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums bg-primary text-primary-content" aria-current="date">10</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">11</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">12<span class="absolute bottom-1 size-1 rounded-full bg-primary" aria-hidden="true"></span></button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">13</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">14</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">15</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">16</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">17<span class="absolute bottom-1 size-1 rounded-full bg-primary" aria-hidden="true"></span></button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">18</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">19<span class="absolute bottom-1 size-1 rounded-full bg-primary" aria-hidden="true"></span></button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">20</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">21</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">22</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">23</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">24<span class="absolute bottom-1 size-1 rounded-full bg-primary" aria-hidden="true"></span></button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">25</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">26<span class="absolute bottom-1 size-1 rounded-full bg-primary" aria-hidden="true"></span></button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">27</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">28</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">29</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums">30</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums text-base-content/60">1</button>
+<button type="button" class="relative flex h-10 items-center justify-center rounded-field text-sm tabular-nums text-base-content/60">2</button>
+</div>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body gap-4 p-4">
+                <h3 class="text-sm font-semibold">Asistencia por semana</h3>
+                <div class="flex h-32 items-end gap-2" role="img" aria-label="Asistencia por semana. S8 es esta semana.">
+                  <div class="h-[62%] flex-1 rounded-t-box bg-primary/40"></div>
+                  <div class="h-[70%] flex-1 rounded-t-box bg-primary/40"></div>
+                  <div class="h-[84%] flex-1 rounded-t-box bg-primary/40"></div>
+                  <div class="h-[78%] flex-1 rounded-t-box bg-primary/40"></div>
+                  <div class="h-[91%] flex-1 rounded-t-box bg-primary/40"></div>
+                  <div class="h-[88%] flex-1 rounded-t-box bg-primary/40"></div>
+                  <div class="h-[95%] flex-1 rounded-t-box bg-primary/40"></div>
+                  <div class="h-[92%] flex-1 rounded-t-box bg-primary"></div>
+                </div>
+                <div class="flex gap-2 text-center text-xs text-base-content/60">
+                  <span class="flex-1">S1</span><span class="flex-1">S2</span><span class="flex-1">S3</span><span class="flex-1">S4</span><span class="flex-1">S5</span><span class="flex-1">S6</span><span class="flex-1">S7</span><span class="flex-1">S8</span>
+                </div>
+                <div class="flex flex-wrap gap-4 text-sm">
+                  <span class="inline-flex items-center gap-2"><span class="size-2 rounded-full bg-primary"></span>Esta semana</span>
+                  <span class="inline-flex items-center gap-2"><span class="size-2 rounded-full bg-primary/40"></span>Anteriores</span>
+                </div>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body gap-4 p-4">
+                <span class="text-2xl font-semibold tabular-nums">72 %</span>
+                <div class="flex h-3 overflow-hidden rounded-selector" role="img" aria-label="72 % presente, 10 % retraso, 10 % ausente, 8 % pendiente">
+                  <div class="h-full w-[72%] bg-success"></div>
+                  <div class="h-full w-[10%] bg-warning"></div>
+                  <div class="h-full w-[10%] bg-error"></div>
+                  <div class="h-full w-[8%] bg-neutral"></div>
+                </div>
+                <ul class="flex flex-col gap-2 text-sm">
+                  <li class="flex items-center justify-between gap-3"><span class="inline-flex items-center gap-2"><span class="size-2 rounded-full bg-success"></span>Presente</span><span class="tabular-nums">72 %</span></li>
+                  <li class="flex items-center justify-between gap-3"><span class="inline-flex items-center gap-2"><span class="size-2 rounded-full bg-warning"></span>Retraso</span><span class="tabular-nums">10 %</span></li>
+                  <li class="flex items-center justify-between gap-3"><span class="inline-flex items-center gap-2"><span class="size-2 rounded-full bg-error"></span>Ausente</span><span class="tabular-nums">10 %</span></li>
+                  <li class="flex items-center justify-between gap-3"><span class="inline-flex items-center gap-2"><span class="size-2 rounded-full bg-neutral"></span>Pendiente</span><span class="tabular-nums">8 %</span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="cursos-y-personas" class="flex scroll-mt-6 flex-col gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Cursos y personas</h2>
+          <div class="grid gap-4 lg:grid-cols-3">
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body gap-4 p-4">
+                <div class="flex items-center gap-3">
+                  <span class="flex size-12 items-center justify-center rounded-box bg-primary/10 text-sm font-semibold text-primary">HA</span>
+                  <span class="flex flex-col">
+                    <span class="text-base font-semibold">Historia del Arte II</span>
+                    <span class="text-meta text-base-content/60">Martes · 09:00</span>
+                  </span>
+                </div>
+                <div class="flex justify-between gap-4 text-sm">
+                  <span class="flex flex-col"><span class="text-meta text-base-content/60">Alumnos</span><span class="tabular-nums">24</span></span>
+                  <span class="flex flex-col"><span class="text-meta text-base-content/60">Asistencia</span><span class="tabular-nums">92 %</span></span>
+                </div>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body gap-4 p-4">
+                <div class="flex items-center gap-3">
+                  <span class="flex size-12 items-center justify-center rounded-box bg-primary/10 text-sm font-semibold text-primary">EC</span>
+                  <span class="flex flex-col">
+                    <span class="text-base font-semibold">Estética Contemporánea</span>
+                    <span class="text-meta text-base-content/60">Jueves · 12:00</span>
+                  </span>
+                </div>
+                <div class="flex justify-between gap-4 text-sm">
+                  <span class="flex flex-col"><span class="text-meta text-base-content/60">Alumnos</span><span class="tabular-nums">18</span></span>
+                  <span class="flex flex-col"><span class="text-meta text-base-content/60">Asistencia</span><span class="tabular-nums">87 %</span></span>
+                </div>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body gap-4 p-4">
+                <div class="flex items-center gap-3">
+                  <span class="flex size-12 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">LF</span>
+                  <span class="flex flex-col">
+                    <span class="text-base font-semibold">Lucía Fernández</span>
+                    <span class="text-meta text-base-content/60">lucia.fernandez@uni.es</span>
+                  </span>
+                </div>
+                <span class="badge badge-soft badge-success w-fit">Riesgo bajo</span>
+                <div class="grid grid-cols-3 gap-2 text-sm">
+                  <span class="flex flex-col"><span class="text-base font-semibold tabular-nums">96 %</span><span class="text-meta text-base-content/60">Asistencia</span></span>
+                  <span class="flex flex-col"><span class="text-base font-semibold tabular-nums">21</span><span class="text-meta text-base-content/60">Racha</span></span>
+                  <span class="flex flex-col"><span class="text-base font-semibold tabular-nums">1</span><span class="text-meta text-base-content/60">Justificantes</span></span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <button type="button" class="btn btn-primary btn-sm">Ver historial</button>
+                  <button type="button" class="btn btn-sm border-0 bg-base-200">Enviar aviso</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div id="g4" class="flex scroll-mt-6 items-baseline justify-between gap-4">
+          <p class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Flujos</p>
+          <p class="text-meta text-base-content/60">Ejemplos</p>
+        </div>
+
+        <section id="asistencia" class="flex scroll-mt-6 flex-col gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Asistencia</h2>
+          <div class="grid gap-4 lg:grid-cols-2">
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body gap-4 p-4">
+                <div class="flex items-center justify-between gap-3">
+                  <h3 class="text-base font-semibold">Registrar asistencia</h3>
+                  <span class="badge badge-soft badge-success gap-2">
+                    <span class="size-1.5 animate-pulse rounded-full bg-success" aria-hidden="true"></span>
+                    Abierta
+                  </span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <input class="input w-12 border-0 bg-primary/10 text-center text-xl tabular-nums" value="4" maxlength="1" inputmode="numeric" aria-label="Dígito 1">
+                  <input class="input w-12 border-0 bg-primary/10 text-center text-xl tabular-nums" value="8" maxlength="1" inputmode="numeric" aria-label="Dígito 2">
+                  <input class="input w-12 border-0 bg-primary/10 text-center text-xl tabular-nums" value="2" maxlength="1" inputmode="numeric" aria-label="Dígito 3">
+                  <input class="input w-12 border-0 bg-base-200 text-center text-xl tabular-nums" maxlength="1" inputmode="numeric" aria-label="Dígito 4">
+                  <input class="input w-12 border-0 bg-base-200 text-center text-xl tabular-nums" maxlength="1" inputmode="numeric" aria-label="Dígito 5">
+                  <input class="input w-12 border-0 bg-base-200 text-center text-xl tabular-nums" maxlength="1" inputmode="numeric" aria-label="Dígito 6">
+                </div>
+                <button type="button" class="btn btn-primary w-full">Confirmar presencia</button>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body gap-4 p-4">
+                <h3 class="text-base font-semibold">Sesión en curso</h3>
+                <p class="text-2xl font-semibold tabular-nums">00:42:18</p>
+                <progress class="progress progress-primary w-full" value="47" max="100" aria-label="47 %"></progress>
+                <div class="flex flex-wrap gap-2">
+                  <button type="button" class="btn border-0 bg-base-200">Pausar</button>
+                  <button type="button" class="btn btn-primary">Comprobación ahora</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="alumno" class="flex scroll-mt-6 flex-col gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Alumno</h2>
+          <div class="grid gap-4 lg:grid-cols-2">
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body gap-4 p-4">
+                <h3 class="text-base font-semibold">Avisar al profesor</h3>
+                <div class="join w-full bg-base-200 p-1" data-pick="segment">
+                  <button type="button" class="btn join-item flex-1 border-0 bg-base-100 shadow-sm" data-item aria-pressed="true">Llegaré tarde</button>
+                  <button type="button" class="btn join-item flex-1 border-0 bg-transparent text-base-content/60" data-item aria-pressed="false">No asistiré</button>
+                </div>
+                <div class="flex flex-wrap gap-2" data-pick="soft">
+                  <button type="button" class="btn btn-sm rounded-full border-0 bg-base-200" data-item aria-pressed="false">5 min</button>
+                  <button type="button" class="btn btn-sm rounded-full border-0 bg-primary/10 text-primary" data-item aria-pressed="true">10 min</button>
+                  <button type="button" class="btn btn-sm rounded-full border-0 bg-base-200" data-item aria-pressed="false">15 min</button>
+                  <button type="button" class="btn btn-sm rounded-full border-0 bg-base-200" data-item aria-pressed="false">30 min</button>
+                </div>
+                <button type="button" class="btn btn-primary">Enviar aviso</button>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body gap-4 p-4">
+                <h3 class="text-base font-semibold">Mis justificantes</h3>
+                <div class="flex items-center justify-between gap-3">
+                  <span class="flex flex-col">
+                    <span class="text-sm font-medium">Seminario de Tesis</span>
+                    <span class="text-meta text-base-content/60">05/11/2026 · Ausente · justificante_medico.pdf</span>
+                  </span>
+                  <span class="badge badge-soft badge-warning">Pendiente de revisión</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="acceso-y-onboarding" class="flex scroll-mt-6 flex-col gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Acceso y onboarding</h2>
+          <div class="grid gap-4 lg:grid-cols-2">
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body gap-4 p-4">
+                <img data-logo="card" src="assets/logo-noche-card.svg" alt="aTempo" class="h-7 w-auto self-start">
+                <div>
+                  <h3 class="text-xl font-semibold">Iniciar sesión</h3>
+                  <p class="text-meta text-base-content/60">UCM</p>
+                </div>
+                <label class="flex flex-col gap-2">
+                  <span class="text-sm font-medium">Correo institucional</span>
+                  <input class="input border-0 bg-base-200" type="email" placeholder="nombre@ucm.es">
+                </label>
+                <label class="flex flex-col gap-2">
+                  <span class="text-sm font-medium">Contraseña</span>
+                  <div class="join w-full">
+                    <input id="clave" class="input join-item flex-1 border-0 bg-base-200" type="password" value="atempo-2026">
+                    <button type="button" id="mostrar" class="btn join-item border-0 bg-base-200">Mostrar</button>
+                  </div>
+                </label>
+                <button type="button" class="btn btn-primary w-full">Entrar</button>
+              </div>
+            </div>
+            <div class="flex flex-col gap-4">
+              <div class="card bg-base-100 shadow-sm">
+                <div class="card-body p-4">
+                  <ul class="steps steps-vertical w-full md:steps-horizontal">
+                    <li class="step step-primary">Organización</li>
+                    <li class="step step-primary font-semibold">Cursos</li>
+                    <li class="step">Profesores</li>
+                    <li class="step">Alumnos</li>
+                  </ul>
+                </div>
+              </div>
+              <div class="card bg-base-100 shadow-sm">
+                <div class="card-body gap-4 p-4">
+                  <h3 class="text-base font-semibold">Importa tus cursos</h3>
+                  <div class="flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-primary">
+                      <svg class="size-4" aria-hidden="true"><use href="#i-upload-simple"></use></svg>
+                      Subir CSV
+                    </button>
+                    <button type="button" class="btn border-0 bg-base-200">Conectar Google Meet</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="ajustes" class="flex scroll-mt-6 flex-col gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Settings</h2>
+          <div class="card bg-base-100 shadow-sm">
+            <div class="card-body gap-4 p-4">
+              <label class="flex items-center justify-between gap-4">
+                <span class="flex flex-col">
+                  <span class="text-sm font-medium">Notificaciones por correo</span>
+                  <span class="text-meta text-base-content/60">Resumen diario · 18:00</span>
+                </span>
+                <input class="toggle toggle-primary" type="checkbox" checked>
+              </label>
+              <label class="flex items-center justify-between gap-4">
+                <span class="flex flex-col">
+                  <span class="text-sm font-medium">Recordatorio antes de clase</span>
+                  <span class="text-meta text-base-content/60">10 minutos antes</span>
+                </span>
+                <input class="toggle toggle-primary" type="checkbox" checked>
+              </label>
+              <label class="flex items-center justify-between gap-4">
+                <span class="flex flex-col">
+                  <span class="text-sm font-medium">Cierre automático de sesión</span>
+                  <span class="text-meta text-base-content/60">Al terminar la hora</span>
+                </span>
+                <input class="toggle toggle-primary" type="checkbox">
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <section id="exportacion-y-auditoria" class="flex scroll-mt-6 flex-col gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Exportación y auditoría</h2>
+          <div class="grid gap-4 lg:grid-cols-2">
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body gap-4 p-4">
+                <h3 class="text-base font-semibold">Exportar asistencia</h3>
+                <span class="badge badge-soft badge-neutral w-fit">PDF</span>
+                <div class="grid gap-4 sm:grid-cols-2">
+                  <label class="flex flex-col gap-2">
+                    <span class="text-sm font-medium">Desde</span>
+                    <input class="input border-0 bg-base-200 tabular-nums" value="01/09/2026">
+                  </label>
+                  <label class="flex flex-col gap-2">
+                    <span class="text-sm font-medium">Hasta</span>
+                    <input class="input border-0 bg-base-200 tabular-nums" value="10/11/2026">
+                  </label>
+                </div>
+                <p class="font-mono text-meta text-base-content/60">SHA-256 3f9a1c…c21e</p>
+                <div class="flex flex-wrap gap-2">
+                  <button type="button" class="btn btn-ghost">Cancelar</button>
+                  <button type="button" class="btn btn-primary">Exportar PDF</button>
+                </div>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body gap-4 p-4">
+                <div class="flex items-center justify-between gap-3">
+                  <h3 class="text-base font-semibold">Historial de cambios</h3>
+                  <button type="button" class="btn btn-sm border-0 bg-base-200">Exportar</button>
+                </div>
+                <div class="flex items-start gap-3">
+                  <span class="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">PR</span>
+                  <span class="flex flex-1 flex-col">
+                    <span class="text-sm"><span class="font-medium">Paula Rivas</span> corrigió a Diego Morales · Ausente → Presente</span>
+                  </span>
+                  <span class="text-meta text-base-content/60 tabular-nums">09:40</span>
+                </div>
+                <div class="flex items-start gap-3">
+                  <span class="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">PR</span>
+                  <span class="flex flex-1 flex-col">
+                    <span class="text-sm"><span class="font-medium">Paula Rivas</span> abrió la sesión</span>
+                  </span>
+                  <span class="text-meta text-base-content/60 tabular-nums">09:00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div id="g5" class="scroll-mt-6">
+          <p class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Feedback</p>
+        </div>
+
+        <section id="dialogos" class="flex scroll-mt-6 flex-col gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Diálogos</h2>
+          <div class="grid gap-4 lg:grid-cols-3">
+            <div class="card bg-base-100 shadow-sm" role="dialog" aria-labelledby="dlg-corregir">
+              <div class="card-body gap-4 p-4">
+                <h3 id="dlg-corregir" class="text-base font-semibold">Corregir asistencia</h3>
+                <p class="text-sm">Presente → Retraso</p>
+                <div class="flex flex-col gap-2">
+                  <span class="text-sm font-medium">Motivo</span>
+                  <p class="text-sm text-base-content/60">Llegó a las 09:18, se registró manualmente a las 09:00 por error.</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <button type="button" class="btn btn-ghost">Cancelar</button>
+                  <button type="button" class="btn btn-primary">Guardar corrección</button>
+                </div>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm" role="dialog" aria-labelledby="dlg-cerrar">
+              <div class="card-body gap-4 p-4">
+                <h3 id="dlg-cerrar" class="text-base font-semibold">¿Cerrar la sesión?</h3>
+                <p class="text-sm">3 pendientes pasarán a ausentes.</p>
+                <div class="flex flex-wrap gap-2">
+                  <button type="button" class="btn btn-ghost">Volver</button>
+                  <button type="button" class="btn btn-error">Cerrar sesión</button>
+                </div>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body gap-3 p-4">
+                <h3 class="text-base font-semibold">Asistente</h3>
+                <div class="chat chat-end">
+                  <div class="chat-bubble chat-bubble-primary text-sm">¿Cuántas faltas tiene Diego este mes?</div>
+                </div>
+                <div class="chat chat-start">
+                  <div class="chat-bubble bg-base-200 text-sm text-base-content">4 ausencias, 3 sin justificar · 52 %</div>
+                </div>
+                <label class="flex flex-col gap-2">
+                  <span class="text-sm font-medium">Pregunta</span>
+                  <input class="input border-0 bg-base-200" placeholder="Pregunta…">
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="carga-y-vacio" class="flex scroll-mt-6 flex-col gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Carga y vacío</h2>
+          <div class="grid gap-4 lg:grid-cols-2">
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body gap-3 p-4">
+                <div class="skeleton h-14 w-full"></div>
+                <div class="skeleton h-14 w-full"></div>
+                <div class="skeleton h-14 w-full"></div>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body items-start gap-4 p-4">
+                <p class="text-base-content/60">Sin sesiones hoy</p>
+                <button type="button" class="btn btn-primary">Ver calendario</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="errores" class="flex scroll-mt-6 flex-col gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Errores</h2>
+          <div class="grid gap-4 lg:grid-cols-2">
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body items-start gap-4 p-4">
+                <span class="flex size-12 items-center justify-center rounded-box bg-error/10 text-error">
+                  <svg class="size-6" aria-hidden="true"><use href="#i-lock-simple"></use></svg>
+                </span>
+                <p class="text-base font-semibold">Sin permiso para ver esta página</p>
+                <a class="btn btn-primary" href="#color">Volver al inicio</a>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body items-start gap-2 p-4">
+                <p class="text-2xl font-semibold tabular-nums">404</p>
+                <p class="text-base-content/60">Esta página no existe</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div id="g6" class="scroll-mt-6">
+          <p class="text-xs font-semibold uppercase tracking-widest text-base-content/60">Código</p>
+        </div>
+
+        <section id="daisyui" class="flex scroll-mt-6 flex-col gap-4">
+          <h2 class="text-xs font-semibold uppercase tracking-widest text-base-content/60">daisyUI</h2>
+          <div class="card bg-base-100 shadow-sm">
+            <div class="card-body gap-4 p-4">
+              <p class="text-sm">El tema está en <span class="font-medium">theme.css</span>. Una pantalla lo importa una vez. Los dos temas, las fuentes y la transición al cambiar viven ahí.</p>
+              <pre class="overflow-x-auto rounded-box bg-base-300 p-4 text-meta"><code>@import "@atempo/design-system/theme.css";
+
+&lt;html data-theme="atempo-oscuro"&gt;</code></pre>
+              <div class="flex flex-wrap items-center gap-3">
+                <button type="button" class="btn btn-primary">Abrir sesión</button>
+                <span class="badge badge-soft badge-success">Presente</span>
+                <span class="badge badge-soft badge-secondary">Justificada</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="drawer-side z-40">
+      <label for="guia-nav" aria-label="Cerrar menú" class="drawer-overlay"></label>
+      <aside class="flex min-h-full w-60 flex-col gap-4 overflow-y-auto bg-base-200 p-4">
+        <img data-logo="page" src="assets/logo-noche-page.svg" alt="aTempo" class="h-8 w-auto self-start">
+        <div class="dropdown dropdown-bottom w-full">
+          <button type="button" tabindex="0" class="btn w-full justify-between border-0 bg-base-100">
+            <span class="flex items-center gap-2">
+              <span class="size-3 rounded-full bg-primary" aria-hidden="true"></span>
+              <span data-theme-label>Oscuro índigo</span>
+            </span>
+            <svg class="size-4" aria-hidden="true"><use href="#i-caret-down"></use></svg>
+          </button>
+          <ul tabindex="0" class="dropdown-content menu z-30 mt-2 w-full rounded-box bg-base-100 p-2 shadow-sm">
+            <li>
+              <button type="button" data-set-theme="atempo-oscuro" class="flex items-start gap-2">
+                <span class="mt-1 size-3 shrink-0 rounded-full bg-primary" aria-hidden="true"></span>
+                <span class="flex flex-col items-start">
+                  <span>Oscuro índigo</span>
+                  <span class="text-meta font-normal text-base-content/60">Fondo carbón · acento violeta</span>
+                </span>
+              </button>
+            </li>
+            <li>
+              <button type="button" data-set-theme="atempo-claro" class="flex items-start gap-2">
+                <span class="mt-1 size-3 shrink-0 rounded-full bg-primary" aria-hidden="true"></span>
+                <span class="flex flex-col items-start">
+                  <span>Claro índigo</span>
+                  <span class="text-meta font-normal text-base-content/60">Fondo gris frío · acento azul eléctrico</span>
+                </span>
+              </button>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <h1 class="text-base font-semibold">Sistema de diseño</h1>
+          <p class="text-meta text-base-content/60">Datos de ejemplo</p>
+        </div>
+        <nav class="flex flex-col gap-4" aria-label="Secciones" id="guia-menu">
+          <div class="flex flex-col gap-1">
+            <a class="px-3 text-xs font-semibold uppercase tracking-widest text-base-content/60" href="#g0">Fundamentos</a>
+            <a class="rounded-field px-3 py-1 text-sm" href="#color">Color</a>
+            <a class="rounded-field px-3 py-1 text-sm" href="#tipografia">Tipografía</a>
+            <a class="rounded-field px-3 py-1 text-sm" href="#espacio">Espacio</a>
+            <a class="rounded-field px-3 py-1 text-sm" href="#estados">Estados</a>
+          </div>
+          <div class="flex flex-col gap-1">
+            <a class="px-3 text-xs font-semibold uppercase tracking-widest text-base-content/60" href="#g1">Controles</a>
+            <a class="rounded-field px-3 py-1 text-sm" href="#botones">Botones</a>
+            <a class="rounded-field px-3 py-1 text-sm" href="#formularios">Formularios</a>
+            <a class="rounded-field px-3 py-1 text-sm" href="#menus-y-ayudas">Menús y ayudas</a>
+          </div>
+          <div class="flex flex-col gap-1">
+            <a class="px-3 text-xs font-semibold uppercase tracking-widest text-base-content/60" href="#g2">Navegación</a>
+            <a class="rounded-field px-3 py-1 text-sm" href="#navegacion">Navegación</a>
+          </div>
+          <div class="flex flex-col gap-1">
+            <a class="px-3 text-xs font-semibold uppercase tracking-widest text-base-content/60" href="#g3">Datos</a>
+            <a class="rounded-field px-3 py-1 text-sm" href="#tablas-y-filas">Tablas y filas</a>
+            <a class="rounded-field px-3 py-1 text-sm" href="#tarjetas">Tarjetas</a>
+            <a class="rounded-field px-3 py-1 text-sm" href="#calendario-y-datos">Calendario y datos</a>
+            <a class="rounded-field px-3 py-1 text-sm" href="#cursos-y-personas">Cursos y personas</a>
+          </div>
+          <div class="flex flex-col gap-1">
+            <a class="px-3 text-xs font-semibold uppercase tracking-widest text-base-content/60" href="#g4">Flujos</a>
+            <a class="rounded-field px-3 py-1 text-sm" href="#asistencia">Asistencia</a>
+            <a class="rounded-field px-3 py-1 text-sm" href="#alumno">Alumno</a>
+            <a class="rounded-field px-3 py-1 text-sm" href="#acceso-y-onboarding">Acceso y onboarding</a>
+            <a class="rounded-field px-3 py-1 text-sm" href="#ajustes">Settings</a>
+            <a class="rounded-field px-3 py-1 text-sm" href="#exportacion-y-auditoria">Exportación y auditoría</a>
+          </div>
+          <div class="flex flex-col gap-1">
+            <a class="px-3 text-xs font-semibold uppercase tracking-widest text-base-content/60" href="#g5">Feedback</a>
+            <a class="rounded-field px-3 py-1 text-sm" href="#dialogos">Diálogos</a>
+            <a class="rounded-field px-3 py-1 text-sm" href="#carga-y-vacio">Carga y vacío</a>
+            <a class="rounded-field px-3 py-1 text-sm" href="#errores">Errores</a>
+          </div>
+          <div class="flex flex-col gap-1">
+            <a class="px-3 text-xs font-semibold uppercase tracking-widest text-base-content/60" href="#g6">Código</a>
+            <a class="rounded-field px-3 py-1 text-sm" href="#daisyui">daisyUI</a>
+          </div>
+        </nav>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var root = document.documentElement;
+      function pintar(tema, animar) {
+        if (animar) root.classList.add("theme-switching");
+        root.dataset.theme = tema;
+        var oscuro = tema !== "atempo-claro";
+        document.querySelectorAll("[data-logo]").forEach(function (img) {
+          img.src = "assets/logo-" + (oscuro ? "noche" : "tinta") + "-" + img.dataset.logo + ".svg";
+        });
+        document.querySelectorAll("[data-theme-label]").forEach(function (el) {
+          el.textContent = oscuro ? "Oscuro índigo" : "Claro índigo";
+        });
+        document.querySelectorAll("[data-set-theme]").forEach(function (btn) {
+          var on = btn.dataset.setTheme === tema;
+          btn.classList.toggle("bg-primary/10", on);
+          btn.classList.toggle("text-primary", on);
+        });
+        try { localStorage.setItem("atempo-guia-theme", tema); } catch (error) {}
+        if (animar) window.setTimeout(function () { root.classList.remove("theme-switching"); }, 350);
+      }
+
+      pintar(root.dataset.theme || "atempo-oscuro", false);
+      document.querySelectorAll("[data-set-theme]").forEach(function (btn) {
+        btn.addEventListener("click", function () { pintar(btn.dataset.setTheme, true); });
+      });
+
+      document.querySelectorAll("#guia-menu a").forEach(function (enlace) {
+        enlace.addEventListener("click", function () {
+          var caja = document.getElementById("guia-nav");
+          if (caja) caja.checked = false;
+        });
+      });
+
+      document.querySelectorAll("[data-pick]").forEach(function (grupo) {
+        grupo.addEventListener("click", function (evento) {
+          var item = evento.target.closest("[data-item]");
+          if (!item || !grupo.contains(item)) return;
+          var modo = grupo.dataset.pick;
+          grupo.querySelectorAll("[data-item]").forEach(function (el) {
+            var on = el === item;
+            if (modo === "segment") {
+              el.classList.toggle("bg-base-100", on);
+              el.classList.toggle("shadow-sm", on);
+              el.classList.toggle("bg-transparent", !on);
+              el.classList.toggle("text-base-content/60", !on);
+              el.setAttribute("aria-pressed", on ? "true" : "false");
+              return;
+            }
+            if (modo === "tab") {
+              el.classList.toggle("tab-active", on);
+              el.setAttribute("aria-selected", on ? "true" : "false");
+              return;
+            }
+            el.classList.toggle("bg-primary/10", on);
+            el.classList.toggle("text-primary", on);
+            el.classList.toggle("bg-base-200", !on);
+            if (modo === "page") {
+              if (on) el.setAttribute("aria-current", "page");
+              else el.removeAttribute("aria-current");
+            } else {
+              el.setAttribute("aria-pressed", on ? "true" : "false");
+            }
+          });
+        });
+      });
+
+      document.querySelectorAll("[data-quitar]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var chip = btn.parentElement;
+          if (chip) chip.remove();
+        });
+      });
+
+      var mostrar = document.getElementById("mostrar");
+      var clave = document.getElementById("clave");
+      if (mostrar && clave) {
+        mostrar.addEventListener("click", function () {
+          var ver = clave.type === "password";
+          clave.type = ver ? "text" : "password";
+          mostrar.textContent = ver ? "Ocultar" : "Mostrar";
+        });
+      }
+
+      var todas = document.getElementById("sel-all");
+      var filas = Array.prototype.slice.call(document.querySelectorAll("[data-row]"));
+      var barra = document.getElementById("bulk");
+      var etiqueta = document.getElementById("bulk-label");
+      function syncSel() {
+        var n = filas.filter(function (fila) { return fila.checked; }).length;
+        if (barra) barra.hidden = n === 0;
+        if (etiqueta) etiqueta.textContent = n === 1 ? "1 seleccionado" : n + " seleccionados";
+        if (todas) {
+          todas.indeterminate = n > 0 && n < filas.length;
+          todas.checked = n === filas.length && n > 0;
+        }
+        filas.forEach(function (fila) {
+          var tr = fila.closest("tr");
+          if (tr) tr.classList.toggle("bg-primary/10", fila.checked);
+        });
+      }
+      if (todas) {
+        todas.addEventListener("change", function () {
+          filas.forEach(function (fila) { fila.checked = todas.checked; });
+          syncSel();
+        });
+      }
+      filas.forEach(function (fila) {
+        fila.addEventListener("change", syncSel);
+      });
+      syncSel();
+    })();
+  </script>
+</body>
+</html>
