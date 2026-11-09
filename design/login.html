@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>aTempo Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cobalt:#2D3FE0; --cobalt-deep:#2333C4; --ink:#141A3C; --ink-soft:#4A5072;
+    --paper:#FFFFFF; --paper-2:#F4F5FA; --line:#D9DCEA; --marker:#FFCF3A;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#E9EBF3;font-family:Manrope,sans-serif;color:var(--ink);padding:40px;display:flex;flex-direction:column;gap:80px;align-items:flex-start;width:1520px}
+  .screen{background:var(--paper);overflow:hidden;position:relative;flex-shrink:0}
+  .panel,.b,.day,.check{flex-shrink:0}
+
+  /* ---------- Desktop ---------- */
+  .desk{width:1440px;height:900px;display:flex}
+  .panel{width:760px;height:100%;background:var(--cobalt);color:#fff;padding:56px 64px;display:flex;flex-direction:column;justify-content:space-between;position:relative}
+  .brand{display:flex;align-items:center;gap:12px}
+  .word{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:30px;letter-spacing:-0.02em}
+  .word span{font-weight:500;opacity:.75}
+  .hero h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:64px;line-height:1.02;letter-spacing:-0.035em;max-width:600px}
+  .hero p{margin-top:24px;font-size:18px;line-height:1.55;max-width:500px;color:rgba(255,255,255,.82)}
+  .beats{background:var(--cobalt-deep);border-radius:24px;padding:28px 28px 24px}
+  .beats-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:18px}
+  .beats-head strong{font-size:15px;font-weight:600}
+  .beats-head em{font-style:normal;font-size:14px;color:rgba(255,255,255,.7)}
+  .row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .day{width:18px;font-size:13px;font-weight:600;color:rgba(255,255,255,.6)}
+  .b{display:block;width:26px;height:26px;border-radius:50%}
+  .b.p{background:#fff}
+  .b.r{background:var(--marker)}
+  .b.a{border:2px solid rgba(255,255,255,.45)}
+  .b.fut{background:rgba(255,255,255,.12)}
+  .b.now{background:#fff;box-shadow:0 0 0 4px var(--cobalt-deep),0 0 0 7px var(--marker)}
+  .legend{display:flex;gap:22px;margin-top:16px;font-size:13px;color:rgba(255,255,255,.8)}
+  .legend span{display:flex;align-items:center;gap:8px}
+  .legend i{display:block;width:12px;height:12px;border-radius:50%}
+  .tempito{position:absolute;right:64px;bottom:342px}
+
+  .side{flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:56px 0 40px 112px}
+  .side-top{display:flex;justify-content:flex-end;padding-right:64px;font-size:14px;color:var(--ink-soft);gap:6px}
+  .side-top a{color:var(--cobalt);font-weight:700;text-decoration:none}
+  .form{width:420px}
+  .form h2{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:36px;letter-spacing:-0.025em}
+  .form .lead{margin-top:10px;font-size:16px;line-height:1.5;color:var(--ink-soft)}
+  .field{margin-top:22px}
+  .field:first-of-type{margin-top:36px}
+  .label-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+  label{font-size:14px;font-weight:600}
+  .link{font-size:14px;font-weight:600;color:var(--cobalt);text-decoration:none}
+  .input{height:52px;border:1.5px solid var(--line);border-radius:14px;background:var(--paper-2);display:flex;align-items:center;padding:0 16px;gap:12px;font-size:16px;color:#8A8FAD}
+  .input .grow{flex:1}
+  .remember{display:flex;align-items:center;gap:10px;margin-top:20px;font-size:14px;color:var(--ink-soft)}
+  .check{width:20px;height:20px;border-radius:6px;background:var(--cobalt);display:flex;align-items:center;justify-content:center}
+  .btn{margin-top:28px;height:54px;border-radius:14px;background:var(--cobalt);color:#fff;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center}
+  .or{display:flex;align-items:center;gap:14px;margin:28px 0 18px;font-size:13px;color:#8A8FAD}
+  .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+  .sso{display:flex;gap:12px}
+  .sso div{flex:1;height:50px;border:1.5px solid var(--line);border-radius:14px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:15px;font-weight:600;background:#fff}
+  .foot{font-size:13px;color:#8A8FAD;display:flex;gap:24px}
+
+  /* ---------- Mobile ---------- */
+  .mob{width:390px;height:844px;display:flex;flex-direction:column}
+  .m-top{background:var(--cobalt);color:#fff;padding:56px 24px 28px;border-radius:0 0 28px 28px;position:relative}
+  .m-top .word{font-size:24px}
+  .m-top h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:32px;line-height:1.05;letter-spacing:-0.03em;margin-top:24px;max-width:250px}
+  .m-top .beats{padding:16px 16px 12px;border-radius:18px;margin-top:22px}
+  .m-top .row{gap:7px;margin-bottom:7px}
+  .m-top .b{width:20px;height:20px}
+  .m-top .day{width:14px;font-size:11px}
+  .m-top .b.now{box-shadow:0 0 0 3px var(--cobalt-deep),0 0 0 5px var(--marker)}
+  .m-top .tempito{right:22px;top:40px;bottom:auto}
+  .m-form{padding:28px 24px 0;flex:1;display:flex;flex-direction:column}
+  .m-form h2{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:26px;letter-spacing:-0.02em}
+  .m-form .field:first-of-type{margin-top:20px}
+  .m-form .field{margin-top:16px}
+  .m-form .input{height:50px}
+  .m-form .btn{margin-top:24px;height:52px}
+  .m-form .m-help{margin-top:18px;text-align:center;font-size:14px;color:var(--ink-soft)}
+  .m-form .m-help a{color:var(--cobalt);font-weight:700;text-decoration:none}
+</style>
+</head>
+<body>
+
+<!-- ===================== DESKTOP ===================== -->
+<section class="screen desk" data-name="Login · Escritorio">
+  <aside class="panel">
+    <div class="brand"><div class="word">a<span>·</span>Tempo</div></div>
+
+    <div class="hero">
+      <h1>Pasar lista ya no es parte de la clase.</h1>
+      <p>aTempo registra entradas, retrasos y salidas para que alumnado, profesorado y centro compartan la misma asistencia, con evidencias que se pueden demostrar.</p>
+    </div>
+
+    <div class="beats">
+      <div class="beats-head"><strong>Tu trimestre, sesión a sesión</strong><em>Hoy, miércoles 09:00</em></div>
+      <div class="row"><span class="day">L</span><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b r"></i></div>
+<div class="row"><span class="day">M</span><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b a"></i><i class="b p"></i><i class="b p"></i><i class="b a"></i><i class="b p"></i><i class="b r"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b r"></i></div>
+<div class="row"><span class="day">X</span><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b now"></i></div>
+<div class="row"><span class="day">J</span><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b r"></i><i class="b p"></i><i class="b p"></i><i class="b a"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b fut"></i></div>
+<div class="row"><span class="day">V</span><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b r"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b r"></i><i class="b fut"></i></div>
+      <div class="legend">
+        <span><i style="background:#fff"></i>Presente</span>
+        <span><i style="background:#FFCF3A"></i>Retraso</span>
+        <span><i style="border:2px solid rgba(255,255,255,.55)"></i>Ausencia</span>
+      </div>
+    </div>
+
+    <div class="tempito"><svg width="120" height="138" viewBox="0 0 100 115" fill="none" xmlns="http://www.w3.org/2000/svg">
+<line x1="50" y1="40" x2="66" y2="6" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+<circle cx="66" cy="8" r="7" fill="#FFFFFF"/>
+<path d="M14 72C14 50 30 34 50 34C70 34 86 50 86 72C86 94 72 106 50 106C28 106 14 94 14 72Z" fill="#FFCF3A"/>
+<ellipse cx="39" cy="68" rx="5" ry="7" fill="#141A3C"/>
+<ellipse cx="61" cy="68" rx="5" ry="7" fill="#141A3C"/>
+<circle cx="41" cy="65" r="1.8" fill="#FFFFFF"/>
+<circle cx="63" cy="65" r="1.8" fill="#FFFFFF"/>
+<path d="M42 84C46 89 54 89 58 84" stroke="#141A3C" stroke-width="3.5" stroke-linecap="round"/>
+<ellipse cx="28" cy="80" rx="6" ry="4" fill="#FF9F6B" opacity="0.55"/>
+<ellipse cx="72" cy="80" rx="6" ry="4" fill="#FF9F6B" opacity="0.55"/>
+<rect x="30" y="104" width="12" height="8" rx="4" fill="#E6B321"/>
+<rect x="58" y="104" width="12" height="8" rx="4" fill="#E6B321"/>
+</svg></div>
+  </aside>
+
+  <main class="side">
+    <div class="side-top">¿Tu centro aún no usa aTempo? <a href="#">Solicita una demo</a></div>
+
+    <div class="form">
+      <h2>Inicia sesión</h2>
+      <p class="lead">Usa la cuenta que te ha dado tu centro. Te llevaremos a tu panel según tu perfil.</p>
+
+      <div class="field">
+        <div class="label-row"><label>Correo electrónico</label></div>
+        <div class="input"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A8FAD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg><span class="grow">nombre@tucentro.es</span></div>
+      </div>
+      <div class="field">
+        <div class="label-row"><label>Contraseña</label><a class="link" href="#">¿Has olvidado la contraseña?</a></div>
+        <div class="input"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A8FAD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="11" width="16" height="10" rx="3"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span class="grow">••••••••••</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A8FAD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></div>
+      </div>
+
+      <div class="remember"><div class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="m5 12 5 5 9-10"/></svg></div>Mantener la sesión iniciada en este dispositivo</div>
+
+      <div class="btn">Entrar</div>
+
+      <div class="or">o entra con</div>
+      <div class="sso">
+        <div><svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Google</div>
+        <div><svg width="18" height="18" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg"><rect width="10" height="10" fill="#F25022"/><rect x="12" width="10" height="10" fill="#7FBA00"/><rect y="12" width="10" height="10" fill="#00A4EF"/><rect x="12" y="12" width="10" height="10" fill="#FFB900"/></svg>Microsoft</div>
+      </div>
+    </div>
+
+    <div class="foot"><span>Privacidad</span><span>Términos</span><span>Ayuda</span><span>© 2026 aTempo</span></div>
+  </main>
+</section>
+
+<!-- ===================== MOBILE ===================== -->
+<section class="screen mob" data-name="Login · Móvil">
+  <div class="m-top">
+    <div class="word">a<span>·</span>Tempo</div>
+    <h1>Pasar lista ya no es parte de la clase.</h1>
+    <div class="beats">
+      <div class="row"><span class="day">L</span><i class="b a"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b a"></i><i class="b r"></i><i class="b p"></i></div>
+<div class="row"><span class="day">M</span><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i></div>
+<div class="row"><span class="day">X</span><i class="b p"></i><i class="b p"></i><i class="b r"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b r"></i><i class="b r"></i><i class="b now"></i></div>
+<div class="row"><span class="day">J</span><i class="b r"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b r"></i><i class="b a"></i><i class="b p"></i><i class="b p"></i><i class="b fut"></i></div>
+<div class="row"><span class="day">V</span><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b p"></i><i class="b fut"></i></div>
+    </div>
+    <div class="tempito"><svg width="64" height="73" viewBox="0 0 100 115" fill="none" xmlns="http://www.w3.org/2000/svg">
+<line x1="50" y1="40" x2="66" y2="6" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+<circle cx="66" cy="8" r="7" fill="#FFFFFF"/>
+<path d="M14 72C14 50 30 34 50 34C70 34 86 50 86 72C86 94 72 106 50 106C28 106 14 94 14 72Z" fill="#FFCF3A"/>
+<ellipse cx="39" cy="68" rx="5" ry="7" fill="#141A3C"/>
+<ellipse cx="61" cy="68" rx="5" ry="7" fill="#141A3C"/>
+<circle cx="41" cy="65" r="1.8" fill="#FFFFFF"/>
+<circle cx="63" cy="65" r="1.8" fill="#FFFFFF"/>
+<path d="M42 84C46 89 54 89 58 84" stroke="#141A3C" stroke-width="3.5" stroke-linecap="round"/>
+<ellipse cx="28" cy="80" rx="6" ry="4" fill="#FF9F6B" opacity="0.55"/>
+<ellipse cx="72" cy="80" rx="6" ry="4" fill="#FF9F6B" opacity="0.55"/>
+<rect x="30" y="104" width="12" height="8" rx="4" fill="#E6B321"/>
+<rect x="58" y="104" width="12" height="8" rx="4" fill="#E6B321"/>
+</svg></div>
+  </div>
+
+  <div class="m-form">
+    <h2>Inicia sesión</h2>
+    <div class="field">
+      <div class="label-row"><label>Correo electrónico</label></div>
+      <div class="input"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A8FAD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg><span class="grow">nombre@tucentro.es</span></div>
+    </div>
+    <div class="field">
+      <div class="label-row"><label>Contraseña</label><a class="link" href="#">¿La has olvidado?</a></div>
+      <div class="input"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A8FAD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="11" width="16" height="10" rx="3"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span class="grow">••••••••••</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A8FAD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></div>
+    </div>
+    <div class="btn">Entrar</div>
+    <div class="or">o entra con</div>
+    <div class="sso">
+      <div><svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Google</div>
+      <div><svg width="18" height="18" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg"><rect width="10" height="10" fill="#F25022"/><rect x="12" width="10" height="10" fill="#7FBA00"/><rect y="12" width="10" height="10" fill="#00A4EF"/><rect x="12" y="12" width="10" height="10" fill="#FFB900"/></svg>Microsoft</div>
+    </div>
+    <p class="m-help">¿Sin cuenta? <a href="#">Pídela a tu centro</a></p>
+  </div>
+</section>
+
+</body>
+</html>
