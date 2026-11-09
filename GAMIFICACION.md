@@ -1,152 +1,156 @@
-# aTempo · Gamificación
+# Gamificación de aTempo
 
-**Documento funcional · Versión 0.2** · Recorte del producto. Constitución: `README.md`.
+Guía para el equipo.
 
-Cierra Tempito, juegos, retos y recompensas para un equipo junior, sin pagos. Fuera: QR, certificados, integraciones, chatbot, predicción.
+La constitución general sigue en `README.md`. Aquí no construimos todo aTempo: ni QR, ni certificados, ni Meet, ni un chatbot. Solo la parte que se juega.
 
-El alumno cuida de Tempito. El profesor lanza un juego de 60 s y ve quién está. Nadie publica un ranking de faltas.
+## Qué estamos haciendo
 
-| Pieza | Qué es | Cuándo |
-| ----- | ------ | ------ |
-| **Tempito** | Mascota de cada alumno. Refleja el cuidado de la asistencia. | Siempre |
-| **Juegos en vivo** | Arranque y Pulso. Sustituyen o refuerzan pasar lista. | En clase, los lanza el profesor |
-| **Retos** | Objetivos semanales, individuales o de grupo. Dan cosmética. | Lunes a domingo |
+En clase, pasar lista es lento y aburrido. La idea es cambiar eso por tres cosas simples:
 
-## 1. Principios
+1. **Tempito**, una mascota que cada alumno cuida al venir a clase.
+2. **Juegos cortos** que lanza el profesor (un minuto, no una partida de una hora).
+3. **Retos de la semana**, para tener un objetivo entre clase y clase.
 
-1. **La clase manda.** Si el juego atrasa la sesión, está mal.
-2. **Asistir es cuidar, no competir.** Tempito es personal. El ranking nunca muestra faltas.
-3. **Justificar no se penaliza.** `excused` no baja energía, no rompe racha y pausa el reto.
-4. **El juego es señal, no certificado.** La evidencia formal vive fuera de este recorte.
-5. **Sin sanciones automáticas.** Tempito no evalúa.
-6. **Privacidad.** Apodo, ocultarse del tablero, nadie ve el ánimo ajeno.
-7. **Apagable** por curso: Tempito, juegos, tablero, retos.
+El alumno no “ficha”. Cuida de Tempito y responde una pregunta. El profesor no recorre una lista. Lanza un juego y ve quién está. Nadie cuelga un ranking de faltas en la pared.
 
-## 2. Contexto mínimo
+Esto lo vamos a programar un equipo junior, sin pagar herramientas. Si una idea pide Unity, OpenAI o tres apps distintas, no entra.
 
-| Entidad | Qué hay | Qué no |
-| ------- | ------- | ------ |
-| Curso | Nombre, alumnos, profesor | Calendario complejo, integraciones |
-| Sesión | Fecha, `scheduled` \| `live` \| `closed` | QR, geocerca, Meet |
-| Asistencia | `present` \| `late` \| `absent` \| `excused` | Auditoría, PDF de justificantes |
+## Cómo nos vamos a comportar
 
-El profesor abre la sesión. El alumno entra al juego o pulsa “estoy aquí”. El profesor corrige a mano (el alumno no edita el original) y puede marcar `excused` sin documentos.
+- **La clase manda.** Si el juego atrasa el tema del día, está mal diseñado.
+- **Asistir es cuidar, no competir.** Tempito es de cada alumno. El ranking, si existe, nunca enseña quién faltó.
+- **Justificar no se castiga.** Si alguien trae un justificante, Tempito no se pone triste, la racha no se rompe y el reto se pausa.
+- **Un juego no es un certificado.** Responder la pregunta dice “estaba aquí”. El papel oficial de asistencia, si algún día existe, es otra cosa.
+- **Tempito no pone notas.** Bajar de energía no es un apercibimiento. El profesor no evalúa con la mascota.
+- **Se puede apagar.** En un curso se pueden quitar Tempito, los juegos, el tablero o los retos.
 
-## 3. Economía
+## Lo mínimo que necesitamos de “clase”
 
-Una moneda. Sin loot boxes ni pagos. Semillas solo compran cosmética, nunca nota ni certificado.
+No vamos a montar el calendario de toda la academia. Nos basta con esto:
 
-| Recurso | Rango | Gana | Pierde |
-| ------- | ----- | ---- | ------ |
-| **Energía** | 0–100 | `present` +10, juego +5, reto +15 | `absent` −20, `late` −5 |
-| **Racha** | días lectivos | `present` o `late` +1 | `absent` → 0. `excused` congela |
-| **Semillas** | puntos | Arranque 10/6, Pulso 4, reto ind. 25, grupo 15 | Comprar ítem |
-| **Cuidado** | vida de la mascota | +1 por día con asistencia válida | Nunca baja. Evoluciona Tempito |
+- Un **curso** (nombre, profesor, lista de alumnos).
+- Una **sesión** (un día y una hora; está programada, en marcha o cerrada).
+- Un **estado de asistencia** por alumno: presente, retraso, falta, o falta justificada.
 
-Asistencia válida: `present` y `late`. `excused` no suma ni rompe. `absent` rompe racha y baja energía.
+Cómo se rellena en este proyecto:
 
-Ítems (se compran una vez; equipar es libre): gorro 40, pañuelo 40, fondo aula 60, fondo parque 80 (o reto de grupo), color aurora 100 (o racha 7), corona de racha 0 (al llegar a 10; se pierde al romperla).
+1. El profesor abre la sesión.
+2. El alumno entra al juego o pulsa “estoy aquí”.
+3. El profesor puede corregir a mano. El alumno no reescribe su propio registro.
+4. Una falta se puede marcar como justificada **sin** subir PDFs. Con un botón vale.
 
-## 4. Tempito
+Con eso ya se alimentan Tempito, los juegos y los retos.
 
-Uno por alumno. El profesor y el admin no lo editan. Evolución permanente (por `cuidado`); ánimo diario (por `energía`).
+## Las cuatro cosas que mueve Tempito
 
-| Forma | Cuidado | Ánimo | Energía |
-| ----- | ------- | ----- | ------- |
-| Semilla | 0–2 | Dormido | 0–19 |
-| Brote | 3–6 | Bajo | 20–39 |
-| Tempito | 7–14 | Bien | 40–79 |
-| Tempo | 15+ | Alto | 80–100 |
+No hay tienda rara ni cajas de botín. Hay cuatro números, y las **Semillas** solo sirven para vestir a Tempito. Nunca para subir nota.
 
-La forma no retrocede. Si la última sesión es `excused` y aún no ha vuelto: estado **descanso** (“Tempito descansa. La racha está en pausa.”), no se ve como castigo.
+**Energía (0 a 100).** Es el ánimo del día. Venir a tiempo suma 10. Jugar suma 5. Cerrar un reto suma 15. Llegar tarde resta 5. Faltar sin justificar resta 20. No baja de 0 ni pasa de 100.
 
-Al **cerrar la sesión**, por alumno:
+**Racha.** Días de clase seguidos viniendo (aunque sea tarde). Una falta injustificada la deja en 0. Una falta justificada **la congela**: ni suma ni se rompe.
 
-```
-present  → energía +10 (máx 100), racha +1, cuidado +1
-late     → energía −5 (mín 0), racha +1, cuidado +1
-excused  → no cambia nada
-absent   → energía −20 (mín 0), racha = 0
-```
+**Semillas.** Los puntos del juego. Se ganan en el Arranque, el Pulso y los retos. Se gastan en gorros, fondos y colores. Una vez comprado, el ítem es para siempre; ponérselo o quitárselo no cuesta otra vez.
 
-Varias sesiones el mismo día: racha y cuidado suman **una vez**. La energía sí va por sesión. Si el profesor corrige `absent` → `excused` o `present`, se recalcula ese día. Semillas de juegos se otorgan aparte.
+**Cuidado.** Cuántos días ha venido de verdad a lo largo de su vida en aTempo. Sube 1 por día válido y **nunca baja**. Sirve para que Tempito evolucione. Las faltas justificadas no suman.
 
-El alumno ve SVG (forma + ánimo + ítems), barras, inventario, últimos 7 días en puntos de color (verde / ámbar / gris descanso / rojo) y el reto activo. El profesor/admin ven forma y racha, **no** energía ni ánimo bajo.
+Qué cuenta como día válido: presente o retraso. La falta justificada no suma ni rompe. La injustificada rompe la racha y baja energía.
 
-## 5. Juegos en vivo
+### La tienda (poca, fija)
 
-Dos juegos, un motor `LiveRound`. El profesor lanza; los alumnos responden en tiempo real; el **servidor** cierra por reloj.
+Gorro 40, pañuelo 40, fondo del aula 60, fondo del parque 80 (o regalado si el grupo cumple el reto), color aurora 100 (o al llegar a racha 7). La corona de racha es gratis al llegar a 10 días seguidos y se cae si la racha se rompe.
 
-### Arranque — 60 s, uno por sesión
+## Tempito
 
-Sustituye pasar lista con una pregunta de la clase anterior (texto + 4 opciones). Quien responde está presente, **acierte o falle**. Quien no, queda `pending` (no se marca ausente solo). Se puede cancelar; nadie cobra.
+Cada alumno tiene el suyo. El profesor y el admin no lo tocan.
 
-| Resultado | Semillas | Energía |
-| --------- | -------- | ------- |
-| Acierto | 10 | +5 |
-| Error | 6 | +5 |
-| No responde | 0 | 0 |
+Tiene dos capas. La **forma** es permanente (según el cuidado). El **ánimo** cambia con la energía.
 
-El profesor usa la baraja del curso o escribe la pregunta al momento. Si el alumno entra a los 50 s, juega los 10 restantes.
+- 0–2 días de cuidado → **Semilla**. Casi no se mueve.
+- 3–6 → **Brote**.
+- 7–14 → **Tempito**.
+- 15 o más → **Tempo**. Ya no vuelve atrás aunque un día falte; solo se pone más triste.
 
-### Pulso — 20 s, máximo 2 por sesión
+Ánimo según la energía: dormido (0–19), bajo (20–39), bien (40–79), alto (80–100).
 
-Botón/código igual para todos. Quien pulsa: +4 Semillas. El profesor ve respondieron / no. Puede marcar `left_early`; **el Pulso no marca ausencias solo.** Sin ranking de velocidad.
+Si la última clase está justificada y todavía no ha vuelto, Tempito aparece **descansando**, con manta: “Tempito descansa. La racha está en pausa.” Eso no es un castigo. Es un descanso.
 
-`LiveRound`: `sessionId`, `type` (`kickoff` \| `pulse`), `status` (`open` \| `closed` \| `cancelled`), `prompt`, `options`, `correctIndex`, `openedAt`, `closesAt`, `responses[]`.
+### Qué pasa al cerrar la clase
 
-## 6. Retos y tablero
+- **Presente:** +10 de energía, +1 racha, +1 cuidado.
+- **Retraso:** −5 de energía, +1 racha, +1 cuidado.
+- **Justificada:** no se mueve nada.
+- **Falta:** −20 de energía, racha a 0.
 
-Semana natural (lun–dom, zona del servidor). Un reto de grupo y, si el profesor quiere, uno individual por curso.
+Si hay dos clases el mismo día, racha y cuidado solo suman **una vez**. La energía sí cuenta cada clase (ir a las dos cuida más; faltar a una ya resta). Si el profesor luego cambia “falta” por “justificada” o “presente”, se recalcula ese día. Las Semillas de los juegos se dan aparte, cuando se juega.
 
-**Racha de la semana (individual).** 4 días lectivos con asistencia válida (o todos, si hay menos de 4). `excused` no suma ni falla. Si no puede llegar al objetivo: se cierra **pausado**, sin Semillas y sin “has perdido” (“Esta semana Tempito descansó.”). Premio: 25 Semillas + 15 energía.
+El alumno ve a Tempito grande, las barras, el armario de ítems, los últimos 7 días en puntitos de color (verde, ámbar, gris de descanso, rojo) y el reto de la semana. El profesor solo ve la forma y la racha. Nadie más ve a Tempito triste.
 
-**El aula en forma (grupo).** El 80 % del curso tiene asistencia válida en ≥ 80 % de las sesiones. `excused` sale del denominador. Cumplido: 15 Semillas cada uno y fondo parque. Si no: el reto se va el lunes, sin recado de derrota.
+Si no hay diseñador, un círculo con ojos y un color por ánimo vale. No hace falta un motor 3D.
 
-Días sin sesión no suman ni rompen. No hay retos de alumnos ni “no llegar tarde nunca”.
+## Los dos juegos
 
-**Tablero (opt-in, apagable):** un curso, una semana; apodo, Arranques, Semillas de la semana, racha. Orden: Semillas, empate por racha. El alumno se oculta y sigue jugando. Nunca: ausencias, energía, forma, nombres legales.
+El profesor los lanza. Los alumnos responden a la vez. El reloj lo marca el **servidor**, no el portátil de cada uno. Hay dos, y se parecen por dentro: pregunta o botón, cuenta atrás, se acaba solo.
 
-## 7. Pantallas
+### Arranque (60 segundos, uno por clase)
 
-| Rol | Pantalla | Acciones |
-| --- | -------- | -------- |
-| Alumno | Tempito, Juegos, Tablero, Hoy | Equipar, ocultarse, responder, “estoy aquí” |
-| Profesor | Sesión, Juegos, Retos, Tablero | Abrir/cerrar, corregir, `excused`, lanzar/cancelar, on/off retos y tablero |
-| Admin | Juegos, Cursos | Interruptores por curso; CRUD mínimo de curso/alumnos |
+Sustituye los primeros minutos de pasar lista. El profesor lanza una pregunta de la clase anterior: un texto y cuatro opciones. Quien responde **está presente**, acierte o falle. Fallar no es un examen: las Semillas premian el acierto; haber estado premia la presencia.
 
-Si hay ronda `open`, Juegos tiene prioridad. Economía fija en código: no hay diseñador de juegos. Notificaciones solo in-app: ronda lanzada, evolución, racha 3/7/10, reto de grupo cumplido.
+- Acierto: 10 Semillas y +5 de energía.
+- Error: 6 Semillas y +5 de energía.
+- No responde: nada. Tampoco se le marca falta todavía: queda pendiente. El profesor cierra la lista a mano o lanza un Pulso más tarde.
 
-## 8. Datos y stack
+Se puede cancelar; entonces nadie cobra. El profesor puede coger una pregunta de su baraja o escribirla al momento. Si un alumno entra a los 50 segundos, juega los 10 que quedan.
 
-```
-User            id, name, nickname, role, passwordHash
-Course          id, name, tempitoEnabled, liveGamesEnabled, boardEnabled, challengesEnabled
-Enrollment      userId, courseId
-Session         id, courseId, startsAt, status
-Attendance      sessionId, userId, status, source   # kickoff | manual | here
-Tempito         userId, energy, streak, care, seeds, stage, mood, equippedItemIds
-TempitoItem     id, slug, name, cost
-TempitoInventory userId, itemId, acquiredAt
-LiveRound       id, sessionId, type, status, prompt, options, correctIndex, openedAt, closesAt
-LiveResponse    roundId, userId, answer, createdAt
-Challenge       id, courseId, type, weekStart, target, status
-ChallengeProgress challengeId, userId, value, status
-Notification    id, userId, type, payload, readAt, createdAt
-```
+### Pulso (20 segundos, como mucho dos por clase)
 
-Una web, tres roles. React + Vite + TS + Tailwind + React Router. Express + Prisma + PostgreSQL. Socket.IO. JWT + bcrypt. Tempito en SVG (o un círculo con ojos). Hosting gratuito (Pages + Render). Sin Clerk, OpenAI, Unity ni Rive.
+A mitad de clase, para ver si siguen ahí. Todos ven el mismo botón o el mismo código corto. Quien pulsa a tiempo gana 4 Semillas. El profesor ve dos columnas: respondieron / no. Puede marcar “se fue antes”, pero **el Pulso no pone faltas solo**. No hay ranking de quién fue más rápido.
 
-## 9. Fases
+## Retos y tablero
 
-**A — el proyecto:** auth y roles; curso/sesión/asistencia; Tempito completo (descanso por `excused`); Arranque en vivo; 3 ítems; reto individual; pantallas alumno y profesor.
+La semana va de lunes a domingo. En cada curso hay, como mucho, un reto de grupo y un reto individual. No montamos un tablón infinito de misiones.
 
-**B — si hay tiempo:** Pulso, reto de grupo, tablero, interruptores admin, baraja reutilizable.
+**Racha de la semana (individual).** Venir 4 días de clase (o todos, si esa semana hay menos de 4). Un día justificado no suma ni falla. Si con los justificantes ya no puede llegar al 4, el reto se cierra en pausa: sin Semillas y sin “has perdido”. El texto es “Esta semana Tempito descansó.” Si lo cumple: 25 Semillas y +15 de energía.
 
-**Fuera:** QR, videollamadas, IA, blockchain, justificantes con archivo, desktop, más géneros de juego, ranking global.
+**El aula en forma (grupo).** El 80 % de la clase ha venido de forma válida al menos al 80 % de las sesiones. Las justificadas no hunden al grupo: ese alumno no cuenta en contra. Si sale: 15 Semillas para cada uno y el fondo del parque. Si no sale, el lunes el reto se va. Sin mensaje de derrota.
 
-## 10. Hecho
+Los días sin clase no suman ni rompen. Nadie crea retos. Tampoco hay un reto de “no llegar tarde nunca”: es demasiado duro.
 
-Cerrado: dos juegos (`LiveRound`); Tempito con 4 formas y 4 ánimos; `excused` congela y descansa; tablero semanal opt-in; premio = cosmética.
+**El tablero** es un ranking de la semana, de un curso, y se puede apagar. Muestra apodo, Arranques respondidos, Semillas de la semana y racha. Gana quien más Semillas tiene esa semana. El alumno puede ocultarse y seguir jugando. Nunca salen faltas, energía, la forma de Tempito ni el nombre real.
 
-El recorte está hecho cuando el profesor abre sesión, lanza un Arranque, los alumnos responden en el mismo minuto, Tempito cambia al cerrar, y una falta justificada **no** deja la mascota peor.
+## Qué ve cada persona
+
+**Alumno:** Tempito (equipar, ocultarse del tablero), Juegos (responder), Tablero, y Hoy (entrar a clase o pulsar “estoy aquí”). Si hay un juego en marcha, Juegos manda: hay que verlo enseguida.
+
+**Profesor:** la sesión (abrir, cerrar, corregir, justificar), los juegos (lanzar, cancelar, escribir la pregunta), los retos y el tablero (encenderlos o apagarlos).
+
+**Admin:** poco. Encender o apagar Tempito, juegos, tablero y retos por curso, y un alta simple de cursos y alumnos. No hay un “editor de videojuegos”. Los números de este documento van fijos en el código.
+
+Avisos solo dentro de la app: “han lanzado un juego”, “Tempito ha evolucionado”, racha 3 / 7 / 10, “el grupo ha cumplido el reto”. Nada de email.
+
+## Cómo lo vamos a montar
+
+Una sola web. Tres zonas según el rol (`/student`, `/teacher`, `/admin`).
+
+- Pantalla: React, Vite, TypeScript, Tailwind.
+- API: Node, Express, PostgreSQL, Prisma.
+- En vivo (Arranque y Pulso): Socket.IO.
+- Login: JWT y contraseña cifrada. Sin Clerk ni Auth0.
+- Dibujo: SVG, o un círculo. Sin Unity ni Rive.
+- Subirlo: algo gratis (Pages + Render o similar).
+
+En la base de datos hay que guardar, en cristiano: usuarios y apodos, cursos con interruptores, quién está en qué curso, sesiones, asistencia, el Tempito de cada uno, los ítems, las rondas de juego y las respuestas, los retos de la semana y los avisos. No hace falta memorizar los nombres de las tablas ahora. Se sacan de estas reglas cuando toque Prisma.
+
+## Por dónde empezar
+
+**Esto es el proyecto (Fase A):** registrarse con rol, un curso y una sesión, marcar asistencia a mano o con “estoy aquí”, Tempito de verdad (incluido el descanso justificado), el Arranque en vivo, tres ítems comprables, el reto individual, pantallas de alumno y de profesor.
+
+**Si sobra tiempo (Fase B):** el Pulso, el reto de grupo, el tablero, los interruptores del admin, la baraja de preguntas para reutilizar.
+
+**No entra:** QR, videollamadas, inteligencia artificial, blockchain, justificantes con archivo, app de escritorio, más tipos de juego, ranking de toda la academia.
+
+## Cuándo está hecho
+
+Cuando un profesor abre la clase, lanza un Arranque, los alumnos responden en ese mismo minuto, Tempito cambia al cerrar, y una falta justificada **no** deja la mascota peor de lo que estaba.
+
+Si eso funciona, hay producto. El resto es capa.
