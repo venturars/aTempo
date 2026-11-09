@@ -57,14 +57,9 @@ Al seleccionar una fecha se listan todas sus sesiones, ordenadas por horario. Pa
 
 La navegación por meses y fechas debe poder usarse con teclado y ofrecer etiquetas comprensibles para lectores de pantalla.
 
-## Relación con otras propuestas
+## Relación con las reglas del curso
 
-Estas referencias son propuestas para contrastar, no decisiones aprobadas por aparecer en una PR:
-
-- [PR #1: estados de asistencia](https://github.com/venturars/aTempo/pull/1). Plantea estados y un ciclo independiente de justificantes. Esta vista reutilizará las definiciones que se acuerden; no redefine transiciones, permisos ni umbrales. La PR está cerrada sin fusionar.
-- [PR #3: Dashboard del profesor y cálculo](https://github.com/venturars/aTempo/pull/3). Propone un cálculo por sesiones y un tratamiento de ausencias justificadas. Esa fórmula no se adopta aquí como decisión del equipo: el README mantiene pendiente el cálculo por horas, sesiones o ambos. Esta propuesta explica al alumno el resultado y sus datos una vez acordado el criterio. La PR está cerrada sin fusionar.
-- [PR #7: ciclo de sesiones](https://github.com/venturars/aTempo/pull/7). Propone los estados y transiciones de la sesión y su relación con el registro del alumno. Aquí solo se consulta esa información y su efecto acordado en el resumen; no se repite ni se fija el ciclo de vida.
-- [PR #8: Tempito](https://github.com/venturars/aTempo/pull/8). Desarrolla la mascota y su progresión. Esta consulta académica en **Mis cursos** tiene un propósito propio y no depende de recompensas, misiones o estados de ánimo.
+Esta consulta utiliza los estados de asistencia, el ciclo de sesiones y las reglas de cálculo que acuerde el equipo. Su aportación se centra en explicar visualmente al alumno sus registros en **Mis cursos**, sin redefinir esas reglas ni asumir que las decisiones pendientes estén aprobadas.
 
 ## Alcance
 
