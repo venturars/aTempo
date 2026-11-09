@@ -7,6 +7,7 @@ La app se construye con DaisyUI, que es lo que pide la asignatura. Esta carpeta 
 - `reference/guia.html` es el ejemplo para leer y copiar patrones, y se abre en el navegador para mirarla. Cómo usarla está en `rules.md`.
 - `reference/assets/` son los logos del oscuro y del claro. La guía los busca al lado.
 - `theme.css` son los dos temas de DaisyUI: oscuro índigo y claro índigo.
+- `guia.css` is `theme.css` compiled so the guide opens without a build; it is never edited by hand and the app does not import it.
 - `rules.md` dice cómo se ve y cómo se escribe cualquier pantalla.
 
 ## Cómo se usa en la app

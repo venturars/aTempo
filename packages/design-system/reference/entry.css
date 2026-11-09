@@ -1,2 +1,3 @@
+/* guia.css is theme.css compiled so the guide opens without a build; it is never edited by hand and the app does not import it. */
 @import "../theme.css";
 @source "./guia.html";
