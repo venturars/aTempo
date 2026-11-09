@@ -1,0 +1,12 @@
+{
+  "name": "@atempo/design-system",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./theme.css": "./theme.css"
+  },
+  "peerDependencies": {
+    "daisyui": "^5.0.0",
+    "tailwindcss": "^4.0.0"
+  }
+}

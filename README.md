@@ -196,3 +196,21 @@ Las predicciones se distribuirán en las pantallas donde aporten valor; no const
 ## 14. Próximo paso
 
 Usar este documento como fuente de verdad para desarrollar el PRD funcional de aTempo, pantalla por pantalla, definiendo funcionalidades exactas, acciones por rol y reglas de negocio antes de elegir tecnologías definitivas.
+
+## 15. Sistema visual
+
+No cambia las secciones 1 a 14.
+
+La app todavía no está empezada. El sistema visual queda en el repositorio antes de la primera pantalla, para que lo que se construya después sea igual. El aspecto está en `packages/design-system`. Quien construya una feature sigue `AGENTS.md`.
+
+Hay dos temas, para no revisar cada pantalla cuatro veces. La app abre en oscuro índigo. El otro es el claro índigo. En Settings, cada usuario elige. Si no hay elección, sigue en oscuro. Hay un cálido y un contraste guardados en `themes-later.css`. No entran todavía.
+
+El significado de un estado no cambia con el tema. Presente es verde, retraso es ámbar, ausente es rojo, salida es azul y pendiente es neutro. El color va siempre con texto.
+
+La interfaz sigue tres referencias, sin copiarlas enteras:
+
+- [Heurísticas de Nielsen](https://www.nngroup.com/articles/ten-usability-heuristics/): la persona ve qué pasa, el texto es el suyo, puede salir de una acción, lo igual se comporta igual y no hace falta recordar lo que se puede mostrar. Se evita el error y, si ocurre, se entiende cómo seguir. Cada pantalla enseña solo lo que hace falta.
+- [Principios de accesibilidad del W3C](https://www.w3.org/WAI/fundamentals/accessibility-principles/): se puede percibir, usar y entender, también con teclado y con un lector de pantalla.
+- [Laws of UX](https://lawsofux.com/): pocas opciones a la vez, y lo importante está cerca y se reconoce sin explicación.
+
+Un ejemplo de la guía no es una decisión. La navegación sigue en la sección 5, las integraciones en la 7.1 y el mecanismo de asistencia sigue abierto.
