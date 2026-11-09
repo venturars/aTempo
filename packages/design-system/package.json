@@ -6,7 +6,7 @@
     "./theme.css": "./theme.css"
   },
   "scripts": {
-    "build:guia": "tailwindcss -i reference/entry.css -o reference/guia.css && node -e \"const fs=require('fs');const p='reference/guia.css';fs.writeFileSync(p,fs.readFileSync(p,'utf8').replaceAll('url(\\\"./fonts/','url(\\\"../fonts/'))\""
+    "build:guia": "tailwindcss -i reference/entry.css -o reference/guia.css --minify && node -e \"const fs=require('fs');const p='reference/guia.css';let css=fs.readFileSync(p,'utf8');css=css.replaceAll('url(\\\"./fonts/','url(\\\"../fonts/').replaceAll('url(./fonts/','url(../fonts/');fs.writeFileSync(p,css)\""
   },
   "peerDependencies": {
     "daisyui": "^5.0.0",
