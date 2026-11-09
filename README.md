@@ -128,10 +128,8 @@ Las integraciones se incorporarán progresivamente, aunque se contemplan desde e
 
 - Pantallas de juegos interactivos de asistencia.
 - Sistema de retos y recompensas.
-- Tipos de juegos: Arranque y Pulso.
-- Competición semanal opcional entre alumnos.
-
-La definición funcional de este recorte (Tempito, juegos, retos, economía y alcance junior) está en [`GAMIFICACION.md`](./GAMIFICACION.md).
+- Tipos de juegos pendientes de definir.
+- Posibilidad de competiciones entre alumnos.
 
 ### 7.5. Temas visuales
 
@@ -149,8 +147,6 @@ Tempito será la mascota virtual de cada alumno. Su estado evolucionará según 
 - Faltar puede afectar a su estado.
 - Los retos permiten conseguir recompensas.
 - Las reglas deberán evitar penalizar injustamente las ausencias justificadas.
-
-Las reglas concretas de energía, racha, evolución y ausencias justificadas están en [`GAMIFICACION.md`](./GAMIFICACION.md).
 
 ## 9. Predicciones de asistencia
 
@@ -186,14 +182,15 @@ Las predicciones se distribuirán en las pantallas donde aporten valor; no const
 - Las predicciones se incorporan de forma contextual en otras pantallas.
 - Para el alumno, registrar asistencia y avisar al profesor forman parte del Dashboard.
 - Perfil y notificaciones del alumno se gestionan desde Settings.
-- Los juegos de asistencia están definidos en [`GAMIFICACION.md`](./GAMIFICACION.md): Arranque y Pulso.
+- Los juegos de asistencia estarán presentes en la estructura, con tipos concretos pendientes de definición.
 
 ## 13. Decisiones pendientes
 
 - Definir los mecanismos concretos de asistencia: QR, comprobaciones periódicas e integraciones con videoconferencia.
 - Definir si el cumplimiento se calcula por horas, por sesiones o con ambos criterios.
 - Definir el nivel de certificación requerido: registro auditable o certificación criptográfica avanzada.
-- Tipos de juegos, reglas de Tempito y ausencias justificadas: cerradas en [`GAMIFICACION.md`](./GAMIFICACION.md). Pendiente alinear con las propuestas de Tempito ya abiertas.
+- Definir los tipos de juegos y sus reglas.
+- Definir las reglas de Tempito y el tratamiento de ausencias justificadas.
 - Detallar las acciones, permisos y reglas de cada pantalla en el PRD funcional.
 
 ## 14. Próximo paso
