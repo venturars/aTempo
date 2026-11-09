@@ -203,7 +203,7 @@ No cambia las secciones 1 a 14.
 
 La app todavía no está empezada. El sistema visual queda en el repositorio antes de la primera pantalla, para que lo que se construya después sea igual. El aspecto está en `packages/design-system`. Quien construya una feature sigue `AGENTS.md`.
 
-Hay dos temas, para no revisar cada pantalla cuatro veces. La app abre en oscuro índigo. El otro es el claro índigo. En Settings, cada usuario elige. Si no hay elección, sigue en oscuro. Hay un cálido y un contraste guardados en `themes-later.css`. No entran todavía.
+Hay dos temas. La app abre en oscuro índigo. El otro es el claro índigo. En Settings, cada usuario elige. Si no hay elección, sigue en oscuro.
 
 El significado de un estado no cambia con el tema. Presente es verde, retraso es ámbar, ausente es rojo, salida es azul y pendiente es neutro. El color va siempre con texto.
 

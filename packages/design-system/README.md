@@ -5,9 +5,8 @@ La app se construye con DaisyUI, que es lo que pide la asignatura. Esta carpeta 
 ## Qué hay aquí
 
 - `reference/index.html` es la guía de ejemplos. Cómo usarla está en `rules.md`.
-- `reference/assets/` es el logo de cada tema. La guía lo busca al lado.
+- `reference/assets/` son los logos del oscuro y del claro. La guía los busca al lado.
 - `theme.css` son los dos temas de DaisyUI: oscuro índigo y claro índigo.
-- `themes-later.css` guarda el cálido y el contraste. No se importa.
 - `rules.md` dice cómo se ve y cómo se escribe cualquier pantalla.
 
 ## Cómo se usa en la app
