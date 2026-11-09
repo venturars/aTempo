@@ -4,12 +4,14 @@ La app se construye con DaisyUI, que es lo que pide la asignatura. Esta carpeta 
 
 ## Qué hay aquí
 
-- `reference/guia.html` es el ejemplo para leer y copiar patrones. `reference/index.html` es la misma guía para mirar. Cómo usarla está en `rules.md`.
+- `reference/guia.html` es el ejemplo para leer y copiar patrones, y se abre en el navegador para mirarla. Cómo usarla está en `rules.md`.
 - `reference/assets/` son los logos del oscuro y del claro. La guía los busca al lado.
 - `theme.css` son los dos temas de DaisyUI: oscuro índigo y claro índigo.
 - `rules.md` dice cómo se ve y cómo se escribe cualquier pantalla.
 
 ## Cómo se usa en la app
+
+El primer PR que añada una app crea el workspace en la raíz, con `packages/*` y `apps/*`. Hasta entonces el import no resuelve.
 
 El mismo aspecto vale para las tres superficies de la constitución: la administración web, la aplicación de escritorio del profesor y el portal web del alumno. No elige la tecnología de cada una. El CSS de entrada importa este archivo una sola vez:
 

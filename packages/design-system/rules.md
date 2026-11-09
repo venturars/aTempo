@@ -2,7 +2,7 @@
 
 Valen para cualquier pantalla. Dicen cómo se ve y cómo se escribe. El producto lo decide el resto de la constitución (`README.md`).
 
-`reference/guia.html` es el ejemplo para leer y copiar patrones. `reference/index.html` es la misma guía para mirar. La navegación y las integraciones salen de la constitución.
+`reference/guia.html` es el ejemplo para leer y copiar patrones, y se abre en el navegador para mirarla. La navegación y las integraciones salen de la constitución.
 
 La app se construye con DaisyUI 5. Los colores, el radio y la fuente salen de `theme.css`. El oscuro índigo usa Geist. El claro índigo usa Inter.
 
@@ -87,6 +87,10 @@ No suena a texto generado. Nada de «¡Por supuesto!», «Encantado de ayudarte�
 | Aviso flotante | `toast toast-top toast-end` con `alert alert-soft` |
 | Vacío | una línea `text-base-content/60` dentro de la tarjeta |
 | Carga | `skeleton` |
+
+## Cuando haya framework
+
+Las clases de este archivo se envuelven una vez en componentes compartidos, en este orden: estado de asistencia (badge), botón, campo, tarjeta, tabla. A partir de ahí una pantalla usa el componente, no las clases.
 
 ## Temas
 
