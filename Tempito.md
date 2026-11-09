@@ -1,6 +1,11 @@
 # Tempito
+Tempito será una mascota virtual que evoluciona y acompaña al alumno durante su experiencia en aTempo.
 
-Se propone organizar Tempito en cuatro módulos funcionales. El README (sección 8) define la mascota virtual del alumno y cómo reacciona a la asistencia, pero no descompone apariencia, progresión, misiones ni el papel de asistente de información.
+No será únicamente un elemento decorativo: tendrá personalidad propia, reaccionará a determinados acontecimientos, propondrá pequeñas misiones y permitirá al alumno personalizar su aspecto.
+
+Su objetivo principal será hacer que la experiencia de utilizar aTempo resulte más atractiva, cercana y motivadora, fomentando la constancia y la participación sin convertir la asistencia en una competición.
+
+Principio fundamental: Tempito debe premiar el progreso y la participación, no castigar las ausencias ni hacer sentir mal al alumno por circunstancias que no controla.
 
 Tempito vive en la pantalla homónima del portal del alumno (sección 5.3). No sustituye al chatbot con RAG ni a la pantalla de Juegos: el chatbot responde preguntas; los juegos son actividades interactivas; Tempito es la mascota, el progreso y los recordatorios cercanos al alumno.
 
