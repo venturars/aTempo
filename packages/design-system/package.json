@@ -8,6 +8,11 @@
   "scripts": {
     "build:guia": "tailwindcss -i reference/entry.css -o reference/guia.css --minify && node -e \"const fs=require('fs');const p='reference/guia.css';let css=fs.readFileSync(p,'utf8');css=css.replaceAll('url(\\\"./fonts/','url(\\\"../fonts/').replaceAll('url(./fonts/','url(../fonts/');fs.writeFileSync(p,css)\""
   },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.0.0",
+    "daisyui": "^5.0.0",
+    "tailwindcss": "^4.0.0"
+  },
   "peerDependencies": {
     "daisyui": "^5.0.0",
     "tailwindcss": "^4.0.0"
