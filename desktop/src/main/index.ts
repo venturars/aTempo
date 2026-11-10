@@ -11,7 +11,7 @@ function createWindow(): void {
     height: 720,
     show: false,
     autoHideMenuBar: true,
-    backgroundColor: '#ACC9E1',
+    backgroundColor: '#141826',
     title: 'aTempo',
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
