@@ -1,6 +1,6 @@
 # Constitución de aTempo
 
-Reglas básicas del proyecto. El detalle de producto sigue en el [README](../README.md). Aquí solo queda lo que ya está decidido para construir.
+Reglas básicas del proyecto. El detalle de producto sigue en [principles.md](../principles.md). Aquí solo queda lo que ya está decidido para construir.
 
 ## 1. Aplicación de escritorio
 
