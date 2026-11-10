@@ -1,6 +1,6 @@
 # Guía visual
 
-Tailwind y daisyUI, con los temas `atempo-oscuro` y `atempo-claro`. Las pantallas usan las clases. No hay un paquete de componentes.
+Tailwind y daisyUI, con los temas `atempo-oscuro` y `atempo-claro`.
 
 Storybook es la fuente de verdad. El markdown de `docs/guia/` sale de aquí y no se versiona.
 
