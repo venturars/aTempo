@@ -2,7 +2,20 @@
 
 Vamos a desarrollar una app para registrar la asistencia (aTempo) de los alumnos de una clase. Sigue la [constitución](docs/CONSTITUTION.md). Este proyecto se trabaja con spec-driven development (SDD).
 
-Antes de construir una pantalla, abre la guía visual con `pnpm storybook` desde `docs/storybook`. Las pantallas usan clases de daisyUI. No hay un paquete de componentes.
+Antes de construir una pantalla, lanza `pnpm guide` desde `docs/storybook` y lee [docs/guia](docs/guia/README.md). Esa carpeta no está en git. Las pantallas usan clases de daisyUI. No hay un paquete de componentes. No abras Storybook para decidir esas clases.
+
+## Guía visual
+
+Storybook, en `docs/storybook`, es la fuente de verdad. El markdown de [docs/guia](docs/guia/README.md) sale de esa fuente y no se versiona. Los agentes leen el markdown.
+
+Si cambias cualquier cosa de `docs/storybook` (historias, reglas, tema o vista previa), es obligatorio volver a lanzar el generador:
+
+```sh
+cd docs/storybook
+pnpm guide
+```
+
+`pnpm guide:check` tiene que salir bien antes de dar el cambio por terminado. No edites `docs/guia/` a mano.
 
 ## 1. Principios Generales del Sistema
 

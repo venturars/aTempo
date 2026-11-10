@@ -1,6 +1,8 @@
 # Estilo
 
-La guía visual está en [docs/storybook](storybook/README.md). Desde esa carpeta, `pnpm storybook` la abre en local.
+La fuente de verdad visual es [docs/storybook](storybook/README.md). El markdown que leen los agentes está en [docs/guia](guia/README.md). Sale de Storybook y no se versiona. Desde `docs/storybook`, `pnpm guide` lo vuelve a generar. Hay que lanzarlo cada vez que cambia Storybook.
+
+Para ver la guía en el navegador, desde `docs/storybook`: `pnpm storybook`.
 
 Hay dos temas de daisyUI. `atempo-oscuro` es el de defecto y usa Geist. `atempo-claro` usa Inter. Las fuentes están en el repositorio, con licencia OFL.
 
