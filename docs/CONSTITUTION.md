@@ -20,8 +20,5 @@ aTempo de escritorio es la aplicación del profesor. Sirve para registrar la asi
 ## 3. Dónde seguir
 
 - [STYLE.md](STYLE.md): los dos temas y el enlace a la guía visual.
-- La fuente de verdad visual es `docs/storybook`. El markdown de `docs/guia/` sale de ahí con `pnpm guide` y no se versiona. Hay que lanzarlo cada vez que cambia Storybook. Los agentes leen ese markdown.
-- `atempo-oscuro` usa Geist y es el tema por defecto. `atempo-claro` usa Inter.
-- Las pantallas usan clases de daisyUI. No hay un paquete de componentes.
 - [ARCHITECTURE.md](ARCHITECTURE.md): las tres capas de la aplicación.
 - [TREE.md](TREE.md): el árbol de carpetas de `desktop/`.
