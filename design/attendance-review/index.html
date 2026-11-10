@@ -289,7 +289,11 @@
         </select>
       </details>
     </footer>
-    <dialog id="decision">
+    <dialog
+      id="decision"
+      aria-labelledby="decision-title"
+      aria-describedby="decision-description"
+    >
       <form id="decision-form">
         <h2 id="decision-title">Resolver solicitud</h2>
         <p id="decision-description"></p>
@@ -358,7 +362,10 @@
           .setAttribute("aria-pressed", String(filter === "resolved"));
         if (scenario !== "normal") {
           const messages = {
-            empty: "No hay solicitudes pendientes.",
+            empty:
+              filter === "pending"
+                ? "No hay solicitudes pendientes."
+                : "Todavía no hay solicitudes resueltas.",
             loading: "Cargando solicitudes…",
             error: "No se pudieron cargar las solicitudes.",
           };
@@ -405,6 +412,9 @@
           button.onclick = () => {
             selectedId = item.id;
             render();
+            const heading = document.querySelector("#student");
+            heading.tabIndex = -1;
+            heading.focus();
           };
           li.append(button);
           queue.append(li);
