@@ -2,6 +2,8 @@
 
 Vamos a desarrollar una app para registrar la asistencia (aTempo) de los alumnos de una clase. Sigue la [constitución](docs/CONSTITUTION.md). Este proyecto se trabaja con spec-driven development (SDD).
 
+Antes de construir una pantalla, abre la guía visual con `pnpm storybook` desde `docs/storybook`. Las pantallas usan clases de daisyUI. No hay un paquete de componentes.
+
 ## 1. Principios Generales del Sistema
 
 - **Fidelidad al SDD:** Ningún agente puede proponer cambios arquitectónicos, de stack o de base de datos que contradigan el SDD activo sin aprobación previa.
