@@ -1,30 +1,13 @@
-# Estilo de aTempo de escritorio
+# Estilo
 
-## Paleta
+La fuente de verdad visual es [docs/storybook](storybook/README.md). El markdown que leen los agentes está en [docs/guia](guia/README.md). Sale de Storybook y no se versiona. Desde `docs/storybook`, `pnpm guide` lo vuelve a generar. Hay que lanzarlo cada vez que cambia Storybook.
 
-Cada color tiene un papel fijo.
+Para ver la guía en el navegador, desde `docs/storybook`: `pnpm storybook`.
 
-| Color     | Papel                                                                       |
-| --------- | --------------------------------------------------------------------------- |
-| `#ACC9E1` | Fondo de la ventana                                                         |
-| `#FFFFFF` | Tarjeta del formulario                                                      |
-| `#1C1917` | Texto principal, sobre la tarjeta blanca                                    |
-| `#359170` | Botón Entrar y texto del botón en blanco                                    |
-| `#87AF99` | Borde de los campos                                                         |
-| `#3116F2` | Foco del campo                                                              |
-| `#417849` | Texto secundario y alert de datos válidos, con el texto del alert en blanco |
+Hay dos temas de daisyUI. `atempo-oscuro` es el de defecto y usa Geist. `atempo-claro` usa Inter. Las fuentes están en el repositorio, con licencia OFL.
 
-`#87AF99` queda en el borde. El texto secundario usa `#417849`, el verde más oscuro de la misma paleta, porque `#87AF99` sobre blanco no se lee.
+Los colores salen del tema. No se escribe un color a mano.
 
-El tema se declara en CSS con el plugin oficial de daisyUI, `@plugin "daisyui/theme"`, con el nombre `atempo`. No hay otra configuración de colores.
+Las pantallas usan las clases de daisyUI. No hay un paquete de componentes.
 
-## Tipografía y espacio
-
-- La letra es la del sistema: `-apple-system`, `BlinkMacSystemFont`, `Segoe UI`, sans-serif.
-- El título es el único texto grande. El resto mantiene una sola jerarquía.
-- La tarjeta tiene aire alrededor de los campos. Los campos no se pegan entre sí.
-- Cada campo lleva su etiqueta visible. El placeholder no sustituye a la etiqueta.
-
-# Reglas de interfaces
-
-Siguen la [guía de interfaces de Apple](https://developer.apple.com/documentation/technologyoverviews/interface-fundamentals):
+Las reglas de la guía siguen la [guía de Apple](https://developer.apple.com/design/human-interface-guidelines).

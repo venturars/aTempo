@@ -27,7 +27,7 @@ desktop/
         App.tsx
         env.d.ts
         styles/
-          app.css       # Tailwind, daisyUI y el tema atempo
+          app.css       # Tailwind y daisyUI
         login/
           LoginScreen.tsx
           loginStore.ts

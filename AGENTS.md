@@ -2,6 +2,21 @@
 
 Vamos a desarrollar una app para registrar la asistencia (aTempo) de los alumnos de una clase. Sigue la [constitución](docs/CONSTITUTION.md). Este proyecto se trabaja con spec-driven development (SDD).
 
+Antes de construir una pantalla, lanza `pnpm guide` desde `docs/storybook` y lee [docs/guia](docs/guia/README.md).
+
+## Guía visual
+
+Storybook, en `docs/storybook`, es la fuente de verdad. El markdown de [docs/guia](docs/guia/README.md) sale de esa fuente y no se versiona. Los agentes leen el markdown.
+
+Si cambias cualquier cosa de `docs/storybook` (historias, reglas, tema o vista previa), es obligatorio volver a lanzar el generador:
+
+```sh
+cd docs/storybook
+pnpm guide
+```
+
+`pnpm guide:check` tiene que salir bien antes de dar el cambio por terminado. No edites `docs/guia/` a mano.
+
 ## 1. Principios Generales del Sistema
 
 - **Fidelidad al SDD:** Ningún agente puede proponer cambios arquitectónicos, de stack o de base de datos que contradigan el SDD activo sin aprobación previa.

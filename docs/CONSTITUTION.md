@@ -1,6 +1,6 @@
 # Constitución de aTempo
 
-Reglas básicas del proyecto. El detalle de producto sigue en el [README](../README.md). Aquí solo queda lo que ya está decidido para construir.
+Reglas básicas del proyecto. El detalle de producto sigue en [principles.md](../principles.md). Aquí solo queda lo que ya está decidido para construir.
 
 ## 1. Aplicación de escritorio
 
@@ -19,6 +19,6 @@ aTempo de escritorio es la aplicación del profesor. Sirve para registrar la asi
 
 ## 3. Dónde seguir
 
-- [STYLE.md](STYLE.md): colores, tipo, espacio y prueba visual.
+- [STYLE.md](STYLE.md): los dos temas y el enlace a la guía visual.
 - [ARCHITECTURE.md](ARCHITECTURE.md): las tres capas de la aplicación.
 - [TREE.md](TREE.md): el árbol de carpetas de `desktop/`.

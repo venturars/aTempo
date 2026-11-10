@@ -6,6 +6,9 @@ node_modules/
 out/
 dist/
 release/
+storybook-static/
+docs/guia/
+debug-storybook.log
 *.tsbuildinfo
 
 # Base local de SQLite
@@ -52,3 +55,6 @@ Desktop.ini
 .idea/
 *.swp
 *.swo
+
+*storybook.log
+storybook-static
