@@ -58,3 +58,9 @@ Desktop.ini
 
 *storybook.log
 storybook-static
+
+
+# APM dependencies
+apm_modules/
+.agents/
+.cursor/
