@@ -2,7 +2,7 @@
 
 Vamos a desarrollar una app para registrar la asistencia (aTempo) de los alumnos de una clase. Sigue la [constitución](docs/CONSTITUTION.md). Este proyecto se trabaja con spec-driven development (SDD).
 
-Antes de construir una pantalla, lanza `pnpm guide` desde `docs/storybook` y lee [docs/guia](docs/guia/README.md). Esa carpeta no está en git. Las pantallas usan clases de daisyUI. No hay un paquete de componentes. No abras Storybook para decidir esas clases.
+Antes de construir una pantalla, lanza `pnpm guide` desde `docs/storybook` y lee [docs/guia](docs/guia/README.md).
 
 ## Guía visual
 
