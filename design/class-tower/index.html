@@ -1,0 +1,728 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>La torre · aTempo</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #f6f5f1;
+        color: #202727;
+        font:
+          16px/1.5 system-ui,
+          sans-serif;
+      }
+      button,
+      select {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      button:disabled {
+        cursor: default;
+        opacity: 0.45;
+      }
+      button:focus-visible,
+      select:focus-visible {
+        outline: 3px solid #285ecd;
+        outline-offset: 4px;
+      }
+      header,
+      main,
+      footer {
+        max-width: 1040px;
+        margin: auto;
+        padding: 24px 32px;
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 24px;
+      }
+      header strong {
+        font-size: 24px;
+      }
+      .views {
+        flex-wrap: wrap;
+        display: flex;
+        gap: 20px;
+      }
+      .views button {
+        padding: 8px 0;
+        background: none;
+        border: 0;
+        color: #626a69;
+      }
+      .views button[aria-pressed="true"] {
+        color: #202727;
+        text-decoration: underline;
+        text-underline-offset: 7px;
+        font-weight: 600;
+      }
+      main {
+        position: relative;
+        text-align: center;
+        padding-top: 44px;
+      }
+      h1 {
+        font-size: clamp(34px, 5vw, 58px);
+        line-height: 1.15;
+        margin: 12px 0 16px;
+      }
+      h2 {
+        font-size: 30px;
+        margin: 16px 0 8px;
+      }
+      .muted {
+        color: #626a69;
+      }
+      #count {
+        font-size: 20px;
+      }
+      #construction {
+        width: min(100%, 660px);
+        display: block;
+        margin: 32px auto 20px;
+        overflow: visible;
+      }
+      .block {
+        opacity: 0;
+        transform: translate(-220px, -30px);
+        transition:
+          transform 550ms cubic-bezier(0.16, 1, 0.3, 1),
+          opacity 180ms ease-out;
+      }
+      .block.from-right {
+        transform: translate(220px, -30px);
+      }
+      .block.placed {
+        opacity: 1;
+        transform: translate(0, 0);
+      }
+      #camera {
+        transform-origin: 330px 300px;
+        transform: translateY(45px) scale(1.13);
+        transition: transform 650ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      #camera.complete {
+        transform: translateY(0) scale(0.86);
+      }
+      .footing {
+        fill: #172c52;
+        opacity: 0.2;
+      }
+      button.primary {
+        background: #285ecd;
+        color: white;
+        border: 0;
+        border-radius: 6px;
+        padding: 13px 22px;
+      }
+      .secondary {
+        border: 0;
+        background: none;
+        color: #626a69;
+        padding: 10px;
+        text-decoration: underline;
+        text-underline-offset: 4px;
+      }
+      #student {
+        max-width: 480px;
+        margin: 20px auto 80px;
+      }
+      label {
+        display: block;
+        text-align: left;
+        margin: 32px 0 8px;
+      }
+      select {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        background: #fff;
+        border: 1px solid #aab2ae;
+        border-radius: 6px;
+      }
+      .student-block {
+        width: 170px;
+        margin: 40px auto 24px;
+        display: block;
+      }
+      .student-block .block {
+        opacity: 1;
+        transform: none;
+      }
+      .student-actions {
+        margin-top: 32px;
+      }
+      #student-status {
+        min-height: 28px;
+        margin-top: 20px;
+      }
+      #teacher-status {
+        min-height: 36px;
+        font-size: 24px;
+        font-weight: 600;
+      }
+      footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        color: #626a69;
+        font-size: 14px;
+        margin-top: 28px;
+      }
+      footer p {
+        max-width: 45ch;
+      }
+      canvas {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 2;
+      }
+      body {
+        min-height: 100vh;
+        background: linear-gradient(
+          170deg,
+          #23314f 0%,
+          #326b86 52%,
+          #8bd9d7 100%
+        );
+        color: #fff;
+      }
+      header,
+      main,
+      footer {
+        max-width: 1000px;
+      }
+      main {
+        padding-top: 8px;
+      }
+      h1 {
+        font-size: clamp(32px, 4vw, 46px);
+        font-weight: 600;
+      }
+      .muted,
+      footer,
+      .secondary,
+      .views button {
+        color: #e1f0f4;
+      }
+      .views button[aria-pressed="true"] {
+        color: white;
+      }
+      #construction {
+        width: min(100%, 540px);
+        margin: -10px auto -18px;
+        overflow: hidden;
+      }
+      #count {
+        margin-bottom: 0;
+      }
+      #teacher-status {
+        margin: 8px 0 18px;
+      }
+      button.primary {
+        color: #20324b;
+        background: #e4f7ef;
+        border-radius: 4px;
+        font-weight: 600;
+      }
+      button:focus-visible,
+      select:focus-visible {
+        outline-color: #ffe2ad;
+      }
+      select {
+        color: #20324b;
+        border: 0;
+      }
+      #student {
+        margin-bottom: 40px;
+      }
+      .student-block {
+        width: 230px;
+      }
+      footer {
+        margin-top: 24px;
+      }
+      .spark,
+      .rocket {
+        stroke-linecap: round;
+        pointer-events: none;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      @media (max-width: 600px) {
+        header,
+        main,
+        footer {
+          padding: 20px;
+        }
+        header {
+          align-items: flex-start;
+        }
+        header strong {
+          font-size: 20px;
+        }
+        .views {
+          gap: 14px;
+        }
+        main {
+          padding-top: 40px;
+        }
+        footer {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+        .views button {
+          font-size: 14px;
+        }
+        #construction {
+          margin: 36px auto 8px;
+        }
+        #teacher-status {
+          font-size: 20px;
+        }
+        #student {
+          margin-bottom: 40px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .block {
+          transition: none;
+          transform: none;
+        }
+        #camera,
+        #camera.complete {
+          transition: none;
+          transform: none;
+        }
+        canvas {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <strong>aTempo</strong>
+      <nav class="views" aria-label="Vistas del boceto">
+        <button id="teacher-view" aria-pressed="true">Profesor</button
+        ><button id="student-view" aria-pressed="false">Alumno</button>
+        <button
+          id="sound"
+          aria-pressed="true"
+          aria-label="Sonido activado. Silenciar"
+        >
+          Sonido: sí
+        </button>
+      </nav>
+    </header>
+    <main>
+      <section id="teacher" aria-labelledby="teacher-title">
+        <p class="muted">AI Engineer · Sesión de hoy</p>
+        <h1 id="teacher-title">La torre de hoy</h1>
+        <p id="count" role="status" aria-live="polite">0 de 6 bloques</p>
+        <svg
+          id="construction"
+          viewBox="0 0 660 500"
+          role="img"
+          aria-label="Torre compartida, todavía vacía"
+        >
+          <g id="camera">
+            <ellipse class="footing" cx="330" cy="430" rx="190" ry="24" />
+            <g id="foundation">
+              <polygon
+                fill="#7191bc"
+                points="330,288 500,373 330,458 160,373"
+              />
+              <polygon
+                fill="#456c99"
+                points="160,373 330,458 330,482 160,397"
+              />
+              <polygon
+                fill="#2f527c"
+                points="330,458 500,373 500,397 330,482"
+              />
+            </g>
+            <g id="slots"></g>
+          </g>
+          <g id="bursts" aria-hidden="true"></g>
+        </svg>
+        <p id="teacher-status" role="status" aria-live="polite">
+          Cada entrada suma.
+        </p>
+        <button class="primary" id="simulate">Simular otra entrada</button>
+      </section>
+      <section id="student" hidden aria-labelledby="student-title">
+        <p class="muted">AI Engineer · Sesión de hoy</p>
+        <h1 id="student-title">Añade tu bloque</h1>
+        <label for="person">Alumno de prueba</label
+        ><select id="person">
+          <option value="1">Lucía</option>
+          <option value="2">Daniel</option>
+          <option value="3">Nora</option>
+          <option value="4">Álex</option>
+          <option value="5">Sara</option>
+          <option value="6">Leo</option>
+        </select>
+        <svg class="student-block" viewBox="0 0 340 205" aria-hidden="true">
+          <polygon fill="#94e3dd" points="170,10 330,90 170,170 10,90" />
+          <polygon fill="#54b6bd" points="10,90 170,170 170,198 10,118" />
+          <polygon fill="#348d9f" points="170,170 330,90 330,118 170,198" />
+        </svg>
+        <div class="student-actions">
+          <button class="primary" id="join">Registrar entrada</button>
+        </div>
+        <p id="student-status" role="status" aria-live="polite"></p>
+      </section>
+    </main>
+    <footer>
+      <button class="secondary" id="reset">Reiniciar demo</button>
+    </footer>
+
+    <script>
+      const people = [
+        { id: 1, name: "Lucía" },
+        { id: 2, name: "Daniel" },
+        { id: 3, name: "Nora" },
+        { id: 4, name: "Álex" },
+        { id: 5, name: "Sara" },
+        { id: 6, name: "Leo" },
+      ];
+      const colors = [
+        ["#96c8f2", "#6194ca", "#426f9e"],
+        ["#91d9ea", "#53acbf", "#348796"],
+        ["#94e3dd", "#54b6bd", "#348d9f"],
+        ["#b5e8c8", "#75bba9", "#4c948d"],
+        ["#e5e8b2", "#b8bd80", "#8c9764"],
+        ["#ffd9a8", "#ddac7e", "#b38461"],
+      ];
+      const joined = new Set();
+      const namespace = "http://www.w3.org/2000/svg";
+      const slots = document.querySelector("#slots");
+      let celebrated = false;
+      let celebrationTimer = null;
+
+      let fireworksFrame = null;
+      const bursts = document.querySelector("#bursts");
+      let audio = null;
+      let volume = null;
+      let soundEnabled = true;
+      const notes = [62, 65, 69, 72, 76, 79];
+      function prepareAudio() {
+        if (!soundEnabled) return false;
+        const AudioEngine = window.AudioContext || window.webkitAudioContext;
+        if (!AudioEngine) return false;
+        if (!audio) {
+          audio = new AudioEngine();
+          volume = audio.createGain();
+          volume.gain.value = 0.45;
+          volume.connect(audio.destination);
+        }
+        if (audio.state === "suspended") audio.resume().catch(() => {});
+        return true;
+      }
+      function piano(index) {
+        if (!prepareAudio()) return;
+        const time = audio.currentTime;
+        const frequency = 440 * 2 ** ((notes[index] - 69) / 12);
+        // A soft attack and decaying harmonics give the note a felt-piano character.
+        [1, 2, 3, 4].forEach((harmonic, i) => {
+          const tone = audio.createOscillator();
+          const envelope = audio.createGain();
+          tone.type = "sine";
+          tone.frequency.value = frequency * harmonic;
+          envelope.gain.setValueAtTime(0, time);
+          envelope.gain.linearRampToValueAtTime(
+            0.32 / (harmonic * harmonic),
+            time + 0.009,
+          );
+          envelope.gain.exponentialRampToValueAtTime(
+            0.0001,
+            time + 1.3 / (1 + i * 0.35),
+          );
+          tone.connect(envelope).connect(volume);
+          tone.start(time);
+          tone.stop(time + 1.4);
+          tone.onended = () => {
+            tone.disconnect();
+            envelope.disconnect();
+          };
+        });
+      }
+      function cheer() {
+        if (!prepareAudio()) return;
+        const time = audio.currentTime;
+        // Three pitched voices sweep from an "ee" vowel into an open "aah".
+        [-9, 0, 9].forEach((detune) => {
+          const voice = audio.createOscillator();
+          const envelope = audio.createGain();
+          voice.type = "sawtooth";
+          voice.detune.value = detune;
+          voice.frequency.setValueAtTime(210, time);
+          voice.frequency.exponentialRampToValueAtTime(310, time + 0.28);
+          voice.frequency.exponentialRampToValueAtTime(245, time + 1.05);
+          envelope.gain.setValueAtTime(0, time);
+          envelope.gain.linearRampToValueAtTime(0.11, time + 0.09);
+          envelope.gain.setValueAtTime(0.09, time + 0.65);
+          envelope.gain.exponentialRampToValueAtTime(0.0001, time + 1.25);
+          const filters = [
+            [350, 850],
+            [2200, 1250],
+          ].map(([from, to]) => {
+            const filter = audio.createBiquadFilter();
+            filter.type = "bandpass";
+            filter.Q.value = 5;
+            filter.frequency.setValueAtTime(from, time);
+            filter.frequency.exponentialRampToValueAtTime(to, time + 0.35);
+            voice.connect(filter).connect(envelope);
+            return filter;
+          });
+          envelope.connect(volume);
+          voice.start(time);
+          voice.stop(time + 1.3);
+          voice.onended = () => {
+            voice.disconnect();
+            envelope.disconnect();
+            filters.forEach((filter) => filter.disconnect());
+          };
+        });
+      }
+      document.querySelector("#sound").onclick = () => {
+        soundEnabled = !soundEnabled;
+        if (volume)
+          volume.gain.setValueAtTime(
+            soundEnabled ? 0.45 : 0,
+            audio.currentTime,
+          );
+        const button = document.querySelector("#sound");
+        button.textContent = soundEnabled ? "Sonido: sí" : "Sonido: no";
+        button.setAttribute("aria-pressed", String(soundEnabled));
+        button.setAttribute(
+          "aria-label",
+          soundEnabled
+            ? "Sonido activado. Silenciar"
+            : "Sonido desactivado. Activar",
+        );
+        if (soundEnabled) prepareAudio();
+      };
+      function shape(parent, tag, attributes) {
+        const node = document.createElementNS(namespace, tag);
+        for (const [name, value] of Object.entries(attributes))
+          node.setAttribute(name, value);
+        parent.append(node);
+        return node;
+      }
+      for (let index = 0; index < people.length; index++) {
+        const y = 260 - index * 28;
+        const slot = shape(slots, "g", { transform: `translate(0,${y})` });
+        const block = shape(slot, "g", {
+          class: `block${index % 2 ? " from-right" : ""}`,
+          id: `block-${index}`,
+        });
+        const [top, left, right] = colors[index];
+        shape(block, "polygon", {
+          fill: left,
+          points: "160,85 330,170 330,198 160,113",
+        });
+        shape(block, "polygon", {
+          fill: right,
+          points: "330,170 500,85 500,113 330,198",
+        });
+        shape(block, "polygon", {
+          fill: top,
+          points: "330,0 500,85 330,170 160,85",
+        });
+        shape(block, "path", {
+          d: "M160 85 L330 170 L500 85",
+          fill: "none",
+          stroke: "#ffffff",
+          "stroke-opacity": ".24",
+        });
+      }
+      function updateStudent() {
+        const id = Number(document.querySelector("#person").value);
+        const alreadyJoined = joined.has(id);
+        document.querySelector("#join").disabled = alreadyJoined;
+        document.querySelector("#student-status").textContent = alreadyJoined
+          ? "Tu entrada está registrada. Tu bloque ya está colocado."
+          : "";
+      }
+      function addBlock(id) {
+        if (joined.has(id)) return;
+        const position = joined.size;
+        joined.add(id);
+        piano(position);
+        document.querySelector(`#block-${position}`).classList.add("placed");
+        document.querySelector("#count").textContent =
+          `${joined.size} de ${people.length} bloques`;
+        document
+          .querySelector("#construction")
+          .setAttribute(
+            "aria-label",
+            `Torre compartida con ${joined.size} de ${people.length} bloques`,
+          );
+        const full = joined.size === people.length;
+        document.querySelector("#simulate").disabled = full;
+        document.querySelector("#simulate").hidden = full;
+        document.querySelector("#teacher-status").textContent = full
+          ? "Todos arriba."
+          : "Cada entrada suma.";
+        updateStudent();
+        if (full && !celebrated) {
+          celebrated = true;
+          celebrationTimer = setTimeout(() => {
+            document.querySelector("#camera").classList.add("complete");
+            launchFireworks();
+          }, 650);
+        }
+      }
+      function launchFireworks() {
+        cancelAnimationFrame(fireworksFrame);
+        celebrationTimer = null;
+        bursts.replaceChildren();
+        const colors = ["#ffe4a0", "#a9fff0", "#ffb9d9", "#c8ceff"];
+        const positions = [
+          [120, 170],
+          [530, 150],
+          [330, 90],
+          [100, 265],
+          [550, 240],
+          [230, 130],
+          [450, 110],
+          [330, 75],
+        ];
+        cheer();
+        const shows = positions.map(([x, y], index) => {
+          const color = colors[index % colors.length];
+          const rocket = shape(bursts, "line", {
+            class: "rocket",
+            stroke: color,
+            "stroke-width": 3,
+            opacity: 0,
+          });
+          const particles = Array.from({ length: 44 }, (_, ray) => {
+            const angle = (Math.PI * 2 * ray) / 44;
+            const speed = 65 + Math.random() * 70;
+            const node = shape(bursts, "line", {
+              class: "spark",
+              stroke: color,
+              "stroke-width": 1.8 + Math.random(),
+              opacity: 0,
+            });
+            return {
+              node,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed,
+              life: 1.3 + Math.random() * 0.7,
+            };
+          });
+          return { x, y, delay: index * 0.78, rocket, particles };
+        });
+        const start = performance.now();
+        function frame(now) {
+          const time = (now - start) / 1000;
+          for (const show of shows) {
+            const age = time - show.delay;
+            const rising = age >= 0 && age < 0.65;
+            show.rocket.setAttribute("opacity", rising ? 1 : 0);
+            if (rising) {
+              const progress = age / 0.65;
+              const y = 490 + (show.y - 490) * (1 - (1 - progress) ** 2);
+              show.rocket.setAttribute("x1", show.x);
+              show.rocket.setAttribute("x2", show.x);
+              show.rocket.setAttribute("y1", y + 17 * (1 - progress));
+              show.rocket.setAttribute("y2", y);
+            }
+            const elapsed = age - 0.65;
+            for (const particle of show.particles) {
+              const active = elapsed >= 0 && elapsed < particle.life;
+              particle.node.setAttribute(
+                "opacity",
+                active ? Math.min(1, (particle.life - elapsed) * 1.6) : 0,
+              );
+              if (!active) continue;
+              // Air resistance slows the burst while gravity pulls the sparks down.
+              const position = (t) => {
+                const travel = (1 - Math.exp(-1.25 * t)) / 1.25;
+                return [
+                  show.x + particle.vx * travel,
+                  show.y + particle.vy * travel + 43 * t * t,
+                ];
+              };
+              const [x1, y1] = position(Math.max(0, elapsed - 0.055));
+              const [x2, y2] = position(elapsed);
+              for (const [name, value] of Object.entries({ x1, y1, x2, y2 }))
+                particle.node.setAttribute(name, value);
+            }
+          }
+          if (time < 8.2) fireworksFrame = requestAnimationFrame(frame);
+          else {
+            stopFireworks();
+          }
+        }
+        fireworksFrame = requestAnimationFrame(frame);
+      }
+      function stopFireworks() {
+        cancelAnimationFrame(fireworksFrame);
+        fireworksFrame = null;
+        bursts.replaceChildren();
+      }
+      function switchView(view) {
+        document.querySelector("#teacher").hidden = view !== "teacher";
+        document.querySelector("#student").hidden = view !== "student";
+        for (const name of ["teacher", "student"])
+          document
+            .querySelector(`#${name}-view`)
+            .setAttribute("aria-pressed", String(name === view));
+        updateStudent();
+        const title = document.querySelector(`#${view}-title`);
+        title.tabIndex = -1;
+        title.focus();
+      }
+      document.querySelector("#teacher-view").onclick = () =>
+        switchView("teacher");
+      document.querySelector("#student-view").onclick = () =>
+        switchView("student");
+      document.querySelector("#person").onchange = updateStudent;
+      document.querySelector("#join").onclick = () =>
+        addBlock(Number(document.querySelector("#person").value));
+      document.querySelector("#simulate").onclick = () => {
+        const next = people.find((person) => !joined.has(person.id));
+        if (next) addBlock(next.id);
+      };
+      document.querySelector("#reset").onclick = () => {
+        clearTimeout(celebrationTimer);
+        stopFireworks();
+        celebrationTimer = null;
+
+        document.querySelector("#camera").classList.remove("complete");
+        joined.clear();
+        celebrated = false;
+        for (const block of slots.querySelectorAll(".block"))
+          block.classList.remove("placed");
+        document.querySelector("#count").textContent = "0 de 6 bloques";
+        document
+          .querySelector("#construction")
+          .setAttribute("aria-label", "Torre compartida, todavía vacía");
+        document.querySelector("#simulate").disabled = false;
+        document.querySelector("#simulate").hidden = false;
+        document.querySelector("#teacher-status").textContent =
+          "Cada entrada suma.";
+        updateStudent();
+      };
+    </script>
+  </body>
+</html>
