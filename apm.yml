@@ -7,6 +7,8 @@ author: xFNighTMaRe
 # Accepted values: agent-skills, antigravity, claude, codex, copilot, cursor, gemini, grok-bot, grok-build, hermes, kiro, opencode, vscode, windsurf
 targets:
   - cursor
+  # La misma entrega de GitHub también queda disponible para Codex.
+  - codex
 dependencies:
   apm:
     - venturars/delivery-workflow#v0.1.0

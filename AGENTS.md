@@ -32,14 +32,18 @@ Para implementar una spec se sigue este orden. Cada paso espera a que el anterio
 1. Localiza la issue y entiende la tarea que hay que resolver.
 2. Lee la [constitución](docs/CONSTITUTION.md).
 3. Investiga cómo se debe resolver la tarea.
-4. Sube a la issue los artefactos `spec.md`, `plan.md` y `tasks.md`.
+4. Escribe las secciones `## Spec`, `## Plan` y `## Tasks` en la issue.
 5. Desarrolla la tarea.
 6. Prueba lo desarrollado.
 7. Commitea los cambios en GitHub.
 
 ## 👥 2. Catálogo y Definición de Agentes
 
-Todavía no hay sub-agentes
+Los agentes del flujo de entrega se instalan localmente con APM para Cursor y Codex. Sus archivos generados no se versionan. El paquete fijado en `apm.yml` es [delivery-workflow](https://github.com/venturars/delivery-workflow/tree/v0.1.0).
+
+Antes de crear una issue, preparar una rama o pedir revisión, instala las dependencias desde la raíz con `apm install` y usa `$delivery-workflow` en Codex o `/delivery-workflow` en Cursor. La issue contiene la spec, el plan y las tareas; la PR empieza en borrador y apunta a `staging`.
+
+Cuando se nombren revisores, consulta primero la skill `github-cache` instalada en `.agents/skills/github-cache/`: reutiliza los alias encontrados, busca solo los nombres ausentes y guarda las coincidencias inequívocas. Ante una ambigüedad, pide aclaración. La caché se crea en `.git/.git-workflow-cache.json`, caduca a las 48 horas y nunca se añade al commit. Antes de solicitar la revisión, comprueba en GitHub que cada login aún puede revisar.
 
 ## 3. Reglas de comportamiento
 

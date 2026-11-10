@@ -43,6 +43,19 @@ pnpm guide
 
 Ese comando es obligatorio: sin él, el markdown se queda desfasado. No se edita `docs/guia/` a mano.
 
+## Flujo de entrega
+
+El paquete [delivery-workflow v0.1.0](https://github.com/venturars/delivery-workflow/tree/v0.1.0) aporta el flujo de issues, ramas, PR en borrador y la caché de revisores. Requiere APM, Node 20 o superior y `gh` con sesión iniciada. Desde CMD, en la raíz del repositorio:
+
+```bat
+set "GITHUB_TOKEN="
+apm install
+```
+
+La instalación genera las skills en `.agents/skills/` y los agentes de Cursor y Codex en sus carpetas locales. Esos archivos no se versionan. Para usar el MCP de GitHub, define `GITHUB_TOKEN` desde tu sesión de `gh` antes de abrir el agente; no guardes el valor en el repositorio.
+
+En Codex, llama a `$delivery-workflow`; en Cursor, a `/delivery-workflow`. Cuando se pidan revisores, el flujo consulta primero `github-cache` y solo busca los nombres ausentes. La caché local se crea al usarla en `.git/.git-workflow-cache.json`, caduca a las 48 horas y no se sube a Git.
+
 ## Documentación
 
 | Documento | Para qué |

@@ -64,3 +64,4 @@ storybook-static
 apm_modules/
 .agents/
 .cursor/
+.codex/
