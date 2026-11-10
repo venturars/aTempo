@@ -18,9 +18,9 @@ async function openApp(): Promise<{ app: ElectronApplication; window: Page }> {
 test('shows the login screen', async () => {
   const { app, window } = await openApp()
 
-  await expect(window.getByRole('heading', { name: 'aTempo' })).toBeVisible()
-  await expect(window.getByText('Entra con tu correo.')).toBeVisible()
-  await expect(window.getByLabel('Correo')).toBeVisible()
+  await expect(window.getByRole('heading', { name: 'Inicia sesión' })).toBeVisible()
+  await expect(window.getByText('Usa la cuenta que te ha dado tu centro.')).toBeVisible()
+  await expect(window.getByLabel('Correo electrónico')).toBeVisible()
   await expect(window.getByLabel('Contraseña')).toBeVisible()
   await expect(window.getByRole('button', { name: 'Entrar' })).toBeVisible()
   await expect(window.getByRole('status')).toHaveCount(0)
@@ -45,7 +45,7 @@ test('shows both errors when the fields are empty', async () => {
 test('shows an error when the email has no email shape', async () => {
   const { app, window } = await openApp()
 
-  await window.getByLabel('Correo').fill('ana')
+  await window.getByLabel('Correo electrónico').fill('ana')
   await window.getByLabel('Contraseña').fill('secreta')
   await window.getByRole('button', { name: 'Entrar' }).click()
 
@@ -58,7 +58,7 @@ test('shows an error when the email has no email shape', async () => {
 test('shows the written email and password in an alert', async () => {
   const { app, window } = await openApp()
 
-  await window.getByLabel('Correo').fill('ana@clase.test')
+  await window.getByLabel('Correo electrónico').fill('ana@clase.test')
   await window.getByLabel('Contraseña').fill('secreta')
   await window.getByRole('button', { name: 'Entrar' }).click()
 
