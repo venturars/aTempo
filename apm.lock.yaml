@@ -73,6 +73,14 @@ dependencies:
   - .agents/skills/pull-changes
   - .agents/skills/pull-changes/SKILL.md
   - .agents/skills/pull-changes/scripts/pull-changes.sh
+  - .codex/agents/code-developer.toml
+  - .codex/agents/code-tester.toml
+  - .codex/agents/concept-developer.toml
+  - .codex/agents/concept-tester.toml
+  - .codex/agents/create-branch.toml
+  - .codex/agents/create-commit.toml
+  - .codex/agents/create-issue.toml
+  - .codex/agents/create-pr.toml
   - .cursor/agents/code-developer.md
   - .cursor/agents/code-tester.md
   - .cursor/agents/concept-developer.md
@@ -128,6 +136,14 @@ dependencies:
     .agents/skills/link-pr-to-issue/SKILL.md: sha256:374708f7d568cdbc7ff606de6830554dd67375d8a3012b8354f7572a872280f8
     .agents/skills/pull-changes/SKILL.md: sha256:645632f583b472c26585480d17fe4e8584a807147ae350525650c57ecf5f8620
     .agents/skills/pull-changes/scripts/pull-changes.sh: sha256:e2a439fb3aef028417bc2dacc65141d69b0ccfe5894002a92e716a9a7d8c2baa
+    .codex/agents/code-developer.toml: sha256:1b9fb86b50eb8a288ff76476c9c03b0ca9133b1538796ab087f003cef5398fb7
+    .codex/agents/code-tester.toml: sha256:9fbbd32a3389b4573590cf57f9220703dc7376311569de723e675f258380f7d3
+    .codex/agents/concept-developer.toml: sha256:78265ee6e0eb3352cfdfcd1de9ea9cd832714b2e989566ab4d9ae9818cfcec0a
+    .codex/agents/concept-tester.toml: sha256:ea2277868e9ba0ed5721d9033ef2b48ef47bf8974f7e21880a00848c64dce9eb
+    .codex/agents/create-branch.toml: sha256:c07e81322b5d8a3be90e32b8bfd53939a55c35395bdacaa5196b149213190616
+    .codex/agents/create-commit.toml: sha256:942abdb0b768170b647c153c185b31c348d776e657813488001ec5844081e28c
+    .codex/agents/create-issue.toml: sha256:9055580f580e2e3beeecbf5e660fb73cccc8c1a16f2e107a486ac3d3eb293f40
+    .codex/agents/create-pr.toml: sha256:3cd4f8ba2be938f4f850af09800bb2dea0cdaebf50e312223742ec3bab193619
     .cursor/agents/code-developer.md: sha256:97f0c675ae6f85c0d482a6dd9482423cbba73600a2332a82e9c4943cc82d5ba3
     .cursor/agents/code-tester.md: sha256:71079c0def446223d9fe3358ba9df3332551271750d5cf884ae87aeb0c6cc40f
     .cursor/agents/concept-developer.md: sha256:72cc834cac546fcfd1ed640872e59cbc540bbb9474153cee28c0b22352c86587
@@ -139,7 +155,7 @@ dependencies:
   content_hash: sha256:1066110b4bb8a81d0d9677a70c0a8acff8cbdaeb2f0d06715344a46c3aeaaeb9
 deployments:
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/assign-author
   runtime: null
   scope: project
@@ -148,7 +164,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: null
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/assign-author/SKILL.md
   runtime: null
   scope: project
@@ -157,7 +173,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:f49fc9c00d2c2ef0b3d9ed481aa6ee4255fbafe3cc984039c346ab205a396f67
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/assign-reviewers
   runtime: null
   scope: project
@@ -166,7 +182,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: null
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/assign-reviewers/SKILL.md
   runtime: null
   scope: project
@@ -175,7 +191,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:b37b1d9ecdf90cba1b60bedc464052367f39e2dd07277bda4d32e4a9f67394cb
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/check-status
   runtime: null
   scope: project
@@ -184,7 +200,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: null
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/check-status/SKILL.md
   runtime: null
   scope: project
@@ -193,7 +209,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:10d2a31df2ade59904906e9f000737da0afd76c766b9f2b1f055ba9a9b7335d7
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/check-status/scripts/check-status.sh
   runtime: null
   scope: project
@@ -202,7 +218,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:ced16994d14e52341fd96309c5f0218aaee016af48dd6e09e0fdbdbc45fa6794
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/commit-changes
   runtime: null
   scope: project
@@ -211,7 +227,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: null
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/commit-changes/SKILL.md
   runtime: null
   scope: project
@@ -220,7 +236,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:6174fee0728d018e5910764d88551229e86010173834f28026d55e353e3d61f8
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/commit-changes/scripts/commit-changes.sh
   runtime: null
   scope: project
@@ -229,7 +245,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:edc11a741b10b3e707175550bc0e433ca3e85c07dbaa606ba4b4fd91c3a6be33
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-branch
   runtime: null
   scope: project
@@ -238,7 +254,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: null
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-branch/SKILL.md
   runtime: null
   scope: project
@@ -247,7 +263,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:da89bbb23486fb5360dc36f5ec7d87a06b5c8236473084db477c60ebd27360f2
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-branch/scripts/create-branch.sh
   runtime: null
   scope: project
@@ -256,7 +272,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:5d5749412bd5e3e260ea15245becd7a2de3de38040dd7c9ebda866eeeb650f6c
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-draft
   runtime: null
   scope: project
@@ -265,7 +281,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: null
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-draft/SKILL.md
   runtime: null
   scope: project
@@ -274,7 +290,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:dbb1da0a5651c5456bfba8b35d8615f8f0fd034e0397cdf1edd4be67d2c11ef8
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-empty-commit
   runtime: null
   scope: project
@@ -283,7 +299,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: null
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-empty-commit/SKILL.md
   runtime: null
   scope: project
@@ -292,7 +308,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:1a18a88fc27462069f75b7cfb152408528813edfac62e8c8f6b07e929ae58c78
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-empty-commit/scripts/create-empty-commit.sh
   runtime: null
   scope: project
@@ -301,7 +317,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:2bf0d78d32c96cb45a2444c3c42fe381fca1ec61bec8a4edc26248bad8cf3f13
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-issue
   runtime: null
   scope: project
@@ -310,7 +326,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: null
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-issue/SKILL.md
   runtime: null
   scope: project
@@ -319,7 +335,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:37c4f10a810093116e3a345ad02a5ffffda21830740365ac8aa4a5ce6cbf1fb0
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-issue/assets/chore_issue.md
   runtime: null
   scope: project
@@ -328,7 +344,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:42902fbd091bd2a3da5e18fba2283c750ae831ad699a58f6f81447c17e9b3592
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-issue/assets/docs_issue.md
   runtime: null
   scope: project
@@ -337,7 +353,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:916e0089b4c38e4fd7fa5b9e11ab6c4c0cfefd0b1bd9539d51fdd14109181e0f
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-issue/assets/feat_issue.md
   runtime: null
   scope: project
@@ -346,7 +362,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:9733cadfddfe7a193b560b8192a343a0bb689873aef54243192b66c4ab14e129
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-issue/assets/fix_issue.md
   runtime: null
   scope: project
@@ -355,7 +371,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:061060e0552c0410cdb0973b905026399c7e386522e059e0848c9188b882ca02
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-issue/assets/knowledge_issue.md
   runtime: null
   scope: project
@@ -364,7 +380,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:3e3cf68b47ee04aa297b427fdf9d816310d53682a1f7de26c347d43b20b49ca8
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-issue/assets/refactor_issue.md
   runtime: null
   scope: project
@@ -373,7 +389,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:84a9ea124d4254f1d3e3d37554d7441855bd7db2654c43a52bbe2910d6d34332
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-issue/assets/test_issue.md
   runtime: null
   scope: project
@@ -382,7 +398,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:65f6c352588e2728a0e430227f653da85e1ac85799a448573cf4d4c85df09b8a
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-issue/scripts/ensure-label.sh
   runtime: null
   scope: project
@@ -391,7 +407,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:283bdf77f77aaabfd9a2335e8742732e563aecff162142e820234d64c1b5f8f0
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-pr-base
   runtime: null
   scope: project
@@ -400,7 +416,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: null
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-pr-base/SKILL.md
   runtime: null
   scope: project
@@ -409,7 +425,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:aff32a154d33d9a44b1946816c6e47a594b65732e6deed3ca3daa0312094ffd9
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-pr-base/assets/chore-pull-request.md
   runtime: null
   scope: project
@@ -418,7 +434,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:dd5a2cbbcccecdbef470dda5cfbc30168368723e51864addd9191734363887c3
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-pr-base/assets/docs-pull-request.md
   runtime: null
   scope: project
@@ -427,7 +443,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:86ef508a593fbf8d672f27cacd701ba9c0dddd5fa8df96f1aab02c3d6102e90d
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-pr-base/assets/feat-pull-request.md
   runtime: null
   scope: project
@@ -436,7 +452,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:ec974ebfe8afb76f844322820569a990f2cad75d2571ef75867c1cc1722a37a9
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-pr-base/assets/fix-pull-request.md
   runtime: null
   scope: project
@@ -445,7 +461,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:38e86dcfe3e054e6687aa391eebbb729f0afa4691ab8e462fb782bee5588440c
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-pr-base/assets/knowledge-pull-request.md
   runtime: null
   scope: project
@@ -454,7 +470,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:8aaa460563afe0c1a1c2288ae732f69f2b7e83410e01adb3f907882e875fca08
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-pr-base/assets/refactor-pull-request.md
   runtime: null
   scope: project
@@ -463,7 +479,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:35ed529ea97cbaf73b599ffcfab16199a29921f99914a75249960adc61425a4c
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-pr-base/assets/test-pull-request.md
   runtime: null
   scope: project
@@ -472,7 +488,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:84822e45e59d08a66db665724ac9522ade623bc6c3b0a90f449f746a71a9260c
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-pr-base/scripts/create-pr-base.sh
   runtime: null
   scope: project
@@ -481,7 +497,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:1608e3c8a95e1fc69221fd0f3621ec7c0551fbc407495a24dd9db4f45ae7e541
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/create-pr-base/scripts/ensure-label.sh
   runtime: null
   scope: project
@@ -490,7 +506,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:283bdf77f77aaabfd9a2335e8742732e563aecff162142e820234d64c1b5f8f0
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/delivery-workflow
   runtime: null
   scope: project
@@ -499,7 +515,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: null
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/delivery-workflow/SKILL.md
   runtime: null
   scope: project
@@ -508,7 +524,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:912cf74d91a294e95fba51b492b42cc207acdb31a1e8c9469ee61997b9026bb8
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/entrevista-con-repo
   runtime: null
   scope: project
@@ -517,7 +533,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: null
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/entrevista-con-repo/SKILL.md
   runtime: null
   scope: project
@@ -526,7 +542,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:371ef1c2777e4bc98721a49e6b006d794d3393f1c10c0a828ba39ec420d93cef
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/entrevista-libre
   runtime: null
   scope: project
@@ -535,7 +551,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: null
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/entrevista-libre/SKILL.md
   runtime: null
   scope: project
@@ -544,7 +560,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:aba8fbe918255545982f25eaef4a928542e41460a0677d9b9cb77eddf73b8022
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/github-cache
   runtime: null
   scope: project
@@ -553,7 +569,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: null
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/github-cache/SKILL.md
   runtime: null
   scope: project
@@ -562,7 +578,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:f73f409026b8e6a51bc9e2b994c24f8f12b98ceb7d37695ab5fa544e726a9d8c
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/github-cache/scripts/github-cache.mjs
   runtime: null
   scope: project
@@ -571,7 +587,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:32e164fe738aa760196c352de3ca27b57c0217a2ddcb04524a5e6caee40c9918
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/help-me-to-think
   runtime: null
   scope: project
@@ -580,7 +596,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: null
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/help-me-to-think/SKILL.md
   runtime: null
   scope: project
@@ -589,7 +605,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:c544f4780a230d52c027b8107d59a12e44cf62db10e52238aaea0ea778c24b99
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/issue-spec
   runtime: null
   scope: project
@@ -598,7 +614,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: null
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/issue-spec/SKILL.md
   runtime: null
   scope: project
@@ -607,7 +623,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:a8bf92906d2edc7107e0d336d2d829f31c012139c364ef91a89caded0e2dfeab
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/issue-spec/assets/plan.md
   runtime: null
   scope: project
@@ -616,7 +632,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:6bfca5a9421f278a27092207dc444838690989310e955439327c54c21daff1b1
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/issue-spec/assets/spec.md
   runtime: null
   scope: project
@@ -625,7 +641,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:ac3729971c2d733291ea911e1a590d20eb0b65f578e325a1390da64c38d169d1
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/issue-spec/assets/tasks.md
   runtime: null
   scope: project
@@ -634,7 +650,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:bd07ada1525c5427df4a01bf0044ac3de2bcf232e693254dba7d8b5d7ec79b9c
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/issue-spec/scripts/issue-spec.mjs
   runtime: null
   scope: project
@@ -643,7 +659,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:309d1ea9bea27e3253e2f3ff5c47fb30882cd3105dee5bb011f6b45438efb564
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/launch-push
   runtime: null
   scope: project
@@ -652,7 +668,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: null
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/launch-push/SKILL.md
   runtime: null
   scope: project
@@ -661,7 +677,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:06f40007fe270dea76cb140be510294280dc5033e29092f04aca5a55eacb2a21
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/launch-push/scripts/launch-push.sh
   runtime: null
   scope: project
@@ -670,7 +686,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:b0926ff8fe7ceb72f528237d8fa8e6f09562666573515e71edcee717d26d9c3e
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/link-pr-to-issue
   runtime: null
   scope: project
@@ -679,7 +695,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: null
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/link-pr-to-issue/SKILL.md
   runtime: null
   scope: project
@@ -688,7 +704,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:374708f7d568cdbc7ff606de6830554dd67375d8a3012b8354f7572a872280f8
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/pull-changes
   runtime: null
   scope: project
@@ -697,7 +713,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: null
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/pull-changes/SKILL.md
   runtime: null
   scope: project
@@ -706,7 +722,7 @@ deployments:
   active_owner: venturars/delivery-workflow
   content_hash: sha256:645632f583b472c26585480d17fe4e8584a807147ae350525650c57ecf5f8620
 - kind: project-relative
-  target: cursor
+  target: codex
   value: .agents/skills/pull-changes/scripts/pull-changes.sh
   runtime: null
   scope: project
@@ -714,6 +730,78 @@ deployments:
   - venturars/delivery-workflow
   active_owner: venturars/delivery-workflow
   content_hash: sha256:e2a439fb3aef028417bc2dacc65141d69b0ccfe5894002a92e716a9a7d8c2baa
+- kind: project-relative
+  target: codex
+  value: .codex/agents/code-developer.toml
+  runtime: null
+  scope: project
+  owners:
+  - venturars/delivery-workflow
+  active_owner: venturars/delivery-workflow
+  content_hash: sha256:1b9fb86b50eb8a288ff76476c9c03b0ca9133b1538796ab087f003cef5398fb7
+- kind: project-relative
+  target: codex
+  value: .codex/agents/code-tester.toml
+  runtime: null
+  scope: project
+  owners:
+  - venturars/delivery-workflow
+  active_owner: venturars/delivery-workflow
+  content_hash: sha256:9fbbd32a3389b4573590cf57f9220703dc7376311569de723e675f258380f7d3
+- kind: project-relative
+  target: codex
+  value: .codex/agents/concept-developer.toml
+  runtime: null
+  scope: project
+  owners:
+  - venturars/delivery-workflow
+  active_owner: venturars/delivery-workflow
+  content_hash: sha256:78265ee6e0eb3352cfdfcd1de9ea9cd832714b2e989566ab4d9ae9818cfcec0a
+- kind: project-relative
+  target: codex
+  value: .codex/agents/concept-tester.toml
+  runtime: null
+  scope: project
+  owners:
+  - venturars/delivery-workflow
+  active_owner: venturars/delivery-workflow
+  content_hash: sha256:ea2277868e9ba0ed5721d9033ef2b48ef47bf8974f7e21880a00848c64dce9eb
+- kind: project-relative
+  target: codex
+  value: .codex/agents/create-branch.toml
+  runtime: null
+  scope: project
+  owners:
+  - venturars/delivery-workflow
+  active_owner: venturars/delivery-workflow
+  content_hash: sha256:c07e81322b5d8a3be90e32b8bfd53939a55c35395bdacaa5196b149213190616
+- kind: project-relative
+  target: codex
+  value: .codex/agents/create-commit.toml
+  runtime: null
+  scope: project
+  owners:
+  - venturars/delivery-workflow
+  active_owner: venturars/delivery-workflow
+  content_hash: sha256:942abdb0b768170b647c153c185b31c348d776e657813488001ec5844081e28c
+- kind: project-relative
+  target: codex
+  value: .codex/agents/create-issue.toml
+  runtime: null
+  scope: project
+  owners:
+  - venturars/delivery-workflow
+  active_owner: venturars/delivery-workflow
+  content_hash: sha256:9055580f580e2e3beeecbf5e660fb73cccc8c1a16f2e107a486ac3d3eb293f40
+- kind: project-relative
+  target: codex
+  value: .codex/agents/create-pr.toml
+  runtime: null
+  scope: project
+  owners:
+  - venturars/delivery-workflow
+  active_owner: venturars/delivery-workflow
+  content_hash: sha256:3cd4f8ba2be938f4f850af09800bb2dea0cdaebf50e312223742ec3bab193619
 - kind: project-relative
   target: cursor
   value: .cursor/agents/code-developer.md
@@ -789,6 +877,15 @@ deployments:
 - kind: uri
   target: mcp
   value: github
+  runtime: codex
+  scope: project
+  owners:
+  - .
+  active_owner: .
+  content_hash: sha256:eedaffedae8c07443ab1940ecebf0b9f3c0dcd37e844c93017d75109c147c1a7
+- kind: uri
+  target: mcp
+  value: github
   runtime: cursor
   scope: project
   owners:
@@ -807,6 +904,8 @@ mcp_configs:
       X-MCP-Features: mcp_apps_disable_form_deferral
     url: https://api.githubcopilot.com/mcp/
 mcp_target_servers:
+  codex:
+  - github
   cursor:
   - github
 mcp_config_provenance:
