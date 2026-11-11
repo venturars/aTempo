@@ -15,10 +15,10 @@ desktop/
   README.md
   src/
     main/
-      index.ts          # abre la ventana y la base; query screen=sign up si ATEMPO_SCREEN es sign up
+      index.ts
       database.ts       # abre atempo.sqlite con node:sqlite
     preload/
-      index.ts          # puente de la plantilla; el login y el registro no lo llaman
+      index.ts
       index.d.ts
     renderer/
       index.html
