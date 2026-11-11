@@ -1,0 +1,55 @@
+name: Crear tag de versión
+
+# Cuándo se ejecuta: cada vez que se actualiza la rama main
+on:
+  push:
+    branches: [main]
+
+# Permiso para poder crear y subir tags al repositorio
+permissions:
+  contents: write
+
+# Si se actualiza main dos veces seguidas, las ejecuciones van en fila, no a la vez
+concurrency:
+  group: crear-tag-version
+  cancel-in-progress: false
+
+jobs:
+  crear-tag:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Descarga el código, con todo el historial y los tags existentes
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 2. Busca el último tag y calcula el siguiente
+      - name: Calcular la siguiente versión
+        id: version
+        run: |
+          if git describe --exact-match --tags HEAD >/dev/null 2>&1; then
+            echo "Este commit ya tiene tag, no se crea otro."
+            echo "next=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          LAST_TAG=$(git tag --list 'v*.*.*' --sort=-v:refname | head -n 1)
+
+          if [ -z "$LAST_TAG" ]; then
+            NEXT="v0.1.0"
+          else
+            IFS='.' read -r MAJOR MINOR PATCH <<< "${LAST_TAG#v}"
+            NEXT="v$MAJOR.$MINOR.$((PATCH + 1))"
+          fi
+
+          echo "Última versión: ${LAST_TAG:-ninguna} → nueva versión: $NEXT"
+          echo "next=$NEXT" >> "$GITHUB_OUTPUT"
+
+      # 3. Crea el tag y lo sube a GitHub
+      - name: Crear y subir el tag
+        if: steps.version.outputs.next != ''
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.version.outputs.next }}" -m "Versión ${{ steps.version.outputs.next }}"
+          git push origin "${{ steps.version.outputs.next }}"
