@@ -189,17 +189,17 @@ test('shows both errors when the fields are empty', async () => {
   })
 })
 
-test('shows the written email and password in an alert', async () => {
+test('opens the organization dashboard after a valid simulated login', async () => {
   await withApp(async (window) => {
     await window.getByLabel('Correo').fill('ana@clase.test')
     await window.getByLabel('Contraseña').fill('secreta')
     await window.getByRole('button', { name: 'Entrar' }).click()
 
-    const alert = window.getByRole('status')
-    await expect(alert).toContainText('Correo: ana@clase.test')
-    await expect(alert).toContainText('Contraseña: secreta')
+    await expect(window.getByRole('heading', { name: 'Una mirada a la asistencia' })).toBeVisible()
+    await expect(window.getByRole('navigation')).toContainText('Dashboard')
+    await expect(window.getByLabel('Correo')).toHaveCount(0)
+    await expect(window.getByText('Contraseña: secreta')).toHaveCount(0)
     await expectNoErrorPhrases(window)
-    await expect(window).toHaveScreenshot('login-alert.png', { animations: 'disabled' })
   })
 })
 

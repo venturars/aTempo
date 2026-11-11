@@ -8,7 +8,7 @@ La visión, los perfiles y las decisiones de producto están en [principles.md](
 
 | Carpeta | Qué es |
 | --- | --- |
-| `desktop/` | Aplicación del profesor. Electron, React y SQLite. La pantalla que hay es el login. |
+| `desktop/` | Aplicación del profesor. Electron, React y SQLite. Incluye login y un prototipo visual de administración de la organización. |
 | `docs/storybook/` | Fuente de verdad visual: Tailwind y daisyUI. Las pantallas usan las clases. No hay un paquete de componentes. |
 | `docs/guia/` | Markdown generado desde Storybook. No se versiona. Lo leen los agentes. |
 | `docs/` | Cómo se construye: constitución, arquitectura, estilo y árbol de carpetas. |
@@ -23,7 +23,11 @@ pnpm install
 pnpm dev
 ```
 
-`pnpm typecheck` comprueba los tipos. `pnpm run test:visual` construye la app y pasa el test de la pantalla de login.
+El login simulado abre el Dashboard de la organización cuando el correo y la contraseña son válidos. Este prototipo reutiliza Electron para revisar la pantalla administrativa con datos locales ficticios; no autentica ni ofrece funciones de administración.
+
+El Dashboard muestra un único contador global de estudiantes con patrón de ausencias o retrasos, una tabla por curso, estudiantes a revisar y pendientes. Cada estudiante cuenta una sola vez, aunque tenga ambos patrones. No incluye salidas anticipadas. Los datos y los umbrales son informativos y no aplican sanciones.
+
+`pnpm typecheck` comprueba los tipos. `pnpm run test:visual` construye la app y ejecuta las pruebas de Playwright.
 
 ## Guía visual
 
