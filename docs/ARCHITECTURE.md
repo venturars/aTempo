@@ -21,13 +21,13 @@ Carpeta: `desktop/src/main/`.
 
 Es Node, dentro de Electron. Abre la ventana y abre SQLite.
 
-La base usa la clase `DatabaseSync` de [`node:sqlite`](https://nodejs.org/api/sqlite.html). Electron 44 trae Node 24, y esa versión exporta `DatabaseSync`. El archivo es `atempo.sqlite`, en la carpeta de datos de Electron (`app.getPath('userData')`). Al arrancar se ejecuta `PRAGMA user_version = 1` para comprobar que el archivo abre. El login y el Dashboard de la organización no leen ni escriben esa base.
+La base usa la clase `DatabaseSync` de [`node:sqlite`](https://nodejs.org/api/sqlite.html). Electron 44 trae Node 24, y esa versión exporta `DatabaseSync`. El archivo es `atempo.sqlite`, en la carpeta de datos de Electron (`app.getPath('userData')`). Al arrancar se ejecuta `PRAGMA user_version = 1` para comprobar que el archivo abre. El login y el Resumen de la organización no leen ni escriben esa base.
 
 ## Preload
 
 Carpeta: `desktop/src/preload/`.
 
-Es el puente entre el proceso principal y la pantalla. El login y el Dashboard de la organización no necesitan datos del proceso principal, así que este puente no expone ninguna función.
+Es el puente entre el proceso principal y la pantalla. El login y el Resumen de la organización no necesitan datos del proceso principal, así que este puente no expone ninguna función.
 
 ## Renderer
 
@@ -39,8 +39,10 @@ El panel del claim y la figura del trimestre se pintan en el renderer y no salen
 
 La validación está en `validateLogin.ts`. Comprueba la forma del correo y que la contraseña no esté vacía antes de aceptar el envío. No llama a la red.
 
-El Dashboard de la organización vive en `organization/`. Reutiliza el escritorio para el prototipo visual autorizado en la issue #29; no incorpora funciones de administración. `OrganizationDashboardScreen.tsx` presenta el modelo tipado de `organizationExample.ts`, con ejemplos normal/provisional, vacío y datos incompletos. Los ejemplos tienen cifras y patrones preparados; no hay un motor de cálculo de asistencia ni consultas a servicios.
+El Resumen de la organización vive en `organization/`. Reutiliza el escritorio para el prototipo visual autorizado en la issue #29; no incorpora funciones de administración. `OrganizationDashboardScreen.tsx` presenta el modelo tipado de `organizationExample.ts`, con ejemplos normal/provisional, vacío y datos incompletos. Los ejemplos tienen cifras y patrones preparados; no hay un motor de cálculo de asistencia ni consultas a servicios.
 
 La única métrica global es el número de estudiantes distintos con al menos 3 ausencias no justificadas en las últimas 5 sesiones o al menos 4 retrasos en las últimas 6. El ejemplo incluye un estudiante con ambos patrones que cuenta una sola vez. La pantalla muestra porcentajes solo en la tabla por curso, y no incluye salidas anticipadas. Los avisos son informativos y no aplican sanciones.
 
-La navegación hacia las demás áreas es texto marcado como Próximamente. Los datos, los avisos y el perfil son ficticios. La pantalla acepta un modelo de presentación para comprobar estados de borde sin añadir controles al producto, y utiliza los dos temas existentes.
+Cuando el modelo es provisional, un único aviso global explica que los resultados pueden cambiar por justificantes y correcciones pendientes. Los cursos y estudiantes afectados muestran «Datos pendientes de confirmar», sin atribuirles una causa individual. El estado vacío no muestra ese aviso; el incompleto conserva la explicación de registros faltantes y muestra Sin datos cuando no hay una base válida.
+
+La navegación identifica la página actual como Resumen y conserva las cinco áreas futuras, incluida Configuración, como texto sin navegación funcional. En ventanas estrechas se distribuyen en dos columnas y comparten un aviso de disponibilidad futura. Los datos, los avisos y el perfil son ficticios. La pantalla acepta un modelo de presentación para comprobar estados de borde sin añadir controles al producto, y utiliza los dos temas existentes.

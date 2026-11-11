@@ -23,9 +23,9 @@ pnpm install
 pnpm dev
 ```
 
-El login simulado abre el Dashboard de la organización cuando el correo y la contraseña son válidos. Este prototipo reutiliza Electron para revisar la pantalla administrativa con datos locales ficticios; no autentica ni ofrece funciones de administración.
+El login simulado abre el Resumen de la organización cuando el correo y la contraseña son válidos. Este prototipo reutiliza Electron para revisar la pantalla administrativa con datos locales ficticios; no autentica ni ofrece funciones de administración.
 
-El Dashboard muestra un único contador global de estudiantes con patrón de ausencias o retrasos, una tabla por curso, estudiantes a revisar y pendientes. Cada estudiante cuenta una sola vez, aunque tenga ambos patrones. No incluye salidas anticipadas. Los datos y los umbrales son informativos y no aplican sanciones.
+El Resumen muestra un único contador global de estudiantes con patrón de ausencias o retrasos, una tabla por curso, estudiantes a revisar y pendientes. Cada estudiante cuenta una sola vez, aunque tenga ambos patrones. No incluye salidas anticipadas. Un único aviso global explica que los resultados pueden cambiar por justificantes y correcciones pendientes. Los cursos y estudiantes afectados indican «Datos pendientes de confirmar». Los datos y los umbrales son informativos y no aplican sanciones.
 
 `pnpm typecheck` comprueba los tipos. `pnpm run test:visual` construye la app y ejecuta las pruebas de Playwright.
 

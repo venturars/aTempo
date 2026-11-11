@@ -18,13 +18,13 @@ desktop/
       index.ts          # abre la ventana y la base
       database.ts       # abre atempo.sqlite con node:sqlite
     preload/
-      index.ts          # puente oficial; login y Dashboard no lo usan
+      index.ts          # puente oficial; login y Resumen no lo usan
       index.d.ts
     renderer/
       index.html
       src/
         main.tsx
-        App.tsx         # login o Dashboard tras envío válido
+        App.tsx         # login o Resumen tras envío válido
         env.d.ts
         styles/
           app.css       # Tailwind y daisyUI
@@ -35,7 +35,7 @@ desktop/
           validateLogin.ts
           trimesterExample.ts
         organization/
-          OrganizationDashboardScreen.tsx # Dashboard visual sin funciones de administración
+          OrganizationDashboardScreen.tsx # Resumen visual sin funciones de administración
           organizationExample.ts          # modelos y datos ficticios normal, vacío e incompleto
   tests/
     login.spec.ts
@@ -50,12 +50,18 @@ desktop/
       login-alert.png
       login-narrow.png
       login-claro.png
-      dashboard-empty.png
-      dashboard-incomplete.png
-      dashboard-atempo-oscuro-1280.png
-      dashboard-atempo-oscuro-390.png
-      dashboard-atempo-claro-1280.png
-      dashboard-atempo-claro-390.png
+      dashboard-normal-atempo-oscuro-1280.png
+      dashboard-normal-atempo-oscuro-390.png
+      dashboard-normal-atempo-claro-1280.png
+      dashboard-normal-atempo-claro-390.png
+      dashboard-empty-atempo-oscuro-1280.png
+      dashboard-empty-atempo-oscuro-390.png
+      dashboard-empty-atempo-claro-1280.png
+      dashboard-empty-atempo-claro-390.png
+      dashboard-incomplete-atempo-oscuro-1280.png
+      dashboard-incomplete-atempo-oscuro-390.png
+      dashboard-incomplete-atempo-claro-1280.png
+      dashboard-incomplete-atempo-claro-390.png
   build/                # iconos de empaquetado de la plantilla
   resources/            # icono de la ventana en Linux
 ```

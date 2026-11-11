@@ -113,7 +113,6 @@ export const organizationExample: OrganizationDashboard = {
     { label: 'Sesiones sin cerrar', count: 2, description: 'Fuera de las métricas' }
   ],
   quality: [
-    'Resultados provisionales: hay justificantes y correcciones pendientes.',
     'Solo se incluyen sesiones cerradas y no canceladas. Las 2 sesiones abiertas no entran en las métricas.'
   ]
 }
@@ -138,7 +137,7 @@ export const incompleteOrganizationExample: OrganizationDashboard = {
     }
   ],
   quality: [
-    'Resultados provisionales: faltan registros para completar las métricas del curso.',
+    'Faltan registros para completar las métricas del curso.',
     'Una base desconocida o sin registros se muestra como Sin datos. Las sesiones abiertas no entran en las métricas.'
   ]
 }

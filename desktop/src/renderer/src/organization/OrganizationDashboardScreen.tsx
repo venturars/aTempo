@@ -5,7 +5,7 @@ import {
   type ReviewStudent
 } from './organizationExample'
 
-const upcomingAreas = ['Cursos y calendario', 'Alumnos', 'Profesores', 'Juegos', 'Settings']
+const upcomingAreas = ['Cursos y calendario', 'Alumnos', 'Profesores', 'Juegos', 'Configuración']
 
 type DashboardProps = { model?: OrganizationDashboard }
 
@@ -19,12 +19,16 @@ export function OrganizationDashboardScreen({
         <OrganizationHeader model={model} />
         <main className="mx-auto flex max-w-[1440px] flex-col gap-6 p-5 md:p-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className="mb-1 text-sm text-base-content/60">Organización / Dashboard</p>
-              <h1 className="text-2xl font-semibold">Una mirada a la asistencia</h1>
-            </div>
+            <h1 className="text-2xl font-semibold">Resumen</h1>
             <p className="badge badge-ghost h-auto py-2 text-meta">Prototipo · Datos ficticios</p>
           </div>
+          {model.provisional ? (
+            <div role="alert" className="alert alert-soft alert-warning">
+              <span>
+                Los resultados pueden cambiar: hay justificantes y correcciones pendientes.
+              </span>
+            </div>
+          ) : null}
           <ReviewSummary model={model} />
           <div className="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
             <CourseOverview model={model} />
@@ -45,7 +49,7 @@ export function OrganizationDashboardScreen({
 
 function OrganizationNavigation({ organization }: { organization: string }): React.JSX.Element {
   return (
-    <aside className="flex flex-col gap-6 bg-base-100 p-5 lg:min-h-screen lg:p-6">
+    <aside className="flex flex-col gap-3 bg-base-100 p-5 lg:min-h-screen lg:gap-6 lg:p-6">
       <div className="flex items-center gap-3">
         <span
           className="flex size-9 items-center justify-center rounded-xl bg-primary font-semibold text-primary-content"
@@ -62,27 +66,27 @@ function OrganizationNavigation({ organization }: { organization: string }): Rea
         <p className="mt-2 text-sm font-medium">{organization}</p>
       </div>
       <nav aria-label="Administración de la organización">
-        <ul className="flex flex-wrap gap-2 lg:flex-col lg:gap-3">
+        <ul className="grid grid-cols-2 gap-x-2 gap-y-1 lg:flex lg:flex-col lg:gap-3">
           <li>
             <span
               aria-current="page"
-              className="flex items-center gap-3 rounded-field bg-primary/10 px-3 py-3 text-sm font-medium text-primary"
+              className="flex items-center gap-3 rounded-field bg-primary/10 px-2 py-1 text-sm font-medium text-primary lg:px-3 lg:py-3"
             >
               <span className="size-2 rounded-full bg-primary" aria-hidden="true" />
-              Dashboard
+              Resumen
             </span>
           </li>
           {upcomingAreas.map((area) => (
-            <li key={area} className="flex flex-col gap-1 rounded-field px-3 py-2 lg:py-3">
+            <li key={area} className="flex flex-col gap-1 rounded-field px-2 py-1 lg:px-3 lg:py-3">
               <span className="text-sm text-base-content/70">{area}</span>
-              <span className="text-xs text-base-content/50">Próximamente</span>
+              <span className="hidden text-xs text-base-content/50 lg:block">Próximamente</span>
             </li>
           ))}
         </ul>
+        <p className="mt-2 px-2 text-xs text-base-content/50 lg:hidden">
+          Las demás áreas estarán disponibles próximamente.
+        </p>
       </nav>
-      <p className="mt-auto hidden border-t border-base-300 pt-5 text-meta text-base-content/50 lg:block">
-        Cada sesión cuenta.
-      </p>
     </aside>
   )
 }
@@ -131,15 +135,9 @@ function ReviewSummary({ model }: { model: OrganizationDashboard }): React.JSX.E
             {model.reviewStudentCount}
           </p>
           <p className="text-meta text-base-content/60">Cada estudiante cuenta una sola vez.</p>
-          {model.provisional ? (
-            <span className="badge badge-warning badge-soft mt-3">Provisional</span>
-          ) : null}
         </div>
         <div className="border-t border-base-300 pt-5 md:border-t-0 md:border-l md:pt-0 md:pl-8">
           <h3 className="text-sm font-medium">Patrones que merecen atención</h3>
-          <p className="mt-2 text-meta text-base-content/60">
-            Señales para acompañar a tus estudiantes.
-          </p>
           <ul className="mt-4 flex flex-col gap-3 text-sm">
             <li className="flex items-start gap-3">
               <span className="mt-1 size-2 shrink-0 rounded-full bg-error" aria-hidden="true" />
@@ -226,7 +224,7 @@ function CourseOverview({ model }: { model: OrganizationDashboard }): React.JSX.
                       </span>
                       {course.provisional ? (
                         <span className="mt-2 block text-meta font-normal text-warning">
-                          Provisional
+                          Datos pendientes de confirmar
                         </span>
                       ) : null}
                     </th>
@@ -272,9 +270,11 @@ function StudentRow({ student }: { student: ReviewStudent }): React.JSX.Element 
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center justify-between gap-1">
           <h3 className="text-sm font-medium">{student.name}</h3>
-          {student.provisional ? <span className="text-meta text-warning">Provisional</span> : null}
         </div>
         <p className="mt-1 text-meta text-base-content/60">{student.course}</p>
+        {student.provisional ? (
+          <p className="mt-1 text-meta text-warning">Datos pendientes de confirmar</p>
+        ) : null}
         <ul className="mt-2 flex flex-col gap-1">
           {student.patterns.map((pattern) => (
             <li key={pattern.kind} className="flex items-center gap-2 text-meta">
@@ -299,7 +299,6 @@ function ReviewStudents({ model }: { model: OrganizationDashboard }): React.JSX.
           <h2 id="students-heading" className="text-base font-medium">
             Estudiantes a acompañar
           </h2>
-          <p className="mt-1 text-meta text-base-content/60">El patrón explica cada aviso.</p>
         </div>
         {model.students.length === 0 ? (
           <p className="py-6 text-sm text-base-content/70">
@@ -346,9 +345,6 @@ function DataQuality({ model }: { model: OrganizationDashboard }): React.JSX.Ele
           <h2 id="quality-heading" className="text-base font-medium">
             Calidad de los datos
           </h2>
-          {model.provisional ? (
-            <span className="badge badge-warning badge-soft">Provisional</span>
-          ) : null}
         </div>
         {model.quality.map((message) => (
           <p key={message} className="text-meta leading-relaxed text-base-content/70">
