@@ -31,7 +31,7 @@
 
 ### Fase 4: Configuración y ensayo real
 
-- [ ] **TASK-10:** Configurar el entorno protegido para la rama de confianza con `DISCORD_BOT_TOKEN`, `DISCORD_CACHE_KEY`, `DISCORD_GUILD_ID` y `DISCORD_GIT_CHANNEL_ID`.
+- [x] **TASK-10:** Configurar el entorno protegido para la rama de confianza con `DISCORD_BOT_TOKEN`, `DISCORD_CACHE_KEY`, `DISCORD_GUILD_ID` y `DISCORD_GIT_CHANNEL_ID`.
   - **Agente:** administrador de aTempo.
 - [ ] **TASK-11:** Tras desplegar los workflows en las ramas requeridas, solicitar dos revisores identificables en una PR a `staging`, repetir el evento y comprobar un solo aviso en `#git`.
   - **Agente:** `code-tester`
