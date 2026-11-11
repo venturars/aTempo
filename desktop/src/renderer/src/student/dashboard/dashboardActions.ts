@@ -1,8 +1,5 @@
 export type DashboardActionId =
-  | 'registrar-asistencia'
-  | 'avisar-retrasos-ausencias'
-  | 'proxima-clase'
-  | 'resumen-asistencia'
+  'registrar-asistencia' | 'avisar-retrasos-ausencias' | 'proxima-clase' | 'resumen-asistencia'
 
 export type DashboardAction = {
   id: DashboardActionId
@@ -16,4 +13,6 @@ export const dashboardActions: DashboardAction[] = [
   { id: 'resumen-asistencia', lines: ['Resumen de asistencia'] }
 ]
 
-export function onDashboardAction(_actionId: DashboardActionId): void {}
+export function onDashboardAction(actionId: DashboardActionId): void {
+  void actionId
+}
