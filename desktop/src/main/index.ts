@@ -4,6 +4,14 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { closeDatabase, openDatabase } from './database'
 
+function screenQuery(): { screen: string } | undefined {
+  if (process.env['ATEMPO_SCREEN'] === 'register') {
+    return { screen: 'register' }
+  }
+
+  return undefined
+}
+
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -31,10 +39,26 @@ function createWindow(): void {
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
+  const query = screenQuery()
+
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
-  } else {
+    const rendererUrl = process.env['ELECTRON_RENDERER_URL']
+
+    if (query === undefined) {
+      mainWindow.loadURL(rendererUrl)
+    } else {
+      const url = new URL(rendererUrl)
+
+      for (const [key, value] of Object.entries(query)) {
+        url.searchParams.set(key, value)
+      }
+
+      mainWindow.loadURL(url.toString())
+    }
+  } else if (query === undefined) {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+  } else {
+    mainWindow.loadFile(join(__dirname, '../renderer/index.html'), { query })
   }
 }
 

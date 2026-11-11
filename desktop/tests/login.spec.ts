@@ -22,7 +22,9 @@ const absentFromScreen = [
   'demo',
   'Privacidad',
   'Términos',
-  'Ayuda'
+  'Ayuda',
+  '¿Ya tienes una cuenta?',
+  'Crear mi cuenta'
 ]
 const errorPhrases = [
   'El correo es obligatorio.',
