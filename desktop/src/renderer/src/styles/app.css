@@ -171,6 +171,14 @@ body {
   }
 }
 
+/* Un enlace o un botón señala que se puede pulsar. Lo desactivado no. */
+:where(a, button, summary, [role='link']) {
+  cursor: pointer;
+}
+:where(button:disabled, [aria-disabled='true']) {
+  cursor: default;
+}
+
 /* El gris al pasar el ratón es claro en los dos temas. */
 @media (hover: hover) {
   .hover-grey:hover,
@@ -673,5 +681,262 @@ main .rounded-box.bg-base-100 {
   .popover-in,
   .modal.modal-open {
     animation: none;
+  }
+}
+
+/* La tabla de asistencia comparte la fila de las demás, pero cada día tiene ancho fijo.
+   Si no, la regla global de width 1% aplasta las columnas y los nombres se montan. */
+.attendance-scroll {
+  overflow-x: auto;
+}
+.table.attendance-table {
+  width: max-content;
+  min-width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.table.attendance-table :is(th, td) {
+  width: 2.75rem;
+  min-width: 2.75rem;
+  max-width: 2.75rem;
+  height: 36px;
+  padding: 0;
+  overflow: hidden;
+  text-align: center;
+  vertical-align: middle;
+}
+.table.attendance-table thead th {
+  height: 44px;
+  background: var(--color-base-100);
+}
+.table.attendance-table :is(th, td).attendance-name {
+  width: 12rem;
+  min-width: 12rem;
+  max-width: 12rem;
+  padding-inline: 1rem;
+  text-align: left;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--color-base-100);
+  box-shadow: 1px 0 0 color-mix(in oklab, var(--color-base-content) 8%, transparent);
+}
+.table.attendance-table thead th.attendance-name {
+  z-index: 3;
+}
+.table.attendance-table :is(th, td).attendance-total {
+  width: 7rem;
+  min-width: 7rem;
+  max-width: 7rem;
+  padding-inline: 1rem;
+  letter-spacing: 0;
+  text-align: right;
+}
+.attendance-grid,
+.attendance-scroll {
+  max-width: 100%;
+  min-width: 0;
+}
+.attendance-cell {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  cursor: pointer;
+}
+.attendance-cell:hover {
+  background: color-mix(in oklab, var(--color-base-content) 4%, transparent);
+}
+[data-theme='atempo-oscuro'] .attendance-cell:hover {
+  background: color-mix(in oklab, var(--color-base-content) 14%, transparent);
+}
+.attendance-cell:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+.attendance-mark {
+  display: inline-grid;
+  width: 1.125rem;
+  height: 1.125rem;
+  place-items: center;
+  border-radius: 2px;
+}
+.attendance-mark svg {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+.mark-presente {
+  background: #4cdb8d;
+  color: #124b2e;
+}
+.mark-retraso {
+  background: #ffd24a;
+  color: #654600;
+}
+.mark-ausente {
+  background: #f16e70;
+  color: #571b20;
+}
+.mark-cancelada,
+.mark-pendiente,
+.mark-sin-registro {
+  background: color-mix(in oklab, var(--color-base-content) 8%, var(--color-base-100));
+  color: color-mix(in oklab, var(--color-base-content) 55%, var(--color-base-100));
+}
+.date-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  width: auto;
+  padding-inline: 0.625rem;
+  cursor: pointer;
+  background-color: color-mix(in oklab, var(--color-base-content) 3%, var(--color-base-100));
+  border-color: transparent;
+  color: color-mix(in oklab, var(--color-base-content) 58%, var(--color-base-100));
+}
+.date-popover {
+  position: fixed;
+  position-area: none;
+  inset: auto;
+  top: calc(anchor(bottom) + 8px);
+  left: anchor(right);
+  translate: -100% 0;
+  margin: 0;
+  width: 20rem;
+  max-width: calc(100vw - 1.5rem);
+  max-height: calc(100dvh - 1.5rem);
+  overflow: auto;
+  border-radius: var(--radius-box);
+  background: var(--color-base-100);
+  color: var(--color-base-content);
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 8%, transparent);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.18),
+    0 16px 40px -18px rgb(0 0 0 / 0.45);
+}
+.date-popover .rdp-root {
+  --rdp-accent-color: var(--color-primary);
+  --rdp-accent-background-color: color-mix(in oklab, var(--color-primary) 14%, var(--color-base-100));
+  --rdp-today-color: var(--color-primary);
+  --rdp-day-height: 2.25rem;
+  --rdp-day-width: 2.25rem;
+  --rdp-day_button-height: 2rem;
+  --rdp-day_button-width: 2rem;
+  --rdp-day_button-border: 2px solid transparent;
+  --rdp-selected-border: 2px solid transparent;
+  --rdp-range_middle-background-color: color-mix(in oklab, var(--color-primary) 14%, var(--color-base-100));
+  --rdp-range_middle-color: var(--color-base-content);
+  --rdp-range_start-color: var(--color-primary-content);
+  --rdp-range_end-color: var(--color-primary-content);
+  --rdp-range_start-date-background-color: var(--color-primary);
+  --rdp-range_end-date-background-color: var(--color-primary);
+  --rdp-nav_button-height: 2rem;
+  --rdp-nav_button-width: 2rem;
+  --rdp-nav-height: 2.5rem;
+  --rdp-weekday-opacity: 1;
+  margin: 0;
+}
+.date-popover .rdp-month_caption {
+  font-size: 1rem;
+  font-weight: 500;
+}
+.date-popover .rdp-selected {
+  font-size: inherit;
+  font-weight: 500;
+}
+.date-popover .rdp-weekday {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: color-mix(in oklab, var(--color-base-content) 45%, transparent);
+}
+.date-popover .rdp-day_button {
+  position: relative;
+  z-index: 1;
+  margin-inline: auto;
+  font-size: 0.875rem;
+}
+.date-popover .rdp-selected:not(.rdp-range_start, .rdp-range_middle, .rdp-range_end) .rdp-day_button {
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+}
+.date-popover .rdp-today:not(.rdp-selected) {
+  color: var(--color-base-content);
+}
+.date-popover .rdp-today:not(.rdp-selected) .rdp-day_button {
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--color-primary) 45%, transparent);
+}
+/* La banda del intervalo entra en los extremos, en vez de cortarse en el círculo. */
+.date-popover :is(.rdp-range_start, .rdp-range_middle, .rdp-range_end) {
+  position: relative;
+  background: transparent;
+}
+.date-popover :is(.rdp-range_start, .rdp-range_middle, .rdp-range_end)::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  height: 1.75rem;
+  transform: translateY(-50%);
+  background: var(--rdp-range_middle-background-color);
+}
+.date-popover .rdp-range_middle::before {
+  inset-inline: 0;
+}
+.date-popover .rdp-range_start::before {
+  inset-inline-start: 50%;
+  inset-inline-end: 0;
+}
+.date-popover .rdp-range_end::before {
+  inset-inline-start: 0;
+  inset-inline-end: 50%;
+}
+.date-popover .rdp-range_start.rdp-range_end::before {
+  content: none;
+}
+.date-popover .rdp-range_middle .rdp-day_button {
+  background: transparent;
+}
+.date-presets {
+  display: flex;
+  gap: 0.5rem;
+  border-block: 1px solid color-mix(in oklab, var(--color-base-content) 8%, transparent);
+}
+.prototype-minutes {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+/* El número y «min» van pegados a los botones. El campo no se abre de más. */
+.minute-stepper {
+  width: auto;
+  gap: 0.125rem;
+  padding-inline: 0.25rem;
+}
+.minute-stepper input {
+  width: 1.5rem;
+  min-width: 0;
+  flex: none;
+  padding: 0;
+}
+.prototype-minutes::-webkit-inner-spin-button,
+.prototype-minutes::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+.mobile-attendance {
+  display: none;
+}
+@media (max-width: 767px) {
+  .desktop-attendance-grid,
+  .desktop-attendance-legend {
+    display: none;
+  }
+  .mobile-attendance {
+    display: block;
+  }
+  .table.attendance-table :is(th, td).attendance-name {
+    width: 12rem;
+    min-width: 12rem;
+    max-width: 12rem;
   }
 }

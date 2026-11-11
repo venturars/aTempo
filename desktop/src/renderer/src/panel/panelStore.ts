@@ -13,6 +13,12 @@ type PanelState = {
   studentName: string | null
   confirmClose: boolean
   lateMinutes: number
+  statsDateMode: 'range' | 'days'
+  statsDates: string[] | null
+  statsScroll: number
+  setStatsDateMode: (mode: 'range' | 'days') => void
+  setStatsDates: (dates: string[]) => void
+  setStatsScroll: (scroll: number) => void
   setTab: (tab: PanelTab) => void
   setLateMinutes: (minutes: number) => void
   openSession: () => void
@@ -38,6 +44,12 @@ export const usePanelStore = create<PanelState>((set, get) => ({
   studentName: null,
   confirmClose: false,
   lateMinutes: 10,
+  statsDateMode: 'range',
+  statsDates: null,
+  statsScroll: 0,
+  setStatsDateMode: (mode) => set({ statsDateMode: mode }),
+  setStatsDates: (dates) => set({ statsDates: dates, statsScroll: 0 }),
+  setStatsScroll: (scroll) => set({ statsScroll: scroll }),
   setTab: (tab) => {
     set({ tab, studentName: null, classId: null, confirmClose: false })
   },
