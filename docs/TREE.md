@@ -24,8 +24,7 @@ desktop/
       index.html
       src/
         main.tsx
-        App.tsx         # elige sign in o sign up
-        screenFromSearch.ts
+        App.tsx
         env.d.ts
         styles/
           app.css       # Tailwind y daisyUI
@@ -40,9 +39,13 @@ desktop/
           registerStore.ts
           validateRegister.ts
           weekExample.ts
+        student/
+          dashboard/
+            DashboardScreen.tsx
   tests/
     login.spec.ts
     register.spec.ts
+    dashboard.spec.ts
     snapshots/
       login-empty.png
       login-errors.png
@@ -54,6 +57,7 @@ desktop/
       register-alert.png
       register-narrow.png
       register-claro.png
+      dashboard-empty.png
   build/                # iconos de empaquetado de la plantilla
   resources/            # icono de la ventana en Linux
 ```

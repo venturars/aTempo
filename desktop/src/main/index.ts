@@ -4,9 +4,13 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { closeDatabase, openDatabase } from './database'
 
-function screenQuery(): { screen: string } | undefined {
-  if (process.env['ATEMPO_SCREEN'] === 'sign up') {
-    return { screen: 'sign up' }
+function startupHash(): string | undefined {
+  if (process.argv.includes('--dashboard')) {
+    return 'student/dashboard'
+  }
+
+  if (process.argv.includes('--sign-up')) {
+    return 'sign-up'
   }
 
   return undefined
@@ -37,28 +41,20 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
+  const hash = startupHash()
+
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
-  const query = screenQuery()
-
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    const rendererUrl = process.env['ELECTRON_RENDERER_URL']
-
-    if (query === undefined) {
-      mainWindow.loadURL(rendererUrl)
-    } else {
-      const url = new URL(rendererUrl)
-
-      for (const [key, value] of Object.entries(query)) {
-        url.searchParams.set(key, value)
-      }
-
-      mainWindow.loadURL(url.toString())
-    }
-  } else if (query === undefined) {
+    const rendererUrl =
+      hash === undefined
+        ? process.env['ELECTRON_RENDERER_URL']
+        : `${process.env['ELECTRON_RENDERER_URL']}#/${hash}`
+    mainWindow.loadURL(rendererUrl)
+  } else if (hash === undefined) {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'), { query })
+    mainWindow.loadFile(join(__dirname, '../renderer/index.html'), { hash })
   }
 }
 

@@ -60,6 +60,10 @@ function WeekPanel(): React.JSX.Element {
   )
 }
 
+function goToLogin(): void {
+  window.location.hash = ''
+}
+
 function RegisterForm(): React.JSX.Element {
   const name = useRegisterStore((state) => state.name)
   const email = useRegisterStore((state) => state.email)
@@ -190,7 +194,7 @@ function RegisterForm(): React.JSX.Element {
         ) : null}
         <p>
           ¿Ya tienes una cuenta?{' '}
-          <button className="btn btn-link" type="button">
+          <button className="btn btn-link" type="button" onClick={goToLogin}>
             Inicia sesión
           </button>
         </p>

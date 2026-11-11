@@ -1,17 +1,32 @@
+import { useEffect, useState } from 'react'
 import { LoginScreen } from './login/LoginScreen'
 import { RegisterScreen } from './register/RegisterScreen'
-import { screenFromSearch } from './screenFromSearch'
+import { DashboardScreen } from './student/dashboard/DashboardScreen'
 
-const screens = {
-  'sign in': LoginScreen,
-  'sign up': RegisterScreen
-} as const
+function pathFromHash(): string {
+  return window.location.hash.replace(/^#\/?/, '')
+}
 
 function App(): React.JSX.Element {
-  const screen = screenFromSearch(window.location.search)
-  const Screen = screens[screen]
+  const [path, setPath] = useState(pathFromHash)
 
-  return <Screen />
+  useEffect(() => {
+    const onHashChange = (): void => {
+      setPath(pathFromHash())
+    }
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
+
+  if (path === 'student/dashboard') {
+    return <DashboardScreen />
+  }
+
+  if (path === 'sign-up') {
+    return <RegisterScreen />
+  }
+
+  return <LoginScreen />
 }
 
 export default App
