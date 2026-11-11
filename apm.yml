@@ -9,7 +9,7 @@ targets:
   - cursor
 dependencies:
   apm:
-    - venturars/delivery-workflow#v0.1.0
+    - venturars/delivery-workflow#staging
   mcp: []
 includes: auto
 scripts: {}
