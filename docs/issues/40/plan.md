@@ -3,7 +3,7 @@
 ### Análisis de impacto
 
 - **Archivos a modificar:** `README.md` para documentar configuración, ejecución y límites de la automatización.
-- **Archivos a crear:** workflows bajo `.github/workflows/`, módulo de automatización bajo `automation/discord-pr-notifications/` y sus tests.
+- **Archivos a crear:** workflows bajo `.github/workflows/`, módulo de automatización bajo `.github/scripts/discord-pr-notifications/` y sus tests.
 - **Fuera del cambio:** `desktop/`, `docs/storybook/` y la base SQLite.
 
 ### Diseño técnico
@@ -20,7 +20,7 @@
 - **Lógica de negocio:** `node:test` con clientes GitHub/Discord simulados para los cinco escenarios y los casos de borde, incluida la recuperación de dos artefactos guardados en paralelo, la verificación de datos no confiables y la recuperación tras fallo.
 - **UI:** No aplica.
 - **Punta a punta:** Prueba real posterior a la configuración del entorno por el administrador y al despliegue de ambos workflows en las ramas necesarias; solicitar dos revisores identificables en una PR a `staging`, repetir el evento y comprobar un único mensaje en `#git`. Este paso no bloquea la ejecución local de tests, pero sí la aceptación operativa.
-- **Comando:** `node --test automation/discord-pr-notifications/*.test.mjs`; el proyecto no tiene un comando de tests para esta automatización.
+- **Comando:** `node --test .github/scripts/discord-pr-notifications/*.test.mjs`; el proyecto no tiene un comando de tests para esta automatización.
 
 ### Riesgos y mitigaciones
 
@@ -37,17 +37,17 @@
 
 ### Traducción a tests
 
-- **Escenario 1:** Aviso de dos revisores identificados → `automation/discord-pr-notifications/notify.test.mjs::publica_un_aviso_con_dos_menciones`
-- **Escenario 2:** Evento repetido → `automation/discord-pr-notifications/notify.test.mjs::ignora_evento_repetido`
-- **Escenario 3:** Identidad ausente o ambigua → `automation/discord-pr-notifications/notify.test.mjs::falla_sin_publicar_si_falta_identidad`
-- **Escenario 4:** Vigencia de las relaciones → `automation/discord-pr-notifications/notify.test.mjs::caduca_relacion_a_las_48_horas`
-- **Escenario 5:** Relaciones guardadas en ejecuciones simultáneas → `automation/discord-pr-notifications/state.test.mjs::fusiona_artefactos_de_pr_simultaneas`
+- **Escenario 1:** Aviso de dos revisores identificados → `.github/scripts/discord-pr-notifications/notify.test.mjs::publica_un_aviso_con_dos_menciones`
+- **Escenario 2:** Evento repetido → `.github/scripts/discord-pr-notifications/notify.test.mjs::ignora_evento_repetido`
+- **Escenario 3:** Identidad ausente o ambigua → `.github/scripts/discord-pr-notifications/notify.test.mjs::falla_sin_publicar_si_falta_identidad`
+- **Escenario 4:** Vigencia de las relaciones → `.github/scripts/discord-pr-notifications/notify.test.mjs::caduca_relacion_a_las_48_horas`
+- **Escenario 5:** Relaciones guardadas en ejecuciones simultáneas → `.github/scripts/discord-pr-notifications/state.test.mjs::fusiona_artefactos_de_pr_simultaneas`
 
 ### Comprobación de concepto
 
 - **Documento:** `README.md`
   - **Frase:** La automatización usa GitHub Actions y el bot existente; el administrador configura el entorno protegido y el aviso solo se publica en `#git` tras identificar inequívocamente a los dos revisores.
-  - **Código:** workflows de `.github/workflows/` y `automation/discord-pr-notifications/notify.mjs`.
+  - **Código:** workflows de `.github/workflows/` y `.github/scripts/discord-pr-notifications/notify.mjs`.
 
 ### Estilo
 

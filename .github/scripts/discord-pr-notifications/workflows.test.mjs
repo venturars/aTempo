@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
-const workflowDirectory = new URL('../../.github/workflows/', import.meta.url);
+const workflowDirectory = new URL('../../workflows/', import.meta.url);
 const trigger = readFileSync(fileURLToPath(new URL('discord-pr-trigger.yml', workflowDirectory)), 'utf8');
 const publisher = readFileSync(fileURLToPath(new URL('discord-pr-publish.yml', workflowDirectory)), 'utf8');
 
@@ -34,7 +34,7 @@ test('el emisor lee el artefacto del run y ejecuta el verificador desde main', (
   assert.match(publisher, /persist-credentials:\s*false/);
   assert.match(publisher, /actions\/download-artifact@[a-f0-9]{40}/);
   assert.match(publisher, /run-id:\s*\$\{\{\s*github\.event\.workflow_run\.id\s*\}\}/);
-  assert.match(publisher, /run:\s*node automation\/discord-pr-notifications\/verify-event\.mjs/);
+  assert.match(publisher, /run:\s*node \.github\/scripts\/discord-pr-notifications\/verify-event\.mjs/);
   assert.match(publisher, /actions:\s*read/);
   assert.match(publisher, /contents:\s*read/);
   assert.match(publisher, /pull-requests:\s*read/);
@@ -53,8 +53,8 @@ test('dos PR distintas serializan el acceso al artefacto compartido', () => {
 
 test('el emisor conserva relaciones cifradas durante dos días', () => {
   assert.match(publisher, /DISCORD_CACHE_KEY:\s*\$\{\{\s*secrets\.DISCORD_CACHE_KEY\s*\}\}/);
-  assert.match(publisher, /run:\s*node automation\/discord-pr-notifications\/state\.mjs prepare/);
-  assert.match(publisher, /run:\s*node automation\/discord-pr-notifications\/notify\.mjs/);
+  assert.match(publisher, /run:\s*node \.github\/scripts\/discord-pr-notifications\/state\.mjs prepare/);
+  assert.match(publisher, /run:\s*node \.github\/scripts\/discord-pr-notifications\/notify\.mjs/);
   assert.match(publisher, /if: always\(\) && steps\.prepare\.outcome == 'success'/);
   assert.match(publisher, /path:\s*current-relations\/relations\.enc\.json/);
   assert.match(publisher, /retention-days:\s*2/);

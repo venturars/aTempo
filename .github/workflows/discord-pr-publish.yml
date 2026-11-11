@@ -44,14 +44,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           PR_NUMBER_FILE: untrusted-event/pr-number
-        run: node automation/discord-pr-notifications/verify-event.mjs
+        run: node .github/scripts/discord-pr-notifications/verify-event.mjs
       - name: Prepare encrypted relations
         id: prepare
         env:
           GITHUB_TOKEN: ${{ github.token }}
           DISCORD_CACHE_KEY: ${{ secrets.DISCORD_CACHE_KEY }}
           RELATIONS_FILE: current-relations/relations.enc.json
-        run: node automation/discord-pr-notifications/state.mjs prepare
+        run: node .github/scripts/discord-pr-notifications/state.mjs prepare
       - name: Notify reviewers in Discord
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -61,7 +61,7 @@ jobs:
           DISCORD_GIT_CHANNEL_ID: ${{ vars.DISCORD_GIT_CHANNEL_ID }}
           PR_NUMBER: ${{ steps.verify.outputs.pr_number }}
           RELATIONS_FILE: current-relations/relations.enc.json
-        run: node automation/discord-pr-notifications/notify.mjs
+        run: node .github/scripts/discord-pr-notifications/notify.mjs
       # También conserva las relaciones confirmadas cuando falta el otro revisor.
       - name: Keep encrypted relations for two days
         if: always() && steps.prepare.outcome == 'success' && steps.verify.outcome == 'success'

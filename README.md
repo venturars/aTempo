@@ -9,7 +9,7 @@ La visión, los perfiles y las decisiones de producto están en [principles.md](
 | Carpeta | Qué es |
 | --- | --- |
 | `desktop/` | Aplicación del profesor. Electron, React y SQLite. La pantalla que hay es el login. |
-| `automation/discord-pr-notifications/` | Verificación de PR, relaciones cifradas y avisos de revisión. |
+| `.github/scripts/discord-pr-notifications/` | Verificación de PR, relaciones cifradas y avisos de revisión. |
 | `.github/workflows/` | Disparador de PR y publicación mediante GitHub Actions. |
 | `docs/storybook/` | Fuente de verdad visual: Tailwind y daisyUI. Las pantallas usan las clases. No hay un paquete de componentes. |
 | `docs/guia/` | Markdown generado desde Storybook. No se versiona. Lo leen los agentes. |
@@ -50,7 +50,7 @@ Un administrador del repositorio debe crear el entorno de GitHub Actions `discor
 
 El bot necesita acceso al servidor y permisos para ver y escribir en `#git`. Los dos workflows deben estar desplegados en las ramas que GitHub usa para los eventos: el disparador en `staging` y el emisor en la rama predeterminada `main`. La publicación real depende de esa configuración y de una PR de prueba lista para revisión con dos revisores identificables. La implementación y las pruebas locales se siguen en la [issue #40](https://github.com/venturars/aTempo/issues/40).
 
-Para comprobar la lógica localmente: `node --test automation/discord-pr-notifications/*.test.mjs`.
+Para comprobar la lógica localmente: `node --test .github/scripts/discord-pr-notifications/*.test.mjs`.
 
 ## Guía visual
 
