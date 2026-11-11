@@ -224,23 +224,6 @@ export function sessionCounts(rows: RosterRow[]): { p: number; r: number; a: num
   }
 }
 
-function datePhrase(label: string): string {
-  const [weekday, ...rest] = label.replace(/ 2026$/, '').split(' ')
-  return `${(weekday ?? '').toLowerCase()} ${rest.join(' ')}`.trim()
-}
-
-function plainDate(label: string): string {
-  const [dow, day, month] = datePhrase(label).split(' ')
-  const full: Record<string, string> = {
-    lun: 'lunes',
-    mar: 'martes',
-    mié: 'miércoles',
-    jue: 'jueves',
-    vie: 'viernes'
-  }
-  return `el ${full[dow ?? ''] ?? dow} ${day} ${month}`
-}
-
 export type RiskNotice = {
   tone: 'warning' | 'info'
   label: string
@@ -255,16 +238,11 @@ export function absenceRisk(name: string, book: SessionMarkBook = {}): RiskNotic
   if (missed.length < 2) {
     return null
   }
-  const dates = missed.map((entry) => plainDate(entry.title))
-  const listed =
-    dates.length === 2
-      ? `${dates[0]} y ${dates[1]}`
-      : `${dates.slice(0, -1).join(', ')} y ${dates[dates.length - 1]}`
   return {
     tone: 'warning',
     label: 'Puede faltar',
     header: 'Puede faltar hoy',
-    explanation: `Faltó ${missed.length} de las últimas 4 clases, ${listed}. Hoy puede no venir.`
+    explanation: `Ha faltado ${missed.length} veces en las últimas 4 clases.`
   }
 }
 
@@ -275,18 +253,11 @@ export function lateRisk(name: string, book: SessionMarkBook = {}): RiskNotice |
   if (late.length < 2) {
     return null
   }
-  const listed =
-    late.length === 2
-      ? `${plainDate(late[0].title)} a las ${late[0].time} y ${plainDate(late[1].title)} a las ${late[1].time}`
-      : late
-          .map((entry) => `${plainDate(entry.title)} a las ${entry.time}`)
-          .join(', ')
-          .replace(/, ([^,]+)$/, ' y $1')
   return {
     tone: 'info',
     label: 'Puede llegar tarde',
     header: 'Puede llegar tarde',
-    explanation: `Llegó tarde ${listed}, después de las ${lateCutoff(10)}. Hoy puede llegar tarde otra vez.`
+    explanation: `Ha llegado tarde ${late.length} veces en las últimas 4 clases.`
   }
 }
 
