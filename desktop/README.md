@@ -20,6 +20,12 @@ $ pnpm install
 $ pnpm run dev
 ```
 
+El dashboard del alumno se abre con:
+
+```bash
+$ pnpm run dev:dashboard
+```
+
 ### Visual test
 
 Builds the app and runs Playwright. The checks and the screenshots are documented in `docs/STYLE.md`.
