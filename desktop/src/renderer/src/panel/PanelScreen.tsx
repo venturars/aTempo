@@ -1,10 +1,15 @@
-import { useState } from 'react'
+import { StudentHistory } from './StudentHistory'
+import { JustificationAccess } from './JustificationAccess'
+import { StatsView } from './StatsView'
+import { SettingsView } from './SettingsView'
+import { useEffect, useRef, useState } from 'react'
 import { usePanelStore, type PanelTab } from './panelStore'
 import {
   classSessions,
+  compareStudentNames,
+  sessionDateLabel,
   course,
   initialsOf,
-  monthReport,
   rollStatus,
   rollTime,
   rosterNames,
@@ -14,7 +19,6 @@ import {
   todayLabel,
   type Attendance,
   type ClassSession,
-  type JustKey,
   type Phase,
   type RosterRow
 } from './roster'
@@ -40,20 +44,6 @@ const markClass: Record<Attendance, string> = {
   pendiente: 'badge badge-soft badge-neutral'
 }
 
-const justLabel: Record<JustKey, string> = {
-  none: '',
-  pend: 'Pendiente',
-  ok: 'Aprobado',
-  no: 'Sin justificante'
-}
-
-const justClass: Record<JustKey, string> = {
-  none: '',
-  pend: 'badge badge-soft badge-warning',
-  ok: 'badge badge-soft badge-success',
-  no: 'text-sm opacity-60'
-}
-
 export function PanelScreen(): React.JSX.Element {
   const tab = usePanelStore((state) => state.tab)
   const classId = usePanelStore((state) => state.classId)
@@ -65,25 +55,58 @@ export function PanelScreen(): React.JSX.Element {
   const crumbs = crumbTrail(tab, selected, studentName, title)
 
   return (
-    <div className="grid min-h-screen grid-cols-1 bg-base-200 md:grid-cols-[15rem_1fr]">
+    <div className="panel-prototype grid min-h-screen grid-cols-1 bg-base-200 md:grid-cols-[13rem_1fr]">
       <aside className="flex flex-col border-base-content/10 bg-base-100 md:sticky md:top-0 md:h-screen md:border-r">
-        <p className="px-5 pt-6 pb-4 text-sm font-semibold tracking-tight">aTempo</p>
-        <nav className="flex flex-col gap-0.5 px-3" aria-label="Secciones">
-          {tabs.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={
-                tab === item.id
-                  ? 'rounded-lg bg-primary/10 px-3 py-2 text-left text-sm font-medium text-primary'
-                  : 'rounded-lg px-3 py-2 text-left text-sm text-base-content/70 hover:bg-base-200'
-              }
-              aria-current={tab === item.id ? 'page' : undefined}
-              onClick={() => setTab(item.id)}
-            >
-              {item.label}
-            </button>
-          ))}
+        <div className="panel-brand">
+          <span aria-hidden="true" className="panel-brand-symbol">
+            a
+          </span>
+          <span>aTempo</span>
+        </div>
+        <nav className="panel-navigation px-3" aria-label="Secciones">
+          <ul className="menu menu-sm w-full gap-1 p-0">
+            {tabs.map((item) => (
+              <li key={item.id} className={item.id === 3 ? 'panel-settings-link' : ''}>
+                <button
+                  type="button"
+                  className={tab === item.id ? 'menu-active font-medium' : 'text-base-content/80'}
+                  aria-current={tab === item.id ? 'page' : undefined}
+                  onClick={() => setTab(item.id)}
+                >
+                  <svg
+                    aria-hidden="true"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    {item.id === 0 ? (
+                      <path d="m3 10 9-7 9 7v10H3V10Zm6 10v-7h6v7" />
+                    ) : item.id === 1 ? (
+                      <>
+                        <rect x="3" y="5" width="18" height="16" rx="1" />
+                        <path d="M7 2v6m10-6v6M3 11h18" />
+                      </>
+                    ) : item.id === 2 ? (
+                      <>
+                        <path d="M4 3v17h17M9 16v-4m5 4V8m5 8V5" />
+                      </>
+                    ) : (
+                      <>
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="m9 3-1 3-3 1-2 5 2 5 3 1 1 3h6l1-3 3-1 2-5-2-5-3-1-1-3H9Z" />
+                      </>
+                    )}
+                  </svg>
+                  {item.label}
+                </button>
+              </li>
+            ))}
+          </ul>
         </nav>
         <div className="mt-auto flex items-center gap-3 border-t border-base-content/10 px-5 py-4">
           <span className="grid size-8 place-items-center rounded-full bg-base-200 text-xs font-medium">
@@ -95,24 +118,29 @@ export function PanelScreen(): React.JSX.Element {
           </span>
         </div>
       </aside>
-      <main className="flex w-full max-w-5xl flex-col gap-6 px-6 py-8">
-        <header className="flex flex-col gap-1">
-          <Breadcrumb crumbs={crumbs} onBack={goBack} onRoot={() => setTab(tab)} />
+      <main className="panel-main flex min-w-0 w-full flex-col">
+        <header className="panel-page-heading flex w-full flex-col gap-1">
+          <div className="panel-heading-row">
+            <Breadcrumb crumbs={crumbs} onBack={goBack} onRoot={() => setTab(tab)} />
+            <JustificationAccess />
+          </div>
           {tab === 0 && studentName === null ? (
             <p className="text-sm opacity-60">{todayLabel}</p>
           ) : null}
         </header>
-        {studentName !== null ? (
-          <StudentFile name={studentName} />
-        ) : tab === 0 ? (
-          <TodayView />
-        ) : tab === 1 ? (
-          <ClassesView selected={selected} />
-        ) : tab === 2 ? (
-          <StatsView />
-        ) : (
-          <SettingsView />
-        )}
+        <div className="panel-content">
+          {studentName !== null ? (
+            <StudentFile name={studentName} />
+          ) : tab === 0 ? (
+            <TodayView />
+          ) : tab === 1 ? (
+            <ClassesView selected={selected} />
+          ) : tab === 2 ? (
+            <StatsView />
+          ) : (
+            <SettingsView />
+          )}
+        </div>
       </main>
       <CloseDialog />
     </div>
@@ -128,7 +156,7 @@ function pageTitle(
     return studentName
   }
   if (tab === 1 && selected !== null) {
-    return selected.title
+    return sessionDateLabel(selected.id)
   }
   return tabs[tab]?.label ?? 'Hoy'
 }
@@ -267,34 +295,36 @@ function TodayView(): React.JSX.Element {
             </tr>
           </thead>
           <tbody>
-            {rosterNames.map((name, index) => {
-              const status = statuses[index] ?? 'none'
-              return (
-                <tr key={name} className="h-14">
-                  <td>
-                    <div className="flex items-center gap-3">
-                      <Avatar name={name} />
-                      <button
-                        type="button"
-                        className="font-medium"
-                        onClick={() => openStudent(name)}
-                      >
-                        {name}
-                      </button>
-                      {name === 'Pablo Jiménez' ? <RiskHint /> : null}
-                    </div>
-                  </td>
-                  <td className="tabular-nums text-base-content/70">{rollTime(status, index)}</td>
-                  <td>
-                    <MarkControl
-                      status={status}
-                      enabled={phase === 'abierta'}
-                      onPick={(mark) => setMark(index, mark)}
-                    />
-                  </td>
-                </tr>
-              )
-            })}
+            {rosterNames
+              .map((name, index) => ({ name, index }))
+              .sort((a, b) => compareStudentNames(a.name, b.name))
+              .map(({ name, index }) => {
+                const status = statuses[index] ?? 'none'
+                return (
+                  <tr key={name} className="panel-data-row">
+                    <td>
+                      <div className="flex items-center gap-3">
+                        <Avatar name={name} />
+                        <button
+                          type="button"
+                          className="font-medium"
+                          onClick={() => openStudent(name)}
+                        >
+                          {name}
+                        </button>
+                      </div>
+                    </td>
+                    <td className="tabular-nums text-base-content/70">{rollTime(status, index)}</td>
+                    <td>
+                      <MarkControl
+                        status={status}
+                        enabled={phase === 'abierta'}
+                        onPick={(mark) => setMark(index, mark)}
+                      />
+                    </td>
+                  </tr>
+                )
+              })}
           </tbody>
         </table>
       </div>
@@ -317,11 +347,13 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
                 <button
                   type="button"
                   className="flex w-full items-center gap-6 px-5 py-4 text-left hover:bg-base-200 disabled:opacity-50"
-                  disabled={session.cancel}
-                  onClick={() => openClass(session.id)}
+                  aria-disabled={session.cancel}
+                  onClick={() => {
+                    if (!session.cancel) openClass(session.id)
+                  }}
                 >
                   <span className="min-w-0 flex-1">
-                    <span className="block font-medium">{session.title}</span>
+                    <span className="block font-medium">{sessionDateLabel(session.id)}</span>
                     <span className="block text-sm text-base-content/60">
                       {session.dow} · {session.time} · {session.room}
                     </span>
@@ -375,233 +407,13 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
   )
 }
 
-function StatsView(): React.JSX.Element {
-  const openStudent = usePanelStore((state) => state.openStudent)
-  const openClass = usePanelStore((state) => state.openClass)
-  const setTab = usePanelStore((state) => state.setTab)
-  const report = monthReport()
-  const held = classSessions.filter((session) => session.rows !== null)
-  const mostAbsent = report.follow[0]
-  const summary =
-    mostAbsent === undefined
-      ? `En noviembre han venido un ${report.pct} %.`
-      : `En noviembre han venido un ${report.pct} %. ${mostAbsent.name.split(' ')[0]} es quien más falta.`
-
-  function showClass(id: string): void {
-    setTab(1)
-    openClass(id)
-  }
-
-  return (
-    <div className="flex flex-col gap-4">
-      <p className="text-sm text-base-content/70">{summary}</p>
-      <section className="grid grid-cols-2 rounded-box bg-base-100 px-5 py-4 shadow-sm md:grid-cols-4">
-        <Stat value={`${report.pct} %`} label="Han venido" />
-        <Stat value={String(report.sessions)} label="Sesiones" />
-        <Stat value={String(report.late)} label="Tarde" />
-        <Stat value={String(report.absent)} label="Ausencias" />
-      </section>
-      <section className="overflow-hidden rounded-box bg-base-100 shadow-sm">
-        <h2 className="px-5 pt-5 text-base font-medium">Justificantes</h2>
-        <p className="px-5 pt-1 text-sm text-base-content/60">
-          Los que todavía piden una respuesta.
-        </p>
-        <ul className="mt-2">
-          {report.excuses.map((excuse) => (
-            <li
-              key={`${excuse.name}-${excuse.title}-${excuse.just}`}
-              className="border-t border-base-content/10"
-            >
-              <div className="flex items-center gap-3 px-5 py-3">
-                <Avatar name={excuse.name} />
-                <span className="flex min-w-0 flex-1 flex-col">
-                  <button
-                    type="button"
-                    className="w-fit text-left font-medium"
-                    onClick={() => openStudent(excuse.name)}
-                  >
-                    {excuse.name}
-                  </button>
-                  <span className="text-sm text-base-content/60">{excuse.title}</span>
-                </span>
-                <span
-                  className={
-                    excuse.just === 'pend'
-                      ? 'badge badge-soft badge-warning'
-                      : 'badge badge-soft badge-error'
-                  }
-                >
-                  {excuse.just === 'pend' ? 'Por revisar' : 'Sin justificante'}
-                </span>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </section>
-      <section className="overflow-hidden rounded-box bg-base-100 shadow-sm">
-        <h2 className="px-5 pt-5 text-base font-medium">A quién hablar</h2>
-        <p className="px-5 pt-1 text-sm text-base-content/60">Quien ha faltado en noviembre.</p>
-        <ul className="mt-2">
-          {report.follow.map((person) => (
-            <li key={person.name} className="border-t border-base-content/10">
-              <div className="flex items-center gap-3 px-5 py-3">
-                <Avatar name={person.name} />
-                <span className="flex min-w-0 flex-1 flex-col">
-                  <button
-                    type="button"
-                    className="w-fit text-left font-medium"
-                    onClick={() => openStudent(person.name)}
-                  >
-                    {person.name}
-                  </button>
-                  <span className="text-sm text-base-content/60">
-                    {absenceLine(person.abs, person.late)} · {person.pct} %
-                  </span>
-                </span>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </section>
-      <section className="overflow-hidden rounded-box bg-base-100 shadow-sm">
-        <h2 className="px-5 pt-5 text-base font-medium">Últimas clases</h2>
-        <ul className="mt-2">
-          {held.map((session) => {
-            const counts = sessionCounts(session.rows ?? [])
-            return (
-              <li key={session.id} className="border-t border-base-content/10">
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-4 px-5 py-3 text-left hover:bg-base-200"
-                  onClick={() => showClass(session.id)}
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="block font-medium">{session.title}</span>
-                    <span className="block text-sm text-base-content/60">{session.dow}</span>
-                  </span>
-                  <span className="text-sm text-base-content/70">{sessionLine(counts)}</span>
-                </button>
-              </li>
-            )
-          })}
-        </ul>
-      </section>
-    </div>
-  )
-}
-
-function absenceLine(abs: number, late: number): string {
-  const absences = abs === 1 ? '1 ausencia' : `${abs} ausencias`
-  if (late === 0) {
-    return absences
-  }
-  const lates = late === 1 ? '1 retraso' : `${late} retrasos`
-  return `${absences} · ${lates}`
-}
-
-function sessionLine(counts: { p: number; r: number; a: number }): string {
-  if (counts.a === 0 && counts.r === 0) {
-    return 'Todos presentes'
-  }
-  const parts = []
-  if (counts.a > 0) {
-    parts.push(counts.a === 1 ? '1 ausencia' : `${counts.a} ausencias`)
-  }
-  if (counts.r > 0) {
-    parts.push(counts.r === 1 ? '1 retraso' : `${counts.r} retrasos`)
-  }
-  return parts.join(' · ')
-}
-
-function SettingsView(): React.JSX.Element {
-  const [autoClose, setAutoClose] = useState(true)
-  const [lateNotice, setLateNotice] = useState(true)
-  const [notifyJust, setNotifyJust] = useState(true)
-  const [notifyRisk, setNotifyRisk] = useState(false)
-  const [theme, setTheme] = useState(
-    () => document.documentElement.dataset.theme ?? 'atempo-oscuro'
-  )
-
-  function chooseTheme(next: 'atempo-oscuro' | 'atempo-claro'): void {
-    document.documentElement.dataset.theme = next
-    setTheme(next)
-  }
-
-  return (
-    <div className="flex max-w-xl flex-col gap-4">
-      <section className="card bg-base-100 shadow-sm">
-        <div className="card-body gap-2">
-          <h2 className="font-medium">Sesiones</h2>
-          <ToggleRow
-            label="Cierre automático"
-            hint="Al terminar la hora programada"
-            checked={autoClose}
-            onChange={setAutoClose}
-          />
-          <div className="flex items-center justify-between gap-4 py-2">
-            <span className="flex flex-col">
-              <span>Margen de retraso</span>
-              <span className="text-sm opacity-60">Minutos tras el inicio</span>
-            </span>
-            <span>10 min</span>
-          </div>
-          <ToggleRow
-            label="Aviso de alumno"
-            hint="Permitir «llegaré tarde»"
-            checked={lateNotice}
-            onChange={setLateNotice}
-          />
-        </div>
-      </section>
-      <section className="card bg-base-100 shadow-sm">
-        <div className="card-body gap-2">
-          <h2 className="font-medium">Notificaciones</h2>
-          <ToggleRow
-            label="Justificante nuevo"
-            hint="Correo y en la app"
-            checked={notifyJust}
-            onChange={setNotifyJust}
-          />
-          <ToggleRow
-            label="Riesgo de ausencia"
-            hint="Alerta predictiva semanal"
-            checked={notifyRisk}
-            onChange={setNotifyRisk}
-          />
-        </div>
-      </section>
-      <section className="card bg-base-100 shadow-sm">
-        <div className="card-body gap-3">
-          <h2 className="font-medium">Tema</h2>
-          <div className="join">
-            <button
-              type="button"
-              className={theme === 'atempo-oscuro' ? 'btn btn-primary join-item' : 'btn join-item'}
-              onClick={() => chooseTheme('atempo-oscuro')}
-            >
-              Noche
-            </button>
-            <button
-              type="button"
-              className={theme === 'atempo-claro' ? 'btn btn-primary join-item' : 'btn join-item'}
-              onClick={() => chooseTheme('atempo-claro')}
-            >
-              Tinta
-            </button>
-          </div>
-        </div>
-      </section>
-    </div>
-  )
-}
-
 function StudentFile({ name }: { name: string }): React.JSX.Element {
   const summary = studentSummary(name)
   const history = studentHistory(name)
 
   return (
-    <div className="flex flex-col gap-4">
-      <section className="rounded-box bg-base-100 px-5 py-5 shadow-sm">
+    <div className="student-profile flex flex-col gap-4">
+      <section className="student-profile-summary bg-base-100">
         <div className="flex items-center gap-3">
           <span className="grid size-10 place-items-center rounded-full bg-base-200 text-sm font-medium">
             {summary.initials}
@@ -610,47 +422,21 @@ function StudentFile({ name }: { name: string }): React.JSX.Element {
             {summary.email} · {course.name}
           </span>
         </div>
-        <div className="mt-5 grid grid-cols-2 md:grid-cols-4">
+        <div className="student-profile-metrics">
           <Stat value={summary.pct} label="Asistencia" />
           <Stat value={String(summary.late)} label="Tarde" />
           <Stat value={String(summary.abs)} label="Ausencias" />
-          <Stat value={String(summary.streak)} label="Racha" />
+          <Stat value={String(summary.streak)} label="Sesiones seguidas" />
         </div>
       </section>
-      <div className="overflow-x-auto rounded-box bg-base-100 shadow-sm">
-        <table className="table">
-          <caption className="px-5 pt-5 text-left text-base font-medium">Historial</caption>
-          <thead>
-            <tr className="[&_th]:text-xs [&_th]:font-medium [&_th]:normal-case [&_th]:text-base-content/50">
-              <th>Fecha</th>
-              <th>Entrada</th>
-              <th>Estado</th>
-              <th>Justificante</th>
-            </tr>
-          </thead>
-          <tbody>
-            {history.map((entry) => (
-              <tr key={entry.title} className="h-14">
-                <td>
-                  <span className="flex flex-col">
-                    <span>{entry.title}</span>
-                    <span className="text-sm text-base-content/60">
-                      {entry.dow} · {entry.sessionTime}
-                    </span>
-                  </span>
-                </td>
-                <td className="tabular-nums">{entry.time}</td>
-                <td>
-                  <span className={markClass[entry.mark]}>{markLabel[entry.mark]}</span>
-                </td>
-                <td>
-                  <JustCell row={entry} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {name === 'Pablo Jiménez' ? (
+        <p className="student-profile-observation">
+          Asistencia los viernes:{' '}
+          {history.filter((entry) => entry.dow === 'Viernes' && entry.mark !== 'ausente').length} de{' '}
+          {history.filter((entry) => entry.dow === 'Viernes').length} sesiones.
+        </p>
+      ) : null}
+      <StudentHistory entries={history} />
     </div>
   )
 }
@@ -674,25 +460,27 @@ function AttendanceTable({
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
-            <tr key={row.name} className="h-14">
-              <td>
-                <div className="flex items-center gap-3">
-                  <Avatar name={row.name} />
-                  <button type="button" className="font-medium" onClick={() => onOpen(row.name)}>
-                    {row.name}
-                  </button>
-                </div>
-              </td>
-              <td className="tabular-nums">{row.time}</td>
-              <td>
-                <span className={markClass[row.mark]}>{markLabel[row.mark]}</span>
-              </td>
-              <td>
-                <JustCell row={row} />
-              </td>
-            </tr>
-          ))}
+          {[...rows]
+            .sort((a, b) => compareStudentNames(a.name, b.name))
+            .map((row) => (
+              <tr key={row.name} className="panel-data-row">
+                <td>
+                  <div className="flex items-center gap-3">
+                    <Avatar name={row.name} />
+                    <button type="button" className="font-medium" onClick={() => onOpen(row.name)}>
+                      {row.name}
+                    </button>
+                  </div>
+                </td>
+                <td className="tabular-nums">{row.time}</td>
+                <td>
+                  <span className={markClass[row.mark]}>{markLabel[row.mark]}</span>
+                </td>
+                <td>
+                  <JustCell row={row} />
+                </td>
+              </tr>
+            ))}
         </tbody>
       </table>
     </div>
@@ -703,19 +491,30 @@ function CloseDialog(): React.JSX.Element | null {
   const open = usePanelStore((state) => state.confirmClose)
   const cancelClose = usePanelStore((state) => state.cancelClose)
   const closeSession = usePanelStore((state) => state.closeSession)
-  if (!open) {
-    return null
-  }
+  const dialog = useRef<HTMLDialogElement>(null)
+  const cancelButton = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    if (!open) return
+    const previous = document.activeElement as HTMLElement | null
+    const element = dialog.current
+    element?.showModal()
+    cancelButton.current?.focus()
+    return () => {
+      element?.close()
+      previous?.focus()
+    }
+  }, [open])
+  if (!open) return null
 
   return (
-    <div className="modal modal-open" role="dialog" aria-labelledby="close-title">
+    <dialog ref={dialog} className="modal" aria-labelledby="close-title" onCancel={cancelClose}>
       <div className="modal-box">
         <h2 id="close-title" className="text-lg font-medium">
           Finalizar la lista
         </h2>
         <p className="py-3">Los pendientes pasarán a ausentes.</p>
         <div className="modal-action">
-          <button type="button" className="btn" onClick={cancelClose}>
+          <button type="button" ref={cancelButton} className="btn" onClick={cancelClose}>
             Volver
           </button>
           <button type="button" className="btn btn-error" onClick={closeSession}>
@@ -723,7 +522,7 @@ function CloseDialog(): React.JSX.Element | null {
           </button>
         </div>
       </div>
-    </div>
+    </dialog>
   )
 }
 
@@ -737,7 +536,7 @@ function PhaseChip({ phase }: { phase: Phase }): React.JSX.Element {
 function Stat({ value, label }: { value: string; label: string }): React.JSX.Element {
   return (
     <div>
-      <p className="text-xl font-medium tabular-nums">{value}</p>
+      <p className="text-base tabular-nums">{value}</p>
       <p className="text-sm text-base-content/60">{label}</p>
     </div>
   )
@@ -808,66 +607,17 @@ function MarkControl({
 }
 
 function JustCell({ row }: { row: RosterRow }): React.JSX.Element {
-  if (row.just === 'none') {
-    return <span />
-  }
-  const fileName = `justificante-${row.name.toLowerCase().replace(/ /g, '-')}.txt`
+  const openStudent = usePanelStore((state) => state.openStudent)
+  if (row.just === 'none') return <span />
+  if (row.just === 'no')
+    return <span className="text-sm text-base-content/70">Sin justificante</span>
   return (
-    <span className="flex items-center gap-2">
-      <span className={justClass[row.just]}>{justLabel[row.just]}</span>
-      {row.just === 'pend' || row.just === 'ok' ? (
-        <a
-          className="btn btn-ghost btn-xs"
-          href={`data:text/plain,Justificante de ${row.name}`}
-          download={fileName}
-        >
-          PDF
-        </a>
-      ) : null}
-    </span>
-  )
-}
-
-function RiskHint(): React.JSX.Element {
-  return (
-    <details className="dropdown dropdown-end">
-      <summary className="badge badge-soft badge-warning cursor-pointer">Puede que falte</summary>
-      <div className="dropdown-content card w-64 bg-base-100 shadow-sm">
-        <div className="card-body gap-1 p-4">
-          <p className="font-medium">Suele faltar los viernes</p>
-          <p className="text-sm">
-            Ha venido a 1 de los últimos 5 viernes. Quizá merece una conversación.
-          </p>
-          <p className="text-sm opacity-60">Es solo una pista, no cuenta en el registro</p>
-        </div>
-      </div>
-    </details>
-  )
-}
-
-function ToggleRow({
-  label,
-  hint,
-  checked,
-  onChange
-}: {
-  label: string
-  hint: string
-  checked: boolean
-  onChange: (checked: boolean) => void
-}): React.JSX.Element {
-  return (
-    <label className="flex items-center justify-between gap-4 py-2">
-      <span className="flex flex-col">
-        <span>{label}</span>
-        <span className="text-sm opacity-60">{hint}</span>
-      </span>
-      <input
-        type="checkbox"
-        className="toggle toggle-primary"
-        checked={checked}
-        onChange={(event) => onChange(event.target.checked)}
-      />
-    </label>
+    <button
+      type="button"
+      className="student-session-document"
+      onClick={() => openStudent(row.name)}
+    >
+      Justificante {row.just === 'ok' ? 'aprobado' : 'pendiente'}
+    </button>
   )
 }

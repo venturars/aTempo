@@ -20,13 +20,15 @@
     "build:unpack": "pnpm run build && electron-builder --dir",
     "build:win": "pnpm run build && electron-builder --win",
     "build:mac": "electron-vite build && electron-builder --mac",
-    "build:linux": "electron-vite build && electron-builder --linux"
+    "build:linux": "electron-vite build && electron-builder --linux",
+    "prototype": "node tools/preview.mjs"
   },
   "dependencies": {
     "@electron-toolkit/preload": "3.0.2",
     "@electron-toolkit/utils": "4.0.0",
     "@tailwindcss/vite": "4.3.4",
     "daisyui": "5.7.50",
+    "react-day-picker": "9.14.0",
     "tailwindcss": "4.3.4",
     "zustand": "5.0.16"
   },

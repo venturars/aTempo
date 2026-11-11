@@ -307,3 +307,17 @@ export function rollTime(status: Attendance | 'none', index: number): string {
   }
   return '—'
 }
+
+export function compareStudentNames(a: string, b: string): number {
+  const surname = (name: string): string => name.split(' ').slice(1).join(' ')
+  return surname(a).localeCompare(surname(b), 'es') || a.localeCompare(b, 'es')
+}
+
+export function sessionDateLabel(id: string): string {
+  const day = Number(id.split(' ')[1])
+  return new Date(2026, 10, day).toLocaleDateString('es', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  })
+}
