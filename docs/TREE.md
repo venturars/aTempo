@@ -33,15 +33,27 @@ desktop/
           LoginScreen.tsx
           loginStore.ts
           validateLogin.ts
+        register/
+          RegisterScreen.tsx
+          registerStore.ts
+          validateRegister.ts
+        components/
+          ClaimPanel.tsx      # panel del claim; lo usan el login y el registro
           trimesterExample.ts
   tests/
     login.spec.ts
+    register.spec.ts
     snapshots/
       login-empty.png
       login-errors.png
       login-alert.png
       login-narrow.png
       login-claro.png
+      register-empty.png
+      register-errors.png
+      register-alert.png
+      register-narrow.png
+      register-claro.png
   build/                # iconos de empaquetado de la plantilla
   resources/            # icono de la ventana en Linux
 ```

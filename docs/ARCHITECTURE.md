@@ -38,3 +38,17 @@ Es React. Pinta la pantalla de login y guarda el formulario en Zustand (`loginSt
 El panel del claim y la figura del trimestre se pintan en el renderer y no salen de la base. La figura es la constante `trimesterDays` de `trimesterExample.ts`.
 
 La validación está en `validateLogin.ts`. Comprueba el correo y la contraseña antes de mostrar el alert. No llama a la red y no abre otra pantalla.
+
+### Registro
+
+Carpeta: `desktop/src/renderer/src/register/`.
+
+La pantalla de registro pide el nombre completo, el correo y la contraseña. La contraseña tiene un botón para mostrarla u ocultarla. El formulario se guarda en Zustand (`registerStore.ts`) y lo valida `validateRegister.ts`: el nombre es obligatorio, el correo tiene que tener forma de correo y la contraseña necesita 8 caracteres o más. Con los datos bien, sale un alert. No llama a la red y no toca SQLite.
+
+Todavía no hay ningún enlace al registro. `App.tsx` lo muestra solo si la URL acaba en `#registro`, y así lo abren los tests.
+
+### Componentes compartidos
+
+Carpeta: `desktop/src/renderer/src/components/`.
+
+`ClaimPanel.tsx` pinta el panel del claim y del trimestre. Lo usan el login y el registro. La figura del trimestre sale de `trimesterExample.ts`, en la misma carpeta.
