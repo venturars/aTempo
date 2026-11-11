@@ -28,10 +28,12 @@ desktop/
         env.d.ts
         styles/
           app.css       # Tailwind y daisyUI
+          fonts/        # Geist e Inter, woff2 con licencia OFL
         login/
           LoginScreen.tsx
           loginStore.ts
           validateLogin.ts
+          trimesterExample.ts
         student/
           dashboard/
             DashboardScreen.tsx
@@ -42,6 +44,8 @@ desktop/
       login-empty.png
       login-errors.png
       login-alert.png
+      login-narrow.png
+      login-claro.png
   build/                # iconos de empaquetado de la plantilla
   resources/            # icono de la ventana en Linux
 ```

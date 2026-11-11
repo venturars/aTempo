@@ -35,4 +35,6 @@ Carpeta: `desktop/src/renderer/`.
 
 Es React. Pinta la pantalla de login y guarda el formulario en Zustand (`loginStore.ts`).
 
+El panel del claim y la figura del trimestre se pintan en el renderer y no salen de la base. La figura es la constante `trimesterDays` de `trimesterExample.ts`.
+
 La validación está en `validateLogin.ts`. Comprueba el correo y la contraseña antes de mostrar el alert. No llama a la red y no abre otra pantalla.
