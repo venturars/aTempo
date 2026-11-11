@@ -63,4 +63,5 @@ storybook-static
 # APM dependencies
 apm_modules/
 .agents/
+.codex/
 .cursor/

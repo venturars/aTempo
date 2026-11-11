@@ -1,0 +1,73 @@
+# El emisor usa código de main y comprueba la PR antes de usar el entorno protegido.
+name: Discord PR notification publisher
+
+on:
+  workflow_run:
+    workflows: [Discord PR notification trigger]
+    types: [completed]
+
+permissions: {}
+
+jobs:
+  publish:
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    environment: discord-pr-notifications
+    concurrency:
+      group: discord-pr-relations
+      queue: max
+      cancel-in-progress: false
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      pull-requests: read
+    steps:
+      - name: Check out trusted main commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Download untrusted PR number
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: discord-pr-number
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          path: untrusted-event
+      - name: Verify current PR through GitHub API
+        id: verify
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER_FILE: untrusted-event/pr-number
+        run: node automation/discord-pr-notifications/verify-event.mjs
+      - name: Prepare encrypted relations
+        id: prepare
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          DISCORD_CACHE_KEY: ${{ secrets.DISCORD_CACHE_KEY }}
+          RELATIONS_FILE: current-relations/relations.enc.json
+        run: node automation/discord-pr-notifications/state.mjs prepare
+      - name: Notify reviewers in Discord
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_CACHE_KEY: ${{ secrets.DISCORD_CACHE_KEY }}
+          DISCORD_GUILD_ID: ${{ vars.DISCORD_GUILD_ID }}
+          DISCORD_GIT_CHANNEL_ID: ${{ vars.DISCORD_GIT_CHANNEL_ID }}
+          PR_NUMBER: ${{ steps.verify.outputs.pr_number }}
+          RELATIONS_FILE: current-relations/relations.enc.json
+        run: node automation/discord-pr-notifications/notify.mjs
+      # También conserva las relaciones confirmadas cuando falta el otro revisor.
+      - name: Keep encrypted relations for two days
+        if: always() && steps.prepare.outcome == 'success' && steps.verify.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: discord-pr-relations
+          path: current-relations/relations.enc.json
+          if-no-files-found: error
+          retention-days: 2

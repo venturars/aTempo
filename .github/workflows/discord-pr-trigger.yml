@@ -1,0 +1,25 @@
+# Recoge el número de la PR sin acceder a secretos ni ejecutar su código.
+name: Discord PR notification trigger
+
+on:
+  pull_request:
+    branches: [staging]
+    types: [opened, review_requested, ready_for_review]
+
+permissions: {}
+
+jobs:
+  record-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Save untrusted PR number
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: printf '%s' "$PR_NUMBER" > pr-number
+      - name: Upload PR number
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: discord-pr-number
+          path: pr-number
+          if-no-files-found: error
+          retention-days: 1

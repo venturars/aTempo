@@ -1,0 +1,92 @@
+import { appendFileSync, readFileSync, statSync } from 'node:fs';
+
+function readPrNumber(filePath) {
+  if (statSync(filePath).size > 10) {
+    throw new Error('The event artifact is too large for a PR number.');
+  }
+  const value = readFileSync(filePath, 'utf8');
+  if (!/^[1-9][0-9]{0,9}$/.test(value)) {
+    throw new Error('The event artifact does not contain a valid PR number.');
+  }
+  return Number(value);
+}
+
+async function readPullRequest(repository, number, token) {
+  const response = await fetch(`https://api.github.com/repos/${repository}/pulls/${number}`, {
+    headers: {
+      accept: 'application/vnd.github+json',
+      authorization: `Bearer ${token}`,
+      'x-github-api-version': '2022-11-28',
+    },
+  });
+  if (!response.ok) {
+    throw new Error(`GitHub could not read PR #${number} (HTTP ${response.status}).`);
+  }
+  return response.json();
+}
+
+function belongsToTriggerRun(run, pullRequest) {
+  const associatedPullRequests = run.pull_requests ?? [];
+  if (associatedPullRequests.length > 0) {
+    return associatedPullRequests.some((item) => item.number === pullRequest.number);
+  }
+
+  // Algunos runs no incluyen pull_requests; se coteja entonces la rama y el commit.
+  const sameHeadRepository = run.head_repository?.full_name === pullRequest.head?.repo?.full_name;
+  const sameHeadBranch = run.head_branch === pullRequest.head?.ref;
+  const sameCommit = run.head_sha === pullRequest.head?.sha ||
+    run.head_sha === pullRequest.merge_commit_sha;
+  return sameHeadRepository && sameHeadBranch && sameCommit;
+}
+
+function validatePullRequest(event, repository, number, pullRequest) {
+  const run = event.workflow_run;
+  if (event.repository?.full_name !== repository ||
+      run?.repository?.full_name !== repository ||
+      run.event !== 'pull_request' ||
+      run.conclusion !== 'success') {
+    throw new Error('The completed run does not belong to this repository and trigger.');
+  }
+  if (pullRequest.number !== number ||
+      pullRequest.base?.repo?.full_name !== repository ||
+      pullRequest.base?.ref !== 'staging' ||
+      pullRequest.state !== 'open' ||
+      pullRequest.draft !== false) {
+    throw new Error(`PR #${number} is not an open, ready PR targeting staging.`);
+  }
+  if (!belongsToTriggerRun(run, pullRequest)) {
+    throw new Error(`PR #${number} does not match the completed trigger run.`);
+  }
+
+  const reviewers = pullRequest.requested_reviewers;
+  if (!Array.isArray(reviewers) || reviewers.length !== 2 ||
+      !reviewers[0]?.login || !reviewers[1]?.login ||
+      !Number.isSafeInteger(reviewers[0].id) ||
+      !Number.isSafeInteger(reviewers[1].id) ||
+      reviewers[0].id === reviewers[1].id ||
+      reviewers[0].login === reviewers[1].login) {
+    throw new Error(`PR #${number} does not have two distinct requested reviewers.`);
+  }
+}
+
+async function main() {
+  const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+  const repository = process.env.GITHUB_REPOSITORY;
+  const token = process.env.GITHUB_TOKEN;
+  if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository ?? '') || !token) {
+    throw new Error('GitHub repository or token is unavailable.');
+  }
+
+  const number = readPrNumber(process.env.PR_NUMBER_FILE);
+  const pullRequest = await readPullRequest(repository, number, token);
+  validatePullRequest(event, repository, number, pullRequest);
+
+  // Las rondas siguientes usan este número solo después de la consulta y validación.
+  appendFileSync(process.env.GITHUB_OUTPUT, `pr_number=${number}\n`, 'utf8');
+  console.log(`PR #${number} verified for notification.`);
+}
+
+main().catch((error) => {
+  console.error(error.message);
+  process.exitCode = 1;
+});
