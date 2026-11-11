@@ -37,7 +37,6 @@ desktop/
         student/
           dashboard/
             DashboardScreen.tsx
-            dashboardActions.ts
   tests/
     login.spec.ts
     snapshots/

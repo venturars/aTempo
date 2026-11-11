@@ -1,4 +1,24 @@
-import { dashboardActions, onDashboardAction } from './dashboardActions'
+type DashboardActionId =
+  | 'registrar-asistencia'
+  | 'avisar-retrasos-ausencias'
+  | 'proxima-clase'
+  | 'resumen-asistencia'
+
+type DashboardAction = {
+  id: DashboardActionId
+  lines: string[]
+}
+
+const dashboardActions: DashboardAction[] = [
+  { id: 'registrar-asistencia', lines: ['Registrar asistencia'] },
+  { id: 'proxima-clase', lines: ['Próxima clase'] },
+  { id: 'avisar-retrasos-ausencias', lines: ['Avisar de retrasos', 'o ausencias'] },
+  { id: 'resumen-asistencia', lines: ['Resumen de asistencia'] }
+]
+
+function onDashboardAction(actionId: DashboardActionId): void {
+  void actionId
+}
 
 const studentName = 'Ada López'
 
