@@ -34,6 +34,9 @@ desktop/
           loginStore.ts
           validateLogin.ts
           trimesterExample.ts
+        student/
+          dashboard/
+            DashboardScreen.tsx
   tests/
     login.spec.ts
     snapshots/

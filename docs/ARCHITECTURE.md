@@ -33,7 +33,7 @@ Es el puente entre el proceso principal y la pantalla. La pantalla de login no n
 
 Carpeta: `desktop/src/renderer/`.
 
-Es React. Pinta la pantalla de login y guarda el formulario en Zustand (`loginStore.ts`).
+Es React. Por defecto pinta la pantalla de login y guarda el formulario en Zustand (`loginStore.ts`). La maqueta del dashboard del alumno se monta cuando la URL del renderer lleva el hash `#/student/dashboard` (`App.tsx`). El arranque con `pnpm run dev:dashboard` carga esa URL desde el proceso principal.
 
 El panel del claim y la figura del trimestre se pintan en el renderer y no salen de la base. La figura es la constante `trimesterDays` de `trimesterExample.ts`.
 

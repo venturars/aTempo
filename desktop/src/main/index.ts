@@ -29,12 +29,20 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
+  const openStudentDashboard = process.argv.includes('--dashboard')
+  const studentDashboardHash = '#/student/dashboard'
+
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+    const rendererUrl = openStudentDashboard
+      ? `${process.env['ELECTRON_RENDERER_URL']}${studentDashboardHash}`
+      : process.env['ELECTRON_RENDERER_URL']
+    mainWindow.loadURL(rendererUrl)
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    mainWindow.loadFile(join(__dirname, '../renderer/index.html'), {
+      hash: openStudentDashboard ? 'student/dashboard' : undefined
+    })
   }
 }
 
