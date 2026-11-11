@@ -31,6 +31,7 @@ const registerErrorPhrases = [
 ]
 const loginOnlyPhrases = ['Tu trimestre, sesión a sesión', 'Entra con tu correo.', 'Entrar']
 const absentFromRegister = ['Términos', 'términos', 'Privacidad', 'privacidad']
+const unknownHashes = ['#/register', '#/signup', '#/login', '#/sign-in', '#/sign up']
 
 type Box = {
   x: number
@@ -42,19 +43,6 @@ type Box = {
 type BodyStyle = {
   fontFamily: string
   backgroundColor: string
-}
-
-function envWithScreen(screen: string): Record<string, string> {
-  const env: Record<string, string> = {}
-
-  for (const [key, value] of Object.entries(process.env)) {
-    if (value !== undefined && key !== 'ELECTRON_RUN_AS_NODE') {
-      env[key] = value
-    }
-  }
-
-  env.ATEMPO_SCREEN = screen
-  return env
 }
 
 function markClassForLabel(label: string | null): string {
@@ -73,11 +61,10 @@ function markClassForLabel(label: string | null): string {
   return 'missing-mark'
 }
 
-async function openApp(screen: string): Promise<{ app: ElectronApplication; window: Page }> {
+async function openApp(): Promise<{ app: ElectronApplication; window: Page }> {
   const app = await electron.launch({
-    args: ['--force-device-scale-factor=1', mainFile],
-    cwd: appRoot,
-    env: envWithScreen(screen)
+    args: ['--force-device-scale-factor=1', '--sign-up', mainFile],
+    cwd: appRoot
   })
   const window = await app.firstWindow()
   await window.setViewportSize({ width: 960, height: 720 })
@@ -85,8 +72,8 @@ async function openApp(screen: string): Promise<{ app: ElectronApplication; wind
   return { app, window }
 }
 
-async function withApp(screen: string, run: (window: Page) => Promise<void>): Promise<void> {
-  const { app, window } = await openApp(screen)
+async function withApp(run: (window: Page) => Promise<void>): Promise<void> {
+  const { app, window } = await openApp()
   try {
     await run(window)
   } finally {
@@ -259,7 +246,9 @@ async function expectLoginScreen(window: Page): Promise<void> {
 }
 
 test('shows the week panel beside the register form', async () => {
-  await withApp('sign up', async (window) => {
+  await withApp(async (window) => {
+    const hash = await window.evaluate(() => window.location.hash)
+    expect(hash.replace(/^#\/?/, '')).toBe('sign-up')
     await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-oscuro')
     await expect(window.getByText('aTempo')).toBeVisible()
     await expectSingleClaim(window)
@@ -276,7 +265,7 @@ test('shows the week panel beside the register form', async () => {
 })
 
 test('shows name, email and password errors when the fields are empty', async () => {
-  await withApp('sign up', async (window) => {
+  await withApp(async (window) => {
     await window.getByRole('button', { name: 'Crear mi cuenta' }).click()
 
     await expect(window.getByText('El nombre es obligatorio.')).toBeVisible()
@@ -301,7 +290,7 @@ test('shows name, email and password errors when the fields are empty', async ()
 })
 
 test('shows errors for a malformed email and a short password', async () => {
-  await withApp('sign up', async (window) => {
+  await withApp(async (window) => {
     const name = window.getByLabel('Nombre completo')
     const email = window.getByLabel('Correo electrónico')
     const password = window.getByLabel('Contraseña', { exact: true })
@@ -401,7 +390,7 @@ test('shows errors for a malformed email and a short password', async () => {
 })
 
 test('shows the written name, email and password in an alert', async () => {
-  await withApp('sign up', async (window) => {
+  await withApp(async (window) => {
     await window.getByLabel('Nombre completo').fill('Ana')
     await window.getByLabel('Correo electrónico').fill('ana@clase.test')
     await window.getByLabel('Contraseña', { exact: true }).fill('secreta12')
@@ -438,29 +427,26 @@ test('shows the written name, email and password in an alert', async () => {
   })
 })
 
-test('does not leave the register screen when Inicia sesión is pressed', async () => {
-  await withApp('sign up', async (window) => {
+test('shows the login screen when Inicia sesión is pressed', async () => {
+  await withApp(async (window) => {
     await expectSignInButton(window)
     await window.getByLabel('Nombre completo').fill('Ana')
     await window.getByLabel('Correo electrónico').fill('ana@clase.test')
     await window.getByLabel('Contraseña', { exact: true }).fill('secreta12')
     await window.getByRole('button', { name: 'Inicia sesión' }).click()
 
-    await expect(window.getByRole('heading', { name: 'Esta semana' })).toBeVisible()
-    await expect(window.getByText('Organiza cada sesión.', { exact: true })).toBeVisible()
-    await expect(window.getByRole('button', { name: 'Crear mi cuenta' })).toBeVisible()
-    await expectNoLogin(window)
+    const hash = await window.evaluate(() => window.location.hash)
+    expect(hash).toBe('')
+    await expectLoginScreen(window)
     await expectNoAlert(window)
-    await expectNoRegisterErrors(window)
-    const screen = await window.evaluate(() =>
-      new URLSearchParams(window.location.search).get('screen')
-    )
-    expect(screen).toBe('sign up')
+    await expect(window.getByText('El nombre es obligatorio.')).toHaveCount(0)
+    await expect(window.getByText('El correo es obligatorio.')).toHaveCount(0)
+    await expect(window.getByText('La contraseña es obligatoria.')).toHaveCount(0)
   })
 })
 
 test('stacks the panel and the form when the window is narrow', async () => {
-  await withApp('sign up', async (window) => {
+  await withApp(async (window) => {
     await window.setViewportSize({ width: 390, height: 844 })
 
     await expectSingleClaim(window)
@@ -476,7 +462,7 @@ test('stacks the panel and the form when the window is narrow', async () => {
 })
 
 test('changes colors and font with the light theme', async () => {
-  await withApp('sign up', async (window) => {
+  await withApp(async (window) => {
     await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-oscuro')
     const dark = await readBodyStyle(window)
 
@@ -500,7 +486,7 @@ test('changes colors and font with the light theme', async () => {
 })
 
 test('shows and hides the password', async () => {
-  await withApp('sign up', async (window) => {
+  await withApp(async (window) => {
     const password = window.getByLabel('Contraseña', { exact: true })
     await window.getByLabel('Nombre completo').fill('Ana')
     await window.getByLabel('Correo electrónico').fill('ana@clase.test')
@@ -531,12 +517,13 @@ test('shows and hides the password', async () => {
   })
 })
 
-test('keeps the login screen when ATEMPO_SCREEN is not sign up', async () => {
-  test.setTimeout(60_000)
-
-  for (const screen of ['sign in', 'Register', '', 'login', 'register']) {
-    await withApp(screen, async (window) => {
+test('shows the login screen when the hash is not a known route', async () => {
+  await withApp(async (window) => {
+    for (const hash of unknownHashes) {
+      await window.evaluate((nextHash) => {
+        window.location.hash = nextHash
+      }, hash)
       await expectLoginScreen(window)
-    })
-  }
+    }
+  })
 })

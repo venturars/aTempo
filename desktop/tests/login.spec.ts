@@ -162,6 +162,10 @@ function readBodyStyle(window: Page): Promise<BodyStyle> {
 
 test('shows the claim panel beside the form', async () => {
   await withApp(async (window) => {
+    const hash = await window.evaluate(() => window.location.hash)
+    expect(hash).toBe('')
+    await expect(window.getByRole('heading', { name: 'Dashboard alumno' })).toHaveCount(0)
+    await expect(window.getByRole('heading', { name: 'Esta semana' })).toHaveCount(0)
     await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-oscuro')
     await expect(window.getByText('aTempo')).toBeVisible()
     await expect(

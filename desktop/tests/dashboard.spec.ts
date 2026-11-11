@@ -39,9 +39,9 @@ async function withDashboardApp(run: (window: Page) => Promise<void>): Promise<v
 
 test('shows the student dashboard mockup', async () => {
   await withDashboardApp(async (window) => {
-    await expect(
-      window.getByRole('heading', { name: 'Dashboard alumno', level: 1 })
-    ).toBeVisible()
+    const hash = await window.evaluate(() => window.location.hash)
+    expect(hash.replace(/^#\/?/, '')).toBe('student/dashboard')
+    await expect(window.getByRole('heading', { name: 'Dashboard alumno', level: 1 })).toBeVisible()
     await expect(window.getByText('Bienvenido Ada López')).toBeVisible()
 
     for (const id of dashboardButtonIds) {
@@ -49,5 +49,20 @@ test('shows the student dashboard mockup', async () => {
     }
 
     await expect(window).toHaveScreenshot('dashboard-empty.png', { animations: 'disabled' })
+  })
+})
+
+test('keeps the dashboard when a button is pressed', async () => {
+  await withDashboardApp(async (window) => {
+    for (const id of dashboardButtonIds) {
+      await window.locator(`#${id}`).click()
+
+      await expect(
+        window.getByRole('heading', { name: 'Dashboard alumno', level: 1 })
+      ).toBeVisible()
+      await expect(window.getByText('Bienvenido Ada López')).toBeVisible()
+      const hash = await window.evaluate(() => window.location.hash)
+      expect(hash.replace(/^#\/?/, '')).toBe('student/dashboard')
+    }
   })
 })
