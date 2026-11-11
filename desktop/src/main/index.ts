@@ -5,8 +5,8 @@ import icon from '../../resources/icon.png?asset'
 import { closeDatabase, openDatabase } from './database'
 
 function screenQuery(): { screen: string } | undefined {
-  if (process.env['ATEMPO_SCREEN'] === 'register') {
-    return { screen: 'register' }
+  if (process.env['ATEMPO_SCREEN'] === 'sign up') {
+    return { screen: 'sign up' }
   }
 
   return undefined

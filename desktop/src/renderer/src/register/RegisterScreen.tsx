@@ -64,13 +64,16 @@ function RegisterForm(): React.JSX.Element {
   const name = useRegisterStore((state) => state.name)
   const email = useRegisterStore((state) => state.email)
   const password = useRegisterStore((state) => state.password)
+  const repeatPassword = useRegisterStore((state) => state.repeatPassword)
   const nameError = useRegisterStore((state) => state.nameError)
   const emailError = useRegisterStore((state) => state.emailError)
   const passwordError = useRegisterStore((state) => state.passwordError)
+  const repeatPasswordError = useRegisterStore((state) => state.repeatPasswordError)
   const submitted = useRegisterStore((state) => state.submitted)
   const setName = useRegisterStore((state) => state.setName)
   const setEmail = useRegisterStore((state) => state.setEmail)
   const setPassword = useRegisterStore((state) => state.setPassword)
+  const setRepeatPassword = useRegisterStore((state) => state.setRepeatPassword)
   const submit = useRegisterStore((state) => state.submit)
   const [passwordVisible, setPasswordVisible] = useState(false)
 
@@ -151,6 +154,27 @@ function RegisterForm(): React.JSX.Element {
           {passwordError !== '' ? (
             <p id="password-error" className="text-sm text-base-content">
               {passwordError}
+            </p>
+          ) : null}
+        </div>
+        <div className="flex flex-col gap-2">
+          <label className="text-base-content" htmlFor="repeat-password">
+            Repetir contraseña
+          </label>
+          <input
+            id="repeat-password"
+            className={repeatPasswordError !== '' ? 'input input-error w-full' : 'input w-full'}
+            type="password"
+            name="repeatPassword"
+            autoComplete="new-password"
+            value={repeatPassword}
+            aria-invalid={repeatPasswordError !== ''}
+            aria-describedby={repeatPasswordError !== '' ? 'repeat-password-error' : undefined}
+            onChange={(event) => setRepeatPassword(event.target.value)}
+          />
+          {repeatPasswordError !== '' ? (
+            <p id="repeat-password-error" className="text-sm text-base-content">
+              {repeatPasswordError}
             </p>
           ) : null}
         </div>

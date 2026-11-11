@@ -1,11 +1,11 @@
-export type AppScreen = 'login' | 'register'
+export type AppScreen = 'sign in' | 'sign up'
 
 export function screenFromSearch(search: string): AppScreen {
   const screen = new URLSearchParams(search).get('screen')
 
-  if (screen === 'register') {
-    return 'register'
+  if (screen === 'sign up') {
+    return 'sign up'
   }
 
-  return 'login'
+  return 'sign in'
 }

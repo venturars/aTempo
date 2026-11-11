@@ -25,7 +25,9 @@ const registerErrorPhrases = [
   'El correo es obligatorio.',
   'El correo no tiene una forma válida.',
   'La contraseña es obligatoria.',
-  'La contraseña tiene que tener al menos 8 caracteres.'
+  'La contraseña tiene que tener al menos 8 caracteres.',
+  'Repetir la contraseña es obligatorio.',
+  'Las contraseñas no coinciden.'
 ]
 const loginOnlyPhrases = ['Tu trimestre, sesión a sesión', 'Entra con tu correo.', 'Entrar']
 const absentFromRegister = ['Términos', 'términos', 'Privacidad', 'privacidad']
@@ -194,7 +196,8 @@ async function expectLegend(window: Page): Promise<void> {
 async function expectRegisterFields(window: Page): Promise<void> {
   await expect(window.getByLabel('Nombre completo')).toBeVisible()
   await expect(window.getByLabel('Correo electrónico')).toBeVisible()
-  await expect(window.getByLabel('Contraseña')).toBeVisible()
+  await expect(window.getByLabel('Contraseña', { exact: true })).toBeVisible()
+  await expect(window.getByLabel('Repetir contraseña')).toBeVisible()
   await expect(window.getByRole('button', { name: 'Crear mi cuenta' })).toBeVisible()
   await expect(window.locator('form')).toHaveAttribute('novalidate', '')
 }
@@ -256,7 +259,7 @@ async function expectLoginScreen(window: Page): Promise<void> {
 }
 
 test('shows the week panel beside the register form', async () => {
-  await withApp('register', async (window) => {
+  await withApp('sign up', async (window) => {
     await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-oscuro')
     await expect(window.getByText('aTempo')).toBeVisible()
     await expectSingleClaim(window)
@@ -273,7 +276,7 @@ test('shows the week panel beside the register form', async () => {
 })
 
 test('shows name, email and password errors when the fields are empty', async () => {
-  await withApp('register', async (window) => {
+  await withApp('sign up', async (window) => {
     await window.getByRole('button', { name: 'Crear mi cuenta' }).click()
 
     await expect(window.getByText('El nombre es obligatorio.')).toBeVisible()
@@ -285,17 +288,23 @@ test('shows name, email and password errors when the fields are empty', async ()
     ).toHaveCount(0)
     await expect(window.getByLabel('Nombre completo')).toHaveAttribute('aria-invalid', 'true')
     await expect(window.getByLabel('Correo electrónico')).toHaveAttribute('aria-invalid', 'true')
-    await expect(window.getByLabel('Contraseña')).toHaveAttribute('aria-invalid', 'true')
+    await expect(window.getByLabel('Contraseña', { exact: true })).toHaveAttribute(
+      'aria-invalid',
+      'true'
+    )
+    await expect(window.getByText('Repetir la contraseña es obligatorio.')).toBeVisible()
+    await expect(window.getByLabel('Repetir contraseña')).toHaveAttribute('aria-invalid', 'true')
+    await expect(window.getByText('Las contraseñas no coinciden.')).toHaveCount(0)
     await expectNoAlert(window)
     await expect(window).toHaveScreenshot('register-errors.png', { animations: 'disabled' })
   })
 })
 
 test('shows errors for a malformed email and a short password', async () => {
-  await withApp('register', async (window) => {
+  await withApp('sign up', async (window) => {
     const name = window.getByLabel('Nombre completo')
     const email = window.getByLabel('Correo electrónico')
-    const password = window.getByLabel('Contraseña')
+    const password = window.getByLabel('Contraseña', { exact: true })
     const submit = window.getByRole('button', { name: 'Crear mi cuenta' })
 
     await name.fill('Ana')
@@ -357,6 +366,15 @@ test('shows errors for a malformed email and a short password', async () => {
     await expectNoAlert(window)
 
     await password.fill('12345678')
+    await window.getByLabel('Repetir contraseña').fill('12345679')
+    await submit.click()
+
+    await expect(window.getByText('Las contraseñas no coinciden.')).toBeVisible()
+    await expect(window.getByLabel('Repetir contraseña')).toHaveAttribute('aria-invalid', 'true')
+    await expect(password).not.toHaveAttribute('aria-invalid', 'true')
+    await expectNoAlert(window)
+
+    await window.getByLabel('Repetir contraseña').fill('12345678')
     await submit.click()
 
     const alert = window.getByRole('status')
@@ -367,6 +385,7 @@ test('shows errors for a malformed email and a short password', async () => {
     await expectNoRegisterErrors(window)
 
     await password.fill(' 1234567')
+    await window.getByLabel('Repetir contraseña').fill(' 1234567')
     await submit.click()
 
     const lines = await alert
@@ -382,10 +401,11 @@ test('shows errors for a malformed email and a short password', async () => {
 })
 
 test('shows the written name, email and password in an alert', async () => {
-  await withApp('register', async (window) => {
+  await withApp('sign up', async (window) => {
     await window.getByLabel('Nombre completo').fill('Ana')
     await window.getByLabel('Correo electrónico').fill('ana@clase.test')
-    await window.getByLabel('Contraseña').fill('secreta12')
+    await window.getByLabel('Contraseña', { exact: true }).fill('secreta12')
+    await window.getByLabel('Repetir contraseña').fill('secreta12')
     await window.getByRole('button', { name: 'Crear mi cuenta' }).click()
 
     const alert = window.getByRole('status')
@@ -400,7 +420,8 @@ test('shows the written name, email and password in an alert', async () => {
 
     await window.getByLabel('Nombre completo').fill('  Ana  ')
     await window.getByLabel('Correo electrónico').fill('  ana@clase.test  ')
-    await window.getByLabel('Contraseña').fill(' secreta12')
+    await window.getByLabel('Contraseña', { exact: true }).fill(' secreta12')
+    await window.getByLabel('Repetir contraseña').fill(' secreta12')
     await window.getByRole('button', { name: 'Crear mi cuenta' }).click()
 
     const lines = await alert
@@ -418,11 +439,11 @@ test('shows the written name, email and password in an alert', async () => {
 })
 
 test('does not leave the register screen when Inicia sesión is pressed', async () => {
-  await withApp('register', async (window) => {
+  await withApp('sign up', async (window) => {
     await expectSignInButton(window)
     await window.getByLabel('Nombre completo').fill('Ana')
     await window.getByLabel('Correo electrónico').fill('ana@clase.test')
-    await window.getByLabel('Contraseña').fill('secreta12')
+    await window.getByLabel('Contraseña', { exact: true }).fill('secreta12')
     await window.getByRole('button', { name: 'Inicia sesión' }).click()
 
     await expect(window.getByRole('heading', { name: 'Esta semana' })).toBeVisible()
@@ -431,13 +452,15 @@ test('does not leave the register screen when Inicia sesión is pressed', async 
     await expectNoLogin(window)
     await expectNoAlert(window)
     await expectNoRegisterErrors(window)
-    const search = await window.evaluate(() => window.location.search)
-    expect(search).toContain('screen=register')
+    const screen = await window.evaluate(() =>
+      new URLSearchParams(window.location.search).get('screen')
+    )
+    expect(screen).toBe('sign up')
   })
 })
 
 test('stacks the panel and the form when the window is narrow', async () => {
-  await withApp('register', async (window) => {
+  await withApp('sign up', async (window) => {
     await window.setViewportSize({ width: 390, height: 844 })
 
     await expectSingleClaim(window)
@@ -453,7 +476,7 @@ test('stacks the panel and the form when the window is narrow', async () => {
 })
 
 test('changes colors and font with the light theme', async () => {
-  await withApp('register', async (window) => {
+  await withApp('sign up', async (window) => {
     await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-oscuro')
     const dark = await readBodyStyle(window)
 
@@ -477,8 +500,8 @@ test('changes colors and font with the light theme', async () => {
 })
 
 test('shows and hides the password', async () => {
-  await withApp('register', async (window) => {
-    const password = window.getByLabel('Contraseña')
+  await withApp('sign up', async (window) => {
+    const password = window.getByLabel('Contraseña', { exact: true })
     await window.getByLabel('Nombre completo').fill('Ana')
     await window.getByLabel('Correo electrónico').fill('ana@clase.test')
     await password.fill('secreta12')
@@ -508,10 +531,10 @@ test('shows and hides the password', async () => {
   })
 })
 
-test('keeps the login screen when ATEMPO_SCREEN is not register', async () => {
+test('keeps the login screen when ATEMPO_SCREEN is not sign up', async () => {
   test.setTimeout(60_000)
 
-  for (const screen of ['Register', '', 'login']) {
+  for (const screen of ['sign in', 'Register', '', 'login', 'register']) {
     await withApp(screen, async (window) => {
       await expectLoginScreen(window)
     })
