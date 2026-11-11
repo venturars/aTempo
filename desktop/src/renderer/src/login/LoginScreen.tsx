@@ -62,7 +62,6 @@ function LoginForm(): React.JSX.Element {
   const password = useLoginStore((state) => state.password)
   const emailError = useLoginStore((state) => state.emailError)
   const passwordError = useLoginStore((state) => state.passwordError)
-  const submitted = useLoginStore((state) => state.submitted)
   const setEmail = useLoginStore((state) => state.setEmail)
   const setPassword = useLoginStore((state) => state.setPassword)
   const submit = useLoginStore((state) => state.submit)
@@ -121,12 +120,6 @@ function LoginForm(): React.JSX.Element {
         <button className="btn btn-primary" type="submit">
           Entrar
         </button>
-        {submitted !== null ? (
-          <div className="alert alert-success" role="status">
-            <span>Correo: {submitted.email}</span>
-            <span>Contraseña: {submitted.password}</span>
-          </div>
-        ) : null}
       </form>
     </section>
   )

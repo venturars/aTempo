@@ -189,17 +189,48 @@ test('shows both errors when the fields are empty', async () => {
   })
 })
 
-test('shows the written email and password in an alert', async () => {
+test('opens the professor panel after a valid login', async () => {
   await withApp(async (window) => {
     await window.getByLabel('Correo').fill('ana@clase.test')
     await window.getByLabel('Contraseña').fill('secreta')
     await window.getByRole('button', { name: 'Entrar' }).click()
 
-    const alert = window.getByRole('status')
-    await expect(alert).toContainText('Correo: ana@clase.test')
-    await expect(alert).toContainText('Contraseña: secreta')
+    await expect(window.getByRole('navigation', { name: 'Secciones' })).toBeVisible()
+    await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
+    await expect(window.getByRole('button', { name: 'Pasar lista' })).toBeVisible()
+    await expect(window.getByText('secreta')).toHaveCount(0)
+    await expect(window.getByRole('status')).toHaveCount(0)
     await expectNoErrorPhrases(window)
-    await expect(window).toHaveScreenshot('login-alert.png', { animations: 'disabled' })
+
+    await window.getByRole('button', { name: 'Pasar lista' }).click()
+    const lucia = window.getByRole('row', { name: /Lucía Fernández/ })
+    await lucia.getByText('Pendiente').click()
+    await lucia.getByRole('button', { name: 'Presente' }).click()
+    await expect(lucia.getByText('Presente')).toBeVisible()
+    await expect(lucia.getByText('09:32')).toBeVisible()
+
+    await window.getByRole('button', { name: 'Finalizar' }).click()
+    const dialog = window.getByRole('dialog')
+    await expect(dialog).toContainText('Los pendientes pasarán a ausentes.')
+    await dialog.getByRole('button', { name: 'Finalizar' }).click()
+    await expect(window.getByText('Cerrada')).toBeVisible()
+    await expect(
+      window.getByRole('row', { name: /Diego Morales/ }).getByText('Ausente')
+    ).toBeVisible()
+    await expect(lucia.getByText('Presente')).toBeVisible()
+
+    await window.getByRole('button', { name: 'Clases' }).click()
+    await window.getByRole('button', { name: /Nov 10 2026/ }).click()
+    await expect(window.getByRole('heading', { level: 1, name: 'Nov 10 2026' })).toBeVisible()
+    await window.getByRole('button', { name: 'Diego Morales' }).click()
+    await expect(window.getByText('diego.morales@neoland.es')).toBeVisible()
+    await expect(window.getByText('Historial')).toBeVisible()
+
+    await window.getByRole('button', { name: 'Ajustes' }).click()
+    await window.getByRole('button', { name: 'Tinta' }).click()
+    await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-claro')
+    await window.getByRole('button', { name: 'Noche' }).click()
+    await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-oscuro')
   })
 })
 
