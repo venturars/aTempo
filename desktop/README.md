@@ -20,14 +20,6 @@ $ pnpm install
 $ pnpm run dev
 ```
 
-El dashboard del alumno (maqueta) se abre con:
-
-```bash
-$ pnpm run dev:dashboard
-```
-
-Eso arranca Electron con el hash `#/student/dashboard`. Con `pnpm run dev` la ventana queda en el login; en desarrollo puedes abrir el dashboard añadiendo `#/student/dashboard` a la URL del renderer.
-
 ### Visual test
 
 Builds the app and runs Playwright. The checks and the screenshots are documented in `docs/STYLE.md`.
