@@ -32,6 +32,10 @@ desktop/
           LoginScreen.tsx
           loginStore.ts
           validateLogin.ts
+        student/
+          dashboard/
+            DashboardScreen.tsx
+            dashboardActions.ts
   tests/
     login.spec.ts
     snapshots/
