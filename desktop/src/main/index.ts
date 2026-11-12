@@ -4,6 +4,22 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { closeDatabase, openDatabase } from './database'
 
+function startupHash(): string | undefined {
+  if (process.argv.includes('--organization-dashboard')) {
+    return 'organization/dashboard'
+  }
+
+  if (process.argv.includes('--dashboard')) {
+    return 'student/dashboard'
+  }
+
+  if (process.argv.includes('--sign-up')) {
+    return 'sign-up'
+  }
+
+  return undefined
+}
+
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -29,12 +45,20 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
+  const hash = startupHash()
+
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
-  } else {
+    const rendererUrl =
+      hash === undefined
+        ? process.env['ELECTRON_RENDERER_URL']
+        : `${process.env['ELECTRON_RENDERER_URL']}#/${hash}`
+    mainWindow.loadURL(rendererUrl)
+  } else if (hash === undefined) {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+  } else {
+    mainWindow.loadFile(join(__dirname, '../renderer/index.html'), { hash })
   }
 }
 
