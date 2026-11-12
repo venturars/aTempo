@@ -1,6 +1,6 @@
 # Guía visual
 
-Tailwind y daisyUI, con los temas `atempo-oscuro` y `atempo-claro`.
+Tailwind y daisyUI, con los temas `atempo-oscuro` y `atempo-claro`. El calendario es de React Day Picker 9.14.0.
 
 Storybook es la fuente de verdad. El markdown de `docs/guia/` sale de aquí y no se versiona.
 

@@ -9,7 +9,7 @@ La visión, los perfiles y las decisiones de producto están en [principles.md](
 | Carpeta | Qué es |
 | --- | --- |
 | `desktop/` | Aplicación del profesor. Electron, React y SQLite. La pantalla de arranque es el login. Con el hash `#/sign-up` se abre el registro. |
-| `docs/storybook/` | Fuente de verdad visual: Tailwind y daisyUI. Las pantallas usan las clases. No hay un paquete de componentes. |
+| `docs/storybook/` | Fuente de verdad visual: Tailwind, daisyUI y el calendario de React Day Picker. Las pantallas usan las clases de daisyUI. |
 | `docs/guia/` | Markdown generado desde Storybook. No se versiona. Lo leen los agentes. |
 | `docs/` | Cómo se construye: constitución, arquitectura, estilo y árbol de carpetas. |
 
