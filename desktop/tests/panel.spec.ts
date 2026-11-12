@@ -32,6 +32,11 @@ const shareWithoutCancelledSession: Record<string, string> = {
 
 const riskSessions = ['Mar 10 nov 2026', 'Lun 9 nov 2026', 'Vie 6 nov 2026', 'Jue 5 nov 2026']
 
+type BodyStyle = {
+  fontFamily: string
+  backgroundColor: string
+}
+
 test.describe.configure({ timeout: 60_000 })
 
 async function openPanel(): Promise<{ app: ElectronApplication; window: Page }> {
@@ -91,6 +96,16 @@ async function expectScreen(window: Page, name: string): Promise<void> {
   await window.mouse.move(size.width - 1, size.height - 1)
   await window.evaluate(() => document.fonts.ready)
   await expect(window).toHaveScreenshot(name, { animations: 'disabled' })
+}
+
+function readBodyStyle(window: Page): Promise<BodyStyle> {
+  return window.locator('body').evaluate((body) => {
+    const style = getComputedStyle(body)
+    return {
+      fontFamily: style.fontFamily,
+      backgroundColor: style.backgroundColor
+    }
+  })
 }
 
 function sessionRow(window: Page, label: string): Locator {
@@ -167,7 +182,7 @@ function headerStaysInTheCard(scroll: AttendanceScroll): void {
   expect(scroll.headerBottom).toBeLessThanOrEqual(scroll.boxBottom)
 }
 
-test('la sesión cancelada se ve en Sesiones y no abre el pase de lista', async () => {
+test('shows the cancelled session in Sesiones without opening the roll call', async () => {
   await withPanel(async (window) => {
     await window.getByRole('button', { name: 'Sesiones' }).click()
     await expect(window.getByRole('heading', { level: 1, name: 'Sesiones' })).toBeVisible()
@@ -190,7 +205,7 @@ test('la sesión cancelada se ve en Sesiones y no abre el pase de lista', async 
   })
 })
 
-test('la cuadrícula muestra la cancelada y no cuenta para el porcentaje ni los reconocimientos', async () => {
+test('shows the cancelled session in the grid and leaves it out of the share and the awards', async () => {
   await withPanel(async (window) => {
     await window.getByRole('button', { name: 'Estadísticas' }).click()
     await expect(window.getByRole('heading', { level: 1, name: 'Estadísticas' })).toBeVisible()
@@ -227,7 +242,7 @@ test('la cuadrícula muestra la cancelada y no cuenta para el porcentaje ni los 
   })
 })
 
-test('las pistas de riesgo siguen con Mar 10, Lun 9, Vie 6 y Jue 5', async () => {
+test('keeps the risk hints from Mar 10, Lun 9, Vie 6 and Jue 5', async () => {
   await withPanel(async (window) => {
     await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
 
@@ -247,7 +262,7 @@ test('las pistas de riesgo siguen con Mar 10, Lun 9, Vie 6 y Jue 5', async () =>
   })
 })
 
-test('los quince alumnos se desplazan dentro de la tarjeta y la cabecera sigue visible', async () => {
+test('scrolls the fifteen students inside the card and keeps the header visible', async () => {
   await withPanel(async (window) => {
     // 1024 px sigue en escritorio y deja las sesiones más anchas que la tarjeta.
     await window.setViewportSize({ width: 1024, height: 900 })
@@ -332,7 +347,7 @@ test('los quince alumnos se desplazan dentro de la tarjeta y la cabecera sigue v
   })
 })
 
-test('un login válido lleva a #/teacher/panel', async () => {
+test('opens #/teacher/panel after a valid login', async () => {
   await withApp([], { width: 1440, height: 900 }, async (window) => {
     expect(await window.evaluate(() => window.location.hash)).toBe('')
     await window.getByLabel('Correo').fill('ana@clase.test')
@@ -344,7 +359,7 @@ test('un login válido lleva a #/teacher/panel', async () => {
   })
 })
 
-test('--panel abre el panel al arrancar', async () => {
+test('opens the panel at startup with --panel', async () => {
   await withApp(['--panel'], { width: 1440, height: 900 }, async (window) => {
     const hash = await window.evaluate(() => window.location.hash)
     expect(hash.replace(/^#\/?/, '')).toBe('teacher/panel')
@@ -354,7 +369,7 @@ test('--panel abre el panel al arrancar', async () => {
   })
 })
 
-test('las pantallas del panel en escritorio coinciden con sus capturas', async () => {
+test('matches the desktop panel screens with their snapshots', async () => {
   await withApp(['--panel'], { width: 1440, height: 900 }, async (window) => {
     await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
     await expectScreen(window, 'panel-hoy.png')
@@ -376,12 +391,45 @@ test('las pantallas del panel en escritorio coinciden con sus capturas', async (
   })
 })
 
-test('Estadísticas a 390 px coincide con su captura', async () => {
+test('matches Estadísticas at 390 px with its snapshot', async () => {
   await withApp(['--panel'], { width: 390, height: 844 }, async (window) => {
     await openTab(window, 'Estadísticas', 'Estadísticas')
     const summary = window.getByRole('region', { name: 'Asistencia por alumno' })
     await expect(summary).toBeVisible()
     await expect(window.getByRole('region', { name: /^Asistencia por fecha/ })).toBeHidden()
     await expectScreen(window, 'panel-estadisticas-movil.png')
+  })
+})
+
+test('changes the panel colors and font with the light theme', async () => {
+  await withApp(['--panel'], { width: 1440, height: 900 }, async (window) => {
+    await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
+    await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-oscuro')
+    const dark = await readBodyStyle(window)
+
+    await window.evaluate(() => {
+      document.documentElement.setAttribute('data-theme', 'atempo-claro')
+    })
+    await window.evaluate(() => document.fonts.ready)
+
+    const light = await readBodyStyle(window)
+    expect(light.fontFamily).toContain('Inter')
+    expect(light.backgroundColor).not.toBe(dark.backgroundColor)
+
+    await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-claro')
+    await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
+    await expectScreen(window, 'panel-claro.png')
+  })
+})
+
+test('matches a student file on desktop with its snapshot', async () => {
+  await withApp(['--panel'], { width: 1440, height: 900 }, async (window) => {
+    await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
+    await window.getByRole('button', { name: 'Meghan Martin', exact: true }).click()
+
+    await expect(window.getByRole('heading', { level: 1, name: 'Meghan Martin' })).toBeVisible()
+    await expect(window.getByText('Asistencia', { exact: true })).toBeVisible()
+    await expect(window.getByRole('heading', { name: 'Historial de asistencia' })).toBeVisible()
+    await expectScreen(window, 'panel-ficha.png')
   })
 })

@@ -223,6 +223,7 @@ body {
 }
 
 /* En claro la línea casi no está y la sombra es ancha y baja. En oscuro la línea es un pelo. */
+/* En oscuro las sombras salen de base-100, el color más oscuro del tema: base-content es claro. */
 :where(.teacher-panel) .card,
 :where(.teacher-panel) main .rounded-box.bg-base-100 {
   border: 1px solid color-mix(in oklab, var(--color-base-content) 4%, transparent);
@@ -234,8 +235,8 @@ body {
   ) {
   border-color: color-mix(in oklab, var(--color-base-content) 8%, transparent);
   box-shadow:
-    0 1px 2px rgb(16 24 40 / 0.03),
-    0 12px 28px -18px rgb(16 24 40 / 0.06);
+    0 1px 2px color-mix(in oklab, var(--color-base-content) 3%, transparent),
+    0 12px 28px -18px color-mix(in oklab, var(--color-base-content) 6%, transparent);
 }
 [data-theme='atempo-claro']
   :where(.teacher-panel)
@@ -257,8 +258,8 @@ body {
 [data-theme='atempo-oscuro'] :where(.teacher-panel) :is(.card, main .rounded-box.bg-base-100) {
   border-color: color-mix(in oklab, var(--color-base-content) 4%, transparent);
   box-shadow:
-    0 1px 2px rgb(0 0 0 / 0.22),
-    0 12px 28px -16px rgb(0 0 0 / 0.45);
+    0 1px 2px color-mix(in oklab, var(--color-base-100) 50%, transparent),
+    0 12px 28px -16px var(--color-base-100);
 }
 [data-theme='atempo-oscuro']
   :where(.teacher-panel)
@@ -653,8 +654,10 @@ body {
 }
 
 /* La miga ya trae 8 px arriba y abajo. En Sesiones y en la fecha eso abre un hueco de más. */
+/* daisyUI la corre 4 px a la izquierda con un margen negativo; sin esos 4 px de más, el último tramo se corta y sale una barra de scroll. */
 :where(.teacher-panel) .breadcrumbs {
   padding-block: 0;
+  max-width: calc(100% + 0.25rem);
 }
 
 /* Lo que flota se separa de la tarjeta. En claro es blanco; en noche, un paso más claro. */
@@ -662,14 +665,14 @@ body {
   border: 1px solid color-mix(in oklab, var(--color-base-content) 10%, transparent);
   background-color: var(--color-base-100);
   box-shadow:
-    0 1px 2px rgb(16 24 40 / 0.04),
-    0 16px 32px -16px rgb(16 24 40 / 0.16);
+    0 1px 2px color-mix(in oklab, var(--color-base-content) 4%, transparent),
+    0 16px 32px -16px color-mix(in oklab, var(--color-base-content) 16%, transparent);
 }
 [data-theme='atempo-oscuro'] .float-panel {
   background-color: var(--color-base-300);
   box-shadow:
-    0 1px 2px rgb(0 0 0 / 0.28),
-    0 16px 36px -16px rgb(0 0 0 / 0.55);
+    0 1px 2px color-mix(in oklab, var(--color-base-100) 50%, transparent),
+    0 16px 36px -16px var(--color-base-100);
 }
 
 /* La pista usa la superficie del tema. En noche se separa un paso de la tarjeta. */
@@ -679,14 +682,14 @@ body {
   background-color: var(--color-base-100);
   color: var(--color-base-content);
   box-shadow:
-    0 1px 2px rgb(16 24 40 / 0.06),
-    0 16px 32px -12px rgb(16 24 40 / 0.22);
+    0 1px 2px color-mix(in oklab, var(--color-base-content) 6%, transparent),
+    0 16px 32px -12px color-mix(in oklab, var(--color-base-content) 22%, transparent);
 }
 [data-theme='atempo-oscuro'] .tip {
   background-color: var(--color-base-300);
   box-shadow:
-    0 1px 2px rgb(0 0 0 / 0.28),
-    0 16px 36px -16px rgb(0 0 0 / 0.55);
+    0 1px 2px color-mix(in oklab, var(--color-base-100) 50%, transparent),
+    0 16px 36px -16px var(--color-base-100);
 }
 .tip-body {
   color: color-mix(in oklab, var(--color-base-content) 55%, transparent);
@@ -887,8 +890,13 @@ body {
   color: var(--color-base-content);
   border: 1px solid color-mix(in oklab, var(--color-base-content) 8%, transparent);
   box-shadow:
-    0 1px 2px rgb(0 0 0 / 0.18),
-    0 16px 40px -18px rgb(0 0 0 / 0.45);
+    0 1px 2px color-mix(in oklab, var(--color-base-content) 20%, transparent),
+    0 16px 40px -18px color-mix(in oklab, var(--color-base-content) 50%, transparent);
+}
+[data-theme='atempo-oscuro'] .date-popover {
+  box-shadow:
+    0 1px 2px color-mix(in oklab, var(--color-base-100) 35%, transparent),
+    0 16px 40px -18px color-mix(in oklab, var(--color-base-100) 90%, transparent);
 }
 .date-popover .rdp-root {
   --rdp-accent-color: var(--color-primary);

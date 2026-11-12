@@ -82,6 +82,8 @@ desktop/
       panel-estadisticas.png
       panel-ajustes.png
       panel-estadisticas-movil.png
+      panel-claro.png
+      panel-ficha.png
   build/                # iconos de empaquetado de la plantilla
   resources/            # icono de la ventana en Linux
 ```
