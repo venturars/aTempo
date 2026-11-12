@@ -928,3 +928,17 @@ deployments:
   - venturars/delivery-workflow
   active_owner: venturars/delivery-workflow
   content_hash: sha256:3dc235b6abbc6c70b249413dd11ff36df2d40dd7d765b1031bbbc2f687369408
+mcp_servers:
+- github
+mcp_configs:
+  github:
+    name: github
+    transport: http
+    registry: false
+    headers:
+      Authorization: Bearer ${GITHUB_TOKEN}
+      X-MCP-Features: mcp_apps_disable_form_deferral
+    url: https://api.githubcopilot.com/mcp/
+mcp_target_servers: {}
+mcp_config_provenance:
+  github: delivery-workflow
