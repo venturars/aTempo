@@ -192,6 +192,14 @@ function buildSession(
   }
 }
 
+function markCancelled(session: ClassSession): ClassSession {
+  return {
+    ...session,
+    state: 'Cancelada',
+    cancel: true
+  }
+}
+
 export const classSessions: ClassSession[] = [
   buildSession(
     'Mar 10 nov',
@@ -214,7 +222,7 @@ export const classSessions: ClassSession[] = [
   buildSession('Jue 5 nov', { 'Sergio Cortes': '09:19' }, ['Meghan Martin'], {
     'Meghan Martin': 'no'
   }),
-  buildSession('Mié 4 nov', { 'Manuel Diaz': '09:15' }, [], {}),
+  markCancelled(buildSession('Mié 4 nov', { 'Manuel Diaz': '09:15' }, [], {})),
   buildSession('Mar 3 nov', {}, [], {}),
   buildSession('Lun 2 nov', { 'Ella Deyavorsky': '09:13' }, [], {})
 ]

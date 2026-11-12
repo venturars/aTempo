@@ -31,24 +31,18 @@ export function DateFilter({
 }): React.JSX.Element {
   const id = useId()
   const popover = useRef<HTMLDivElement>(null)
-  const appliedMode = usePanelStore((state) => state.statsDateMode)
   const setAppliedMode = usePanelStore((state) => state.setStatsDateMode)
-  const [mode, setMode] = useState<'range' | 'days'>(appliedMode)
   const [draft, setDraft] = useState(dates)
   const [range, setRange] = useState<DateRange | undefined>()
   const ordered = [...dates].sort()
   const format = (date: string): string =>
     parseDate(date).toLocaleDateString('es', { day: 'numeric', month: 'short' })
-  const label =
-    appliedMode === 'days' && dates.length > 1
-      ? `${dates.length} días seleccionados`
-      : dates.length === 1
-        ? format(ordered[0])
-        : `${format(ordered[0])} – ${format(ordered.at(-1)!)}`
+  const label = dates.length === 1 ? format(ordered[0]) : `${format(ordered[0])} – ${format(ordered.at(-1)!)}`
+  const month = parseDate(available.at(-1)!)
 
   function preset(next: string[]): void {
     const nextRange = { from: parseDate(next[0]), to: parseDate(next.at(-1)!) }
-    setDraft(mode === 'range' ? rangeDates(nextRange) : next)
+    setDraft(rangeDates(nextRange))
     setRange(nextRange)
   }
 
@@ -61,10 +55,7 @@ export function DateFilter({
         aria-label={`${label}. Elegir fechas`}
         className="badge badge-sm badge-soft date-trigger"
         style={{ anchorName: '--attendance-dates' }}
-        onClick={() => {
-          preset(dates)
-          setMode(appliedMode)
-        }}
+        onClick={() => preset(dates)}
       >
         <svg
           aria-hidden="true"
@@ -79,17 +70,6 @@ export function DateFilter({
           <path d="M7 2v6m10-6v6M3 11h18" />
         </svg>
         <span>{label}</span>
-        <svg
-          aria-hidden="true"
-          width="14"
-          height="14"
-          viewBox="0 0 20 20"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.6"
-        >
-          <path d="m5 8 5 5 5-5" />
-        </svg>
       </button>
       <div
         id={id}
@@ -100,51 +80,23 @@ export function DateFilter({
         className="dropdown date-popover"
         style={{ positionAnchor: '--attendance-dates' }}
       >
-        <div className="flex items-center justify-between gap-3 px-3 pt-3">
-          <span className="text-sm font-medium">Fechas</span>
-        </div>
-        <div className="join mx-3 mt-3 flex">
-          {(
-            [
-              { value: 'range', label: 'Intervalo' },
-              { value: 'days', label: 'Días sueltos' }
-            ] as const
-          ).map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              className={`btn btn-sm join-item flex-1 ${mode === option.value ? 'btn-primary' : ''}`}
-              aria-pressed={mode === option.value}
-              onClick={() => setMode(option.value)}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
         <div className="flex justify-center py-1">
-          {mode === 'range' ? (
-            <DayPicker
-              className="react-day-picker"
-              locale={es}
-              mode="range"
-              defaultMonth={parseDate(available.at(-1)!)}
-              selected={range}
-              onSelect={(next, day) => {
-                const selection = range?.from && range?.to ? { from: day } : next
-                setRange(selection)
-                setDraft(rangeDates(selection))
-              }}
-            />
-          ) : (
-            <DayPicker
-              className="react-day-picker"
-              locale={es}
-              mode="multiple"
-              defaultMonth={parseDate(available.at(-1)!)}
-              selected={draft.map(parseDate)}
-              onSelect={(next) => setDraft((next ?? []).map(dateKey))}
-            />
-          )}
+          <DayPicker
+            className="react-day-picker"
+            locale={es}
+            mode="range"
+            hideNavigation
+            disableNavigation
+            startMonth={month}
+            endMonth={month}
+            defaultMonth={month}
+            selected={range}
+            onSelect={(next, day) => {
+              const selection = range?.from && range?.to ? { from: day } : next
+              setRange(selection)
+              setDraft(rangeDates(selection))
+            }}
+          />
         </div>
         <div className="date-presets px-3 py-2">
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => preset(available)}>
@@ -158,17 +110,14 @@ export function DateFilter({
             Últimas 3 sesiones
           </button>
         </div>
-        <div className="flex items-center justify-between gap-3 px-3 py-3">
-          <span className="text-sm text-base-content/60">
-            {draft.length} {draft.length === 1 ? 'día seleccionado' : 'días seleccionados'}
-          </span>
+        <div className="flex items-center justify-end gap-3 px-3 py-3">
           <button
             type="button"
             className="btn btn-sm btn-primary"
             disabled={!draft.length}
             onClick={() => {
               onChange([...draft].sort())
-              setAppliedMode(mode)
+              setAppliedMode('range')
               popover.current?.hidePopover()
             }}
           >

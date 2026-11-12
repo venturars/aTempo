@@ -443,6 +443,11 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
               const rows = rowsWithMarks(session.rows, sessionMarks[session.id])
               const counts = session.rows === null ? null : sessionCounts(rows)
               const linked = !session.cancel && counts !== null
+              const attendance = session.cancel
+                ? 'Cancelada'
+                : counts === null
+                  ? '—'
+                  : attendanceShare(counts)
               return (
                 <tr
                   key={session.id}
@@ -461,9 +466,7 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
                       <SessionDate label={`${session.id} 2026`} strong />
                     </button>
                   </td>
-                  <td className="tabular-nums text-base-content/50">
-                    {counts === null ? '—' : attendanceShare(counts)}
-                  </td>
+                  <td className="tabular-nums text-base-content/50">{attendance}</td>
                   <td>
                     {counts === null ? (
                       <span className="text-base-content/50">—</span>

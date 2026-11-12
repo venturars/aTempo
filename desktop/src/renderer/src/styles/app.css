@@ -685,9 +685,13 @@ main .rounded-box.bg-base-100 {
 }
 
 /* La tabla de asistencia comparte la fila de las demás, pero cada día tiene ancho fijo.
-   Si no, la regla global de width 1% aplasta las columnas y los nombres se montan. */
+   Si no, la regla global de width 1% aplasta las columnas y los nombres se montan.
+   Quince filas de 36 px más la cabecera de 44 px miden 584 px. El tope es más bajo
+   para que esa lista se desplace dentro de la tarjeta y la cabecera se quede arriba. */
 .attendance-scroll {
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: calc(44px + 10 * 36px);
 }
 .table.attendance-table {
   width: max-content;
@@ -709,6 +713,9 @@ main .rounded-box.bg-base-100 {
 .table.attendance-table thead th {
   height: 44px;
   background: var(--color-base-100);
+  position: sticky;
+  top: 0;
+  z-index: 3;
 }
 .table.attendance-table :is(th, td).attendance-name {
   width: 12rem;
@@ -723,7 +730,7 @@ main .rounded-box.bg-base-100 {
   box-shadow: 1px 0 0 color-mix(in oklab, var(--color-base-content) 8%, transparent);
 }
 .table.attendance-table thead th.attendance-name {
-  z-index: 3;
+  z-index: 4;
 }
 .table.attendance-table :is(th, td).attendance-total {
   width: 7rem;
@@ -838,8 +845,12 @@ main .rounded-box.bg-base-100 {
   margin: 0;
 }
 .date-popover .rdp-month_caption {
+  justify-content: center;
   font-size: 1rem;
   font-weight: 500;
+}
+.date-popover .rdp-nav {
+  display: none;
 }
 .date-popover .rdp-selected {
   font-size: inherit;

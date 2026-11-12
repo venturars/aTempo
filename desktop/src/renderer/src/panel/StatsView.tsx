@@ -184,7 +184,7 @@ export function StatsView(): React.JSX.Element {
             className="attendance-scroll"
             ref={scroll}
             role="region"
-            aria-label="Asistencia por fecha. Desplázate horizontalmente para ver más sesiones."
+            aria-label="Asistencia por fecha. Desplázate en vertical para ver más alumnos y en horizontal para ver más sesiones."
             tabIndex={0}
             onScroll={(event) => setScroll(event.currentTarget.scrollLeft)}
           >

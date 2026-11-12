@@ -35,7 +35,7 @@ export function RecognitionAward({
               <li key={name}>
                 <button
                   type="button"
-                  className="block w-full cursor-pointer truncate text-left text-sm font-medium"
+                  className="block w-full cursor-pointer truncate text-left text-sm font-medium text-base-content/45"
                   onClick={() => onSelect(name)}
                 >
                   {name}
