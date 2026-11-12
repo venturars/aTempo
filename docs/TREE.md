@@ -23,8 +23,18 @@ desktop/
     renderer/
       index.html
       src/
-        main.tsx
-        App.tsx
+        main.tsx          # crea el router con hash history
+        routeTree.gen.ts  # generado por el plugin de TanStack Router
+        routes/
+          __root.tsx    # ruta raíz; si no hay ruta, el login
+          index.tsx     # /, login
+          sign-up.tsx   # /sign-up, registro
+          student/
+            dashboard.tsx  # /student/dashboard
+          organization/
+            dashboard.tsx  # /organization/dashboard, en construcción
+          teacher/
+            panel.tsx      # /teacher/panel, en construcción
         env.d.ts
         styles/
           app.css       # Tailwind y daisyUI
@@ -42,10 +52,15 @@ desktop/
         student/
           dashboard/
             DashboardScreen.tsx
+        session/
+          sessionStore.ts  # perfil de la sesión y ruta de su dashboard
+        underConstruction/
+          UnderConstructionScreen.tsx  # pantalla provisional con título
   tests/
     login.spec.ts
     register.spec.ts
     dashboard.spec.ts
+    navigation.spec.ts  # rutas, flags de arranque y dashboard de cada perfil
     snapshots/
       login-empty.png
       login-errors.png
@@ -58,6 +73,8 @@ desktop/
       register-narrow.png
       register-claro.png
       dashboard-empty.png
+      navigation-organization-dashboard.png
+      navigation-teacher-panel.png
   build/                # iconos de empaquetado de la plantilla
   resources/            # icono de la ventana en Linux
 ```

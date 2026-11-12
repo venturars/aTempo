@@ -14,7 +14,7 @@ type LoginState = {
   submitted: SubmittedLogin | null
   setEmail: (email: string) => void
   setPassword: (password: string) => void
-  submit: () => void
+  submit: () => boolean
 }
 
 export const useLoginStore = create<LoginState>((set, get) => ({
@@ -39,7 +39,7 @@ export const useLoginStore = create<LoginState>((set, get) => ({
         passwordError: errors.password,
         submitted: null
       })
-      return
+      return false
     }
 
     set({
@@ -50,5 +50,6 @@ export const useLoginStore = create<LoginState>((set, get) => ({
         password
       }
     })
+    return true
   }
 }))
