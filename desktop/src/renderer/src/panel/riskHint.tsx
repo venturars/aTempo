@@ -54,7 +54,7 @@ export function RiskHint({ name }: { name: string }): React.JSX.Element | null {
       {box !== null
         ? createPortal(
             <span
-              className="tip popover-in fixed z-50 flex w-64 flex-col gap-1 px-3.5 py-3 text-sm leading-snug"
+              className="teacher-panel tip popover-in fixed z-50 flex w-64 flex-col gap-1 px-3.5 py-3 text-sm leading-snug"
               style={{
                 top: box.top ?? undefined,
                 bottom: box.bottom ?? undefined,

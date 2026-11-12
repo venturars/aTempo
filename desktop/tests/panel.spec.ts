@@ -57,6 +57,42 @@ async function withPanel(run: (window: Page) => Promise<void>): Promise<void> {
   }
 }
 
+async function withApp(
+  flags: string[],
+  size: { width: number; height: number },
+  run: (window: Page) => Promise<void>
+): Promise<void> {
+  const app = await electron.launch({
+    args: ['--force-device-scale-factor=1', ...flags, mainFile],
+    cwd: appRoot
+  })
+  try {
+    const window = await app.firstWindow()
+    await window.setViewportSize(size)
+    await window.evaluate(() => document.fonts.ready)
+    await run(window)
+  } finally {
+    await app.close()
+  }
+}
+
+async function openTab(window: Page, label: string, title: string): Promise<void> {
+  await window
+    .getByRole('navigation', { name: 'Secciones' })
+    .getByRole('button', { name: label })
+    .click()
+  await expect(window.getByRole('heading', { level: 1, name: title })).toBeVisible()
+}
+
+// El ratón sale de la barra lateral para que ningún botón quede en hover en la captura.
+async function expectScreen(window: Page, name: string): Promise<void> {
+  const size = window.viewportSize()
+  if (size === null) throw new Error('La ventana no tiene tamaño.')
+  await window.mouse.move(size.width - 1, size.height - 1)
+  await window.evaluate(() => document.fonts.ready)
+  await expect(window).toHaveScreenshot(name, { animations: 'disabled' })
+}
+
 function sessionRow(window: Page, label: string): Locator {
   return window.getByRole('row').filter({
     has: window.getByRole('button', { name: label })
@@ -293,5 +329,59 @@ test('los quince alumnos se desplazan dentro de la tarjeta y la cabecera sigue v
 
     await cell.click()
     await expect(window.getByRole('status')).toContainText(detailText)
+  })
+})
+
+test('un login válido lleva a #/teacher/panel', async () => {
+  await withApp([], { width: 1440, height: 900 }, async (window) => {
+    expect(await window.evaluate(() => window.location.hash)).toBe('')
+    await window.getByLabel('Correo').fill('ana@clase.test')
+    await window.getByLabel('Contraseña').fill('secreta')
+    await window.getByRole('button', { name: 'Entrar' }).click()
+
+    await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
+    expect(await window.evaluate(() => window.location.hash)).toBe('#/teacher/panel')
+  })
+})
+
+test('--panel abre el panel al arrancar', async () => {
+  await withApp(['--panel'], { width: 1440, height: 900 }, async (window) => {
+    const hash = await window.evaluate(() => window.location.hash)
+    expect(hash.replace(/^#\/?/, '')).toBe('teacher/panel')
+    await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
+    await expect(window.getByLabel('Correo')).toHaveCount(0)
+    await expect(window.getByRole('button', { name: 'Entrar' })).toHaveCount(0)
+  })
+})
+
+test('las pantallas del panel en escritorio coinciden con sus capturas', async () => {
+  await withApp(['--panel'], { width: 1440, height: 900 }, async (window) => {
+    await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
+    await expectScreen(window, 'panel-hoy.png')
+
+    await openTab(window, 'Sesiones', 'Sesiones')
+    await expectScreen(window, 'panel-sesiones.png')
+
+    await openTab(window, 'Estadísticas', 'Estadísticas')
+    const grid = window.getByRole('region', { name: /^Asistencia por fecha/ })
+    await grid
+      .getByRole('button', { name: /^Manuel Diaz · / })
+      .first()
+      .click()
+    await expect(window.getByRole('status')).toContainText('Manuel Diaz')
+    await expectScreen(window, 'panel-estadisticas.png')
+
+    await openTab(window, 'Ajustes', 'Ajustes')
+    await expectScreen(window, 'panel-ajustes.png')
+  })
+})
+
+test('Estadísticas a 390 px coincide con su captura', async () => {
+  await withApp(['--panel'], { width: 390, height: 844 }, async (window) => {
+    await openTab(window, 'Estadísticas', 'Estadísticas')
+    const summary = window.getByRole('region', { name: 'Asistencia por alumno' })
+    await expect(summary).toBeVisible()
+    await expect(window.getByRole('region', { name: /^Asistencia por fecha/ })).toBeHidden()
+    await expectScreen(window, 'panel-estadisticas-movil.png')
   })
 })

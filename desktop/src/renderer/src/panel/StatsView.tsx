@@ -357,7 +357,7 @@ export function StatsView(): React.JSX.Element {
       {timeTip !== null
         ? createPortal(
             <span
-              className="tip popover-in pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full px-2.5 py-1 text-sm font-medium tabular-nums"
+              className="teacher-panel tip popover-in pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full px-2.5 py-1 text-sm font-medium tabular-nums"
               style={{ top: timeTip.top, left: timeTip.left }}
             >
               {timeTip.text}

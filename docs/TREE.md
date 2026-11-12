@@ -69,7 +69,6 @@ desktop/
     snapshots/
       login-empty.png
       login-errors.png
-      login-alert.png
       login-narrow.png
       login-claro.png
       register-empty.png
@@ -78,6 +77,11 @@ desktop/
       register-narrow.png
       register-claro.png
       dashboard-empty.png
+      panel-hoy.png
+      panel-sesiones.png
+      panel-estadisticas.png
+      panel-ajustes.png
+      panel-estadisticas-movil.png
   build/                # iconos de empaquetado de la plantilla
   resources/            # icono de la ventana en Linux
 ```

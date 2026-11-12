@@ -44,7 +44,7 @@ export function PanelScreen(): React.JSX.Element {
   const crumbs = crumbTrail(tab, selected, studentName, title)
 
   return (
-    <div className="grid min-h-screen grid-cols-1 bg-base-200 md:grid-cols-[15rem_minmax(0,1fr)]">
+    <div className="teacher-panel grid min-h-screen grid-cols-1 bg-base-200 md:grid-cols-[15rem_minmax(0,1fr)]">
       <aside className="flex flex-col border-base-content/4 bg-base-100 md:sticky md:top-0 md:h-screen md:border-r">
         <button
           type="button"

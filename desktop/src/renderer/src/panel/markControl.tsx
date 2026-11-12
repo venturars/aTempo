@@ -105,7 +105,7 @@ export function MarkControl({
         ? createPortal(
             <ul
               role="menu"
-              className="menu float-panel popover-in rounded-box fixed z-50 p-1.5 shadow-sm"
+              className="teacher-panel menu float-panel popover-in rounded-box fixed z-50 p-1.5 shadow-sm"
               style={{ top: menu.top, left: menu.left }}
               onClick={(event) => event.stopPropagation()}
             >
@@ -175,7 +175,7 @@ function AbsenceNote({
       {box !== null
         ? createPortal(
             <span
-              className="tip popover-in fixed z-50 flex w-56 flex-col gap-1 px-3.5 py-3 text-sm leading-snug"
+              className="teacher-panel tip popover-in fixed z-50 flex w-56 flex-col gap-1 px-3.5 py-3 text-sm leading-snug"
               style={{ top: box.top, left: box.left }}
               onMouseEnter={show}
               onMouseLeave={scheduleHide}
