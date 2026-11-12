@@ -4,34 +4,17 @@ import { MobileAttendance } from './MobileAttendance'
 import { AttendanceStatus } from './AttendanceStatus'
 import { Avatar } from './avatar'
 import { DateFilter } from './DateFilter'
+import { markBadge, markLabel } from './marks'
 import { RecognitionAward } from './RecognitionAward'
 import { usePanelStore } from './panelStore'
 import {
   classSessions,
-  compareStudentNames,
+  compareByName,
   course,
   rosterNames,
   type RosterRow,
   type ClassSession
 } from './roster'
-
-const labels = {
-  presente: 'Presente',
-  retraso: 'Tarde',
-  ausente: 'Ausente',
-  pendiente: 'Pendiente',
-  cancelada: 'Cancelada',
-  'sin-registro': 'Sin registro'
-}
-
-const badges = {
-  presente: 'badge badge-sm badge-soft badge-success',
-  retraso: 'badge badge-sm badge-soft badge-warning',
-  ausente: 'badge badge-sm badge-soft badge-error',
-  pendiente: 'badge badge-sm badge-soft',
-  cancelada: 'badge badge-sm badge-soft',
-  'sin-registro': 'badge badge-sm badge-soft'
-}
 
 function dateLabel(session: ClassSession): string {
   return `${session.id.split(' ')[1]} nov 2026`
@@ -87,7 +70,7 @@ export function StatsView(): React.JSX.Element {
   const openStudent = usePanelStore((state) => state.openStudent)
   const visible = sessions.filter((session) => dates.includes(sessionDate(session)))
   const held = visible.filter((session) => session.rows !== null && !session.cancel)
-  const records = [...rosterNames].sort(compareStudentNames).map((name) => {
+  const records = [...rosterNames].sort(compareByName).map((name) => {
     const rows = held.flatMap((session) => {
       const row = session.rows?.find((item) => item.name === name)
       return row ? [row] : []
@@ -103,7 +86,7 @@ export function StatsView(): React.JSX.Element {
   })
   const awards = [
     {
-      title: 'Never miss a day',
+      title: 'Nunca falta',
       icon: 'trophy' as const,
       description: 'Asistencia completa',
       names: records
@@ -111,7 +94,7 @@ export function StatsView(): React.JSX.Element {
         .map((person) => person.name)
     },
     {
-      title: 'Always on time',
+      title: 'Siempre a tiempo',
       icon: 'clock' as const,
       description: 'Siempre puntual',
       names: records
@@ -147,7 +130,7 @@ export function StatsView(): React.JSX.Element {
   return (
     <div className="grid items-start gap-5 md:grid-cols-[minmax(0,1fr)_17rem]">
       <div className="flex min-w-0 flex-col gap-5">
-      <section className="card overflow-hidden bg-base-100 shadow-sm">
+        <section className="card overflow-hidden bg-base-100 shadow-sm">
           <div className="card-body gap-4">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <h2 className="text-lg font-medium">{course.name}</h2>
@@ -165,7 +148,7 @@ export function StatsView(): React.JSX.Element {
               {(['presente', 'retraso', 'ausente', 'cancelada'] as const).map((mark) => (
                 <span key={mark} className="inline-flex items-center gap-2">
                   <AttendanceStatus mark={mark} />
-                  {labels[mark]}
+                  {markLabel[mark]}
                 </span>
               ))}
             </div>
@@ -179,175 +162,180 @@ export function StatsView(): React.JSX.Element {
             />
           ) : null}
           {visible.length > 0 ? (
-          <div className="attendance-grid desktop-attendance-grid border-t border-base-content/4">
-          <div
-            className="attendance-scroll"
-            ref={scroll}
-            role="region"
-            aria-label="Asistencia por fecha. Desplázate en vertical para ver más alumnos y en horizontal para ver más sesiones."
-            tabIndex={0}
-            onScroll={(event) => setScroll(event.currentTarget.scrollLeft)}
-          >
-            <table className="table attendance-table">
-              <caption className="sr-only">
-                Asistencia de todos los alumnos por sesión. Los retrasos cuentan como asistencia;
-                las sesiones canceladas no cuentan. Usa las flechas para recorrer los estados y
-                Enter para ver el detalle.
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col" className="attendance-name">
-                    Alumno
-                  </th>
-                  {visible.map((session) => (
-                    <th
-                      key={session.id}
-                      scope="col"
-                      className={`attendance-date ${session.cancel ? 'cancelled-column' : ''}`}
-                    >
-                      <span className="block font-medium normal-case tracking-normal">
-                        {session.id.split(' ')[0]}
-                      </span>
-                      <span className="block font-medium normal-case tracking-normal tabular-nums text-base-content">
-                        {session.id.split(' ')[1]}
-                      </span>
-                    </th>
-                  ))}
-                  <th scope="col" className="attendance-total">
-                    Asistencia
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {records.map((person, personIndex) => (
-                  <tr key={person.name} className="attendance-row">
-                    <th scope="row" className="attendance-name">
-                      <button
-                        type="button"
-                        aria-label={person.name}
-                        className="block w-full cursor-pointer truncate border-0 bg-transparent p-0 text-left text-sm font-medium normal-case tracking-normal text-base-content"
-                        onClick={() => openStudent(person.name)}
-                      >
-                        {person.name}
-                      </button>
-                    </th>
-                    {visible.map((session, sessionIndex) => {
-                      const row = session.rows?.find((item) => item.name === person.name)
-                      const mark = session.cancel ? 'cancelada' : (row?.mark ?? 'sin-registro')
-                      const status = session.cancel
-                        ? 'Cancelada'
-                        : row
-                          ? labels[row.mark]
-                          : 'Sin registro'
-                      const title = `${person.name} · ${dateLabel(session)} · ${status}${row && row.time !== '—' ? ` · ${row.time}` : ''}`
-                      const time = row && row.time !== '—' ? row.time : 'Sin entrada'
-                      return (
-                        <td
+            <div className="attendance-grid desktop-attendance-grid border-t border-base-content/4">
+              <div
+                className="attendance-scroll"
+                ref={scroll}
+                role="region"
+                aria-label="Asistencia por fecha. Desplázate en vertical para ver más alumnos y en horizontal para ver más sesiones."
+                tabIndex={0}
+                onScroll={(event) => setScroll(event.currentTarget.scrollLeft)}
+              >
+                <table className="table attendance-table">
+                  <caption className="sr-only">
+                    Asistencia de todos los alumnos por sesión. Los retrasos cuentan como
+                    asistencia; las sesiones canceladas no cuentan. Usa las flechas para recorrer
+                    los estados y Enter para ver el detalle.
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th scope="col" className="attendance-name">
+                        Alumno
+                      </th>
+                      {visible.map((session) => (
+                        <th
                           key={session.id}
-                          className={`attendance-day ${session.cancel ? 'cancelled-column' : ''}`}
+                          scope="col"
+                          className={`attendance-date ${session.cancel ? 'cancelled-column' : ''}`}
                         >
+                          <span className="block font-medium normal-case tracking-normal">
+                            {session.id.split(' ')[0]}
+                          </span>
+                          <span className="block font-medium normal-case tracking-normal tabular-nums text-base-content">
+                            {session.id.split(' ')[1]}
+                          </span>
+                        </th>
+                      ))}
+                      <th scope="col" className="attendance-total">
+                        Asistencia
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {records.map((person, personIndex) => (
+                      <tr key={person.name} className="attendance-row">
+                        <th scope="row" className="attendance-name">
                           <button
                             type="button"
-                            className="attendance-cell"
-                            aria-label={title}
-                            tabIndex={
-                              focusedCell === personIndex * visible.length + sessionIndex ? 0 : -1
-                            }
-                            onKeyDown={(event) =>
-                              moveCellFocus(event, personIndex * visible.length + sessionIndex)
-                            }
-                            onFocus={() =>
-                              setFocusedCell(personIndex * visible.length + sessionIndex)
-                            }
-                            onMouseEnter={(event) => showTime(event, time)}
-                            onMouseLeave={() => setTimeTip(null)}
-                            onClick={() => setSelected({ name: person.name, session, row })}
+                            aria-label={person.name}
+                            className="block w-full cursor-pointer truncate border-0 bg-transparent p-0 text-left text-sm font-medium normal-case tracking-normal text-base-content"
+                            onClick={() => openStudent(person.name)}
                           >
-                            <AttendanceStatus mark={mark} />
+                            {person.name}
                           </button>
+                        </th>
+                        {visible.map((session, sessionIndex) => {
+                          const row = session.rows?.find((item) => item.name === person.name)
+                          const mark = session.cancel ? 'cancelada' : (row?.mark ?? 'sin-registro')
+                          const status = session.cancel
+                            ? 'Cancelada'
+                            : row
+                              ? markLabel[row.mark]
+                              : 'Sin registro'
+                          const title = `${person.name} · ${dateLabel(session)} · ${status}${row && row.time !== '—' ? ` · ${row.time}` : ''}`
+                          const time = row && row.time !== '—' ? row.time : 'Sin entrada'
+                          return (
+                            <td
+                              key={session.id}
+                              className={`attendance-day ${session.cancel ? 'cancelled-column' : ''}`}
+                            >
+                              <button
+                                type="button"
+                                className="attendance-cell"
+                                aria-label={title}
+                                tabIndex={
+                                  focusedCell === personIndex * visible.length + sessionIndex
+                                    ? 0
+                                    : -1
+                                }
+                                onKeyDown={(event) =>
+                                  moveCellFocus(event, personIndex * visible.length + sessionIndex)
+                                }
+                                onFocus={() =>
+                                  setFocusedCell(personIndex * visible.length + sessionIndex)
+                                }
+                                onMouseEnter={(event) => showTime(event, time)}
+                                onMouseLeave={() => setTimeTip(null)}
+                                onClick={() => setSelected({ name: person.name, session, row })}
+                              >
+                                <AttendanceStatus mark={mark} />
+                              </button>
+                            </td>
+                          )
+                        })}
+                        <td className="attendance-total tabular-nums text-base-content/50">
+                          <span>
+                            {held.length
+                              ? `${Math.round((person.attended / held.length) * 100)} %`
+                              : '—'}
+                          </span>
                         </td>
-                      )
-                    })}
-                    <td className="attendance-total tabular-nums text-base-content/50">
-                      <span>
-                        {held.length
-                          ? `${Math.round((person.attended / held.length) * 100)} %`
-                          : '—'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {overflow.left || overflow.right ? (
-            <div className="flex justify-end gap-2 border-t border-base-content/4 px-4 py-3">
-              <button
-                type="button"
-                className="btn btn-sm"
-                aria-label="Ver sesiones anteriores"
-                disabled={!overflow.left}
-                onClick={() => scroll.current?.scrollBy({ left: -168 })}
-              >
-                ←
-              </button>
-              <button
-                type="button"
-                className="btn btn-sm"
-                aria-label="Ver sesiones siguientes"
-                disabled={!overflow.right}
-                onClick={() => scroll.current?.scrollBy({ left: 168 })}
-              >
-                →
-              </button>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {overflow.left || overflow.right ? (
+                <div className="flex justify-end gap-2 border-t border-base-content/4 px-4 py-3">
+                  <button
+                    type="button"
+                    className="btn btn-sm"
+                    aria-label="Ver sesiones anteriores"
+                    disabled={!overflow.left}
+                    onClick={() => scroll.current?.scrollBy({ left: -168 })}
+                  >
+                    ←
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-sm"
+                    aria-label="Ver sesiones siguientes"
+                    disabled={!overflow.right}
+                    onClick={() => scroll.current?.scrollBy({ left: 168 })}
+                  >
+                    →
+                  </button>
+                </div>
+              ) : null}
             </div>
           ) : null}
-          </div>
-          ) : null}
           {!held.length ? (
-            <p role="status" className="border-t border-base-content/4 px-5 py-4 text-sm text-base-content/60">
+            <p
+              role="status"
+              className="border-t border-base-content/4 px-5 py-4 text-sm text-base-content/60"
+            >
               No hay clases celebradas en estas fechas. Elige otro intervalo.
             </p>
           ) : null}
         </section>
-      {selected ? (
-        <div
-          className="flex items-center justify-between gap-4 rounded-box bg-base-100 px-5 py-3 shadow-sm"
-          role="status"
-        >
-          <div className="flex min-w-0 items-center gap-3">
-            <Avatar name={selected.name} />
-            <div className="min-w-0">
-              <p className="text-sm font-medium">
-                {selected.name} · {dateLabel(selected.session)}
-              </p>
-              <p className="text-sm text-base-content/60">
-                {selected.row && selected.row.time !== '—' ? `Entrada ${selected.row.time}` : 'Sin entrada'}
-              </p>
+        {selected ? (
+          <div
+            className="flex items-center justify-between gap-4 rounded-box bg-base-100 px-5 py-3 shadow-sm"
+            role="status"
+          >
+            <div className="flex min-w-0 items-center gap-3">
+              <Avatar name={selected.name} />
+              <div className="min-w-0">
+                <p className="text-sm font-medium">
+                  {selected.name} · {dateLabel(selected.session)}
+                </p>
+                <p className="text-sm text-base-content/60">
+                  {selected.row && selected.row.time !== '—'
+                    ? `Entrada ${selected.row.time}`
+                    : 'Sin entrada'}
+                </p>
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-3">
+              <span
+                className={
+                  markBadge[
+                    selected.session.cancel ? 'cancelada' : (selected.row?.mark ?? 'sin-registro')
+                  ]
+                }
+              >
+                {selected.session.cancel
+                  ? 'Cancelada'
+                  : selected.row
+                    ? markLabel[selected.row.mark]
+                    : 'Sin registro'}
+              </span>
+              <button type="button" className="btn btn-sm" onClick={() => setSelected(null)}>
+                Cerrar
+              </button>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-3">
-            <span
-              className={
-                badges[
-                  selected.session.cancel
-                    ? 'cancelada'
-                    : (selected.row?.mark ?? 'sin-registro')
-                ]
-              }
-            >
-              {selected.session.cancel
-                ? 'Cancelada'
-                : selected.row
-                  ? labels[selected.row.mark]
-                  : 'Sin registro'}
-            </span>
-            <button type="button" className="btn btn-sm" onClick={() => setSelected(null)}>
-              Cerrar
-            </button>
-          </div>
-        </div>
-      ) : null}
+        ) : null}
       </div>
       <section aria-labelledby="awards-title" className="flex flex-col gap-4">
         <h2 id="awards-title" className="text-lg font-medium">

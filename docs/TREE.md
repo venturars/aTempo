@@ -34,8 +34,28 @@ desktop/
           loginStore.ts
           validateLogin.ts
           trimesterExample.ts
+        panel/
+          AttendanceStatus.tsx
+          DateFilter.tsx
+          JustificationAccess.tsx
+          MobileAttendance.tsx
+          PanelScreen.tsx
+          RecognitionAward.tsx
+          RecognitionIcon.tsx
+          SettingsView.tsx
+          StatsView.tsx
+          StudentHistory.tsx
+          avatar.tsx
+          markControl.tsx
+          marks.ts
+          panelStore.ts
+          riskHint.tsx
+          roster.ts
+          sessionQr.tsx
+          settingsStore.ts
   tests/
     login.spec.ts
+    panel.spec.ts
     snapshots/
       login-empty.png
       login-errors.png

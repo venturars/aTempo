@@ -1,4 +1,5 @@
 import { Avatar } from './avatar'
+import { markBadge, markLabel } from './marks'
 import { sessionDateLabel, type ClassSession } from './roster'
 
 type StudentSummary = {
@@ -6,20 +7,6 @@ type StudentSummary = {
   attended: number
   absent: number
   late: number
-}
-
-const statusLabels = {
-  presente: 'Presente',
-  retraso: 'Tarde',
-  ausente: 'Ausente',
-  pendiente: 'Pendiente'
-}
-
-const badges = {
-  presente: 'badge badge-sm badge-soft badge-success',
-  retraso: 'badge badge-sm badge-soft badge-warning',
-  ausente: 'badge badge-sm badge-soft badge-error',
-  pendiente: 'badge badge-sm badge-soft'
 }
 
 export function MobileAttendance({
@@ -32,9 +19,15 @@ export function MobileAttendance({
   onOpenStudent: (name: string) => void
 }): React.JSX.Element {
   return (
-    <section className="mobile-attendance border-t border-base-content/4" aria-label="Asistencia por alumno">
+    <section
+      className="mobile-attendance border-t border-base-content/4"
+      aria-label="Asistencia por alumno"
+    >
       {students.map((student) => (
-        <details key={student.name} className="group border-b border-base-content/4 px-5 last:border-b-0">
+        <details
+          key={student.name}
+          className="group border-b border-base-content/4 px-5 last:border-b-0"
+        >
           <summary className="flex cursor-pointer list-none items-center gap-3 py-3">
             <Avatar name={student.name} compact />
             <span className="min-w-0 flex-1">
@@ -63,7 +56,10 @@ export function MobileAttendance({
             </svg>
           </summary>
           <div className="flex flex-col gap-3 pb-4 pl-9">
-            <ul className="divide-y divide-base-content/4" aria-label={`Sesiones de ${student.name}`}>
+            <ul
+              className="divide-y divide-base-content/4"
+              aria-label={`Sesiones de ${student.name}`}
+            >
               {[...sessions].reverse().map((session) => {
                 const row = session.rows?.find((record) => record.name === student.name)
                 return (
@@ -71,17 +67,23 @@ export function MobileAttendance({
                     <span className="text-sm">{sessionDateLabel(session.id)}</span>
                     <span className="inline-flex items-center gap-2">
                       {row && row.time !== '—' ? (
-                        <time className="text-sm tabular-nums text-base-content/60">{row.time}</time>
+                        <time className="text-sm tabular-nums text-base-content/60">
+                          {row.time}
+                        </time>
                       ) : null}
-                      <span className={row ? badges[row.mark] : 'badge badge-sm badge-soft'}>
-                        {row ? statusLabels[row.mark] : 'Sin registro'}
+                      <span className={row ? markBadge[row.mark] : markBadge['sin-registro']}>
+                        {row ? markLabel[row.mark] : markLabel['sin-registro']}
                       </span>
                     </span>
                   </li>
                 )
               })}
             </ul>
-            <button type="button" className="btn btn-sm w-fit" onClick={() => onOpenStudent(student.name)}>
+            <button
+              type="button"
+              className="btn btn-sm w-fit"
+              onClick={() => onOpenStudent(student.name)}
+            >
               Ver ficha
             </button>
           </div>

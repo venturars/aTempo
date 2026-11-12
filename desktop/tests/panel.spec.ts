@@ -178,8 +178,8 @@ test('la cuadrícula muestra la cancelada y no cuenta para el porcentaje ni los 
       await expect(student.getByText(share, { exact: true })).toBeVisible()
     }
 
-    const neverMiss = award(window, 'Never miss a day')
-    const onTime = award(window, 'Always on time')
+    const neverMiss = award(window, 'Nunca falta')
+    const onTime = award(window, 'Siempre a tiempo')
     await expect(neverMiss).toContainText('Asistencia completa')
     await expect(onTime).toContainText('Siempre puntual')
     await expect(neverMiss.getByRole('button', { name: 'Manuel Diaz', exact: true })).toBeVisible()

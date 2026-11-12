@@ -205,7 +205,7 @@ test('opens the professor panel after a valid login', async () => {
     await window.getByRole('button', { name: 'Abrir lista' }).click()
     const molero = window.getByRole('row', { name: /Diego Molero/ })
     await molero.getByText('Pendiente').click()
-    await molero.getByRole('button', { name: 'Presente' }).click()
+    await window.getByRole('button', { name: 'Presente' }).click()
     await expect(molero.getByText('Presente')).toBeVisible()
     await expect(molero.getByText('09:05')).toBeVisible()
 

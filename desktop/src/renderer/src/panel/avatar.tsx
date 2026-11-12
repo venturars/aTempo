@@ -16,8 +16,7 @@ const toneOrder = [0, 3, 5, 1, 4, 2, 5, 0, 3, 1, 4, 2, 0, 5, 3]
 
 function toneFor(name: string): string {
   const place = namesInOrder.indexOf(name)
-  const slot =
-    place === -1 ? name.length % avatarTones.length : toneOrder[place % toneOrder.length]
+  const slot = place === -1 ? name.length % avatarTones.length : toneOrder[place % toneOrder.length]
   return avatarTones[slot ?? 0] ?? avatarTones[0]
 }
 

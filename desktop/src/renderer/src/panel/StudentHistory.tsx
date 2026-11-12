@@ -1,19 +1,6 @@
 import { useRef, useState } from 'react'
+import { markBadge, markLabel } from './marks'
 import { sessionDateLabel, type HistoryEntry } from './roster'
-
-const labels = {
-  presente: 'Presente',
-  retraso: 'Tarde',
-  ausente: 'Ausente',
-  pendiente: 'Pendiente'
-}
-
-const badges = {
-  presente: 'badge badge-sm badge-soft badge-success',
-  retraso: 'badge badge-sm badge-soft badge-warning',
-  ausente: 'badge badge-sm badge-soft badge-error',
-  pendiente: 'badge badge-sm badge-soft'
-}
 
 export function StudentHistory({ entries }: { entries: HistoryEntry[] }): React.JSX.Element {
   const dialog = useRef<HTMLDialogElement>(null)
@@ -37,7 +24,7 @@ export function StudentHistory({ entries }: { entries: HistoryEntry[] }): React.
                 {entry.time !== '—' ? (
                   <time className="text-sm tabular-nums text-base-content/70">{entry.time}</time>
                 ) : null}
-                <span className={badges[entry.mark]}>{labels[entry.mark]}</span>
+                <span className={markBadge[entry.mark]}>{markLabel[entry.mark]}</span>
               </div>
             </div>
             {entry.just === 'pend' || entry.just === 'ok' ? (

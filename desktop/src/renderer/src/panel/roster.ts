@@ -170,7 +170,7 @@ function buildSession(
     const lateTime = late[name]
     const isAbsent = absent.includes(name)
     const mark: Attendance = isAbsent ? 'ausente' : lateTime !== undefined ? 'retraso' : 'presente'
-    const time = isAbsent ? '—' : lateTime ?? arrivalThatDay(name, day)
+    const time = isAbsent ? '—' : (lateTime ?? arrivalThatDay(name, day))
     return {
       name,
       time,
@@ -207,12 +207,10 @@ export const classSessions: ClassSession[] = [
     ['Diego Torres'],
     { 'Diego Torres': 'pend' }
   ),
-  buildSession(
-    'Lun 9 nov',
-    { 'Miguel Rodriguez': '09:16' },
-    ['Meghan Martin', 'Esther Patino'],
-    { 'Meghan Martin': 'ok', 'Esther Patino': 'no' }
-  ),
+  buildSession('Lun 9 nov', { 'Miguel Rodriguez': '09:16' }, ['Meghan Martin', 'Esther Patino'], {
+    'Meghan Martin': 'ok',
+    'Esther Patino': 'no'
+  }),
   buildSession(
     'Vie 6 nov',
     { 'Miguel Rodriguez': '09:23', 'Victor Chang': '09:17' },
@@ -289,7 +287,7 @@ export function studentRisk(name: string, book: SessionMarkBook = {}): RiskNotic
 
 export function studentHistory(name: string, book: SessionMarkBook = {}): HistoryEntry[] {
   return classSessions.flatMap((session) => {
-    if (session.rows === null) {
+    if (session.rows === null || session.cancel) {
       return []
     }
     const row = session.rows.find((item) => item.name === name)
@@ -329,90 +327,10 @@ export function studentSummary(
   }
 }
 
-export type FollowUp = {
-  name: string
-  abs: number
-  late: number
-  pct: number
-}
-
-export type OpenExcuse = {
-  name: string
-  title: string
-  just: 'pend' | 'no'
-}
-
-export function monthReport(): {
-  sessions: number
-  pct: number
-  late: number
-  absent: number
-  follow: FollowUp[]
-  excuses: OpenExcuse[]
-} {
-  const held = classSessions.filter((session) => session.rows !== null)
-  const tally = new Map<string, FollowUp>()
-  for (const name of rosterNames) {
-    tally.set(name, { name, abs: 0, late: 0, pct: 100 })
-  }
-  let late = 0
-  let absent = 0
-  let present = 0
-  const excuses: OpenExcuse[] = []
-  for (const session of held) {
-    for (const row of session.rows ?? []) {
-      const person = tally.get(row.name)
-      if (person === undefined) {
-        continue
-      }
-      if (row.mark === 'retraso') {
-        late += 1
-        person.late += 1
-      } else if (row.mark === 'ausente') {
-        absent += 1
-        person.abs += 1
-      } else {
-        present += 1
-      }
-      if (row.just === 'pend' || row.just === 'no') {
-        excuses.push({ name: row.name, title: session.title, just: row.just })
-      }
-    }
-  }
-  const marks = present + late + absent
-  const pct = marks === 0 ? 0 : Math.round(((present + late) / marks) * 100)
-  for (const person of tally.values()) {
-    person.pct =
-      held.length === 0 ? 0 : Math.round(((held.length - person.abs) / held.length) * 100)
-  }
-  const follow = [...tally.values()]
-    .filter((person) => person.abs > 0)
-    .sort((a, b) => b.abs - a.abs || b.late - a.late || a.name.localeCompare(b.name, 'es'))
-
-  return { sessions: held.length, pct, late, absent, follow, excuses }
-}
-
-export function lateCutoff(minutes: number): string {
-  const [hourText, minuteText] = course.startsAt.split(':')
-  const total = Number(hourText) * 60 + Number(minuteText) + minutes
-  const hour = Math.floor(total / 60) % 24
-  const minute = ((total % 60) + 60) % 60
-  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
-}
-
-export function arrivalStatus(index: number, lateMinutes: number): 'presente' | 'retraso' {
-  const entry = todayEntry[index]
-  if (entry === undefined || entry === '—') {
-    return 'presente'
-  }
-  return entry >= lateCutoff(lateMinutes) ? 'retraso' : 'presente'
-}
-
 export function rollStatus(
   phase: Phase,
   marks: Record<number, Attendance>,
-  index: number,
-  _lateMinutes: number
+  index: number
 ): Attendance | 'none' {
   if (phase === 'programada') {
     return 'none'

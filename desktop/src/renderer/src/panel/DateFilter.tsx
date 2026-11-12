@@ -37,7 +37,8 @@ export function DateFilter({
   const ordered = [...dates].sort()
   const format = (date: string): string =>
     parseDate(date).toLocaleDateString('es', { day: 'numeric', month: 'short' })
-  const label = dates.length === 1 ? format(ordered[0]) : `${format(ordered[0])} – ${format(ordered.at(-1)!)}`
+  const label =
+    dates.length === 1 ? format(ordered[0]) : `${format(ordered[0])} – ${format(ordered.at(-1)!)}`
   const month = parseDate(available.at(-1)!)
 
   function preset(next: string[]): void {

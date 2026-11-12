@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { usePanelStore, type PanelTab } from './panelStore'
 import { Avatar } from './avatar'
 import { JustificationAccess } from './JustificationAccess'
+import { MarkControl } from './markControl'
 import { SettingsView } from './SettingsView'
+import { SessionQr } from './sessionQr'
 import { StatsView } from './StatsView'
 import { StudentHistory } from './StudentHistory'
+import { RiskHint } from './riskHint'
 import {
   classSessions,
   compareByName,
@@ -17,11 +19,9 @@ import {
   rosterNames,
   sessionCounts,
   studentHistory,
-  studentRisk,
   studentSummary,
   type Attendance,
   type ClassSession,
-  type JustKey,
   type Phase,
   type RosterRow
 } from './roster'
@@ -32,32 +32,6 @@ const tabs: { id: PanelTab; label: string }[] = [
   { id: 2, label: 'Estadísticas' },
   { id: 3, label: 'Ajustes' }
 ]
-
-const markLabel: Record<Attendance, string> = {
-  presente: 'Presente',
-  retraso: 'Tarde',
-  ausente: 'Ausente',
-  pendiente: 'Pendiente'
-}
-
-const markClass: Record<Attendance, string> = {
-  presente: 'badge badge-sm badge-soft badge-success',
-  retraso: 'badge badge-sm badge-soft badge-warning',
-  ausente: 'badge badge-sm badge-soft badge-error',
-  pendiente: 'badge badge-sm badge-soft badge-neutral'
-}
-
-const riskClass = {
-  warning: 'badge badge-sm badge-soft badge-warning shrink-0 cursor-pointer whitespace-nowrap',
-  info: 'badge badge-sm badge-soft badge-info shrink-0 cursor-pointer whitespace-nowrap'
-} as const
-
-const markButton: Record<Attendance, string> = {
-  presente: 'btn btn-xs btn-soft btn-success',
-  retraso: 'btn btn-xs btn-soft btn-warning',
-  ausente: 'btn btn-xs btn-soft btn-error',
-  pendiente: 'btn btn-xs btn-soft'
-}
 
 export function PanelScreen(): React.JSX.Element {
   const tab = usePanelStore((state) => state.tab)
@@ -268,8 +242,7 @@ function TodayView(): React.JSX.Element {
   const setMark = usePanelStore((state) => state.setMark)
   const setTime = usePanelStore((state) => state.setTime)
   const times = usePanelStore((state) => state.times)
-  const lateMinutes = usePanelStore((state) => state.lateMinutes)
-  const statuses = rosterNames.map((_, index) => rollStatus(phase, marks, index, lateMinutes))
+  const statuses = rosterNames.map((_, index) => rollStatus(phase, marks, index))
   const present = statuses.filter((status) => status === 'presente').length
   const late = statuses.filter((status) => status === 'retraso').length
   const absent = statuses.filter((status) => status === 'ausente').length
@@ -360,7 +333,11 @@ function RosterTable({
     >
       <table
         className={
-          compact ? 'table table-live' : started ? 'table table-roster table-spread' : 'table table-roster'
+          compact
+            ? 'table table-live'
+            : started
+              ? 'table table-roster table-spread'
+              : 'table table-roster'
         }
       >
         {started ? (
@@ -386,9 +363,7 @@ function RosterTable({
                     <Avatar name={name} compact={compact} />
                     <span className="whitespace-nowrap">{name}</span>
                   </button>
-                  {status === 'none' || status === 'pendiente' ? (
-                    <RiskHint name={name} />
-                  ) : null}
+                  {status === 'none' || status === 'pendiente' ? <RiskHint name={name} /> : null}
                 </div>
               </td>
               {started ? (
@@ -451,9 +426,7 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
               return (
                 <tr
                   key={session.id}
-                  className={
-                    linked ? 'cursor-pointer hover-grey [&_*]:cursor-pointer' : undefined
-                  }
+                  className={linked ? 'cursor-pointer hover-grey [&_*]:cursor-pointer' : undefined}
                   onClick={linked ? () => openClass(session.id) : undefined}
                 >
                   <td className="whitespace-nowrap">
@@ -477,9 +450,7 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
                   <td>
                     {counts === null ? '—' : <SessionCount value={counts.r} tone="warning" />}
                   </td>
-                  <td>
-                    {counts === null ? '—' : <SessionCount value={counts.a} tone="error" />}
-                  </td>
+                  <td>{counts === null ? '—' : <SessionCount value={counts.a} tone="error" />}</td>
                 </tr>
               )
             })}
@@ -719,61 +690,6 @@ function CloseDialog(): React.JSX.Element | null {
   )
 }
 
-function SessionQr(): React.JSX.Element {
-  const size = 21
-  const cells = qrModules(size)
-  return (
-    <div className="shrink-0 rounded-box bg-base-200 p-2.5">
-      <svg
-        viewBox={`0 0 ${size} ${size}`}
-        className="size-36"
-        role="img"
-        aria-label="Código de la lista"
-      >
-        {cells.map((row, y) =>
-          row.map((on, x) =>
-            on ? <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" className="fill-base-content" /> : null
-          )
-        )}
-      </svg>
-    </div>
-  )
-}
-
-function qrModules(size: number): boolean[][] {
-  const grid = Array.from({ length: size }, () => Array<boolean>(size).fill(false))
-  stampFinder(grid, 0, 0)
-  stampFinder(grid, size - 7, 0)
-  stampFinder(grid, 0, size - 7)
-  let bit = 1
-  for (let y = 0; y < size; y += 1) {
-    for (let x = 0; x < size; x += 1) {
-      if (inFinder(x, y, size)) {
-        continue
-      }
-      bit = (bit * 33 + x * 7 + y) % 97
-      grid[y][x] = bit % 3 !== 0
-    }
-  }
-  return grid
-}
-
-function stampFinder(grid: boolean[][], originX: number, originY: number): void {
-  for (let y = 0; y < 7; y += 1) {
-    for (let x = 0; x < 7; x += 1) {
-      const edge = x === 0 || y === 0 || x === 6 || y === 6
-      const core = x >= 2 && x <= 4 && y >= 2 && y <= 4
-      grid[originY + y][originX + x] = edge || core
-    }
-  }
-}
-
-function inFinder(x: number, y: number, size: number): boolean {
-  const corner = (originX: number, originY: number) =>
-    x >= originX && x < originX + 7 && y >= originY && y < originY + 7
-  return corner(0, 0) || corner(size - 7, 0) || corner(0, size - 7)
-}
-
 function StatWell({
   value,
   label,
@@ -798,7 +714,11 @@ function StatWell({
         : 'text-base-content'
 
   return (
-    <div className={card ? 'rounded-box bg-base-100 px-4 py-3 shadow-sm' : 'rounded-box bg-base-200 px-3 py-2'}>
+    <div
+      className={
+        card ? 'rounded-box bg-base-100 px-4 py-3 shadow-sm' : 'rounded-box bg-base-200 px-3 py-2'
+      }
+    >
       <p className={`text-base font-medium tabular-nums ${color}`}>{value}</p>
       <p className="text-xs text-base-content/60">{label}</p>
     </div>
@@ -908,117 +828,6 @@ function TimeField({
   )
 }
 
-function MarkControl({
-  status,
-  enabled,
-  person = '',
-  when = '',
-  excuse = 'no',
-  onPick
-}: {
-  status: Attendance | 'none'
-  enabled: boolean
-  person?: string
-  when?: string
-  excuse?: JustKey
-  onPick: (mark: Attendance) => void
-}): React.JSX.Element {
-  const buttonRef = useRef<HTMLButtonElement>(null)
-  const [menu, setMenu] = useState<{ top: number; left: number } | null>(null)
-
-  useEffect(() => {
-    if (menu === null) {
-      return
-    }
-    function close(): void {
-      setMenu(null)
-    }
-    window.addEventListener('click', close)
-    return () => window.removeEventListener('click', close)
-  }, [menu])
-
-  if (status === 'none') {
-    return <span className="opacity-50">—</span>
-  }
-
-  const noted = (pill: React.ReactNode): React.ReactNode =>
-    status === 'ausente' ? (
-      <AbsenceNote name={person} when={when} excuse={excuse}>
-        {pill}
-      </AbsenceNote>
-    ) : (
-      pill
-    )
-
-  if (!enabled) {
-    return <>{noted(<span className={markClass[status]}>{markLabel[status]}</span>)}</>
-  }
-
-  function toggle(event: React.MouseEvent<HTMLButtonElement>): void {
-    event.stopPropagation()
-    if (menu !== null) {
-      setMenu(null)
-      return
-    }
-    const rect = buttonRef.current?.getBoundingClientRect()
-    if (rect === undefined) {
-      return
-    }
-    setMenu({ top: rect.bottom + 4, left: rect.left })
-  }
-
-  return (
-    <div onClick={(event) => event.stopPropagation()}>
-      {noted(
-        <button
-          ref={buttonRef}
-          type="button"
-          className={`${markButton[status]} gap-1`}
-          aria-haspopup="menu"
-          aria-expanded={menu !== null}
-          onClick={toggle}
-        >
-          {markLabel[status]}
-          <svg viewBox="0 0 16 16" className="size-3 opacity-70" fill="none" aria-hidden="true">
-            <path
-              d="M4 6.5 8 10.5 12 6.5"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-      )}
-      {menu !== null
-        ? createPortal(
-            <ul
-              className="menu float-panel popover-in rounded-box fixed z-50 p-1.5 shadow-sm"
-              style={{ top: menu.top, left: menu.left }}
-              onClick={(event) => event.stopPropagation()}
-            >
-              {(['presente', 'retraso', 'ausente'] as Attendance[]).map((mark) => (
-                <li key={mark}>
-                  <button
-                    type="button"
-                    className="cursor-pointer"
-                    onClick={() => {
-                      setMenu(null)
-                      onPick(mark)
-                    }}
-                  >
-                    <span className={markClass[mark]}>{markLabel[mark]}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>,
-            document.body
-          )
-        : null}
-    </div>
-  )
-}
-
 function rowsWithMarks(
   rows: RosterRow[] | null,
   saved: Record<string, Attendance> | undefined
@@ -1027,169 +836,4 @@ function rowsWithMarks(
     const mark = saved?.[row.name]
     return mark === undefined ? row : { ...row, mark }
   })
-}
-
-function AbsenceNote({
-  name,
-  when,
-  excuse,
-  children
-}: {
-  name: string
-  when: string
-  excuse: JustKey
-  children: React.ReactNode
-}): React.JSX.Element {
-  const anchorRef = useRef<HTMLSpanElement>(null)
-  const hide = useRef<number | null>(null)
-  const [box, setBox] = useState<{ top: number; left: number } | null>(null)
-  const filed = excuse === 'ok' || excuse === 'pend'
-  const header = excuse === 'ok' ? 'Con justificante' : excuse === 'pend' ? 'Por revisar' : 'Sin justificante'
-
-  function show(): void {
-    if (hide.current !== null) {
-      window.clearTimeout(hide.current)
-    }
-    const rect = anchorRef.current?.getBoundingClientRect()
-    if (rect === undefined) {
-      return
-    }
-    setBox({ top: rect.bottom + 6, left: rect.left })
-  }
-
-  function scheduleHide(): void {
-    hide.current = window.setTimeout(() => setBox(null), 140)
-  }
-
-  return (
-    <span ref={anchorRef} onMouseEnter={show} onMouseLeave={scheduleHide} onClick={() => setBox(null)}>
-      {children}
-      {box !== null
-        ? createPortal(
-            <span
-              className="tip popover-in fixed z-50 flex w-56 flex-col gap-1 px-3.5 py-3 text-sm leading-snug"
-              style={{ top: box.top, left: box.left }}
-              onMouseEnter={show}
-              onMouseLeave={scheduleHide}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <span className="font-medium tracking-tight">{header}</span>
-              {filed ? (
-                <button
-                  type="button"
-                  className="mt-1 w-fit cursor-pointer border-0 bg-transparent p-0 text-sm font-medium underline"
-                  onClick={() => downloadJustificante(name, when)}
-                >
-                  Descargar
-                </button>
-              ) : (
-                <span className="tip-body">No hay documento.</span>
-              )}
-            </span>,
-            document.body
-          )
-        : null}
-    </span>
-  )
-}
-
-function downloadJustificante(name: string, when: string): void {
-  const lines = ['Justificante', name, when, course.name]
-  const stream = lines
-    .map((line, index) => `BT /F1 12 Tf 72 ${740 - index * 18} Td (${line}) Tj ET`)
-    .join('\n')
-  const objects = [
-    '<< /Type /Catalog /Pages 2 0 R >>',
-    '<< /Type /Pages /Count 1 /Kids [3 0 R] >>',
-    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>',
-    `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
-    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'
-  ]
-  let pdf = '%PDF-1.4\n'
-  const offsets = [0]
-  objects.forEach((object, index) => {
-    offsets.push(pdf.length)
-    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`
-  })
-  const xref = pdf.length
-  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`
-  offsets.slice(1).forEach((offset) => {
-    pdf += `${String(offset).padStart(10, '0')} 00000 n \n`
-  })
-  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`
-  const url = URL.createObjectURL(new Blob([pdf], { type: 'application/pdf' }))
-  const link = document.createElement('a')
-  const slug = `${name}-${when}`
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-  link.href = url
-  link.download = `justificante-${slug}.pdf`
-  link.click()
-  URL.revokeObjectURL(url)
-}
-
-function RiskHint({ name }: { name: string }): React.JSX.Element | null {
-  const sessionMarks = usePanelStore((state) => state.sessionMarks)
-  const risk = studentRisk(name, sessionMarks)
-  const anchorRef = useRef<HTMLSpanElement>(null)
-  const [box, setBox] = useState<{ top: number | null; bottom: number | null; left: number } | null>(
-    null
-  )
-  if (risk === null) {
-    return null
-  }
-
-  function place(): void {
-    const rect = anchorRef.current?.getBoundingClientRect()
-    if (rect === undefined) {
-      return
-    }
-    const width = 256
-    const gap = 6
-    const edge = 8
-    const left = Math.max(edge, Math.min(rect.left, window.innerWidth - edge - width))
-    const roomBelow = window.innerHeight - rect.bottom
-    const roomAbove = rect.top
-    const opensAbove = roomBelow < 96 && roomAbove > roomBelow
-    setBox({
-      left,
-      top: opensAbove ? null : rect.bottom + gap,
-      bottom: opensAbove ? window.innerHeight - rect.top + gap : null
-    })
-  }
-
-  return (
-    <span
-      ref={anchorRef}
-      onMouseEnter={place}
-      onMouseLeave={() => setBox(null)}
-      onClick={(event) => {
-        event.stopPropagation()
-        setBox(null)
-      }}
-    >
-      <span
-        className={riskClass[risk.tone]}
-      >
-        {risk.label}
-      </span>
-      {box !== null
-        ? createPortal(
-            <span
-              className="tip popover-in fixed z-50 flex w-64 flex-col gap-1 px-3.5 py-3 text-sm leading-snug"
-              style={{
-                top: box.top ?? undefined,
-                bottom: box.bottom ?? undefined,
-                left: box.left
-              }}
-            >
-              <span className="font-medium tracking-tight">{risk.header}</span>
-              <span className="tip-body">{risk.explanation}</span>
-            </span>,
-            document.body
-          )
-        : null}
-    </span>
-  )
 }

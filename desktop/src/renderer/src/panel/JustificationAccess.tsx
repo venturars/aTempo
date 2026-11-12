@@ -35,7 +35,12 @@ export function JustificationAccess(): React.JSX.Element {
       >
         Justificantes{pending ? ` · ${pending}` : ''}
       </button>
-      <dialog ref={dialog} className="modal" aria-labelledby="justifications-title" onCancel={close}>
+      <dialog
+        ref={dialog}
+        className="modal"
+        aria-labelledby="justifications-title"
+        onCancel={close}
+      >
         <div className="modal-box">
           <div className="flex items-center justify-between gap-3">
             <h2 id="justifications-title" className="text-lg font-medium">

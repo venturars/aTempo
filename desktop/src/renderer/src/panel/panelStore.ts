@@ -12,7 +12,6 @@ type PanelState = {
   classId: string | null
   studentName: string | null
   confirmClose: boolean
-  lateMinutes: number
   statsDateMode: 'range' | 'days'
   statsDates: string[] | null
   statsScroll: number
@@ -20,7 +19,6 @@ type PanelState = {
   setStatsDates: (dates: string[]) => void
   setStatsScroll: (scroll: number) => void
   setTab: (tab: PanelTab) => void
-  setLateMinutes: (minutes: number) => void
   openSession: () => void
   askClose: () => void
   cancelClose: () => void
@@ -43,7 +41,6 @@ export const usePanelStore = create<PanelState>((set, get) => ({
   classId: null,
   studentName: null,
   confirmClose: false,
-  lateMinutes: 10,
   statsDateMode: 'range',
   statsDates: null,
   statsScroll: 0,
@@ -73,13 +70,6 @@ export const usePanelStore = create<PanelState>((set, get) => ({
   },
   reopenSession: () => {
     set({ phase: 'abierta', confirmClose: false })
-  },
-  setLateMinutes: (minutes) => {
-    const next = Math.min(90, Math.max(0, Math.round(minutes)))
-    if (!Number.isFinite(next)) {
-      return
-    }
-    set({ lateMinutes: next })
   },
   setMark: (index, mark) => {
     if (get().phase !== 'abierta') {

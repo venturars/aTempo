@@ -98,7 +98,7 @@
   name: 'atempo-claro';
   color-scheme: light;
   --color-base-100: #ffffff;
-  --color-base-200: #f7f9fb;
+  --color-base-200: #f5f7f9;
   --color-base-300: #e5e9ee;
   --color-base-content: #111827;
   --color-primary: #3116f2;
@@ -185,10 +185,8 @@ body {
   .menu :where(li > :not(.menu-active, [aria-current], .btn):hover) {
     background-color: color-mix(in oklab, var(--color-base-content) 4%, var(--color-base-100));
   }
-  [data-theme='atempo-oscuro'] :is(
-    .hover-grey:hover,
-    .menu :where(li > :not(.menu-active, [aria-current], .btn):hover)
-  ) {
+  [data-theme='atempo-oscuro']
+    :is(.hover-grey:hover, .menu :where(li > :not(.menu-active, [aria-current], .btn):hover)) {
     background-color: color-mix(in oklab, var(--color-base-content) 14%, var(--color-base-100));
   }
   .hover-grey:active {
@@ -210,10 +208,13 @@ main .rounded-box.bg-base-100 {
     0 1px 2px rgb(16 24 40 / 0.03),
     0 12px 28px -18px rgb(16 24 40 / 0.06);
 }
-[data-theme='atempo-claro'] .table :where(thead tr :is(th, td), tbody tr:not(:last-child) :is(th, td)) {
+[data-theme='atempo-claro']
+  .table
+  :where(thead tr :is(th, td), tbody tr:not(:last-child) :is(th, td)) {
   border-bottom-color: color-mix(in oklab, var(--color-base-content) 8%, transparent);
 }
-[data-theme='atempo-claro'] :is(.border-base-content\/4, .divide-base-content\/4 > :not(:last-child)) {
+[data-theme='atempo-claro']
+  :is(.border-base-content\/4, .divide-base-content\/4 > :not(:last-child)) {
   border-color: color-mix(in oklab, var(--color-base-content) 8%, transparent);
 }
 [data-theme='atempo-claro'] .divider {
@@ -228,10 +229,13 @@ main .rounded-box.bg-base-100 {
     0 1px 2px rgb(0 0 0 / 0.22),
     0 12px 28px -16px rgb(0 0 0 / 0.45);
 }
-[data-theme='atempo-oscuro'] .table :where(thead tr :is(th, td), tbody tr:not(:last-child) :is(th, td)) {
+[data-theme='atempo-oscuro']
+  .table
+  :where(thead tr :is(th, td), tbody tr:not(:last-child) :is(th, td)) {
   border-bottom-color: color-mix(in oklab, var(--color-base-content) 4%, transparent);
 }
-[data-theme='atempo-oscuro'] :is(.border-base-content\/4, .divide-base-content\/4 > :not(:last-child)) {
+[data-theme='atempo-oscuro']
+  :is(.border-base-content\/4, .divide-base-content\/4 > :not(:last-child)) {
   border-color: color-mix(in oklab, var(--color-base-content) 4%, transparent);
 }
 .table {
@@ -385,18 +389,19 @@ main .rounded-box.bg-base-100 {
 }
 
 /* Pendiente en noche es un gris bajo, no una pastilla clara. */
-[data-theme='atempo-oscuro'] :is(
-  .badge-soft.badge-neutral,
-  .btn.btn-soft:not(
-    .btn-primary,
-    .btn-secondary,
-    .btn-accent,
-    .btn-info,
-    .btn-success,
-    .btn-warning,
-    .btn-error
-  )
-) {
+[data-theme='atempo-oscuro']
+  :is(
+    .badge-soft.badge-neutral,
+    .btn.btn-soft:not(
+        .btn-primary,
+        .btn-secondary,
+        .btn-accent,
+        .btn-info,
+        .btn-success,
+        .btn-warning,
+        .btn-error
+      )
+  ) {
   background-color: color-mix(in oklab, var(--color-base-content) 8%, var(--color-base-100));
   border-color: color-mix(in oklab, var(--color-base-content) 12%, var(--color-base-100));
   color: color-mix(in oklab, var(--color-base-content) 62%, var(--color-base-100));
@@ -418,50 +423,39 @@ main .rounded-box.bg-base-100 {
 }
 
 /* En claro las píldoras son un tinte muy pálido. */
-[data-theme='atempo-claro'] :is(
-  .badge-soft.badge-neutral,
-  .btn.btn-soft:not(
-    .btn-primary,
-    .btn-secondary,
-    .btn-accent,
-    .btn-info,
-    .btn-success,
-    .btn-warning,
-    .btn-error
-  )
-) {
+[data-theme='atempo-claro']
+  :is(
+    .badge-soft.badge-neutral,
+    .btn.btn-soft:not(
+        .btn-primary,
+        .btn-secondary,
+        .btn-accent,
+        .btn-info,
+        .btn-success,
+        .btn-warning,
+        .btn-error
+      )
+  ) {
   background-color: color-mix(in oklab, var(--color-base-content) 6%, var(--color-base-100));
   border-color: color-mix(in oklab, var(--color-base-content) 8%, var(--color-base-100));
   color: var(--color-base-content);
 }
-[data-theme='atempo-claro'] :is(
-  .badge-soft.badge-primary,
-  .badge-soft.badge-secondary,
-  .badge-soft.badge-accent,
-  .badge-soft.badge-info,
-  .badge-soft.badge-success,
-  .badge-soft.badge-warning,
-  .badge-soft.badge-error
-) {
+[data-theme='atempo-claro']
+  :is(
+    .badge-soft.badge-primary,
+    .badge-soft.badge-secondary,
+    .badge-soft.badge-accent,
+    .badge-soft.badge-info,
+    .badge-soft.badge-success,
+    .badge-soft.badge-warning,
+    .badge-soft.badge-error
+  ) {
   background-color: oklch(from var(--badge-color) 0.95 0.035 h);
   border-color: oklch(from var(--badge-color) 0.93 0.03 h);
   color: oklch(from var(--badge-color) 0.4 0.09 h);
 }
-[data-theme='atempo-claro'] :is(
-  .btn.btn-soft.btn-primary,
-  .btn.btn-soft.btn-secondary,
-  .btn.btn-soft.btn-accent,
-  .btn.btn-soft.btn-info,
-  .btn.btn-soft.btn-success,
-  .btn.btn-soft.btn-warning,
-  .btn.btn-soft.btn-error
-) {
-  background-color: oklch(from var(--btn-color) 0.95 0.035 h);
-  border-color: oklch(from var(--btn-color) 0.93 0.03 h);
-  color: oklch(from var(--btn-color) 0.4 0.09 h);
-}
-@media (hover: hover) {
-  [data-theme='atempo-claro'] :is(
+[data-theme='atempo-claro']
+  :is(
     .btn.btn-soft.btn-primary,
     .btn.btn-soft.btn-secondary,
     .btn.btn-soft.btn-accent,
@@ -469,50 +463,68 @@ main .rounded-box.bg-base-100 {
     .btn.btn-soft.btn-success,
     .btn.btn-soft.btn-warning,
     .btn.btn-soft.btn-error
-  ):hover {
+  ) {
+  background-color: oklch(from var(--btn-color) 0.95 0.035 h);
+  border-color: oklch(from var(--btn-color) 0.93 0.03 h);
+  color: oklch(from var(--btn-color) 0.4 0.09 h);
+}
+@media (hover: hover) {
+  [data-theme='atempo-claro']
+    :is(
+      .btn.btn-soft.btn-primary,
+      .btn.btn-soft.btn-secondary,
+      .btn.btn-soft.btn-accent,
+      .btn.btn-soft.btn-info,
+      .btn.btn-soft.btn-success,
+      .btn.btn-soft.btn-warning,
+      .btn.btn-soft.btn-error
+    ):hover {
     background-color: oklch(from var(--btn-color) 0.92 0.045 h);
   }
 }
 
 /* En noche las etiquetas son un tinte oscuro con texto claro. El pastel claro deslumbra. */
-[data-theme='atempo-oscuro'] :is(
-  .badge-soft.badge-primary,
-  .badge-soft.badge-secondary,
-  .badge-soft.badge-accent,
-  .badge-soft.badge-info,
-  .badge-soft.badge-success,
-  .badge-soft.badge-warning,
-  .badge-soft.badge-error
-) {
+[data-theme='atempo-oscuro']
+  :is(
+    .badge-soft.badge-primary,
+    .badge-soft.badge-secondary,
+    .badge-soft.badge-accent,
+    .badge-soft.badge-info,
+    .badge-soft.badge-success,
+    .badge-soft.badge-warning,
+    .badge-soft.badge-error
+  ) {
   background-color: oklch(from var(--badge-color) 0.26 0.035 h);
   border-color: oklch(from var(--badge-color) 0.32 0.04 h);
   color: oklch(from var(--badge-color) 0.68 0.04 h);
   font-weight: 500;
 }
-[data-theme='atempo-oscuro'] :is(
-  .btn.btn-soft.btn-primary,
-  .btn.btn-soft.btn-secondary,
-  .btn.btn-soft.btn-accent,
-  .btn.btn-soft.btn-info,
-  .btn.btn-soft.btn-success,
-  .btn.btn-soft.btn-warning,
-  .btn.btn-soft.btn-error
-) {
+[data-theme='atempo-oscuro']
+  :is(
+    .btn.btn-soft.btn-primary,
+    .btn.btn-soft.btn-secondary,
+    .btn.btn-soft.btn-accent,
+    .btn.btn-soft.btn-info,
+    .btn.btn-soft.btn-success,
+    .btn.btn-soft.btn-warning,
+    .btn.btn-soft.btn-error
+  ) {
   background-color: oklch(from var(--btn-color) 0.26 0.035 h);
   border-color: oklch(from var(--btn-color) 0.32 0.04 h);
   color: oklch(from var(--btn-color) 0.68 0.04 h);
   font-weight: 500;
 }
 @media (hover: hover) {
-  [data-theme='atempo-oscuro'] :is(
-    .btn.btn-soft.btn-primary,
-    .btn.btn-soft.btn-secondary,
-    .btn.btn-soft.btn-accent,
-    .btn.btn-soft.btn-info,
-    .btn.btn-soft.btn-success,
-    .btn.btn-soft.btn-warning,
-    .btn.btn-soft.btn-error
-  ):hover {
+  [data-theme='atempo-oscuro']
+    :is(
+      .btn.btn-soft.btn-primary,
+      .btn.btn-soft.btn-secondary,
+      .btn.btn-soft.btn-accent,
+      .btn.btn-soft.btn-info,
+      .btn.btn-soft.btn-success,
+      .btn.btn-soft.btn-warning,
+      .btn.btn-soft.btn-error
+    ):hover {
     background-color: oklch(from var(--btn-color) 0.32 0.04 h);
   }
 }
@@ -555,14 +567,15 @@ main .rounded-box.bg-base-100 {
   background-color: oklch(from var(--avatar-tone) 0.92 0.055 h);
   color: oklch(from var(--avatar-tone) 0.42 0.08 h);
 }
-[data-theme='atempo-oscuro'] :is(
-  .avatar-tone-primary,
-  .avatar-tone-secondary,
-  .avatar-tone-info,
-  .avatar-tone-success,
-  .avatar-tone-warning,
-  .avatar-tone-error
-) {
+[data-theme='atempo-oscuro']
+  :is(
+    .avatar-tone-primary,
+    .avatar-tone-secondary,
+    .avatar-tone-info,
+    .avatar-tone-success,
+    .avatar-tone-warning,
+    .avatar-tone-error
+  ) {
   background-color: oklch(from var(--avatar-tone) 0.62 0.1 h);
   color: oklch(from var(--avatar-tone) 0.22 0.08 h);
 }
@@ -611,18 +624,24 @@ main .rounded-box.bg-base-100 {
     0 16px 36px -16px rgb(0 0 0 / 0.55);
 }
 
-/* La pista va en blanco en los dos temas, con la tinta del tema claro. */
+/* La pista usa la superficie del tema. En noche se separa un paso de la tarjeta. */
 .tip {
-  border: 1px solid rgb(17 24 39 / 0.08);
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 10%, transparent);
   border-radius: 0.75rem;
-  background-color: white;
-  color: #111827;
+  background-color: var(--color-base-100);
+  color: var(--color-base-content);
   box-shadow:
     0 1px 2px rgb(16 24 40 / 0.06),
     0 16px 32px -12px rgb(16 24 40 / 0.22);
 }
+[data-theme='atempo-oscuro'] .tip {
+  background-color: var(--color-base-300);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.28),
+    0 16px 36px -16px rgb(0 0 0 / 0.55);
+}
 .tip-body {
-  color: rgb(17 24 39 / 0.55);
+  color: color-mix(in oklab, var(--color-base-content) 55%, transparent);
 }
 .time-field {
   height: 1.75rem;
@@ -774,16 +793,16 @@ main .rounded-box.bg-base-100 {
   height: 0.8rem;
 }
 .mark-presente {
-  background: #4cdb8d;
-  color: #124b2e;
+  background: var(--color-success);
+  color: var(--color-success-content);
 }
 .mark-retraso {
-  background: #ffd24a;
-  color: #654600;
+  background: var(--color-warning);
+  color: var(--color-warning-content);
 }
 .mark-ausente {
-  background: #f16e70;
-  color: #571b20;
+  background: var(--color-error);
+  color: var(--color-error-content);
 }
 .mark-cancelada,
 .mark-pendiente,
@@ -824,7 +843,11 @@ main .rounded-box.bg-base-100 {
 }
 .date-popover .rdp-root {
   --rdp-accent-color: var(--color-primary);
-  --rdp-accent-background-color: color-mix(in oklab, var(--color-primary) 14%, var(--color-base-100));
+  --rdp-accent-background-color: color-mix(
+    in oklab,
+    var(--color-primary) 14%,
+    var(--color-base-100)
+  );
   --rdp-today-color: var(--color-primary);
   --rdp-day-height: 2.25rem;
   --rdp-day-width: 2.25rem;
@@ -832,7 +855,11 @@ main .rounded-box.bg-base-100 {
   --rdp-day_button-width: 2rem;
   --rdp-day_button-border: 2px solid transparent;
   --rdp-selected-border: 2px solid transparent;
-  --rdp-range_middle-background-color: color-mix(in oklab, var(--color-primary) 14%, var(--color-base-100));
+  --rdp-range_middle-background-color: color-mix(
+    in oklab,
+    var(--color-primary) 14%,
+    var(--color-base-100)
+  );
   --rdp-range_middle-color: var(--color-base-content);
   --rdp-range_start-color: var(--color-primary-content);
   --rdp-range_end-color: var(--color-primary-content);
@@ -867,7 +894,9 @@ main .rounded-box.bg-base-100 {
   margin-inline: auto;
   font-size: 0.875rem;
 }
-.date-popover .rdp-selected:not(.rdp-range_start, .rdp-range_middle, .rdp-range_end) .rdp-day_button {
+.date-popover
+  .rdp-selected:not(.rdp-range_start, .rdp-range_middle, .rdp-range_end)
+  .rdp-day_button {
   background: var(--color-primary);
   color: var(--color-primary-content);
 }
