@@ -56,7 +56,6 @@ Desktop.ini
 *.swp
 *.swo
 
-# Configuración local de Codex
 .codex/
 
 *storybook.log
