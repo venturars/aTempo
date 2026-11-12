@@ -66,12 +66,6 @@ desktop/
       dashboard-normal-atempo-oscuro-390.png
       dashboard-normal-atempo-claro-1280.png
       dashboard-normal-atempo-claro-390.png
-      win32/
-        login-alert.png
-        login-claro.png
-        login-empty.png
-        login-errors.png
-        login-narrow.png
   build/
   resources/
 ```

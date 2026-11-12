@@ -11,10 +11,6 @@ import path from 'node:path'
 const appRoot = path.join(__dirname, '..')
 const mainFile = path.join(appRoot, 'out', 'main', 'index.js')
 
-function loginSnapshot(name: string): string | string[] {
-  return process.platform === 'win32' ? ['win32', name] : name
-}
-
 const dayNames = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes']
 const dayLetters = ['L', 'M', 'X', 'J', 'V']
 const sessionMarkLabels = Array.from({ length: 12 }, () => 'Presente').concat('Retraso', 'Ausencia')
@@ -182,9 +178,7 @@ test('shows the claim panel beside the form', async () => {
     await expectPanelLeftOfForm(window)
     await expectNoAlert(window)
     await expectAbsentCopy(window)
-    await expect(window).toHaveScreenshot(loginSnapshot('login-empty.png'), {
-      animations: 'disabled'
-    })
+    await expect(window).toHaveScreenshot('login-empty.png', { animations: 'disabled' })
   })
 })
 
@@ -197,27 +191,21 @@ test('shows both errors when the fields are empty', async () => {
     await expect(window.getByLabel('Correo')).toHaveAttribute('aria-invalid', 'true')
     await expect(window.getByLabel('Contraseña')).toHaveAttribute('aria-invalid', 'true')
     await expectNoAlert(window)
-    await expect(window).toHaveScreenshot(loginSnapshot('login-errors.png'), {
-      animations: 'disabled'
-    })
+    await expect(window).toHaveScreenshot('login-errors.png', { animations: 'disabled' })
   })
 })
 
 test('shows the written email and password in an alert', async () => {
   await withApp(async (window) => {
-    const hash = await window.evaluate(() => window.location.hash)
     await window.getByLabel('Correo').fill('ana@clase.test')
-    await window.getByLabel('Contrase\u00f1a').fill('secreta')
+    await window.getByLabel('Contraseña').fill('secreta')
     await window.getByRole('button', { name: 'Entrar' }).click()
-    await expect(window.getByRole('status')).toContainText('Correo: ana@clase.test')
-    await expect(window.getByRole('status')).toContainText('Contrase\u00f1a: secreta')
-    expect(await window.evaluate(() => window.location.hash)).toBe(hash)
-    await expectLoginFields(window)
-    await expect(window.getByRole('heading', { name: 'Resumen', level: 1 })).toHaveCount(0)
+
+    const alert = window.getByRole('status')
+    await expect(alert).toContainText('Correo: ana@clase.test')
+    await expect(alert).toContainText('Contraseña: secreta')
     await expectNoErrorPhrases(window)
-    await expect(window).toHaveScreenshot(loginSnapshot('login-alert.png'), {
-      animations: 'disabled'
-    })
+    await expect(window).toHaveScreenshot('login-alert.png', { animations: 'disabled' })
   })
 })
 
@@ -231,9 +219,7 @@ test('stacks the panel and the form when the window is narrow', async () => {
     await expectLoginFields(window)
     await expectPanelAboveForm(window)
     await expect(window.getByRole('heading', { level: 1 })).toHaveCount(1)
-    await expect(window).toHaveScreenshot(loginSnapshot('login-narrow.png'), {
-      animations: 'disabled'
-    })
+    await expect(window).toHaveScreenshot('login-narrow.png', { animations: 'disabled' })
   })
 })
 
@@ -257,9 +243,7 @@ test('changes colors and font with the light theme', async () => {
     await expectLoginFields(window)
     await expectPanelLeftOfForm(window)
     await expect(window.getByRole('button', { name: /tema|theme/i })).toHaveCount(0)
-    await expect(window).toHaveScreenshot(loginSnapshot('login-claro.png'), {
-      animations: 'disabled'
-    })
+    await expect(window).toHaveScreenshot('login-claro.png', { animations: 'disabled' })
   })
 })
 

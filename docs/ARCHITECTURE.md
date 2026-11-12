@@ -21,6 +21,8 @@ Carpeta: `desktop/src/main/`.
 
 Es Node, dentro de Electron. Abre la ventana y abre SQLite. `startupHash()` selecciona el hash según los argumentos: `--organization-dashboard` abre `#/organization/dashboard`, `--dashboard` abre `#/student/dashboard` y `--sign-up` abre `#/sign-up`, en ese orden de prioridad. Sin esos argumentos, carga el renderer sin hash. En desarrollo usa `loadURL` y en compilación `loadFile` con el hash seleccionado.
 
+Desde `desktop/`, `pnpm dev -- --organization-dashboard` abre directamente el Resumen de la organización sin credenciales.
+
 La base usa la clase `DatabaseSync` de [`node:sqlite`](https://nodejs.org/api/sqlite.html). Electron 44 trae Node 24, y esa versión exporta `DatabaseSync`. El archivo es `atempo.sqlite`, en la carpeta de datos de Electron (`app.getPath('userData')`). Al arrancar se ejecuta `PRAGMA user_version = 1` para comprobar que el archivo abre. El login y el Resumen de la organización no leen ni escriben esa base.
 
 ## Preload
