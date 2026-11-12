@@ -37,7 +37,7 @@ Carpeta: `desktop/src/renderer/`.
 
 Es React. Pinta la pantalla de login y guarda el formulario en Zustand (`loginStore.ts`).
 
-Sin hash, o con un hash que no es una ruta conocida, se ve el login. `#/sign-up` muestra el registro. `#/student/dashboard` muestra la maqueta del dashboard del alumno. `#/organization/dashboard` muestra el Resumen de la organización. `App.tsx` escucha `hashchange` y elige la pantalla por el hash, sin consultar el estado del login.
+Sin hash, o con un hash que no es una ruta conocida, se ve el login. `#/sign-up` muestra el registro. `#/student/dashboard` muestra la maqueta del dashboard del alumno. `#/organization/dashboard` muestra el Resumen de la organización. `App.tsx` escucha `hashchange` y elige la pantalla por el hash.
 
 El panel del claim y la figura del trimestre se pintan en el renderer y no salen de la base. La figura es la constante `trimesterDays` de `trimesterExample.ts`.
 

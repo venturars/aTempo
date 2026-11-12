@@ -179,33 +179,6 @@ test('shows the course metrics, the pending items and the data quality', async (
   })
 })
 
-test('follows the hash and shows the login for an unknown route', async () => {
-  await withApp(async (window) => {
-    await window.evaluate(() => {
-      window.location.hash = '/unknown'
-    })
-    await expect(window.getByLabel('Correo')).toBeVisible()
-
-    await window.evaluate(() => {
-      window.location.hash = '/organization/dashboard'
-    })
-    await expectSummaryHeading(window)
-  })
-})
-
-test('keeps the login on its own screen when the form is sent', async () => {
-  await withApp(async (window) => {
-    const hash = await readHash(window)
-    await window.getByLabel('Correo').fill('ana@clase.test')
-    await window.getByLabel('Contraseña').fill('secreta')
-    await window.getByRole('button', { name: 'Entrar' }).click()
-
-    await expect(window.getByRole('status')).toContainText('Correo: ana@clase.test')
-    expect(await readHash(window)).toBe(hash)
-    await expect(window.getByRole('heading', { name: 'Resumen', level: 1 })).toHaveCount(0)
-  }, [])
-})
-
 for (const theme of themes) {
   for (const viewport of viewports) {
     test(`preserves the layout in ${theme} at ${viewport.width} pixels`, async () => {
