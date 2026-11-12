@@ -69,6 +69,9 @@ function LoginForm(): React.JSX.Element {
   function onSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault()
     submit()
+    if (useLoginStore.getState().submitted !== null) {
+      window.location.hash = '#/teacher/panel'
+    }
   }
 
   return (

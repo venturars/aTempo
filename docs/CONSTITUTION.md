@@ -14,7 +14,7 @@ aTempo de escritorio es la aplicación del profesor. Sirve para registrar la asi
 - **Tailwind** pone los estilos con clases.
 - **daisyUI** aporta los componentes (campo, botón, alert) encima de Tailwind.
 - **Zustand** guarda el estado de la pantalla en el renderer.
-- **SQLite** es la base local. Se abre con `node:sqlite` y la clase `DatabaseSync` en el proceso principal. El login no la usa.
+- **SQLite** es la base local. Se abre con `node:sqlite` y la clase `DatabaseSync` en el proceso principal.
 - **pnpm** es el gestor de paquetes de `desktop/`. Las versiones van fijas, sin `^`.
 
 ## 3. Dónde seguir
