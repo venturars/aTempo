@@ -14,6 +14,7 @@
     "typecheck": "pnpm run typecheck:node && pnpm run typecheck:web",
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
+    "dev:dashboard": "electron-vite dev -- --dashboard",
     "build": "pnpm run typecheck && electron-vite build",
     "test:visual": "electron-vite build && playwright test",
     "postinstall": "install-electron && electron-builder install-app-deps",

@@ -8,7 +8,7 @@ La visión, los perfiles y las decisiones de producto están en [principles.md](
 
 | Carpeta | Qué es |
 | --- | --- |
-| `desktop/` | Aplicación del profesor. Electron, React y SQLite. La pantalla que hay es el login. |
+| `desktop/` | Aplicación del profesor. Electron, React y SQLite. La pantalla de arranque es el login. Con el hash `#/sign-up` se abre el registro. |
 | `.github/scripts/discord-pr-notifications/` | Verificación de PR, relaciones cifradas y avisos de revisión. |
 | `.github/workflows/` | Disparador de PR y publicación mediante GitHub Actions. |
 | `docs/storybook/` | Fuente de verdad visual: Tailwind y daisyUI. Las pantallas usan las clases. No hay un paquete de componentes. |
