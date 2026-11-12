@@ -1,27 +1,29 @@
 import { useEffect, useState } from 'react'
 import { LoginScreen } from './login/LoginScreen'
+import { RegisterScreen } from './register/RegisterScreen'
 import { DashboardScreen } from './student/dashboard/DashboardScreen'
 
-const studentDashboardRoute = 'student/dashboard'
-
-function isStudentDashboardHash(): boolean {
-  const path = window.location.hash.replace(/^#\/?/, '')
-  return path === studentDashboardRoute
+function pathFromHash(): string {
+  return window.location.hash.replace(/^#\/?/, '')
 }
 
 function App(): React.JSX.Element {
-  const [showDashboard, setShowDashboard] = useState(isStudentDashboardHash)
+  const [path, setPath] = useState(pathFromHash)
 
   useEffect(() => {
     const onHashChange = (): void => {
-      setShowDashboard(isStudentDashboardHash())
+      setPath(pathFromHash())
     }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
 
-  if (showDashboard) {
+  if (path === 'student/dashboard') {
     return <DashboardScreen />
+  }
+
+  if (path === 'sign-up') {
+    return <RegisterScreen />
   }
 
   return <LoginScreen />
