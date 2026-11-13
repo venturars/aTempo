@@ -8,6 +8,7 @@ const repoRoot = path.resolve(storybookRoot, '../..')
 const sourceRoot = path.join(storybookRoot, 'src')
 const guideRoot = path.join(repoRoot, 'docs', 'guia')
 const themeFile = path.join(sourceRoot, 'theme.css')
+const systemFile = path.join(sourceRoot, 'system.css')
 const previewFile = path.join(storybookRoot, '.storybook', 'preview.tsx')
 
 const checkOnly = process.argv.includes('--check')
@@ -112,8 +113,12 @@ function pageFromStory(file) {
   }
 }
 
+function themeCss() {
+  return `${fs.readFileSync(themeFile, 'utf8')}\n${fs.readFileSync(systemFile, 'utf8')}`
+}
+
 function themeMarkdown() {
-  const css = fs.readFileSync(themeFile, 'utf8')
+  const css = themeCss()
   const preview = fs.readFileSync(previewFile, 'utf8')
   const themes = readThemes(css)
   const fonts = readFonts(css)
@@ -135,7 +140,7 @@ function themeMarkdown() {
     '',
     generatedNote(themeFile).replace(
       `Sale de \`${repoPath(themeFile)}\`.`,
-      `Sale de \`${repoPath(themeFile)}\` y \`${repoPath(previewFile)}\`.`
+      `Sale de \`${repoPath(themeFile)}\`, \`${repoPath(systemFile)}\` y \`${repoPath(previewFile)}\`.`
     ),
     '',
     `La barra de Storybook cambia \`${previewThemes.attribute}\`. El tema por defecto es \`${previewThemes.defaultTheme}\`.`,
@@ -491,20 +496,23 @@ function outputPath(title) {
 
 function readThemes(css) {
   const themes = []
-  for (const match of css.matchAll(/@plugin "daisyui\/theme" \{/g)) {
+  const prefersDark = css.includes('@media (prefers-color-scheme: dark)')
+  for (const match of css.matchAll(/\[data-theme="([^"]+)"\][^{]*\{/g)) {
     const open = css.indexOf('{', match.index)
+    const before = css.slice(Math.max(0, match.index - 240), match.index)
     const body = css.slice(open + 1, matchPair(css, open, '{', '}'))
-    const name = body.match(/name:\s*"([^"]+)"/)
+    if (!body.includes('--color-base-100')) continue
     const scheme = body.match(/color-scheme:\s*(\w+)/)
-    if (!name || !scheme) throw new Error('Un tema no tiene nombre o esquema')
+    if (!scheme) throw new Error(`El tema ${match[1]} no tiene esquema`)
     const vars = [...body.matchAll(/--([\w-]+):\s*([^;]+);/g)].map((item) => [
       `--${item[1]}`,
       item[2].trim()
     ])
+    const sinceBrace = before.slice(before.lastIndexOf('}') + 1)
     themes.push({
-      name: name[1],
-      isDefault: /default:\s*true/.test(body),
-      prefersDark: /prefersdark:\s*true/.test(body),
+      name: match[1],
+      isDefault: sinceBrace.includes(':where(:root)'),
+      prefersDark: prefersDark && scheme[1] === 'dark',
       scheme: scheme[1],
       colors: vars.filter((item) => item[0].startsWith('--color-')),
       rest: vars.filter((item) => !item[0].startsWith('--color-'))
