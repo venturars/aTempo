@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { UnderConstructionScreen } from '../../underConstruction/UnderConstructionScreen'
+import { OrganizationDashboardScreen } from '../../organization/OrganizationDashboardScreen'
 
 export const Route = createFileRoute('/organization/dashboard')({
-  component: () => <UnderConstructionScreen title="Dashboard de organización" />
+  component: OrganizationDashboardScreen
 })

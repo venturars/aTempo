@@ -23,7 +23,7 @@ pnpm install
 pnpm dev
 ```
 
-`pnpm typecheck` comprueba los tipos. `pnpm run test:visual` construye la app y pasa el test de la pantalla de login.
+`pnpm typecheck` comprueba los tipos. `pnpm run test:visual` construye la app y ejecuta las pruebas de Playwright.
 
 ## Guía visual
 

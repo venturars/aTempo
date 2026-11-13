@@ -70,6 +70,12 @@ async function expectStudentDashboard(window: Page): Promise<void> {
   await expectNoLoginScreen(window)
 }
 
+async function expectOrganizationDashboard(window: Page): Promise<void> {
+  await expect(window.getByRole('heading', { name: 'Resumen', level: 1 })).toBeVisible()
+  await expect(window.getByText('En construcción')).toHaveCount(0)
+  await expectNoLoginScreen(window)
+}
+
 async function expectUnderConstruction(window: Page, title: string): Promise<void> {
   await expect(window.getByRole('heading', { level: 1 })).toHaveCount(1)
   await expect(window.getByRole('heading', { name: title, level: 1 })).toBeVisible()
@@ -85,10 +91,10 @@ test('shows the login when the app opens without flags', async () => {
   })
 })
 
-test('shows the organization dashboard under construction with --organization-dashboard', async () => {
+test('shows the organization summary with --organization-dashboard', async () => {
   await withApp(['--organization-dashboard'], async (window) => {
     expect(await readRoute(window)).toBe('organization/dashboard')
-    await expectUnderConstruction(window, 'Dashboard de organización')
+    await expectOrganizationDashboard(window)
     await expect(window).toHaveScreenshot('navigation-organization-dashboard.png', {
       animations: 'disabled'
     })
@@ -155,7 +161,7 @@ test('opens the first flag in priority order when several flags are passed', asy
 
   await withApp(['--panel', '--organization-dashboard'], async (window) => {
     expect(await readRoute(window)).toBe('organization/dashboard')
-    await expectUnderConstruction(window, 'Dashboard de organización')
+    await expectOrganizationDashboard(window)
   })
 })
 

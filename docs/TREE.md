@@ -32,7 +32,7 @@ desktop/
           student/
             dashboard.tsx  # /student/dashboard
           organization/
-            dashboard.tsx  # /organization/dashboard, en construcción
+            dashboard.tsx  # /organization/dashboard, Resumen de la organización
           teacher/
             panel.tsx      # /teacher/panel, en construcción
         env.d.ts
@@ -44,6 +44,9 @@ desktop/
           loginStore.ts
           validateLogin.ts
           trimesterExample.ts
+        organization/
+          OrganizationDashboardScreen.tsx
+          organizationExample.ts
         register/
           RegisterScreen.tsx
           registerStore.ts
@@ -58,6 +61,7 @@ desktop/
           UnderConstructionScreen.tsx  # pantalla provisional con título
   tests/
     login.spec.ts
+    organization-dashboard.spec.ts
     register.spec.ts
     dashboard.spec.ts
     navigation.spec.ts  # rutas, flags de arranque y dashboard de cada perfil
@@ -73,6 +77,10 @@ desktop/
       register-narrow.png
       register-claro.png
       dashboard-empty.png
+      dashboard-normal-atempo-oscuro-1280.png
+      dashboard-normal-atempo-oscuro-390.png
+      dashboard-normal-atempo-claro-1280.png
+      dashboard-normal-atempo-claro-390.png
       navigation-organization-dashboard.png
       navigation-teacher-panel.png
   build/                # iconos de empaquetado de la plantilla
