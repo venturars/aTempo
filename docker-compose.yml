@@ -1,0 +1,35 @@
+# Entorno de instalación de aTempo. El porqué está en docs/ARCHITECTURE.md.
+#   docker compose run --rm setup               instala APM y las dependencias
+#   docker compose up storybook                 sirve Storybook en http://localhost:6006
+#   docker compose run --rm desktop pnpm lint   comprueba desktop/ con las versiones del equipo
+
+x-base: &base
+  build: .
+  image: atempo-dev
+  volumes:
+    - .:/work
+    - desktop-node-modules:/work/desktop/node_modules
+    - storybook-node-modules:/work/docs/storybook/node_modules
+    - pnpm-store:/pnpm-store
+
+services:
+  setup:
+    <<: *base
+    command: bash docker/setup.sh
+
+  storybook:
+    <<: *base
+    working_dir: /work/docs/storybook
+    command: pnpm storybook --host 0.0.0.0 --ci
+    ports:
+      - "6006:6006"
+
+  desktop:
+    <<: *base
+    working_dir: /work/desktop
+
+# Docker les pone delante el nombre de la carpeta: cada copia del repositorio tiene los suyos.
+volumes:
+  desktop-node-modules:
+  storybook-node-modules:
+  pnpm-store:
