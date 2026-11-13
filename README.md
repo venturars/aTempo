@@ -43,6 +43,20 @@ pnpm guide
 
 Ese comando es obligatorio: sin él, el markdown se queda desfasado. No se edita `docs/guia/` a mano.
 
+## Avisos opcionales de PR en Discord
+
+Los tres workflows de `.github/workflows/discord-pr-*.yml` activan los avisos en este repositorio; APM no los instala ni forman parte de los pasos de los agentes. El emisor vive en `main`, mientras que los disparadores recogen PR dirigidas a `staging` y comentarios de asociación. La función queda activa cuando estos workflows llegan a `main`.
+
+Al solicitar al menos dos revisores, el bot publica el repositorio, un resumen y el enlace de la PR. Muestra los logins de GitHub aunque no encuentre sus cuentas de Discord, y menciona únicamente a quienes tengan una asociación verificada. Las asociaciones se guardan cifradas durante 48 horas en una caché propia de aTempo.
+
+Para confirmar una asociación que falte, el autor de la PR o un miembro autorizado del repositorio puede dejar este comentario en la PR:
+
+```text
+/discord-map LOGIN_GITHUB ID_DISCORD
+```
+
+Reemplaza los valores por el login exacto del revisor solicitado y su ID numérico de Discord. Para copiar el ID, activa el modo desarrollador de Discord, abre el menú del usuario y selecciona **Copiar ID de usuario**. El workflow valida que la persona sea revisora y que el ID pertenezca al servidor antes de guardar la asociación y enviar una mención adicional. El comentario queda visible en la PR; no incluyas tokens ni claves.
+
 ## Documentación
 
 | Documento | Para qué |
