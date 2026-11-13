@@ -1,4 +1,6 @@
 import { FormEvent } from 'react'
+import { useNavigate } from '@tanstack/react-router'
+import { dashboardPathForProfile, useSessionStore } from '../session/sessionStore'
 import { useLoginStore } from './loginStore'
 import { markClass, markLabel, trimesterDays, type AttendanceMark } from './trimesterExample'
 
@@ -66,10 +68,16 @@ function LoginForm(): React.JSX.Element {
   const setEmail = useLoginStore((state) => state.setEmail)
   const setPassword = useLoginStore((state) => state.setPassword)
   const submit = useLoginStore((state) => state.submit)
+  const profile = useSessionStore((state) => state.profile)
+  const navigate = useNavigate()
 
   function onSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault()
-    submit()
+    const isValid = submit()
+
+    if (isValid && profile !== null) {
+      navigate({ to: dashboardPathForProfile(profile) })
+    }
   }
 
   return (

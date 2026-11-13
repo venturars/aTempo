@@ -436,7 +436,7 @@ test('shows the login screen when Inicia sesión is pressed', async () => {
     await window.getByRole('button', { name: 'Inicia sesión' }).click()
 
     const hash = await window.evaluate(() => window.location.hash)
-    expect(hash).toBe('')
+    expect(hash.replace(/^#\/?/, '')).toBe('')
     await expectLoginScreen(window)
     await expectNoAlert(window)
     await expect(window.getByText('El nombre es obligatorio.')).toHaveCount(0)

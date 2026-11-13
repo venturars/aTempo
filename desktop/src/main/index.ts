@@ -5,16 +5,20 @@ import icon from '../../resources/icon.png?asset'
 import { closeDatabase, openDatabase } from './database'
 
 function startupHash(): string | undefined {
-  if (process.argv.includes('--organization-dashboard')) {
-    return 'organization/dashboard'
-  }
-
   if (process.argv.includes('--dashboard')) {
-    return 'student/dashboard'
+    return '/student/dashboard'
   }
 
   if (process.argv.includes('--sign-up')) {
-    return 'sign-up'
+    return '/sign-up'
+  }
+
+  if (process.argv.includes('--organization-dashboard')) {
+    return '/organization/dashboard'
+  }
+
+  if (process.argv.includes('--panel')) {
+    return '/teacher/panel'
   }
 
   return undefined
@@ -53,7 +57,7 @@ function createWindow(): void {
     const rendererUrl =
       hash === undefined
         ? process.env['ELECTRON_RENDERER_URL']
-        : `${process.env['ELECTRON_RENDERER_URL']}#/${hash}`
+        : `${process.env['ELECTRON_RENDERER_URL']}#${hash}`
     mainWindow.loadURL(rendererUrl)
   } else if (hash === undefined) {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
