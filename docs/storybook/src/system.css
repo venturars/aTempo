@@ -1,0 +1,310 @@
+/* Tamaños del tema. 20, 16 y 14 ya son text-xl, text-base y text-sm. */
+@theme {
+  --text-2xl: 1.75rem;
+  --text-2xl--line-height: 1.25;
+  --text-meta: 0.8125rem;
+  --text-meta--line-height: 1.4;
+  --text-xs: 0.6875rem;
+  --text-xs--line-height: 1.35;
+}
+
+/* Dos temas. El oscuro índigo es el de defecto. El otro es el claro índigo.
+   Los valores son CSS plano: el escritorio y Storybook importan este fichero
+   y cada uno resuelve daisyUI en su propia carpeta. */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --color-base-100: #0C0F19;
+    --color-base-200: #141826;
+    --color-base-300: #242A3B;
+    --color-base-content: #EEF0F6;
+    --color-primary: #9D8CFF;
+    --color-primary-content: #0C0F19;
+    --color-secondary: #E879F9;
+    --color-secondary-content: #3B0764;
+    --color-accent: #E879F9;
+    --color-accent-content: #3B0764;
+    --color-neutral: #EEF0F6;
+    --color-neutral-content: #0C0F19;
+    --color-info: #7DD3FC;
+    --color-info-content: #082F49;
+    --color-success: #5BE39A;
+    --color-success-content: #052E16;
+    --color-warning: #FBBF5E;
+    --color-warning-content: #431407;
+    --color-error: #FF8F8F;
+    --color-error-content: #450A0A;
+    --radius-selector: 9999px;
+    --radius-field: 0.5rem;
+    --radius-box: 1rem;
+    --size-selector: 0.25rem;
+    --size-field: 0.25rem;
+    --border: 0px;
+    --depth: 0;
+    --noise: 0;
+  }
+}
+
+:where(:root),
+:root:has(input.theme-controller[value="atempo-oscuro"]:checked),
+[data-theme="atempo-oscuro"] {
+  color-scheme: dark;
+  --color-base-100: #0C0F19;
+  --color-base-200: #141826;
+  --color-base-300: #242A3B;
+  --color-base-content: #EEF0F6;
+  --color-primary: #9D8CFF;
+  --color-primary-content: #0C0F19;
+  --color-secondary: #E879F9;
+  --color-secondary-content: #3B0764;
+  --color-accent: #E879F9;
+  --color-accent-content: #3B0764;
+  --color-neutral: #EEF0F6;
+  --color-neutral-content: #0C0F19;
+  --color-info: #7DD3FC;
+  --color-info-content: #082F49;
+  --color-success: #5BE39A;
+  --color-success-content: #052E16;
+  --color-warning: #FBBF5E;
+  --color-warning-content: #431407;
+  --color-error: #FF8F8F;
+  --color-error-content: #450A0A;
+  --radius-selector: 9999px;
+  --radius-field: 0.5rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 0px;
+  --depth: 0;
+  --noise: 0;
+}
+
+:root:has(input.theme-controller[value="atempo-claro"]:checked),
+[data-theme="atempo-claro"] {
+  color-scheme: light;
+  --color-base-100: #FFFFFF;
+  --color-base-200: #F5F7F9;
+  --color-base-300: #E5E9EE;
+  --color-base-content: #111827;
+  --color-primary: #3116F2;
+  --color-primary-content: #FFFFFF;
+  --color-secondary: #A21CAF;
+  --color-secondary-content: #FFFFFF;
+  --color-accent: #A21CAF;
+  --color-accent-content: #FFFFFF;
+  --color-neutral: #111827;
+  --color-neutral-content: #FFFFFF;
+  --color-info: #026DA6;
+  --color-info-content: #FFFFFF;
+  --color-success: #107736;
+  --color-success-content: #FFFFFF;
+  --color-warning: #9C5605;
+  --color-warning-content: #FFFFFF;
+  --color-error: #B93A3E;
+  --color-error-content: #FFFFFF;
+  --radius-selector: 9999px;
+  --radius-field: 0.5rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 0px;
+  --depth: 0;
+  --noise: 0;
+}
+
+/* Tipografía por tema. cv11 y ss01 son de Inter. */
+[data-theme="atempo-oscuro"]    { --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.01em; }
+[data-theme="atempo-claro"]     { --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif; }
+body {
+  font-family: var(--font-sans);
+  font-feature-settings: "tnum";
+  background-color: var(--color-base-200);
+  color: var(--color-base-content);
+}
+[data-theme="atempo-claro"] body { font-feature-settings: "cv11", "ss01", "tnum"; }
+
+/* Altos del tema. DaisyUI da 40 px y 32 px. */
+.btn:where(:not(.btn-xs, .btn-sm, .btn-lg, .btn-xl)) { height: 36px; min-height: 36px; }
+.btn-sm { height: 30px; min-height: 30px; }
+.input:where(:not(.input-xs, .input-sm, .input-lg, .input-xl)),
+.select:where(:not(.select-xs, .select-sm, .select-lg, .select-xl)) { height: 38px; min-height: 38px; }
+
+/* Con puntero grueso, campo y botón llegan a 44 px. */
+@media (pointer: coarse) {
+  .btn:where(:not(.btn-xs, .btn-lg, .btn-xl)),
+  .btn-sm,
+  .input:where(:not(.input-xs, .input-lg, .input-xl)),
+  .select:where(:not(.select-xs, .select-lg, .select-xl)) {
+    height: 44px;
+    min-height: 44px;
+  }
+}
+
+/* min-height en el tr no cambia la fila. La altura va en la celda. */
+.table :where(th, td) {
+  height: 56px;
+  padding-block: 6px;
+}
+/* El borde del tema es 0 y las filas pierden la línea. La línea es de adorno. */
+.table :where(thead tr :is(th, td), tbody tr:not(:last-child) :is(th, td)) {
+  border-bottom: 1px solid color-mix(in oklab, var(--color-base-content) 12%, transparent);
+}
+.table :where(th) {
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* El borde del tema es 0. El anillo se queda marcado o no.
+   Un checkbox de color, al marcarlo, se rellena y no lleva anillo. */
+.checkbox,
+.radio {
+  background-color: var(--color-base-100);
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--color-base-content) 50%, transparent);
+}
+.checkbox:is(
+  .checkbox-primary,
+  .checkbox-secondary,
+  .checkbox-accent,
+  .checkbox-neutral,
+  .checkbox-info,
+  .checkbox-success,
+  .checkbox-warning,
+  .checkbox-error
+):is(:checked, :indeterminate, [aria-checked="true"], [aria-checked="mixed"]) {
+  background-color: var(--input-color);
+  box-shadow: none;
+}
+.checkbox { border-radius: 0.25rem; }
+
+/* El borde del tema es 0 y el toggle se queda en un punto. La pista se ve apagado y encendido. */
+.toggle {
+  background-color: color-mix(in oklab, var(--color-base-content) 50%, var(--color-base-100));
+}
+.toggle::before {
+  background-color: var(--color-base-100);
+  box-shadow: none;
+}
+.toggle:checked,
+.toggle[aria-checked="true"],
+.toggle:has(> input:checked) {
+  background-color: var(--input-color);
+}
+
+/* Igual que el campo: fondo base-200, sin anillo. */
+.textarea,
+.select,
+.file-input {
+  background-color: var(--color-base-200);
+  box-shadow: none;
+}
+
+/* kbd es un control. El borde del tema es 0. */
+.kbd {
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--color-base-content) 50%, transparent);
+}
+
+/* btn-outline usa el ancho de borde del tema, que es 0. */
+.btn-outline {
+  border-width: 1.5px;
+}
+
+/* La pista del range es un control. El divisor es una línea de adorno. */
+.range {
+  --range-bg: color-mix(in oklab, currentColor 50%, transparent);
+}
+.divider {
+  --divider-color: color-mix(in oklab, var(--color-base-content) 12%, transparent);
+}
+
+/* En la tarjeta, el menú y el diálogo son del mismo color que el fondo. El borde del tema es 0. La línea es de adorno. */
+.dropdown-content,
+.modal-box {
+  outline: 1px solid color-mix(in oklab, var(--color-base-content) 12%, transparent);
+}
+
+/* El borde del tema es 0, así que input-error no se ve. El anillo usa el color de error del tema. */
+.input.input-error,
+.input.input-error:focus,
+.input.input-error:focus-within {
+  box-shadow: inset 0 0 0 1.5px var(--color-error);
+  background-color: color-mix(in oklab, var(--color-error) 12%, var(--color-base-200));
+}
+
+/* El foco se ve aunque el borde sea 0. */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+/* Calendario de React Day Picker. Los mismos valores que el panel de desktop. */
+.react-day-picker.rdp-root {
+  --rdp-accent-color: var(--color-primary);
+  --rdp-accent-background-color: color-mix(in oklab, var(--color-primary) 14%, var(--color-base-100));
+  --rdp-today-color: var(--color-primary);
+  --rdp-day-height: 2.25rem;
+  --rdp-day-width: 2.25rem;
+  --rdp-day_button-height: 2rem;
+  --rdp-day_button-width: 2rem;
+  --rdp-day_button-border: 2px solid transparent;
+  --rdp-selected-border: 2px solid transparent;
+  --rdp-range_middle-background-color: color-mix(in oklab, var(--color-primary) 14%, var(--color-base-100));
+  --rdp-range_middle-color: var(--color-base-content);
+  --rdp-range_start-color: var(--color-primary-content);
+  --rdp-range_end-color: var(--color-primary-content);
+  --rdp-range_start-date-background-color: var(--color-primary);
+  --rdp-range_end-date-background-color: var(--color-primary);
+  --rdp-weekday-opacity: 1;
+  margin: 0;
+}
+.react-day-picker .rdp-month_caption {
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 500;
+}
+.react-day-picker .rdp-selected {
+  font-size: inherit;
+  font-weight: 500;
+}
+.react-day-picker .rdp-weekday {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: color-mix(in oklab, var(--color-base-content) 45%, transparent);
+}
+.react-day-picker .rdp-day_button {
+  position: relative;
+  z-index: 1;
+  margin-inline: auto;
+  font-size: 0.875rem;
+}
+.react-day-picker .rdp-selected:not(.rdp-range_start, .rdp-range_middle, .rdp-range_end) .rdp-day_button {
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+}
+.react-day-picker .rdp-today:not(.rdp-selected) {
+  color: var(--color-base-content);
+}
+.react-day-picker .rdp-today:not(.rdp-selected) .rdp-day_button {
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--color-primary) 45%, transparent);
+}
+/* La banda del intervalo entra en los extremos, en vez de cortarse en el círculo. */
+.react-day-picker :is(.rdp-range_start, .rdp-range_middle, .rdp-range_end) {
+  position: relative;
+  background: transparent;
+}
+.react-day-picker :is(.rdp-range_start, .rdp-range_middle, .rdp-range_end)::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  height: 1.75rem;
+  transform: translateY(-50%);
+  background: var(--rdp-range_middle-background-color);
+}
+.react-day-picker .rdp-range_middle::before { inset-inline: 0; }
+.react-day-picker .rdp-range_start::before { inset-inline-start: 50%; inset-inline-end: 0; }
+.react-day-picker .rdp-range_end::before { inset-inline-start: 0; inset-inline-end: 50%; }
+.react-day-picker .rdp-range_start.rdp-range_end::before { content: none; }
+.react-day-picker .rdp-range_middle .rdp-day_button { background: transparent; }

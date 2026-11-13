@@ -27,7 +27,7 @@ desktop/
         App.tsx
         env.d.ts
         styles/
-          app.css       # Tailwind y daisyUI
+          app.css       # importa docs/storybook/src/system.css
           fonts/        # Geist e Inter, woff2 con licencia OFL
         login/
           LoginScreen.tsx
