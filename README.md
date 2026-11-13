@@ -57,17 +57,6 @@ Para confirmar una asociación que falte, el autor de la PR o un miembro autoriz
 
 Reemplaza los valores por el login exacto del revisor solicitado y su ID numérico de Discord. Para copiar el ID, activa el modo desarrollador de Discord, abre el menú del usuario y selecciona **Copiar ID de usuario**. El workflow valida que la persona sea revisora y que el ID pertenezca al servidor antes de guardar la asociación y enviar una mención adicional. El comentario queda visible en la PR; no incluyas tokens ni claves.
 
-El administrador configura el entorno protegido `Discord-PR-Notifications`, restringido a `main`, con estos datos:
-
-| Tipo | Nombre | Valor |
-| --- | --- | --- |
-| Secreto | `DISCORD_BOT_TOKEN` | Token del bot de Discord que ya usa el servidor. |
-| Secreto | `DISCORD_CACHE_KEY` | Clave aleatoria de 32 bytes codificada en Base64. |
-| Variable | `DISCORD_GUILD_ID` | ID del servidor de Discord. |
-| Variable | `DISCORD_GIT_CHANNEL_ID` | ID del canal `#git`. |
-
-Tras fusionar los workflows en `main`, prueba con una PR hacia `staging` que tenga al menos dos revisores. Comprueba el mensaje en `#git` y repite la ejecución para verificar que no se publique un duplicado. La acción debe fijarse a un SHA completo publicado de `delivery-workflow`. El SHA de `v0.3.0` aún no incluye la corrección de la PR #35; antes de activar esta integración, actualízalo a una versión posterior que la contenga.
-
 ## Documentación
 
 | Documento | Para qué |
