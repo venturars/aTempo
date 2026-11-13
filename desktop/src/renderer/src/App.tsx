@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { LoginScreen } from './login/LoginScreen'
+import { PanelScreen } from './panel/PanelScreen'
 import { RegisterScreen } from './register/RegisterScreen'
 import { DashboardScreen } from './student/dashboard/DashboardScreen'
 
@@ -17,6 +18,10 @@ function App(): React.JSX.Element {
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
+
+  if (path === 'teacher/panel') {
+    return <PanelScreen />
+  }
 
   if (path === 'student/dashboard') {
     return <DashboardScreen />

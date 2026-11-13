@@ -195,17 +195,50 @@ test('shows both errors when the fields are empty', async () => {
   })
 })
 
-test('shows the written email and password in an alert', async () => {
+test('opens the professor panel after a valid login', async () => {
   await withApp(async (window) => {
     await window.getByLabel('Correo').fill('ana@clase.test')
     await window.getByLabel('Contraseña').fill('secreta')
     await window.getByRole('button', { name: 'Entrar' }).click()
 
-    const alert = window.getByRole('status')
-    await expect(alert).toContainText('Correo: ana@clase.test')
-    await expect(alert).toContainText('Contraseña: secreta')
+    await expect(window.getByRole('navigation', { name: 'Secciones' })).toBeVisible()
+    await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
+    await expect(window.getByRole('button', { name: 'Abrir lista' })).toBeVisible()
+    await expect(window.getByText('secreta')).toHaveCount(0)
+    await expect(window.getByRole('status')).toHaveCount(0)
     await expectNoErrorPhrases(window)
-    await expect(window).toHaveScreenshot('login-alert.png', { animations: 'disabled' })
+
+    await window.getByRole('button', { name: 'Abrir lista' }).click()
+    const molero = window.getByRole('row', { name: /Diego Molero/ })
+    await molero.getByText('Pendiente').click()
+    await window.getByRole('button', { name: 'Presente' }).click()
+    await expect(molero.getByText('Presente')).toBeVisible()
+    await expect(molero.getByText('09:05')).toBeVisible()
+
+    await window.getByRole('button', { name: 'Cerrar lista' }).click()
+    const dialog = window.getByRole('dialog')
+    await expect(dialog).toContainText('Los pendientes pasarán a ausentes.')
+    await dialog.getByRole('button', { name: 'Cerrar lista' }).click()
+    await expect(window.getByRole('button', { name: 'Volver a abrir' })).toBeVisible()
+    await expect(window.getByText('Cerrada')).toHaveCount(0)
+    await expect(
+      window.getByRole('row', { name: /Diego Torres/ }).getByText('Ausente')
+    ).toBeVisible()
+    await expect(molero.getByText('Presente')).toBeVisible()
+
+    await window.getByRole('button', { name: 'Sesiones' }).click()
+    await window.getByRole('button', { name: /Mar 10 nov/ }).click()
+    await expect(window.getByRole('heading', { level: 1, name: 'Mar 10 nov 2026' })).toBeVisible()
+    await window.getByRole('button', { name: 'Diego Torres' }).click()
+    await expect(window.getByRole('navigation', { name: 'Ruta' })).toBeVisible()
+    await expect(window.getByRole('button', { name: 'Mar 10 nov 2026' })).toBeVisible()
+    await expect(window.getByRole('heading', { level: 1, name: 'Diego Torres' })).toBeVisible()
+
+    await window.getByRole('button', { name: 'Ajustes' }).click()
+    await window.getByRole('button', { name: 'Tinta' }).click()
+    await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-claro')
+    await window.getByRole('button', { name: 'Noche' }).click()
+    await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-oscuro')
   })
 })
 

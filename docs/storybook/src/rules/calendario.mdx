@@ -4,4 +4,18 @@ import { Meta } from '@storybook/addon-docs/blocks'
 
 # Calendario
 
-El calendario de daisyUI no tiene historia. No es solo CSS: pide Cally, Pikaday o React Day Picker. Esta guía no añade esa librería.
+El calendario lo pinta React Day Picker 9.14.0, la misma versión que `desktop/`. La historia está en Entrada/Calendar.
+
+## Hacer
+
+- Usar el calendario para elegir un intervalo de fechas (`mode="range"`) o varias fechas sueltas (`mode="multiple"`).
+- Ponerle la clase `react-day-picker` de daisyUI y `locale={es}`, de `react-day-picker/locale`.
+- Importar `react-day-picker/style.css`. Los colores salen del tema: las variables `--rdp-*` usan `primary` y los fondos `base`.
+
+```tsx
+<DayPicker className="react-day-picker" locale={es} mode="range" selected={range} onSelect={setRange} />
+```
+
+## No hacer
+
+- Escribir a mano un color del calendario.

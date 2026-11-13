@@ -13,6 +13,10 @@ function startupHash(): string | undefined {
     return 'sign-up'
   }
 
+  if (process.argv.includes('--panel')) {
+    return 'teacher/panel'
+  }
+
   return undefined
 }
 

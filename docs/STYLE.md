@@ -8,6 +8,6 @@ Hay dos temas de daisyUI. `atempo-oscuro` es el de defecto y usa Geist. `atempo-
 
 Los colores salen del tema. No se escribe un color a mano.
 
-Las pantallas usan las clases de daisyUI. No hay un paquete de componentes.
+Las pantallas usan las clases de daisyUI. El calendario es de React Day Picker 9.14.0, con la clase `react-day-picker` de daisyUI y los colores del tema.
 
 Las reglas de la guía siguen la [guía de Apple](https://developer.apple.com/design/human-interface-guidelines).

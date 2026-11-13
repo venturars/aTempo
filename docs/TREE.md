@@ -34,6 +34,25 @@ desktop/
           loginStore.ts
           validateLogin.ts
           trimesterExample.ts
+        panel/
+          AttendanceStatus.tsx
+          DateFilter.tsx
+          JustificationAccess.tsx
+          MobileAttendance.tsx
+          PanelScreen.tsx
+          RecognitionAward.tsx
+          RecognitionIcon.tsx
+          SettingsView.tsx
+          StatsView.tsx
+          StudentHistory.tsx
+          avatar.tsx
+          markControl.tsx
+          marks.ts
+          panelStore.ts
+          riskHint.tsx
+          roster.ts
+          sessionQr.tsx
+          settingsStore.ts
         register/
           RegisterScreen.tsx
           registerStore.ts
@@ -44,12 +63,12 @@ desktop/
             DashboardScreen.tsx
   tests/
     login.spec.ts
+    panel.spec.ts
     register.spec.ts
     dashboard.spec.ts
     snapshots/
       login-empty.png
       login-errors.png
-      login-alert.png
       login-narrow.png
       login-claro.png
       register-empty.png
@@ -58,6 +77,13 @@ desktop/
       register-narrow.png
       register-claro.png
       dashboard-empty.png
+      panel-hoy.png
+      panel-sesiones.png
+      panel-estadisticas.png
+      panel-ajustes.png
+      panel-estadisticas-movil.png
+      panel-claro.png
+      panel-ficha.png
   build/                # iconos de empaquetado de la plantilla
   resources/            # icono de la ventana en Linux
 ```

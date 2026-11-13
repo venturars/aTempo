@@ -188,6 +188,138 @@ body {
   text-transform: uppercase;
 }
 
+/* Las reglas con :where(.teacher-panel) valen solo en el panel. :where() no sube la especificidad,
+   así .date-trigger sigue ganando a .badge-soft. Los createPortal llevan teacher-panel. */
+
+/* Un enlace o un botón señala que se puede pulsar. Lo desactivado no. */
+:where(.teacher-panel) :where(a, button, summary, [role='link']) {
+  cursor: pointer;
+}
+:where(.teacher-panel) :where(button:disabled, [aria-disabled='true']) {
+  cursor: default;
+}
+
+/* El gris al pasar el ratón es claro en los dos temas. */
+@media (hover: hover) {
+  :where(.teacher-panel) .hover-grey:hover,
+  :where(.teacher-panel) .menu :where(li > :not(.menu-active, [aria-current], .btn):hover),
+  :where(.teacher-panel).menu :where(li > :not(.menu-active, [aria-current], .btn):hover) {
+    background-color: color-mix(in oklab, var(--color-base-content) 4%, var(--color-base-100));
+  }
+  [data-theme='atempo-oscuro']
+    :is(
+      :where(.teacher-panel) .hover-grey:hover,
+      :where(.teacher-panel) .menu :where(li > :not(.menu-active, [aria-current], .btn):hover),
+      :where(.teacher-panel).menu :where(li > :not(.menu-active, [aria-current], .btn):hover)
+    ) {
+    background-color: color-mix(in oklab, var(--color-base-content) 14%, var(--color-base-100));
+  }
+  :where(.teacher-panel) .hover-grey:active {
+    background-color: color-mix(in oklab, var(--color-base-content) 8%, var(--color-base-100));
+  }
+  [data-theme='atempo-oscuro'] :where(.teacher-panel) .hover-grey:active {
+    background-color: color-mix(in oklab, var(--color-base-content) 18%, var(--color-base-100));
+  }
+}
+
+/* En claro la línea casi no está y la sombra es ancha y baja. En oscuro la línea es un pelo. */
+/* En oscuro las sombras salen de base-100, el color más oscuro del tema: base-content es claro. */
+:where(.teacher-panel) .card,
+:where(.teacher-panel) main .rounded-box.bg-base-100 {
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 4%, transparent);
+}
+[data-theme='atempo-claro']
+  :is(
+    :where(.teacher-panel) :is(.shadow-sm, .card, main .rounded-box.bg-base-100),
+    :where(.teacher-panel).shadow-sm
+  ) {
+  border-color: color-mix(in oklab, var(--color-base-content) 8%, transparent);
+  box-shadow:
+    0 1px 2px color-mix(in oklab, var(--color-base-content) 3%, transparent),
+    0 12px 28px -18px color-mix(in oklab, var(--color-base-content) 6%, transparent);
+}
+[data-theme='atempo-claro']
+  :where(.teacher-panel)
+  .table
+  :where(thead tr :is(th, td), tbody tr:not(:last-child) :is(th, td)) {
+  border-bottom-color: color-mix(in oklab, var(--color-base-content) 8%, transparent);
+}
+[data-theme='atempo-claro']
+  :where(.teacher-panel)
+  :is(.border-base-content\/4, .divide-base-content\/4 > :not(:last-child)) {
+  border-color: color-mix(in oklab, var(--color-base-content) 8%, transparent);
+}
+[data-theme='atempo-claro'] :where(.teacher-panel) .divider {
+  --divider-color: color-mix(in oklab, var(--color-base-content) 8%, transparent);
+}
+[data-theme='atempo-claro'] :where(.teacher-panel) :is(.dropdown-content, .modal-box) {
+  outline-color: color-mix(in oklab, var(--color-base-content) 8%, transparent);
+}
+[data-theme='atempo-oscuro'] :where(.teacher-panel) :is(.card, main .rounded-box.bg-base-100) {
+  border-color: color-mix(in oklab, var(--color-base-content) 4%, transparent);
+  box-shadow:
+    0 1px 2px color-mix(in oklab, var(--color-base-100) 50%, transparent),
+    0 12px 28px -16px var(--color-base-100);
+}
+[data-theme='atempo-oscuro']
+  :where(.teacher-panel)
+  .table
+  :where(thead tr :is(th, td), tbody tr:not(:last-child) :is(th, td)) {
+  border-bottom-color: color-mix(in oklab, var(--color-base-content) 4%, transparent);
+}
+[data-theme='atempo-oscuro']
+  :where(.teacher-panel)
+  :is(.border-base-content\/4, .divide-base-content\/4 > :not(:last-child)) {
+  border-color: color-mix(in oklab, var(--color-base-content) 4%, transparent);
+}
+:where(.teacher-panel) .table {
+  width: 100%;
+}
+:where(.teacher-panel) .table :where(th, td) {
+  height: 52px;
+  width: 1%;
+  padding-block: 10px;
+  padding-inline: 1.25rem;
+  white-space: nowrap;
+}
+:where(.teacher-panel) .table :where(tr > :last-child) {
+  width: auto;
+}
+/* Las columnas repartidas ocupan el ancho a partes iguales. */
+.table.table-spread {
+  table-layout: fixed;
+}
+.table.table-spread :where(th, td) {
+  width: auto;
+}
+:where(.teacher-panel) .table :where(thead tr :is(th, td), tbody tr:not(:last-child) :is(th, td)) {
+  border-bottom: 1px solid color-mix(in oklab, var(--color-base-content) 4%, transparent);
+}
+:where(.teacher-panel) .table :where(th) {
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: color-mix(in oklab, var(--color-base-content) 45%, transparent);
+  text-transform: uppercase;
+}
+:where(.teacher-panel) .badge,
+:where(.teacher-panel) .btn.btn-xs,
+:where(.teacher-panel) .btn.btn-soft {
+  font-weight: 500;
+}
+/* Pendiente es un botón. El resto de etiquetas son pastillas. El radio tiene que coincidir. */
+:where(.teacher-panel) .badge,
+:where(.teacher-panel) .btn.btn-xs.btn-soft {
+  border-radius: var(--radius-selector);
+}
+:where(.teacher-panel) .menu :where(li > :not(ul, details, .menu-title)),
+:where(.teacher-panel).menu :where(li > :not(ul, details, .menu-title)) {
+  border-radius: 0.5rem;
+  padding-block: 0.375rem;
+  padding-inline: 0.75rem;
+}
+
 /* El borde del tema es 0. El anillo se queda marcado o no.
    Un checkbox de color, al marcarlo, se rellena y no lleva anillo. */
 .checkbox,
@@ -244,6 +376,202 @@ body {
   border-width: 1.5px;
 }
 
+/* El 8 % de DaisyUI se pierde en la fila. Un poco más de tinte. Tarde, un poco más. */
+:where(.teacher-panel) .badge-soft {
+  background-color: color-mix(
+    in oklab,
+    var(--badge-color, var(--color-base-content)) 18%,
+    var(--color-base-100)
+  );
+  border-color: color-mix(
+    in oklab,
+    var(--badge-color, var(--color-base-content)) 22%,
+    var(--color-base-100)
+  );
+}
+:where(.teacher-panel) .badge-soft.badge-warning {
+  background-color: color-mix(in oklab, var(--color-warning) 28%, var(--color-base-100));
+  border-color: color-mix(in oklab, var(--color-warning) 32%, var(--color-base-100));
+}
+:where(.teacher-panel) .btn.btn-soft {
+  background-color: color-mix(
+    in oklab,
+    var(--btn-color, var(--color-base-content)) 18%,
+    var(--color-base-100)
+  );
+  border-color: color-mix(
+    in oklab,
+    var(--btn-color, var(--color-base-content)) 22%,
+    var(--color-base-100)
+  );
+}
+:where(.teacher-panel) .btn.btn-soft.btn-warning {
+  background-color: color-mix(in oklab, var(--color-warning) 28%, var(--color-base-100));
+  border-color: color-mix(in oklab, var(--color-warning) 32%, var(--color-base-100));
+}
+@media (hover: hover) {
+  :where(.teacher-panel) .btn.btn-soft:hover {
+    background-color: color-mix(
+      in oklab,
+      var(--btn-color, var(--color-base-content)) 26%,
+      var(--color-base-100)
+    );
+  }
+  :where(.teacher-panel) .btn.btn-soft.btn-warning:hover {
+    background-color: color-mix(in oklab, var(--color-warning) 36%, var(--color-base-100));
+  }
+}
+
+/* Pendiente en noche es un gris bajo, no una pastilla clara. */
+[data-theme='atempo-oscuro']
+  :where(.teacher-panel)
+  :is(
+    .badge-soft.badge-neutral,
+    .btn.btn-soft:not(
+        .btn-primary,
+        .btn-secondary,
+        .btn-accent,
+        .btn-info,
+        .btn-success,
+        .btn-warning,
+        .btn-error
+      )
+  ) {
+  background-color: color-mix(in oklab, var(--color-base-content) 8%, var(--color-base-100));
+  border-color: color-mix(in oklab, var(--color-base-content) 12%, var(--color-base-100));
+  color: color-mix(in oklab, var(--color-base-content) 62%, var(--color-base-100));
+  font-weight: 500;
+}
+@media (hover: hover) {
+  [data-theme='atempo-oscuro']
+    :where(.teacher-panel)
+    .btn.btn-soft:not(
+      .btn-primary,
+      .btn-secondary,
+      .btn-accent,
+      .btn-info,
+      .btn-success,
+      .btn-warning,
+      .btn-error
+    ):hover {
+    background-color: color-mix(in oklab, var(--color-base-content) 12%, var(--color-base-100));
+  }
+}
+
+/* En claro las píldoras son un tinte muy pálido. */
+[data-theme='atempo-claro']
+  :where(.teacher-panel)
+  :is(
+    .badge-soft.badge-neutral,
+    .btn.btn-soft:not(
+        .btn-primary,
+        .btn-secondary,
+        .btn-accent,
+        .btn-info,
+        .btn-success,
+        .btn-warning,
+        .btn-error
+      )
+  ) {
+  background-color: color-mix(in oklab, var(--color-base-content) 6%, var(--color-base-100));
+  border-color: color-mix(in oklab, var(--color-base-content) 8%, var(--color-base-100));
+  color: var(--color-base-content);
+}
+[data-theme='atempo-claro']
+  :where(.teacher-panel)
+  :is(
+    .badge-soft.badge-primary,
+    .badge-soft.badge-secondary,
+    .badge-soft.badge-accent,
+    .badge-soft.badge-info,
+    .badge-soft.badge-success,
+    .badge-soft.badge-warning,
+    .badge-soft.badge-error
+  ) {
+  background-color: oklch(from var(--badge-color) 0.95 0.035 h);
+  border-color: oklch(from var(--badge-color) 0.93 0.03 h);
+  color: oklch(from var(--badge-color) 0.4 0.09 h);
+}
+[data-theme='atempo-claro']
+  :where(.teacher-panel)
+  :is(
+    .btn.btn-soft.btn-primary,
+    .btn.btn-soft.btn-secondary,
+    .btn.btn-soft.btn-accent,
+    .btn.btn-soft.btn-info,
+    .btn.btn-soft.btn-success,
+    .btn.btn-soft.btn-warning,
+    .btn.btn-soft.btn-error
+  ) {
+  background-color: oklch(from var(--btn-color) 0.95 0.035 h);
+  border-color: oklch(from var(--btn-color) 0.93 0.03 h);
+  color: oklch(from var(--btn-color) 0.4 0.09 h);
+}
+@media (hover: hover) {
+  [data-theme='atempo-claro']
+    :where(.teacher-panel)
+    :is(
+      .btn.btn-soft.btn-primary,
+      .btn.btn-soft.btn-secondary,
+      .btn.btn-soft.btn-accent,
+      .btn.btn-soft.btn-info,
+      .btn.btn-soft.btn-success,
+      .btn.btn-soft.btn-warning,
+      .btn.btn-soft.btn-error
+    ):hover {
+    background-color: oklch(from var(--btn-color) 0.92 0.045 h);
+  }
+}
+
+/* En noche las etiquetas son un tinte oscuro con texto claro. El pastel claro deslumbra. */
+[data-theme='atempo-oscuro']
+  :where(.teacher-panel)
+  :is(
+    .badge-soft.badge-primary,
+    .badge-soft.badge-secondary,
+    .badge-soft.badge-accent,
+    .badge-soft.badge-info,
+    .badge-soft.badge-success,
+    .badge-soft.badge-warning,
+    .badge-soft.badge-error
+  ) {
+  background-color: oklch(from var(--badge-color) 0.26 0.035 h);
+  border-color: oklch(from var(--badge-color) 0.32 0.04 h);
+  color: oklch(from var(--badge-color) 0.68 0.04 h);
+  font-weight: 500;
+}
+[data-theme='atempo-oscuro']
+  :where(.teacher-panel)
+  :is(
+    .btn.btn-soft.btn-primary,
+    .btn.btn-soft.btn-secondary,
+    .btn.btn-soft.btn-accent,
+    .btn.btn-soft.btn-info,
+    .btn.btn-soft.btn-success,
+    .btn.btn-soft.btn-warning,
+    .btn.btn-soft.btn-error
+  ) {
+  background-color: oklch(from var(--btn-color) 0.26 0.035 h);
+  border-color: oklch(from var(--btn-color) 0.32 0.04 h);
+  color: oklch(from var(--btn-color) 0.68 0.04 h);
+  font-weight: 500;
+}
+@media (hover: hover) {
+  [data-theme='atempo-oscuro']
+    :where(.teacher-panel)
+    :is(
+      .btn.btn-soft.btn-primary,
+      .btn.btn-soft.btn-secondary,
+      .btn.btn-soft.btn-accent,
+      .btn.btn-soft.btn-info,
+      .btn.btn-soft.btn-success,
+      .btn.btn-soft.btn-warning,
+      .btn.btn-soft.btn-error
+    ):hover {
+    background-color: oklch(from var(--btn-color) 0.32 0.04 h);
+  }
+}
+
 /* La pista del range es un control. El divisor es una línea de adorno. */
 .range {
   --range-bg: color-mix(in oklab, currentColor 50%, transparent);
@@ -251,11 +579,23 @@ body {
 .divider {
   --divider-color: color-mix(in oklab, var(--color-base-content) 12%, transparent);
 }
+:where(.teacher-panel) .divider {
+  --divider-color: color-mix(in oklab, var(--color-base-content) 4%, transparent);
+}
+[data-theme='atempo-oscuro'] :where(.teacher-panel) .divider {
+  --divider-color: color-mix(in oklab, var(--color-base-content) 4%, transparent);
+}
 
 /* En la tarjeta, el menú y el diálogo son del mismo color que el fondo. El borde del tema es 0. La línea es de adorno. */
 .dropdown-content,
 .modal-box {
   outline: 1px solid color-mix(in oklab, var(--color-base-content) 12%, transparent);
+}
+:where(.teacher-panel) :is(.dropdown-content, .modal-box) {
+  outline: 1px solid color-mix(in oklab, var(--color-base-content) 4%, transparent);
+}
+[data-theme='atempo-oscuro'] :where(.teacher-panel) :is(.dropdown-content, .modal-box) {
+  outline-color: color-mix(in oklab, var(--color-base-content) 4%, transparent);
 }
 
 /* El borde del tema es 0, así que input-error no se ve. El anillo usa el color de error del tema. */
@@ -266,8 +606,434 @@ body {
   background-color: color-mix(in oklab, var(--color-error) 12%, var(--color-base-200));
 }
 
+/* Pastel del tema. El matiz se ve, sin el brillo de un color sólido. */
+.avatar-tone-primary,
+.avatar-tone-secondary,
+.avatar-tone-info,
+.avatar-tone-success,
+.avatar-tone-warning,
+.avatar-tone-error {
+  background-color: oklch(from var(--avatar-tone) 0.92 0.055 h);
+  color: oklch(from var(--avatar-tone) 0.42 0.08 h);
+}
+[data-theme='atempo-oscuro']
+  :is(
+    .avatar-tone-primary,
+    .avatar-tone-secondary,
+    .avatar-tone-info,
+    .avatar-tone-success,
+    .avatar-tone-warning,
+    .avatar-tone-error
+  ) {
+  background-color: oklch(from var(--avatar-tone) 0.62 0.1 h);
+  color: oklch(from var(--avatar-tone) 0.22 0.08 h);
+}
+.avatar-tone-primary {
+  --avatar-tone: var(--color-primary);
+}
+.avatar-tone-secondary {
+  --avatar-tone: var(--color-secondary);
+}
+.avatar-tone-info {
+  --avatar-tone: var(--color-info);
+}
+.avatar-tone-success {
+  --avatar-tone: var(--color-success);
+}
+.avatar-tone-warning {
+  --avatar-tone: var(--color-warning);
+}
+.avatar-tone-error {
+  --avatar-tone: var(--color-error);
+}
+
 /* El foco se ve aunque el borde sea 0. */
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+/* La miga ya trae 8 px arriba y abajo. En Sesiones y en la fecha eso abre un hueco de más. */
+/* daisyUI la corre 4 px a la izquierda con un margen negativo; sin esos 4 px de más, el último tramo se corta y sale una barra de scroll. */
+:where(.teacher-panel) .breadcrumbs {
+  padding-block: 0;
+  max-width: calc(100% + 0.25rem);
+}
+
+/* Lo que flota se separa de la tarjeta. En claro es blanco; en noche, un paso más claro. */
+.float-panel {
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 10%, transparent);
+  background-color: var(--color-base-100);
+  box-shadow:
+    0 1px 2px color-mix(in oklab, var(--color-base-content) 4%, transparent),
+    0 16px 32px -16px color-mix(in oklab, var(--color-base-content) 16%, transparent);
+}
+[data-theme='atempo-oscuro'] .float-panel {
+  background-color: var(--color-base-300);
+  box-shadow:
+    0 1px 2px color-mix(in oklab, var(--color-base-100) 50%, transparent),
+    0 16px 36px -16px var(--color-base-100);
+}
+
+/* La pista usa la superficie del tema. En noche se separa un paso de la tarjeta. */
+.tip {
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 10%, transparent);
+  border-radius: 0.75rem;
+  background-color: var(--color-base-100);
+  color: var(--color-base-content);
+  box-shadow:
+    0 1px 2px color-mix(in oklab, var(--color-base-content) 6%, transparent),
+    0 16px 32px -12px color-mix(in oklab, var(--color-base-content) 22%, transparent);
+}
+[data-theme='atempo-oscuro'] .tip {
+  background-color: var(--color-base-300);
+  box-shadow:
+    0 1px 2px color-mix(in oklab, var(--color-base-100) 50%, transparent),
+    0 16px 36px -16px var(--color-base-100);
+}
+.tip-body {
+  color: color-mix(in oklab, var(--color-base-content) 55%, transparent);
+}
+.time-field {
+  height: 1.75rem;
+  width: 6.25rem;
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 16%, transparent);
+  border-radius: 0.5rem;
+  background: var(--color-base-100);
+  color: var(--color-base-content);
+  padding-inline: 0.5rem;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+/* El movimiento es corto y solo en lo que aparece o cambia de color. */
+@media (prefers-reduced-motion: no-preference) {
+  :where(.teacher-panel) .btn,
+  :where(.teacher-panel) .hover-grey,
+  :where(.teacher-panel) .badge,
+  :where(.teacher-panel) .menu :where(li > *),
+  :where(.teacher-panel).menu :where(li > *) {
+    transition:
+      background-color 140ms ease,
+      color 140ms ease,
+      border-color 140ms ease;
+  }
+
+  .popover-in {
+    animation: popover-in 140ms ease-out;
+  }
+
+  :where(.teacher-panel) .modal.modal-open {
+    animation: fade-in 140ms ease-out;
+  }
+}
+
+@keyframes popover-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .popover-in,
+  :where(.teacher-panel) .modal.modal-open {
+    animation: none;
+  }
+}
+
+/* La tabla de asistencia comparte la fila de las demás, pero cada día tiene ancho fijo.
+   Si no, la regla de width 1% de las tablas del panel aplasta las columnas y los nombres se montan.
+   Quince filas de 36 px más la cabecera de 44 px miden 584 px. El tope es más bajo
+   para que esa lista se desplace dentro de la tarjeta y la cabecera se quede arriba. */
+.attendance-scroll {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: calc(44px + 10 * 36px);
+}
+.table.attendance-table {
+  width: max-content;
+  min-width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.table.attendance-table :is(th, td) {
+  width: 2.75rem;
+  min-width: 2.75rem;
+  max-width: 2.75rem;
+  height: 36px;
+  padding: 0;
+  overflow: hidden;
+  text-align: center;
+  vertical-align: middle;
+}
+.table.attendance-table thead th {
+  height: 44px;
+  background: var(--color-base-100);
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+.table.attendance-table :is(th, td).attendance-name {
+  width: 12rem;
+  min-width: 12rem;
+  max-width: 12rem;
+  padding-inline: 1rem;
+  text-align: left;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--color-base-100);
+  box-shadow: 1px 0 0 color-mix(in oklab, var(--color-base-content) 8%, transparent);
+}
+.table.attendance-table thead th.attendance-name {
+  z-index: 4;
+}
+.table.attendance-table :is(th, td).attendance-total {
+  width: 7rem;
+  min-width: 7rem;
+  max-width: 7rem;
+  padding-inline: 1rem;
+  letter-spacing: 0;
+  text-align: right;
+}
+.attendance-grid,
+.attendance-scroll {
+  max-width: 100%;
+  min-width: 0;
+}
+.attendance-cell {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  cursor: pointer;
+}
+.attendance-cell:hover {
+  background: color-mix(in oklab, var(--color-base-content) 4%, transparent);
+}
+[data-theme='atempo-oscuro'] .attendance-cell:hover {
+  background: color-mix(in oklab, var(--color-base-content) 14%, transparent);
+}
+.attendance-cell:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+.attendance-mark {
+  display: inline-grid;
+  width: 1.125rem;
+  height: 1.125rem;
+  place-items: center;
+  border-radius: 2px;
+}
+.attendance-mark svg {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+.mark-presente {
+  background: var(--color-success);
+  color: var(--color-success-content);
+}
+.mark-retraso {
+  background: var(--color-warning);
+  color: var(--color-warning-content);
+}
+.mark-ausente {
+  background: var(--color-error);
+  color: var(--color-error-content);
+}
+.mark-cancelada,
+.mark-pendiente,
+.mark-sin-registro {
+  background: color-mix(in oklab, var(--color-base-content) 8%, var(--color-base-100));
+  color: color-mix(in oklab, var(--color-base-content) 55%, var(--color-base-100));
+}
+.date-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  width: auto;
+  padding-inline: 0.625rem;
+  cursor: pointer;
+  background-color: color-mix(in oklab, var(--color-base-content) 3%, var(--color-base-100));
+  border-color: transparent;
+  color: color-mix(in oklab, var(--color-base-content) 58%, var(--color-base-100));
+}
+.date-popover {
+  position: fixed;
+  position-area: none;
+  inset: auto;
+  top: calc(anchor(bottom) + 8px);
+  left: anchor(right);
+  translate: -100% 0;
+  margin: 0;
+  width: 20rem;
+  max-width: calc(100vw - 1.5rem);
+  max-height: calc(100dvh - 1.5rem);
+  overflow: auto;
+  border-radius: var(--radius-box);
+  background: var(--color-base-100);
+  color: var(--color-base-content);
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 8%, transparent);
+  box-shadow:
+    0 1px 2px color-mix(in oklab, var(--color-base-content) 20%, transparent),
+    0 16px 40px -18px color-mix(in oklab, var(--color-base-content) 50%, transparent);
+}
+[data-theme='atempo-oscuro'] .date-popover {
+  box-shadow:
+    0 1px 2px color-mix(in oklab, var(--color-base-100) 35%, transparent),
+    0 16px 40px -18px color-mix(in oklab, var(--color-base-100) 90%, transparent);
+}
+.date-popover .rdp-root {
+  --rdp-accent-color: var(--color-primary);
+  --rdp-accent-background-color: color-mix(
+    in oklab,
+    var(--color-primary) 14%,
+    var(--color-base-100)
+  );
+  --rdp-today-color: var(--color-primary);
+  --rdp-day-height: 2.25rem;
+  --rdp-day-width: 2.25rem;
+  --rdp-day_button-height: 2rem;
+  --rdp-day_button-width: 2rem;
+  --rdp-day_button-border: 2px solid transparent;
+  --rdp-selected-border: 2px solid transparent;
+  --rdp-range_middle-background-color: color-mix(
+    in oklab,
+    var(--color-primary) 14%,
+    var(--color-base-100)
+  );
+  --rdp-range_middle-color: var(--color-base-content);
+  --rdp-range_start-color: var(--color-primary-content);
+  --rdp-range_end-color: var(--color-primary-content);
+  --rdp-range_start-date-background-color: var(--color-primary);
+  --rdp-range_end-date-background-color: var(--color-primary);
+  --rdp-nav_button-height: 2rem;
+  --rdp-nav_button-width: 2rem;
+  --rdp-nav-height: 2.5rem;
+  --rdp-weekday-opacity: 1;
+  margin: 0;
+}
+.date-popover .rdp-month_caption {
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 500;
+}
+.date-popover .rdp-nav {
+  display: none;
+}
+.date-popover .rdp-selected {
+  font-size: inherit;
+  font-weight: 500;
+}
+.date-popover .rdp-weekday {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: color-mix(in oklab, var(--color-base-content) 45%, transparent);
+}
+.date-popover .rdp-day_button {
+  position: relative;
+  z-index: 1;
+  margin-inline: auto;
+  font-size: 0.875rem;
+}
+.date-popover
+  .rdp-selected:not(.rdp-range_start, .rdp-range_middle, .rdp-range_end)
+  .rdp-day_button {
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+}
+.date-popover .rdp-today:not(.rdp-selected) {
+  color: var(--color-base-content);
+}
+.date-popover .rdp-today:not(.rdp-selected) .rdp-day_button {
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--color-primary) 45%, transparent);
+}
+/* La banda del intervalo entra en los extremos, en vez de cortarse en el círculo. */
+.date-popover :is(.rdp-range_start, .rdp-range_middle, .rdp-range_end) {
+  position: relative;
+  background: transparent;
+}
+.date-popover :is(.rdp-range_start, .rdp-range_middle, .rdp-range_end)::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  height: 1.75rem;
+  transform: translateY(-50%);
+  background: var(--rdp-range_middle-background-color);
+}
+.date-popover .rdp-range_middle::before {
+  inset-inline: 0;
+}
+.date-popover .rdp-range_start::before {
+  inset-inline-start: 50%;
+  inset-inline-end: 0;
+}
+.date-popover .rdp-range_end::before {
+  inset-inline-start: 0;
+  inset-inline-end: 50%;
+}
+.date-popover .rdp-range_start.rdp-range_end::before {
+  content: none;
+}
+.date-popover .rdp-range_middle .rdp-day_button {
+  background: transparent;
+}
+.date-presets {
+  display: flex;
+  gap: 0.5rem;
+  border-block: 1px solid color-mix(in oklab, var(--color-base-content) 8%, transparent);
+}
+.prototype-minutes {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+/* El número y «min» van pegados a los botones. El campo no se abre de más. */
+.minute-stepper {
+  width: auto;
+  gap: 0.125rem;
+  padding-inline: 0.25rem;
+}
+.minute-stepper input {
+  width: 1.5rem;
+  min-width: 0;
+  flex: none;
+  padding: 0;
+}
+.prototype-minutes::-webkit-inner-spin-button,
+.prototype-minutes::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+.mobile-attendance {
+  display: none;
+}
+@media (max-width: 767px) {
+  .desktop-attendance-grid,
+  .desktop-attendance-legend {
+    display: none;
+  }
+  .mobile-attendance {
+    display: block;
+  }
+  .table.attendance-table :is(th, td).attendance-name {
+    width: 12rem;
+    min-width: 12rem;
+    max-width: 12rem;
+  }
 }
