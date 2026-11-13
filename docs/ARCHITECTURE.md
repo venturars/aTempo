@@ -81,3 +81,26 @@ El Resumen de la organización vive en `organization/`. `OrganizationDashboardSc
 
 La única métrica global es el número de estudiantes distintos con al menos 3 ausencias no justificadas en las últimas 5 sesiones o al menos 4 retrasos en las últimas 6. Quien cumple los dos patrones cuenta una sola vez. Cuando hay justificantes o correcciones pendientes, un único aviso lo explica y los cursos y estudiantes afectados lo indican. Las áreas futuras de la navegación son solo texto.
 
+## Entorno de instalación
+
+Docker instala lo que el proyecto necesita con las mismas versiones para todo el equipo: Node 24, que es el de Electron 44, pnpm 10.33.0 y APM 0.35.0. Está en `Dockerfile`, `docker-compose.yml` y `docker/setup.sh`.
+
+- `setup` lanza `apm install` en la raíz y `pnpm install` en `desktop/` y `docs/storybook/`.
+- Las skills y los agentes de delivery-workflow quedan en la carpeta del proyecto, para Cursor, Codex y Claude Code. Son texto y valen en cualquier sistema.
+- Los `node_modules` quedan en volúmenes de Docker. Los de Linux no sirven en macOS ni en Windows, ni al revés: Electron, SQLite y Vite traen binarios de cada sistema.
+- `storybook` sirve Storybook en el puerto 6006. `desktop` lanza las comprobaciones de `desktop/`.
+- Los hooks de `.githooks/` lanzan `setup` después de `git pull`, de cambiar de rama o de un rebase, solo si cambió la instalación. Si Docker no está en marcha, avisan y git sigue.
+
+Docker es el instalador, no el entorno de trabajo. Cursor y Codex se usan sobre todo desde sus apps de escritorio, y esas apps trabajan sobre la carpeta del ordenador: el agente lanza allí sus comandos, no dentro de un contenedor. Por eso cada ordenador sigue necesitando `git`, `gh`, Node y bash para el flujo de delivery-workflow, y la ventana de Electron se abre en el ordenador.
+
+Se descartó trabajar dentro de un Dev Container:
+
+| | Docker como instalador | Dev Container |
+| --- | --- | --- |
+| App de escritorio de Codex | Funciona | No abre proyectos dentro de un contenedor |
+| App de escritorio de Cursor | Funciona | Con su extensión de Dev Containers, que falla a menudo |
+| Ventana de Electron | En el ordenador | Sin pantalla dentro del contenedor |
+| Lo que necesita cada ordenador | Docker, git, `gh`, Node y bash | Docker y git |
+| Windows | WSL o Git Bash para el flujo | Resuelto: el contenedor es Linux |
+
+`.devcontainer/devcontainer.json` usa la misma imagen para quien pueda abrir un Dev Container. Es opcional.
