@@ -13,7 +13,7 @@ aTempo de escritorio es la aplicación del profesor. Sirve para registrar la asi
 - **Node** ejecuta el proceso principal de Electron.
 - **Tailwind** pone los estilos con clases.
 - **daisyUI** aporta los componentes (campo, botón, alert) encima de Tailwind.
-- **TanStack Router** es el enrutado elegido para el renderer. Las rutas van por archivos en `src/renderer/src/routes/` y su plugin de Vite genera `routeTree.gen.ts`. Las direcciones van en el hash (`createHashHistory`), porque la app empaquetada se abre desde un archivo local.
+- **TanStack Router** elige la pantalla según la ruta del hash.
 - **Zustand** guarda el estado de la pantalla en el renderer.
 - **SQLite** es la base local. Se abre con `node:sqlite` y la clase `DatabaseSync` en el proceso principal.
 - **pnpm** es el gestor de paquetes de `desktop/`. Las versiones van fijas, sin `^`.
