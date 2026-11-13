@@ -1,11 +1,7 @@
 import { create } from 'zustand'
+import { useSessionStore } from '../session/sessionStore'
+import { useStudentAccountsStore } from '../student/studentAccounts'
 import { validateRegister } from './validateRegister'
-
-export type SubmittedRegister = {
-  name: string
-  email: string
-  password: string
-}
 
 type RegisterState = {
   name: string
@@ -16,12 +12,11 @@ type RegisterState = {
   emailError: string
   passwordError: string
   repeatPasswordError: string
-  submitted: SubmittedRegister | null
   setName: (name: string) => void
   setEmail: (email: string) => void
   setPassword: (password: string) => void
   setRepeatPassword: (repeatPassword: string) => void
-  submit: () => void
+  submit: () => boolean
 }
 
 export const useRegisterStore = create<RegisterState>((set, get) => ({
@@ -33,18 +28,17 @@ export const useRegisterStore = create<RegisterState>((set, get) => ({
   emailError: '',
   passwordError: '',
   repeatPasswordError: '',
-  submitted: null,
   setName: (name) => {
-    set({ name, submitted: null })
+    set({ name })
   },
   setEmail: (email) => {
-    set({ email, submitted: null })
+    set({ email })
   },
   setPassword: (password) => {
-    set({ password, submitted: null })
+    set({ password })
   },
   setRepeatPassword: (repeatPassword) => {
-    set({ repeatPassword, submitted: null })
+    set({ repeatPassword })
   },
   submit: () => {
     const { name, email, password, repeatPassword } = get()
@@ -60,22 +54,26 @@ export const useRegisterStore = create<RegisterState>((set, get) => ({
         nameError: errors.name,
         emailError: errors.email,
         passwordError: errors.password,
-        repeatPasswordError: errors.repeatPassword,
-        submitted: null
+        repeatPasswordError: errors.repeatPassword
       })
-      return
+      return false
     }
 
-    set({
-      nameError: '',
-      emailError: '',
-      passwordError: '',
-      repeatPasswordError: '',
-      submitted: {
-        name: name.trim(),
-        email: email.trim(),
-        password
-      }
-    })
+    const accounts = useStudentAccountsStore.getState()
+
+    if (accounts.findByEmail(email) !== undefined) {
+      set({
+        nameError: '',
+        emailError: 'Ya hay una cuenta con este correo.',
+        passwordError: '',
+        repeatPasswordError: ''
+      })
+      return false
+    }
+
+    const account = accounts.addAccount(name, email, password)
+    set({ nameError: '', emailError: '', passwordError: '', repeatPasswordError: '' })
+    useSessionStore.getState().startStudentSession(account.email)
+    return true
   }
 }))

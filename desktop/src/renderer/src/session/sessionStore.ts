@@ -6,6 +6,8 @@ export type DashboardPath = '/student/dashboard' | '/teacher/panel' | '/organiza
 
 type SessionState = {
   profile: Profile | null
+  email: string | null
+  startStudentSession: (email: string) => void
 }
 
 const dashboardPaths: Record<Profile, DashboardPath> = {
@@ -18,6 +20,10 @@ export function dashboardPathForProfile(profile: Profile): DashboardPath {
   return dashboardPaths[profile]
 }
 
-export const useSessionStore = create<SessionState>(() => ({
-  profile: null
+export const useSessionStore = create<SessionState>((set) => ({
+  profile: null,
+  email: null,
+  startStudentSession: (email) => {
+    set({ profile: 'student', email })
+  }
 }))

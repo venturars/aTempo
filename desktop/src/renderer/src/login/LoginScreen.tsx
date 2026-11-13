@@ -1,6 +1,6 @@
 import { FormEvent } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { dashboardPathForProfile, useSessionStore } from '../session/sessionStore'
+import { dashboardPathForProfile } from '../session/sessionStore'
 import { useLoginStore } from './loginStore'
 import { markClass, markLabel, trimesterDays, type AttendanceMark } from './trimesterExample'
 
@@ -8,7 +8,7 @@ const legendMarks: AttendanceMark[] = ['presente', 'retraso', 'ausencia']
 
 export function LoginScreen(): React.JSX.Element {
   return (
-    <main className="flex min-h-screen flex-col gap-8 p-8 md:flex-row">
+    <main className="flex min-h-screen flex-col gap-8 p-4 md:flex-row md:p-8">
       <ClaimPanel />
       <LoginForm />
     </main>
@@ -18,7 +18,7 @@ export function LoginScreen(): React.JSX.Element {
 function ClaimPanel(): React.JSX.Element {
   return (
     <section
-      className="flex flex-1 flex-col gap-8 rounded-box bg-base-300 p-8"
+      className="flex flex-1 flex-col gap-8 rounded-box bg-base-300 p-4 md:p-8"
       aria-labelledby="claim"
     >
       <div className="flex flex-col gap-2">
@@ -68,20 +68,17 @@ function LoginForm(): React.JSX.Element {
   const setEmail = useLoginStore((state) => state.setEmail)
   const setPassword = useLoginStore((state) => state.setPassword)
   const submit = useLoginStore((state) => state.submit)
-  const profile = useSessionStore((state) => state.profile)
   const navigate = useNavigate()
 
   function onSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault()
-    const isValid = submit()
-
-    if (isValid && profile !== null) {
-      navigate({ to: dashboardPathForProfile(profile) })
+    if (submit()) {
+      navigate({ to: dashboardPathForProfile('student') })
     }
   }
 
   return (
-    <section className="flex w-full max-w-md flex-col gap-8 rounded-box bg-base-100 p-8">
+    <section className="flex w-full max-w-md flex-col gap-8 rounded-box bg-base-100 p-4 md:p-8">
       <p>Entra con tu correo.</p>
       <form className="flex flex-col gap-5" noValidate onSubmit={onSubmit}>
         <div className="flex flex-col gap-2">

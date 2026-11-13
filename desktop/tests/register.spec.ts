@@ -366,64 +366,37 @@ test('shows errors for a malformed email and a short password', async () => {
     await window.getByLabel('Repetir contraseña').fill('12345678')
     await submit.click()
 
-    const alert = window.getByRole('status')
-    await expect(alert).toBeVisible()
-    await expect(alert).toContainText('Nombre completo: Ana')
-    await expect(alert).toContainText('Correo electrónico: ana@clase.test')
-    await expect(alert).toContainText('Contraseña: 12345678')
-    await expectNoRegisterErrors(window)
-
-    await password.fill(' 1234567')
-    await window.getByLabel('Repetir contraseña').fill(' 1234567')
-    await submit.click()
-
-    const lines = await alert
-      .locator('span')
-      .evaluateAll((nodes) => nodes.map((node) => node.textContent))
-    expect(lines).toEqual([
-      'Nombre completo: Ana',
-      'Correo electrónico: ana@clase.test',
-      'Contraseña:  1234567'
-    ])
-    await expectNoRegisterErrors(window)
+    await expect(window.getByRole('heading', { name: 'Dashboard alumno', level: 1 })).toBeVisible()
+    await expectNoAlert(window)
   })
 })
 
-test('shows the written name, email and password in an alert', async () => {
+test('opens the student dashboard instead of showing an alert after a valid sign-up', async () => {
   await withApp(async (window) => {
-    await window.getByLabel('Nombre completo').fill('Ana')
-    await window.getByLabel('Correo electrónico').fill('ana@clase.test')
+    await window.getByLabel('Nombre completo').fill('  Ana  ')
+    await window.getByLabel('Correo electrónico').fill('  ana@clase.test  ')
     await window.getByLabel('Contraseña', { exact: true }).fill('secreta12')
     await window.getByLabel('Repetir contraseña').fill('secreta12')
     await window.getByRole('button', { name: 'Crear mi cuenta' }).click()
 
-    const alert = window.getByRole('status')
-    await expect(alert).toBeVisible()
-    await expect(alert).toHaveClass(/alert/)
-    await expect(alert).toHaveClass(/alert-success/)
-    await expect(alert).toContainText('Nombre completo: Ana')
-    await expect(alert).toContainText('Correo electrónico: ana@clase.test')
-    await expect(alert).toContainText('Contraseña: secreta12')
-    await expectNoRegisterErrors(window)
-    await expect(window).toHaveScreenshot('register-alert.png', { animations: 'disabled' })
+    await expect(window.getByRole('heading', { name: 'Dashboard alumno', level: 1 })).toBeVisible()
+    expect(await window.evaluate(() => window.location.hash)).toBe('#/student/dashboard')
+    await expectNoAlert(window)
+    await expect(window.getByRole('button', { name: 'Crear mi cuenta' })).toHaveCount(0)
+  })
+})
 
-    await window.getByLabel('Nombre completo').fill('  Ana  ')
-    await window.getByLabel('Correo electrónico').fill('  ana@clase.test  ')
-    await window.getByLabel('Contraseña', { exact: true }).fill(' secreta12')
-    await window.getByLabel('Repetir contraseña').fill(' secreta12')
+test('shows an email error when the email already has an account', async () => {
+  await withApp(async (window) => {
+    await window.getByLabel('Nombre completo').fill('Otra Ada')
+    await window.getByLabel('Correo electrónico').fill(' ADA.LOPEZ@clase.test ')
+    await window.getByLabel('Contraseña', { exact: true }).fill('secreta12')
+    await window.getByLabel('Repetir contraseña').fill('secreta12')
     await window.getByRole('button', { name: 'Crear mi cuenta' }).click()
 
-    const lines = await alert
-      .locator('span')
-      .evaluateAll((nodes) => nodes.map((node) => node.textContent))
-    expect(lines).toEqual([
-      'Nombre completo: Ana',
-      'Correo electrónico: ana@clase.test',
-      'Contraseña:  secreta12'
-    ])
-
-    await window.getByLabel('Nombre completo').fill('Ana María')
-    await expectNoAlert(window)
+    await expect(window.getByText('Ya hay una cuenta con este correo.')).toBeVisible()
+    await expect(window.getByLabel('Correo electrónico')).toHaveAttribute('aria-invalid', 'true')
+    await expect(window.getByRole('heading', { name: 'Dashboard alumno' })).toHaveCount(0)
   })
 })
 
