@@ -1,21 +1,27 @@
-name: Crear tag de versión
+name: Crear versión y release
 
-# Cuándo se ejecuta: cada vez que se actualiza la rama main
+# Cuándo se ejecuta: cada vez que se actualiza la rama main.
+# La IA de Groq decide si el cambio es major, minor o patch y escribe el resumen.
+# Si la IA falla, deciden las reglas de los commits:
+#   "!" o "BREAKING CHANGE" -> major, algún "feat" -> minor, el resto -> patch.
+# Necesita el secreto GROQ_API_KEY en el repositorio (sin él, usa solo las reglas).
 on:
   push:
     branches: [main]
 
-# Permiso para poder crear y subir tags al repositorio
 permissions:
-  contents: write
+  contents: write # crear el tag y la release
 
 # Si se actualiza main dos veces seguidas, las ejecuciones van en fila, no a la vez
 concurrency:
   group: crear-tag-version
   cancel-in-progress: false
 
+env:
+  MODELO_IA: openai/gpt-oss-120b
+
 jobs:
-  crear-tag:
+  crear-version:
     runs-on: ubuntu-latest
     steps:
       # 1. Descarga el código, con todo el historial y los tags existentes
@@ -23,33 +29,157 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 2. Busca el último tag y calcula el siguiente
-      - name: Calcular la siguiente versión
-        id: version
+      # 2. Busca la última versión. Si este commit ya tiene una, no hace nada más
+      - name: Buscar la última versión
+        id: ultima
         run: |
           if git describe --exact-match --tags HEAD >/dev/null 2>&1; then
-            echo "Este commit ya tiene tag, no se crea otro."
-            echo "next=" >> "$GITHUB_OUTPUT"
+            echo "Este commit ya tiene versión, no se crea otra."
+            echo "saltar=si" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-
           LAST_TAG=$(git tag --list 'v*.*.*' --sort=-v:refname | head -n 1)
+          echo "Última versión: ${LAST_TAG:-ninguna}"
+          echo "tag=$LAST_TAG" >> "$GITHUB_OUTPUT"
 
+      # 3. Reúne qué ha cambiado desde la última versión: commits y archivos
+      - name: Reunir los cambios
+        if: steps.ultima.outputs.saltar != 'si'
+        env:
+          LAST_TAG: ${{ steps.ultima.outputs.tag }}
+        run: |
+          if [ -n "$LAST_TAG" ]; then
+            RANGO="$LAST_TAG..HEAD"
+            DESDE="$LAST_TAG"
+          else
+            RANGO="HEAD"
+            DESDE=$(git hash-object -t tree /dev/null)
+          fi
+          git log "$RANGO" --format='%s' --no-merges > asuntos.txt
+          git log "$RANGO" --format='%b' --no-merges > cuerpos.txt
+          {
+            echo "## Commits"
+            git log "$RANGO" --format='- %s%n%b' --no-merges | grep -v '^[[:space:]]*$'
+            echo
+            echo "## Archivos cambiados"
+            git diff --stat "$DESDE" HEAD | tail -n 60
+          } | head -n 300 > cambios.txt
+          cat cambios.txt
+
+      # 4. Pregunta a la IA qué tipo de cambio es y le pide un resumen.
+      #    Si no hay clave, la IA falla o responde algo raro, deciden las reglas de los commits.
+      - name: Decidir el tipo de cambio
+        id: decidir
+        if: steps.ultima.outputs.saltar != 'si'
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          set +e # si algo de la IA falla, el paso sigue y deciden las reglas
+          TIPO=""
+          : > decision.json
+          if [ -n "$GROQ_API_KEY" ]; then
+            INSTRUCCIONES='Eres el responsable de versiones de aTempo, una aplicación de escritorio para que el profesor registre la asistencia de los alumnos de una clase. Sigue el versionado semántico.
+          Decide el tipo de cambio a partir de los commits y los archivos:
+          - "major": rompe la compatibilidad (commits con "!" o "BREAKING CHANGE") o cambia por completo cómo se usa la aplicación.
+          - "minor": añade funcionalidades nuevas (normalmente commits "feat").
+          - "patch": correcciones, documentación, diseño o mantenimiento (fix, docs, chore, refactor, test, knowledge).
+          Escribe también un resumen en español de 2 a 5 viñetas en Markdown, pensado para quien usa la aplicación.
+          Responde solo con este JSON, sin texto alrededor:
+          {"tipo": "major|minor|patch", "motivo": "una frase", "resumen": "viñetas en Markdown"}'
+
+            jq -n --arg modelo "$MODELO_IA" --arg instrucciones "$INSTRUCCIONES" --rawfile cambios cambios.txt \
+              '{model: $modelo, temperature: 0, messages: [{role: "system", content: $instrucciones}, {role: "user", content: $cambios}]}' \
+              > peticion.json
+
+            if curl -sS --fail-with-body --max-time 60 "https://api.groq.com/openai/v1/chat/completions" \
+                -H "Authorization: Bearer $GROQ_API_KEY" \
+                -H "Content-Type: application/json" \
+                -d @peticion.json -o respuesta.json; then
+              jq -r '.choices[0].message.content // empty' respuesta.json | sed '/^```/d' > decision.json || true
+            else
+              echo "La IA no ha respondido:"
+              cat respuesta.json || true
+            fi
+            TIPO=$(jq -r '.tipo // empty' decision.json 2>/dev/null || true)
+          else
+            echo "No hay GROQ_API_KEY: se usan las reglas de los commits."
+          fi
+
+          case "$TIPO" in
+            major|minor|patch)
+              QUIEN="la IA"
+              jq -r '.motivo // ""' decision.json > motivo.txt 2>/dev/null || : > motivo.txt
+              jq -r '.resumen // ""' decision.json > resumen.md 2>/dev/null || : > resumen.md
+              ;;
+            *)
+              [ -n "$GROQ_API_KEY" ] && echo "Respuesta de la IA no válida: se usan las reglas de los commits."
+              QUIEN="las reglas de los commits"
+              if grep -qE '^[a-z]+(\([^)]*\))?!:' asuntos.txt || grep -q 'BREAKING CHANGE' cuerpos.txt; then
+                TIPO="major"; echo 'Hay commits con "!" o "BREAKING CHANGE": cambios que rompen la compatibilidad.' > motivo.txt
+              elif grep -qE '^feat(\([^)]*\))?:' asuntos.txt; then
+                TIPO="minor"; echo 'Hay commits "feat": funcionalidades nuevas.' > motivo.txt
+              else
+                TIPO="patch"; echo 'Solo hay correcciones, documentación o mantenimiento.' > motivo.txt
+              fi
+              # Resumen: los commits agrupados por tipo.
+              {
+                NOVEDADES=$(grep -E '^feat(\([^)]*\))?!?:' asuntos.txt | sed -E 's/^[a-z]+(\([^)]*\))?!?: */- /')
+                CORRECCIONES=$(grep -E '^fix(\([^)]*\))?!?:' asuntos.txt | sed -E 's/^[a-z]+(\([^)]*\))?!?: */- /')
+                OTROS=$(grep -vE '^(feat|fix)(\([^)]*\))?!?:' asuntos.txt | grep -vE '^chore: open #' | sed -E 's/^[a-z]+(\([^)]*\))?!?: */- /; t; s/^/- /')
+                [ -n "$NOVEDADES" ] && printf '### Novedades\n%s\n\n' "$NOVEDADES"
+                [ -n "$CORRECCIONES" ] && printf '### Correcciones\n%s\n\n' "$CORRECCIONES"
+                [ -n "$OTROS" ] && printf '### Otros cambios\n%s\n\n' "$OTROS"
+              } > resumen.md || true
+              ;;
+          esac
+
+          echo "Decide: $QUIEN. Tipo de cambio: $TIPO. Motivo: $(cat motivo.txt)"
+          echo "tipo=$TIPO" >> "$GITHUB_OUTPUT"
+          echo "quien=$QUIEN" >> "$GITHUB_OUTPUT"
+
+      # 5. Calcula la nueva versión según el tipo de cambio
+      - name: Calcular la nueva versión
+        id: version
+        if: steps.ultima.outputs.saltar != 'si'
+        env:
+          LAST_TAG: ${{ steps.ultima.outputs.tag }}
+          TIPO: ${{ steps.decidir.outputs.tipo }}
+        run: |
           if [ -z "$LAST_TAG" ]; then
             NEXT="v0.1.0"
           else
             IFS='.' read -r MAJOR MINOR PATCH <<< "${LAST_TAG#v}"
-            NEXT="v$MAJOR.$MINOR.$((PATCH + 1))"
+            case "$TIPO" in
+              major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+              minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+              *)     PATCH=$((PATCH + 1)) ;;
+            esac
+            NEXT="v$MAJOR.$MINOR.$PATCH"
           fi
-
-          echo "Última versión: ${LAST_TAG:-ninguna} → nueva versión: $NEXT"
+          echo "Nueva versión: ${LAST_TAG:-ninguna} → $NEXT"
           echo "next=$NEXT" >> "$GITHUB_OUTPUT"
 
-      # 3. Crea el tag y lo sube a GitHub
-      - name: Crear y subir el tag
-        if: steps.version.outputs.next != ''
+      # 6. Crea el tag y la release: resumen + tipo de cambio + lista de PRs de GitHub
+      - name: Crear el tag y la release
+        if: steps.ultima.outputs.saltar != 'si'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEXT: ${{ steps.version.outputs.next }}
+          LAST_TAG: ${{ steps.ultima.outputs.tag }}
+          TIPO: ${{ steps.decidir.outputs.tipo }}
+          QUIEN: ${{ steps.decidir.outputs.quien }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "${{ steps.version.outputs.next }}" -m "Versión ${{ steps.version.outputs.next }}"
-          git push origin "${{ steps.version.outputs.next }}"
+          {
+            echo "## Resumen"
+            echo
+            if [ -s resumen.md ]; then cat resumen.md; else echo "Sin resumen automático."; fi
+            echo
+            echo "**Tipo de cambio:** $TIPO, decidido por $QUIEN. $(cat motivo.txt)"
+            echo
+          } > notas.md
+          gh release create "$NEXT" \
+            --target "$GITHUB_SHA" \
+            --title "$NEXT" \
+            --notes-file notas.md \
+            --generate-notes \
+            ${LAST_TAG:+--notes-start-tag "$LAST_TAG"}
