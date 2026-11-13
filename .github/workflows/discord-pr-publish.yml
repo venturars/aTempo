@@ -1,0 +1,41 @@
+name: Discord PR notification publisher
+
+on:
+  workflow_run:
+    workflows: [Discord PR notification trigger, Discord PR confirmation trigger]
+    types: [completed]
+
+jobs:
+  publish:
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      (github.event.workflow_run.event == 'pull_request' || github.event.workflow_run.event == 'issue_comment') &&
+      github.event.workflow_run.repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    environment: Discord-PR-Notifications
+    concurrency:
+      group: discord-pr-relations
+      queue: max
+      cancel-in-progress: false
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      pull-requests: read
+    steps:
+      # El emisor usa el commit confiable de main, no el código de la PR que disparó el evento.
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: venturars/delivery-workflow/.github/actions/discord-pr-notifications@fb228007744116fca6ace5d0dfe75efa1900b340
+        with:
+          github-token: ${{ github.token }}
+          bot-token: ${{ secrets.DISCORD_BOT_TOKEN }}
+          cache-key: ${{ secrets.DISCORD_CACHE_KEY }}
+          guild-id: ${{ vars.DISCORD_GUILD_ID }}
+          channel-id: ${{ vars.DISCORD_GIT_CHANNEL_ID }}
+          expected-repository: venturars/aTempo
+          base-branch: staging
+          trigger-run-id: ${{ github.event.workflow_run.id }}
