@@ -52,9 +52,9 @@ test('shows the student dashboard mockup', async () => {
   })
 })
 
-test('keeps the dashboard when a button is pressed', async () => {
+test('keeps the dashboard when a button without action is pressed', async () => {
   await withDashboardApp(async (window) => {
-    for (const id of dashboardButtonIds) {
+    for (const id of ['proxima-clase', 'avisar-retrasos-ausencias']) {
       await window.locator(`#${id}`).click()
 
       await expect(
