@@ -18,6 +18,7 @@ const colors = [
 const typeSizes = [
   { name: 'text-2xl', className: 'text-2xl', sample: '28' },
   { name: 'text-xl', className: 'text-xl', sample: '20' },
+  { name: 'text-lg', className: 'text-lg', sample: '18' },
   { name: 'text-base', className: 'text-base', sample: '16' },
   { name: 'text-sm', className: 'text-sm', sample: '14' },
   { name: 'text-meta', className: 'text-meta', sample: '13' },
