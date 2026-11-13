@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { LoginScreen } from './login/LoginScreen'
+import { OrganizationDashboardScreen } from './organization/OrganizationDashboardScreen'
 import { RegisterScreen } from './register/RegisterScreen'
 import { DashboardScreen } from './student/dashboard/DashboardScreen'
 
@@ -24,6 +25,10 @@ function App(): React.JSX.Element {
 
   if (path === 'sign-up') {
     return <RegisterScreen />
+  }
+
+  if (path === 'organization/dashboard') {
+    return <OrganizationDashboardScreen />
   }
 
   return <LoginScreen />

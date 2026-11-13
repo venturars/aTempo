@@ -5,6 +5,10 @@ import icon from '../../resources/icon.png?asset'
 import { closeDatabase, openDatabase } from './database'
 
 function startupHash(): string | undefined {
+  if (process.argv.includes('--organization-dashboard')) {
+    return 'organization/dashboard'
+  }
+
   if (process.argv.includes('--dashboard')) {
     return 'student/dashboard'
   }

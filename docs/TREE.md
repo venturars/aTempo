@@ -34,6 +34,9 @@ desktop/
           loginStore.ts
           validateLogin.ts
           trimesterExample.ts
+        organization/
+          OrganizationDashboardScreen.tsx
+          organizationExample.ts
         register/
           RegisterScreen.tsx
           registerStore.ts
@@ -44,6 +47,7 @@ desktop/
             DashboardScreen.tsx
   tests/
     login.spec.ts
+    organization-dashboard.spec.ts
     register.spec.ts
     dashboard.spec.ts
     snapshots/
@@ -58,6 +62,10 @@ desktop/
       register-narrow.png
       register-claro.png
       dashboard-empty.png
+      dashboard-normal-atempo-oscuro-1280.png
+      dashboard-normal-atempo-oscuro-390.png
+      dashboard-normal-atempo-claro-1280.png
+      dashboard-normal-atempo-claro-390.png
   build/                # iconos de empaquetado de la plantilla
   resources/            # icono de la ventana en Linux
 ```
