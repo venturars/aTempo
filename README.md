@@ -23,7 +23,7 @@ Necesitas en tu ordenador:
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/), en marcha.
 - git, [GitHub CLI](https://cli.github.com) (`gh`), Node 20 o superior y bash, para el flujo de delivery-workflow. En Windows, con WSL o Git Bash.
-- Un `.env` en la raíz con `GITHUB_TOKEN=tu_token`, un token clásico de tu cuenta con el permiso `repo`. Ya está en `.gitignore`.
+- Un `.env` en la raíz con la línea `GITHUB_TOKEN=tu_token`. Crea el token en <https://github.com/settings/tokens/new?scopes=repo>: un token clásico de tu cuenta con el permiso `repo`. `.env` ya está en `.gitignore`. Lo usa el flujo de delivery-workflow, no la instalación: `setup` funciona sin él.
 
 Una sola vez, al clonar:
 
@@ -31,6 +31,8 @@ Una sola vez, al clonar:
 git config core.hooksPath .githooks
 docker compose run --rm setup
 ```
+
+La primera vez, `setup` construye la imagen de Docker: tarda unos minutos. Las siguientes, unos segundos.
 
 `setup` instala delivery-workflow para Cursor, Codex y Claude Code en la raíz del proyecto, y las dependencias de `desktop/` y `docs/storybook/` dentro de Docker, en volúmenes. Los `node_modules` de Linux no llegan a tu carpeta.
 
