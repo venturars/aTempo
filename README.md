@@ -36,7 +36,7 @@ La primera vez, `setup` construye la imagen de Docker: tarda unos minutos. Las s
 
 `setup` instala delivery-workflow para Cursor, Codex y Claude Code en la raíz del proyecto, y las dependencias de `desktop/` y `docs/storybook/` dentro de Docker, en volúmenes. Los `node_modules` de Linux no llegan a tu carpeta.
 
-Desde entonces, git lo lanza solo después de `git pull`, de cambiar de rama o de un rebase, si cambió `apm.yml`, `apm.lock.yaml` o un `pnpm-lock.yaml`. Si Docker no está en marcha, git avisa y sigue: lanza `docker compose run --rm setup` cuando lo arranques.
+Desde entonces, git lo lanza solo después de `git pull`, de cambiar de rama o de un rebase, si la rama nueva tiene otro `apm.yml`, `apm.lock.yaml`, `pnpm-lock.yaml` o `Dockerfile`. Si cambió el `Dockerfile`, reconstruye antes la imagen. Si Docker no está en marcha, git avisa y sigue: lanza `docker compose run --build --rm setup` cuando lo arranques.
 
 Para cambiar de versión de delivery-workflow, cambia la etiqueta en `apm.yml` (por ejemplo, `#v0.1.2` por `#v0.1.3`), lanza `docker compose run --rm setup` y sube `apm.yml` y `apm.lock.yaml` en una pull request `chore`.
 
@@ -51,7 +51,7 @@ docker compose run --rm desktop pnpm typecheck
 docker compose run --rm desktop pnpm lint
 ```
 
-La ventana de Electron se abre en tu ordenador, no en Docker. Instala allí sus dependencias:
+La ventana de Electron se abre en tu ordenador, no en Docker. Para eso necesitas pnpm 10.33.0 en tu ordenador (`npm install --global pnpm@10.33.0`) e instalar allí sus dependencias, aparte de las de Docker:
 
 ```sh
 cd desktop
