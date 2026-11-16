@@ -1,24 +1,12 @@
-import {
-  _electron as electron,
-  expect,
-  test,
-  type ElectronApplication,
-  type Page
-} from '@playwright/test'
-import path from 'node:path'
+import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
+import { launchHiddenElectron } from './helpers/electron'
 import { dashboardPathForProfile } from '../src/renderer/src/session/sessionStore'
-
-const appRoot = path.join(__dirname, '..')
-const mainFile = path.join(appRoot, 'out', 'main', 'index.js')
 
 const unknownHashes = ['#/register', '#/signup', '#/login', '#/sign-in', '#/sign up']
 const loginErrorPhrases = ['El correo es obligatorio.', 'La contraseña es obligatoria.']
 
 async function openApp(flags: string[]): Promise<{ app: ElectronApplication; window: Page }> {
-  const app = await electron.launch({
-    args: ['--force-device-scale-factor=1', ...flags, mainFile],
-    cwd: appRoot
-  })
+  const app = await launchHiddenElectron([...flags])
   const window = await app.firstWindow()
   await window.setViewportSize({ width: 960, height: 720 })
   await window.evaluate(() => document.fonts.ready)
@@ -35,13 +23,13 @@ async function withApp(flags: string[], run: (window: Page) => Promise<void>): P
 }
 
 async function readRoute(window: Page): Promise<string> {
-  const hash = await window.evaluate(() => window.location.hash)
+  const hash = await window.evaluate(() => globalThis.location.hash)
   return hash.replace(/^#\/?/, '')
 }
 
 async function changeHash(window: Page, nextHash: string): Promise<void> {
   await window.evaluate((hash) => {
-    window.location.hash = hash
+    globalThis.location.hash = hash
   }, nextHash)
 }
 
@@ -76,10 +64,11 @@ async function expectOrganizationDashboard(window: Page): Promise<void> {
   await expectNoLoginScreen(window)
 }
 
-async function expectUnderConstruction(window: Page, title: string): Promise<void> {
+async function expectTeacherPanel(window: Page): Promise<void> {
   await expect(window.getByRole('heading', { level: 1 })).toHaveCount(1)
-  await expect(window.getByRole('heading', { name: title, level: 1 })).toBeVisible()
-  await expect(window.getByText('En construcción')).toBeVisible()
+  await expect(window.getByRole('heading', { name: 'Hoy', level: 1 })).toBeVisible()
+  await expect(window.getByRole('navigation', { name: 'Secciones' })).toBeVisible()
+  await expect(window.getByText('En construcción')).toHaveCount(0)
   await expectNoLoginScreen(window)
 }
 
@@ -101,10 +90,13 @@ test('shows the organization summary with --organization-dashboard', async () =>
   })
 })
 
-test('shows the teacher panel under construction with --panel', async () => {
-  await withApp(['--panel'], async (window) => {
+test('shows the teacher panel through the router after a normal startup', async () => {
+  await withApp([], async (window) => {
+    await expectLoginScreen(window)
+    expect(await readRoute(window)).toBe('')
+    await changeHash(window, '#/teacher/panel')
     expect(await readRoute(window)).toBe('teacher/panel')
-    await expectUnderConstruction(window, 'Panel del profesor')
+    await expectTeacherPanel(window)
     await expect(window).toHaveScreenshot('navigation-teacher-panel.png', {
       animations: 'disabled'
     })
@@ -112,10 +104,15 @@ test('shows the teacher panel under construction with --panel', async () => {
 })
 
 test('shows the login when the hash changes to an unknown route from any screen', async () => {
-  const startFlags = [['--dashboard'], ['--organization-dashboard'], ['--panel']]
+  const startFlags = [['--dashboard'], ['--organization-dashboard'], []]
 
   for (const flags of startFlags) {
     await withApp(flags, async (window) => {
+      if (flags.length === 0) {
+        await expectLoginScreen(window)
+        await changeHash(window, '#/teacher/panel')
+        await expectTeacherPanel(window)
+      }
       await expectNoLoginScreen(window)
 
       for (const hash of unknownHashes) {
@@ -154,14 +151,14 @@ test('opens the first flag in priority order when several flags are passed', asy
     await expectStudentDashboard(window)
   })
 
-  await withApp(['--panel', '--sign-up'], async (window) => {
+  await withApp(['--organization-dashboard', '--sign-up'], async (window) => {
     expect(await readRoute(window)).toBe('sign-up')
     await expectRegisterScreen(window)
   })
 
-  await withApp(['--panel', '--organization-dashboard'], async (window) => {
-    expect(await readRoute(window)).toBe('organization/dashboard')
-    await expectOrganizationDashboard(window)
+  await withApp(['--organization-dashboard', '--sign-up', '--dashboard'], async (window) => {
+    expect(await readRoute(window)).toBe('student/dashboard')
+    await expectStudentDashboard(window)
   })
 })
 
@@ -187,7 +184,7 @@ test('changes the screen without reloading when the hash changes', async () => {
     await expectStudentDashboard(window)
 
     await changeHash(window, '#/teacher/panel')
-    await expectUnderConstruction(window, 'Panel del profesor')
+    await expectTeacherPanel(window)
 
     await changeHash(window, '#/')
     await expectLoginScreen(window)
