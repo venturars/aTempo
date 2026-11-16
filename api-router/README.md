@@ -6,23 +6,31 @@ Hoy solo expone `GET /health`. La lógica de negocio vivirá en [`sdk/`](../sdk/
 
 ## Arranque
 
+Desde la raíz del repositorio, con Docker en marcha:
+
 ```sh
-pnpm install
-pnpm dev
+docker compose up api-router
 ```
 
 Por defecto escucha en el puerto `3000`. Puedes usar la variable `PORT`.
 
 ## Probar con Swagger
 
-1. Con el servicio en marcha (`pnpm dev`), abre `http://localhost:3000/docs` (o el mismo puerto que uses con `PORT`).
+1. Con el servicio en marcha (`docker compose up api-router`), abre `http://localhost:3000/docs` (o el mismo puerto que uses con `PORT`).
 2. En la sección **health**, abre `GET /health` → **Try it out** → **Execute**.
 3. La respuesta debe ser `200` con cuerpo `{ "status": "ok" }`.
 
 El documento OpenAPI en JSON está en `/docs-json`.
 
-Otros comandos:
+Otros comandos (desde la raíz, en Docker):
+
+```sh
+docker compose run --rm api-router pnpm typecheck
+docker compose run --rm api-router pnpm lint
+docker compose run --rm api-router pnpm test
+docker compose run --rm api-router pnpm build
+```
 
 - `pnpm typecheck` — comprobación de tipos.
-- `pnpm test` — prueba e2e de `/health`.
+- `pnpm test` — prueba e2e de `/health` y Swagger.
 - `pnpm build` — compilación a `dist/`.
