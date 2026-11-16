@@ -1,58 +1,39 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
-const workflowsDirectory = new URL('../.github/workflows/', import.meta.url);
+const workflow = readFileSync(new URL('../.github/workflows/discord-pr-notifications.yml', import.meta.url), 'utf8');
+const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8');
 
-async function readWorkflow(fileName) {
-  return readFile(new URL(fileName, workflowsDirectory), 'utf8');
-}
-
-test('PR trigger captures only a staging PR number without permissions or secrets', async () => {
-  const workflow = await readWorkflow('discord-pr-trigger.yml');
-
-  assert.match(workflow, /pull_request:\s*\n\s+branches: \[staging\]/);
+test('el workflow confiable de main escucha PR hacia staging y asociaciones', () => {
+  assert.match(workflow, /pull_request_target:\s*\n\s+branches: \[staging\]/);
   assert.match(workflow, /types: \[opened, review_requested, ready_for_review\]/);
-  assert.match(workflow, /permissions: \{\}/);
-  assert.match(workflow, /PR_NUMBER: \$\{\{ github\.event\.pull_request\.number \}\}/);
-  assert.match(workflow, /name: discord-pr-number/);
-  assert.match(workflow, /path: pr-event\/pr-number/);
-  assert.doesNotMatch(workflow, /secrets\.|DISCORD_BOT_TOKEN|DISCORD_CACHE_KEY/);
-});
-
-test('mapping trigger accepts PR comments and forwards only the PR number', async () => {
-  const workflow = await readWorkflow('discord-pr-confirmation-trigger.yml');
-
   assert.match(workflow, /issue_comment:\s*\n\s+types: \[created, edited\]/);
-  assert.match(workflow, /permissions: \{\}/);
+  assert.match(workflow, /github\.ref == 'refs\/heads\/main'/);
+  assert.match(workflow, /github\.repository == 'venturars\/aTempo'/);
+  assert.match(workflow, /github\.event\.pull_request\.base\.ref == 'staging'/);
   assert.match(workflow, /github\.event\.issue\.pull_request/);
   assert.match(workflow, /startsWith\(github\.event\.comment\.body, '\/discord-map '\)/);
-  assert.match(workflow, /PR_NUMBER: \$\{\{ github\.event\.issue\.number \}\}/);
-  assert.match(workflow, /name: discord-pr-number/);
-  assert.match(workflow, /path: pr-event\/pr-number/);
-  assert.doesNotMatch(workflow, /secrets\.|DISCORD_BOT_TOKEN|DISCORD_CACHE_KEY/);
 });
 
-test('publisher is restricted to main and calls the published action in the protected environment', async () => {
-  const workflow = await readWorkflow('discord-pr-publish.yml');
-
-  assert.match(workflow, /workflow_run:/);
-  assert.match(workflow, /workflows: \[Discord PR notification trigger, Discord PR confirmation trigger\]/);
-  assert.match(workflow, /types: \[completed\]/);
-  assert.match(workflow, /github\.ref == 'refs\/heads\/main'/);
-  assert.match(workflow, /github\.event\.workflow_run\.conclusion == 'success'/);
-  assert.match(workflow, /github\.event\.workflow_run\.repository\.full_name == github\.repository/);
+test('el emisor usa el entorno protegido y solo la acción fijada del paquete', () => {
   assert.match(workflow, /environment: Discord-PR-Notifications/);
   assert.match(workflow, /group: discord-pr-relations[\s\S]*queue: max[\s\S]*cancel-in-progress: false/);
   assert.match(workflow, /permissions:\s*\n\s+actions: read\s*\n\s+contents: read\s*\n\s+issues: write\s*\n\s+pull-requests: read/);
-  assert.match(workflow, /actions\/checkout@11bd71901bbe5b1630ceea73d27597364c9af683/);
-  assert.match(workflow, /ref: \$\{\{ github\.sha \}\}/);
-  assert.match(workflow, /venturars\/delivery-workflow\/\.github\/actions\/discord-pr-notifications@fb228007744116fca6ace5d0dfe75efa1900b340/);
+  assert.match(workflow, /uses: venturars\/delivery-workflow\/\.github\/actions\/discord-pr-notifications@1fe1b22af187e0afa1470f9d5df435f7a202435b/);
   assert.match(workflow, /expected-repository: venturars\/aTempo/);
   assert.match(workflow, /base-branch: staging/);
-  assert.match(workflow, /trigger-run-id: \$\{\{ github\.event\.workflow_run\.id \}\}/);
+  assert.match(workflow, /trusted-branch: main/);
+  assert.match(workflow, /pr-number: \$\{\{ github\.event\.pull_request\.number \|\| github\.event\.issue\.number \}\}/);
   assert.match(workflow, /bot-token: \$\{\{ secrets\.DISCORD_BOT_TOKEN \}\}/);
   assert.match(workflow, /cache-key: \$\{\{ secrets\.DISCORD_CACHE_KEY \}\}/);
   assert.match(workflow, /guild-id: \$\{\{ vars\.DISCORD_GUILD_ID \}\}/);
   assert.match(workflow, /channel-id: \$\{\{ vars\.DISCORD_GIT_CHANNEL_ID \}\}/);
+  assert.doesNotMatch(workflow, /actions\/checkout|trigger-run-id:|download-artifact|head\.sha/);
+});
+
+test('la documentación describe un aviso optativo sin pasos de agente', () => {
+  assert.match(readme, /discord-pr-notifications\.yml/);
+  assert.match(readme, /\/discord-map LOGIN_GITHUB ID_DISCORD/);
+  assert.match(readme, /APM no instala este workflow/);
 });
