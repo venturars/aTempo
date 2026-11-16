@@ -39,7 +39,7 @@ async function withApp(
 }
 
 async function readHash(window: Page): Promise<string> {
-  const hash = await window.evaluate(() => window.location.hash)
+  const hash = await window.evaluate(() => globalThis.location.hash)
   return hash.replace(/^#\/?/, '')
 }
 

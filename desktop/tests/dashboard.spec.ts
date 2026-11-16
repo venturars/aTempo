@@ -27,7 +27,7 @@ async function withDashboardApp(run: (window: Page) => Promise<void>): Promise<v
 
 test('shows the student dashboard mockup', async () => {
   await withDashboardApp(async (window) => {
-    const hash = await window.evaluate(() => window.location.hash)
+    const hash = await window.evaluate(() => globalThis.location.hash)
     expect(hash.replace(/^#\/?/, '')).toBe('student/dashboard')
     await expect(window.getByRole('heading', { name: 'Dashboard alumno', level: 1 })).toBeVisible()
     await expect(window.getByText('Bienvenido Ada López')).toBeVisible()
@@ -49,7 +49,7 @@ test('keeps the dashboard when a button is pressed', async () => {
         window.getByRole('heading', { name: 'Dashboard alumno', level: 1 })
       ).toBeVisible()
       await expect(window.getByText('Bienvenido Ada López')).toBeVisible()
-      const hash = await window.evaluate(() => window.location.hash)
+      const hash = await window.evaluate(() => globalThis.location.hash)
       expect(hash.replace(/^#\/?/, '')).toBe('student/dashboard')
     }
   })

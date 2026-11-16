@@ -38,6 +38,7 @@ async function openApp(): Promise<{ app: ElectronApplication; window: Page }> {
   const app = await launchHiddenElectron()
   const window = await app.firstWindow()
   await window.setViewportSize({ width: 960, height: 720 })
+  await expect(window.getByRole('heading', { level: 1 })).toBeVisible()
   await window.evaluate(() => document.fonts.ready)
   return { app, window }
 }
@@ -149,7 +150,7 @@ function readBodyStyle(window: Page): Promise<BodyStyle> {
 
 test('shows the claim panel beside the form', async () => {
   await withApp(async (window) => {
-    const hash = await window.evaluate(() => window.location.hash)
+    const hash = await window.evaluate(() => globalThis.location.hash)
     expect(hash).toBe('')
     await expect(window.getByRole('heading', { name: 'Dashboard alumno' })).toHaveCount(0)
     await expect(window.getByRole('heading', { name: 'Esta semana' })).toHaveCount(0)
@@ -190,12 +191,12 @@ test('keeps a valid login without a profile before navigating to the professor p
 
     await expect(window.getByRole('status')).toContainText('Correo: ana@clase.test')
     await expect(window.getByRole('status')).toContainText('Contraseña: secreta')
-    expect(await window.evaluate(() => window.location.hash)).toBe('')
+    expect(await window.evaluate(() => globalThis.location.hash)).toBe('')
     await expectLoginFields(window)
     await expectNoErrorPhrases(window)
     await expect(window).toHaveScreenshot('login-alert.png', { animations: 'disabled' })
     await window.evaluate(() => {
-      window.location.hash = '#/teacher/panel'
+      globalThis.location.hash = '#/teacher/panel'
     })
 
     await expect(window.getByRole('navigation', { name: 'Secciones' })).toBeVisible()

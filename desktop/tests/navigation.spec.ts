@@ -23,13 +23,13 @@ async function withApp(flags: string[], run: (window: Page) => Promise<void>): P
 }
 
 async function readRoute(window: Page): Promise<string> {
-  const hash = await window.evaluate(() => window.location.hash)
+  const hash = await window.evaluate(() => globalThis.location.hash)
   return hash.replace(/^#\/?/, '')
 }
 
 async function changeHash(window: Page, nextHash: string): Promise<void> {
   await window.evaluate((hash) => {
-    window.location.hash = hash
+    globalThis.location.hash = hash
   }, nextHash)
 }
 

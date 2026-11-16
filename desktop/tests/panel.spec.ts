@@ -35,9 +35,9 @@ async function withPanel(
 ): Promise<void> {
   await withApp([], size, async (window) => {
     await expect(window.getByRole('button', { name: 'Entrar' })).toBeVisible()
-    expect(await window.evaluate(() => window.location.hash)).toBe('')
+    expect(await window.evaluate(() => globalThis.location.hash)).toBe('')
     await window.evaluate(() => {
-      window.location.hash = '#/teacher/panel'
+      globalThis.location.hash = '#/teacher/panel'
     })
     await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
     await run(window)
@@ -328,26 +328,26 @@ test('scrolls the fifteen students inside the card and keeps the header visible'
 
 test('keeps the login without a profile and opens the panel through the router', async () => {
   await withApp([], { width: 1440, height: 900 }, async (window) => {
-    expect(await window.evaluate(() => window.location.hash)).toBe('')
+    expect(await window.evaluate(() => globalThis.location.hash)).toBe('')
     await window.getByLabel('Correo').fill('ana@clase.test')
     await window.getByLabel('Contraseña').fill('secreta')
     await window.getByRole('button', { name: 'Entrar' }).click()
 
     await expect(window.getByRole('status')).toContainText('Correo: ana@clase.test')
-    expect(await window.evaluate(() => window.location.hash)).toBe('')
+    expect(await window.evaluate(() => globalThis.location.hash)).toBe('')
     await window.evaluate(() => {
       document.body.dataset.navigationMarker = 'same-page'
-      window.location.hash = '#/teacher/panel'
+      globalThis.location.hash = '#/teacher/panel'
     })
     await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
-    expect(await window.evaluate(() => window.location.hash)).toBe('#/teacher/panel')
+    expect(await window.evaluate(() => globalThis.location.hash)).toBe('#/teacher/panel')
     expect(await window.evaluate(() => document.body.dataset.navigationMarker)).toBe('same-page')
   })
 })
 
 test('opens the panel through the router after a normal startup', async () => {
   await withPanel(async (window) => {
-    expect(await window.evaluate(() => window.location.hash)).toBe('#/teacher/panel')
+    expect(await window.evaluate(() => globalThis.location.hash)).toBe('#/teacher/panel')
     await expect(window.getByRole('navigation', { name: 'Secciones' })).toBeVisible()
     await expect(window.getByLabel('Correo')).toHaveCount(0)
     await expect(window.getByRole('button', { name: 'Entrar' })).toHaveCount(0)

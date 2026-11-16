@@ -91,6 +91,7 @@ desktop/
     register.spec.ts
     dashboard.spec.ts
     navigation.spec.ts  # rutas, flags de arranque y dashboard de cada perfil
+    visual-system.spec.ts  # paridad de Storybook y escritorio, temas y rutas
     snapshots/
       login-empty.png
       login-errors.png

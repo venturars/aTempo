@@ -234,7 +234,7 @@ async function expectLoginScreen(window: Page): Promise<void> {
 
 test('shows the week panel beside the register form', async () => {
   await withApp(async (window) => {
-    const hash = await window.evaluate(() => window.location.hash)
+    const hash = await window.evaluate(() => globalThis.location.hash)
     expect(hash.replace(/^#\/?/, '')).toBe('sign-up')
     await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-oscuro')
     await expect(window.getByText('aTempo')).toBeVisible()
@@ -422,7 +422,7 @@ test('shows the login screen when Inicia sesión is pressed', async () => {
     await window.getByLabel('Contraseña', { exact: true }).fill('secreta12')
     await window.getByRole('button', { name: 'Inicia sesión' }).click()
 
-    const hash = await window.evaluate(() => window.location.hash)
+    const hash = await window.evaluate(() => globalThis.location.hash)
     expect(hash.replace(/^#\/?/, '')).toBe('')
     await expectLoginScreen(window)
     await expectNoAlert(window)
@@ -508,7 +508,7 @@ test('shows the login screen when the hash is not a known route', async () => {
   await withApp(async (window) => {
     for (const hash of unknownHashes) {
       await window.evaluate((nextHash) => {
-        window.location.hash = nextHash
+        globalThis.location.hash = nextHash
       }, hash)
       await expectLoginScreen(window)
     }
