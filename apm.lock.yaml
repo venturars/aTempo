@@ -4,9 +4,9 @@ dependencies:
 - repo_url: venturars/delivery-workflow
   name: delivery-workflow
   host: github.com
-  resolved_commit: 4eef866996622618ffde3db5444d596c3dff0699
-  resolved_ref: v0.1.2
-  version: 0.1.2
+  resolved_commit: fb228007744116fca6ace5d0dfe75efa1900b340
+  resolved_ref: v0.3.0
+  version: 0.3.0
   package_type: apm_package
   deployed_files:
   - .agents/skills/assign-author
@@ -44,6 +44,8 @@ dependencies:
   - .agents/skills/create-issue/assets/knowledge_issue.md
   - .agents/skills/create-issue/assets/refactor_issue.md
   - .agents/skills/create-issue/assets/test_issue.md
+  - .agents/skills/create-issue/scripts/check-title.sh
+  - .agents/skills/create-issue/scripts/create-issue.sh
   - .agents/skills/create-issue/scripts/ensure-label.sh
   - .agents/skills/create-issue/scripts/gh.sh
   - .agents/skills/create-pr-base
@@ -55,6 +57,7 @@ dependencies:
   - .agents/skills/create-pr-base/assets/knowledge-pull-request.md
   - .agents/skills/create-pr-base/assets/refactor-pull-request.md
   - .agents/skills/create-pr-base/assets/test-pull-request.md
+  - .agents/skills/create-pr-base/scripts/check-title.sh
   - .agents/skills/create-pr-base/scripts/create-pr-base.sh
   - .agents/skills/create-pr-base/scripts/ensure-label.sh
   - .agents/skills/create-pr-base/scripts/gh.sh
@@ -86,6 +89,8 @@ dependencies:
   - .agents/skills/pull-changes
   - .agents/skills/pull-changes/SKILL.md
   - .agents/skills/pull-changes/scripts/pull-changes.sh
+  - .agents/skills/say-it-straight
+  - .agents/skills/say-it-straight/SKILL.md
   - .cursor/agents/code-developer.md
   - .cursor/agents/code-tester.md
   - .cursor/agents/concept-developer.md
@@ -97,7 +102,7 @@ dependencies:
   deployed_file_hashes:
     .agents/skills/assign-author/SKILL.md: sha256:64ce97c7f2dc2593a1b6cb8b2277f701c19be117fd1bf7e6003e7a1f8a1c635d
     .agents/skills/assign-author/scripts/gh.sh: sha256:e932a31f01873bc5b3aa94603a66568bb5a965ff138426a2c91dce6b2af46f4a
-    .agents/skills/assign-reviewers/SKILL.md: sha256:a535db4eb587b2e1fc2c7fc1610e44537132576d554566f678a60ce709c45595
+    .agents/skills/assign-reviewers/SKILL.md: sha256:653e8db6258dfe8c747499379915662fb965d58f1617599f2b03df2b4bfd0a15
     .agents/skills/assign-reviewers/scripts/gh.sh: sha256:e932a31f01873bc5b3aa94603a66568bb5a965ff138426a2c91dce6b2af46f4a
     .agents/skills/check-status/SKILL.md: sha256:5b54ec8d3e486eec44812954ac47431b606e5f13a455f50578fc20a42130b533
     .agents/skills/check-status/scripts/check-status.sh: sha256:d53c567ce43ff52cb839ac639553b826b29ef227dbec2de4375afca3f54e475a
@@ -113,7 +118,7 @@ dependencies:
     .agents/skills/create-draft/scripts/gh.sh: sha256:e932a31f01873bc5b3aa94603a66568bb5a965ff138426a2c91dce6b2af46f4a
     .agents/skills/create-empty-commit/SKILL.md: sha256:1a18a88fc27462069f75b7cfb152408528813edfac62e8c8f6b07e929ae58c78
     .agents/skills/create-empty-commit/scripts/create-empty-commit.sh: sha256:2bf0d78d32c96cb45a2444c3c42fe381fca1ec61bec8a4edc26248bad8cf3f13
-    .agents/skills/create-issue/SKILL.md: sha256:8774a757c65350c7b26e0926b3e8fd65e199ae40ffa0bb03b39f960cdc437088
+    .agents/skills/create-issue/SKILL.md: sha256:77db456c763f88203352a981ca75383b78d86c2db26ca4e9d8d759c1662e39fa
     .agents/skills/create-issue/assets/chore_issue.md: sha256:42902fbd091bd2a3da5e18fba2283c750ae831ad699a58f6f81447c17e9b3592
     .agents/skills/create-issue/assets/docs_issue.md: sha256:916e0089b4c38e4fd7fa5b9e11ab6c4c0cfefd0b1bd9539d51fdd14109181e0f
     .agents/skills/create-issue/assets/feat_issue.md: sha256:9733cadfddfe7a193b560b8192a343a0bb689873aef54243192b66c4ab14e129
@@ -121,9 +126,11 @@ dependencies:
     .agents/skills/create-issue/assets/knowledge_issue.md: sha256:3e3cf68b47ee04aa297b427fdf9d816310d53682a1f7de26c347d43b20b49ca8
     .agents/skills/create-issue/assets/refactor_issue.md: sha256:84a9ea124d4254f1d3e3d37554d7441855bd7db2654c43a52bbe2910d6d34332
     .agents/skills/create-issue/assets/test_issue.md: sha256:65f6c352588e2728a0e430227f653da85e1ac85799a448573cf4d4c85df09b8a
+    .agents/skills/create-issue/scripts/check-title.sh: sha256:2c6cb8587300479b96a17fc8b15f1a508e0124ec420fcaef1e735ddbbde6dd80
+    .agents/skills/create-issue/scripts/create-issue.sh: sha256:842e6c228b280eae719dd6ea3419d7e8eb9344678132954761916db283079265
     .agents/skills/create-issue/scripts/ensure-label.sh: sha256:33d9d232ba32b478368ca8c43d1bfdb07c4d5d49e9fb113e784c47dd6cab8e18
     .agents/skills/create-issue/scripts/gh.sh: sha256:e932a31f01873bc5b3aa94603a66568bb5a965ff138426a2c91dce6b2af46f4a
-    .agents/skills/create-pr-base/SKILL.md: sha256:dc410534fd05025bdb8d05c3c52e5daabfa347393a2074ea3bcbeab1ad9a8f21
+    .agents/skills/create-pr-base/SKILL.md: sha256:e435524caf0cc682bdf15a3fbd49698a0a43ee81fb6f3f9f4b10fd18b8c8fec2
     .agents/skills/create-pr-base/assets/chore-pull-request.md: sha256:dd5a2cbbcccecdbef470dda5cfbc30168368723e51864addd9191734363887c3
     .agents/skills/create-pr-base/assets/docs-pull-request.md: sha256:86ef508a593fbf8d672f27cacd701ba9c0dddd5fa8df96f1aab02c3d6102e90d
     .agents/skills/create-pr-base/assets/feat-pull-request.md: sha256:ec974ebfe8afb76f844322820569a990f2cad75d2571ef75867c1cc1722a37a9
@@ -131,10 +138,11 @@ dependencies:
     .agents/skills/create-pr-base/assets/knowledge-pull-request.md: sha256:8aaa460563afe0c1a1c2288ae732f69f2b7e83410e01adb3f907882e875fca08
     .agents/skills/create-pr-base/assets/refactor-pull-request.md: sha256:35ed529ea97cbaf73b599ffcfab16199a29921f99914a75249960adc61425a4c
     .agents/skills/create-pr-base/assets/test-pull-request.md: sha256:84822e45e59d08a66db665724ac9522ade623bc6c3b0a90f449f746a71a9260c
-    .agents/skills/create-pr-base/scripts/create-pr-base.sh: sha256:e015106f06dd5237a758e1ac5ca72e332575383c1cc74f5d29a408c11d525c62
+    .agents/skills/create-pr-base/scripts/check-title.sh: sha256:2c6cb8587300479b96a17fc8b15f1a508e0124ec420fcaef1e735ddbbde6dd80
+    .agents/skills/create-pr-base/scripts/create-pr-base.sh: sha256:d2e708e79f06618d3455b3adf3ecd142f0b4387311731083020c15623876c3d2
     .agents/skills/create-pr-base/scripts/ensure-label.sh: sha256:33d9d232ba32b478368ca8c43d1bfdb07c4d5d49e9fb113e784c47dd6cab8e18
     .agents/skills/create-pr-base/scripts/gh.sh: sha256:e932a31f01873bc5b3aa94603a66568bb5a965ff138426a2c91dce6b2af46f4a
-    .agents/skills/delivery-workflow/SKILL.md: sha256:dc5225c44828a3f46386b45d7d37348bd725afb3ec30287fefd7c29a1db64924
+    .agents/skills/delivery-workflow/SKILL.md: sha256:49120bf4710723919ae4d67800538e496747ea5fab70d2b95c234466f44741c9
     .agents/skills/entrevista-con-repo/SKILL.md: sha256:371ef1c2777e4bc98721a49e6b006d794d3393f1c10c0a828ba39ec420d93cef
     .agents/skills/entrevista-libre/SKILL.md: sha256:790bfb3b5fea8b06dec6128a2705e23428bdb372f58341404c4650f5f25e46c8
     .agents/skills/github-cache/SKILL.md: sha256:1d90f88558e9b403990f525b9b1a792b54bb201a7f7c9e4d0a13bd55032ea0ff
@@ -149,19 +157,20 @@ dependencies:
     .agents/skills/issue-spec/scripts/issue-spec.mjs: sha256:80dc97d51686a7dbe11185278c7d3350a64af94f5ae9e9bb6bcd026f640a79a1
     .agents/skills/launch-push/SKILL.md: sha256:06f40007fe270dea76cb140be510294280dc5033e29092f04aca5a55eacb2a21
     .agents/skills/launch-push/scripts/launch-push.sh: sha256:b0926ff8fe7ceb72f528237d8fa8e6f09562666573515e71edcee717d26d9c3e
-    .agents/skills/link-pr-to-issue/SKILL.md: sha256:89b4f1ba33d3c13156e376608d5da8b07a5788c77e4be7f50febb97be4698224
+    .agents/skills/link-pr-to-issue/SKILL.md: sha256:996b77a0c3f0cefb15be1883f0292802ef94b149b2b5546ef53cce67d292b1ee
     .agents/skills/link-pr-to-issue/scripts/gh.sh: sha256:e932a31f01873bc5b3aa94603a66568bb5a965ff138426a2c91dce6b2af46f4a
     .agents/skills/pull-changes/SKILL.md: sha256:645632f583b472c26585480d17fe4e8584a807147ae350525650c57ecf5f8620
     .agents/skills/pull-changes/scripts/pull-changes.sh: sha256:e2a439fb3aef028417bc2dacc65141d69b0ccfe5894002a92e716a9a7d8c2baa
+    .agents/skills/say-it-straight/SKILL.md: sha256:3cb58f3a3655d7d8547cfbf92838669beb91afa8436d5e00086aa40393a4fd46
     .cursor/agents/code-developer.md: sha256:7f3430ca0691062be75103c3940355dbffc8a98d9805951b9ae3dc84adb44327
     .cursor/agents/code-tester.md: sha256:e8302407c8bbcd071b7c2133c34158ddfd777f3703d030058b1181e2aedbb0cd
-    .cursor/agents/concept-developer.md: sha256:831c351a3948a2ebad94b828c39017aca71576a25de5ac3216ba65c41d765d58
-    .cursor/agents/concept-tester.md: sha256:b2843e5157eeb229fc3029b76dd297454c82961f59b935a49830910a6eadd291
+    .cursor/agents/concept-developer.md: sha256:aefa307d4fcee9f134f44dc4a97cdc560c3943706b27c7194e87e5d4cd663448
+    .cursor/agents/concept-tester.md: sha256:3600dc10a4b4e0b6bf398631609aa0465f143ffaedae8bd4bd8097ad9bbf3406
     .cursor/agents/create-branch.md: sha256:5873c23b583ddf58220050856bdb84a76c4d0b270673400ba8842af0c22b69ff
     .cursor/agents/create-commit.md: sha256:8f3cdda0edeac803296b3e92eab342780a73afef97b08d1ce83371c06b68843f
-    .cursor/agents/create-issue.md: sha256:332420e6a0bcb49181cef64097da7c843a05eab5e46e62771d123540c840e883
-    .cursor/agents/create-pr.md: sha256:3dc235b6abbc6c70b249413dd11ff36df2d40dd7d765b1031bbbc2f687369408
-  content_hash: sha256:d49c1c591a57b7e109ff8342b86c1a3f80d7c6d7392694d49b1d3e5f467648be
+    .cursor/agents/create-issue.md: sha256:b3510ff8bd7b30dfde92d791f326fb115d82bbca4ea903706da02117179cf4c1
+    .cursor/agents/create-pr.md: sha256:21aa8813fcec09f7abec744e9f8911e38a5ea876e0199a1b3617601c33a3a12b
+  content_hash: sha256:b7911e8e9e4ff7c780391490da16182ec70c47e93c6167c91d702aa4a0fa8548
 deployments:
 - kind: project-relative
   target: cursor
@@ -207,7 +216,7 @@ deployments:
   owners:
   - venturars/delivery-workflow
   active_owner: venturars/delivery-workflow
-  content_hash: sha256:a535db4eb587b2e1fc2c7fc1610e44537132576d554566f678a60ce709c45595
+  content_hash: sha256:653e8db6258dfe8c747499379915662fb965d58f1617599f2b03df2b4bfd0a15
 - kind: project-relative
   target: cursor
   value: .agents/skills/assign-reviewers/scripts/gh.sh
@@ -414,7 +423,7 @@ deployments:
   owners:
   - venturars/delivery-workflow
   active_owner: venturars/delivery-workflow
-  content_hash: sha256:8774a757c65350c7b26e0926b3e8fd65e199ae40ffa0bb03b39f960cdc437088
+  content_hash: sha256:77db456c763f88203352a981ca75383b78d86c2db26ca4e9d8d759c1662e39fa
 - kind: project-relative
   target: cursor
   value: .agents/skills/create-issue/assets/chore_issue.md
@@ -480,6 +489,24 @@ deployments:
   content_hash: sha256:65f6c352588e2728a0e430227f653da85e1ac85799a448573cf4d4c85df09b8a
 - kind: project-relative
   target: cursor
+  value: .agents/skills/create-issue/scripts/check-title.sh
+  runtime: null
+  scope: project
+  owners:
+  - venturars/delivery-workflow
+  active_owner: venturars/delivery-workflow
+  content_hash: sha256:2c6cb8587300479b96a17fc8b15f1a508e0124ec420fcaef1e735ddbbde6dd80
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/create-issue/scripts/create-issue.sh
+  runtime: null
+  scope: project
+  owners:
+  - venturars/delivery-workflow
+  active_owner: venturars/delivery-workflow
+  content_hash: sha256:842e6c228b280eae719dd6ea3419d7e8eb9344678132954761916db283079265
+- kind: project-relative
+  target: cursor
   value: .agents/skills/create-issue/scripts/ensure-label.sh
   runtime: null
   scope: project
@@ -513,7 +540,7 @@ deployments:
   owners:
   - venturars/delivery-workflow
   active_owner: venturars/delivery-workflow
-  content_hash: sha256:dc410534fd05025bdb8d05c3c52e5daabfa347393a2074ea3bcbeab1ad9a8f21
+  content_hash: sha256:e435524caf0cc682bdf15a3fbd49698a0a43ee81fb6f3f9f4b10fd18b8c8fec2
 - kind: project-relative
   target: cursor
   value: .agents/skills/create-pr-base/assets/chore-pull-request.md
@@ -579,13 +606,22 @@ deployments:
   content_hash: sha256:84822e45e59d08a66db665724ac9522ade623bc6c3b0a90f449f746a71a9260c
 - kind: project-relative
   target: cursor
+  value: .agents/skills/create-pr-base/scripts/check-title.sh
+  runtime: null
+  scope: project
+  owners:
+  - venturars/delivery-workflow
+  active_owner: venturars/delivery-workflow
+  content_hash: sha256:2c6cb8587300479b96a17fc8b15f1a508e0124ec420fcaef1e735ddbbde6dd80
+- kind: project-relative
+  target: cursor
   value: .agents/skills/create-pr-base/scripts/create-pr-base.sh
   runtime: null
   scope: project
   owners:
   - venturars/delivery-workflow
   active_owner: venturars/delivery-workflow
-  content_hash: sha256:e015106f06dd5237a758e1ac5ca72e332575383c1cc74f5d29a408c11d525c62
+  content_hash: sha256:d2e708e79f06618d3455b3adf3ecd142f0b4387311731083020c15623876c3d2
 - kind: project-relative
   target: cursor
   value: .agents/skills/create-pr-base/scripts/ensure-label.sh
@@ -621,7 +657,7 @@ deployments:
   owners:
   - venturars/delivery-workflow
   active_owner: venturars/delivery-workflow
-  content_hash: sha256:dc5225c44828a3f46386b45d7d37348bd725afb3ec30287fefd7c29a1db64924
+  content_hash: sha256:49120bf4710723919ae4d67800538e496747ea5fab70d2b95c234466f44741c9
 - kind: project-relative
   target: cursor
   value: .agents/skills/entrevista-con-repo
@@ -819,7 +855,7 @@ deployments:
   owners:
   - venturars/delivery-workflow
   active_owner: venturars/delivery-workflow
-  content_hash: sha256:89b4f1ba33d3c13156e376608d5da8b07a5788c77e4be7f50febb97be4698224
+  content_hash: sha256:996b77a0c3f0cefb15be1883f0292802ef94b149b2b5546ef53cce67d292b1ee
 - kind: project-relative
   target: cursor
   value: .agents/skills/link-pr-to-issue/scripts/gh.sh
@@ -858,6 +894,24 @@ deployments:
   content_hash: sha256:e2a439fb3aef028417bc2dacc65141d69b0ccfe5894002a92e716a9a7d8c2baa
 - kind: project-relative
   target: cursor
+  value: .agents/skills/say-it-straight
+  runtime: null
+  scope: project
+  owners:
+  - venturars/delivery-workflow
+  active_owner: venturars/delivery-workflow
+  content_hash: null
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/say-it-straight/SKILL.md
+  runtime: null
+  scope: project
+  owners:
+  - venturars/delivery-workflow
+  active_owner: venturars/delivery-workflow
+  content_hash: sha256:3cb58f3a3655d7d8547cfbf92838669beb91afa8436d5e00086aa40393a4fd46
+- kind: project-relative
+  target: cursor
   value: .cursor/agents/code-developer.md
   runtime: null
   scope: project
@@ -882,7 +936,7 @@ deployments:
   owners:
   - venturars/delivery-workflow
   active_owner: venturars/delivery-workflow
-  content_hash: sha256:831c351a3948a2ebad94b828c39017aca71576a25de5ac3216ba65c41d765d58
+  content_hash: sha256:aefa307d4fcee9f134f44dc4a97cdc560c3943706b27c7194e87e5d4cd663448
 - kind: project-relative
   target: cursor
   value: .cursor/agents/concept-tester.md
@@ -891,7 +945,7 @@ deployments:
   owners:
   - venturars/delivery-workflow
   active_owner: venturars/delivery-workflow
-  content_hash: sha256:b2843e5157eeb229fc3029b76dd297454c82961f59b935a49830910a6eadd291
+  content_hash: sha256:3600dc10a4b4e0b6bf398631609aa0465f143ffaedae8bd4bd8097ad9bbf3406
 - kind: project-relative
   target: cursor
   value: .cursor/agents/create-branch.md
@@ -918,7 +972,7 @@ deployments:
   owners:
   - venturars/delivery-workflow
   active_owner: venturars/delivery-workflow
-  content_hash: sha256:332420e6a0bcb49181cef64097da7c843a05eab5e46e62771d123540c840e883
+  content_hash: sha256:b3510ff8bd7b30dfde92d791f326fb115d82bbca4ea903706da02117179cf4c1
 - kind: project-relative
   target: cursor
   value: .cursor/agents/create-pr.md
@@ -927,18 +981,4 @@ deployments:
   owners:
   - venturars/delivery-workflow
   active_owner: venturars/delivery-workflow
-  content_hash: sha256:3dc235b6abbc6c70b249413dd11ff36df2d40dd7d765b1031bbbc2f687369408
-mcp_servers:
-- github
-mcp_configs:
-  github:
-    name: github
-    transport: http
-    registry: false
-    headers:
-      Authorization: Bearer ${GITHUB_TOKEN}
-      X-MCP-Features: mcp_apps_disable_form_deferral
-    url: https://api.githubcopilot.com/mcp/
-mcp_target_servers: {}
-mcp_config_provenance:
-  github: delivery-workflow
+  content_hash: sha256:21aa8813fcec09f7abec744e9f8911e38a5ea876e0199a1b3617601c33a3a12b
