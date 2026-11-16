@@ -1,3 +1,32 @@
+# Árbol de `sdk/` (pendiente)
+
+```text
+sdk/                  # lógica de negocio; paquete aún no creado
+```
+
+# Árbol de `API-router/`
+
+```text
+API-router/
+  package.json
+  pnpm-lock.yaml
+  .npmrc
+  nest-cli.json
+  tsconfig.json
+  tsconfig.build.json
+  eslint.config.mjs
+  README.md
+  src/
+    main.ts
+    app.module.ts
+    health/
+      health.module.ts
+      health.controller.ts
+  test/
+    health.e2e-spec.ts
+    jest-e2e.json
+```
+
 # Árbol de `desktop/`
 
 ```text
