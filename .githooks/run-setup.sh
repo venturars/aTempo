@@ -13,9 +13,7 @@ root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
 cd "$root" || exit 0
 
 needs_setup() {
-  # Falta el paquete para alguna herramienta: hay que instalar.
   [[ -d .agents/skills/delivery-workflow && -d .claude/skills/delivery-workflow ]] || return 0
-  # Sin commit de antes (un clon nuevo): hay que instalar.
   [[ -n "$before" && ! "$before" =~ ^0+$ ]] || return 0
   ! git diff --quiet "$before" "$after" -- apm.yml apm.lock.yaml desktop/pnpm-lock.yaml docs/storybook/pnpm-lock.yaml Dockerfile docker/setup.sh 2>/dev/null
 }
