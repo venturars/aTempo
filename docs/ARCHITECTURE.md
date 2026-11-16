@@ -24,11 +24,10 @@ Es Node, dentro de Electron. Abre la ventana y abre SQLite. `startupHash()` mira
 1. `--dashboard` → `/student/dashboard`.
 2. `--sign-up` → `/sign-up`.
 3. `--organization-dashboard` → `/organization/dashboard`.
-4. `--panel` → `/teacher/panel`.
 
-Sin ninguno de esos flags, carga el renderer sin hash. En desarrollo la ruta va detrás de `#` en `ELECTRON_RENDERER_URL`. En la app empaquetada va en la opción `hash` de `loadFile`. En los dos casos el renderer recibe `#/ruta`.
+Sin ninguno de esos flags, carga el renderer sin hash y muestra el login. En desarrollo la ruta va detrás de `#` en `ELECTRON_RENDERER_URL`. En la app empaquetada va en la opción `hash` de `loadFile`. En los dos casos el renderer recibe `#/ruta`.
 
-`--panel` abre el panel del profesor. `--organization-dashboard` abre el Resumen de la organización.
+Tras el arranque normal, TanStack Router abre el panel del profesor cuando el hash del renderer cambia a `#/teacher/panel`. `--organization-dashboard` abre el Resumen de la organización.
 
 Desde `desktop/`, `pnpm dev -- --organization-dashboard` abre directamente el Resumen de la organización sin credenciales.
 

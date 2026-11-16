@@ -1,11 +1,4 @@
-import {
-  _electron as electron,
-  expect,
-  test,
-  type ElectronApplication,
-  type Locator,
-  type Page
-} from '@playwright/test'
+import { _electron as electron, expect, test, type Locator, type Page } from '@playwright/test'
 import path from 'node:path'
 
 const appRoot = path.join(__dirname, '..')
@@ -39,24 +32,19 @@ type BodyStyle = {
 
 test.describe.configure({ timeout: 60_000 })
 
-async function openPanel(): Promise<{ app: ElectronApplication; window: Page }> {
-  const app = await electron.launch({
-    args: ['--force-device-scale-factor=1', '--panel', mainFile],
-    cwd: appRoot
-  })
-  const window = await app.firstWindow()
-  await window.setViewportSize({ width: 1440, height: 900 })
-  await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
-  return { app, window }
-}
-
-async function withPanel(run: (window: Page) => Promise<void>): Promise<void> {
-  const { app, window } = await openPanel()
-  try {
+async function withPanel(
+  run: (window: Page) => Promise<void>,
+  size = { width: 1440, height: 900 }
+): Promise<void> {
+  await withApp([], size, async (window) => {
+    await expect(window.getByRole('button', { name: 'Entrar' })).toBeVisible()
+    expect(await window.evaluate(() => window.location.hash)).toBe('')
+    await window.evaluate(() => {
+      window.location.hash = '#/teacher/panel'
+    })
+    await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
     await run(window)
-  } finally {
-    await app.close()
-  }
+  })
 }
 
 async function withApp(
@@ -363,18 +351,17 @@ test('keeps the login without a profile and opens the panel through the router',
   })
 })
 
-test('opens the panel at startup with --panel', async () => {
-  await withApp(['--panel'], { width: 1440, height: 900 }, async (window) => {
-    const hash = await window.evaluate(() => window.location.hash)
-    expect(hash.replace(/^#\/?/, '')).toBe('teacher/panel')
-    await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
+test('opens the panel through the router after a normal startup', async () => {
+  await withPanel(async (window) => {
+    expect(await window.evaluate(() => window.location.hash)).toBe('#/teacher/panel')
+    await expect(window.getByRole('navigation', { name: 'Secciones' })).toBeVisible()
     await expect(window.getByLabel('Correo')).toHaveCount(0)
     await expect(window.getByRole('button', { name: 'Entrar' })).toHaveCount(0)
   })
 })
 
 test('matches the desktop panel screens with their snapshots', async () => {
-  await withApp(['--panel'], { width: 1440, height: 900 }, async (window) => {
+  await withPanel(async (window) => {
     await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
     await expectScreen(window, 'panel-hoy.png')
 
@@ -396,17 +383,20 @@ test('matches the desktop panel screens with their snapshots', async () => {
 })
 
 test('matches Estadísticas at 390 px with its snapshot', async () => {
-  await withApp(['--panel'], { width: 390, height: 844 }, async (window) => {
-    await openTab(window, 'Estadísticas', 'Estadísticas')
-    const summary = window.getByRole('region', { name: 'Asistencia por alumno' })
-    await expect(summary).toBeVisible()
-    await expect(window.getByRole('region', { name: /^Asistencia por fecha/ })).toBeHidden()
-    await expectScreen(window, 'panel-estadisticas-movil.png')
-  })
+  await withPanel(
+    async (window) => {
+      await openTab(window, 'Estadísticas', 'Estadísticas')
+      const summary = window.getByRole('region', { name: 'Asistencia por alumno' })
+      await expect(summary).toBeVisible()
+      await expect(window.getByRole('region', { name: /^Asistencia por fecha/ })).toBeHidden()
+      await expectScreen(window, 'panel-estadisticas-movil.png')
+    },
+    { width: 390, height: 844 }
+  )
 })
 
 test('changes the panel colors and font with the light theme', async () => {
-  await withApp(['--panel'], { width: 1440, height: 900 }, async (window) => {
+  await withPanel(async (window) => {
     await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
     await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-oscuro')
     const dark = await readBodyStyle(window)
@@ -427,7 +417,7 @@ test('changes the panel colors and font with the light theme', async () => {
 })
 
 test('matches a student file on desktop with its snapshot', async () => {
-  await withApp(['--panel'], { width: 1440, height: 900 }, async (window) => {
+  await withPanel(async (window) => {
     await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
     await window.getByRole('button', { name: 'Meghan Martin', exact: true }).click()
 

@@ -102,8 +102,11 @@ test('shows the organization summary with --organization-dashboard', async () =>
   })
 })
 
-test('shows the teacher panel with --panel', async () => {
-  await withApp(['--panel'], async (window) => {
+test('shows the teacher panel through the router after a normal startup', async () => {
+  await withApp([], async (window) => {
+    await expectLoginScreen(window)
+    expect(await readRoute(window)).toBe('')
+    await changeHash(window, '#/teacher/panel')
     expect(await readRoute(window)).toBe('teacher/panel')
     await expectTeacherPanel(window)
     await expect(window).toHaveScreenshot('navigation-teacher-panel.png', {
@@ -113,10 +116,15 @@ test('shows the teacher panel with --panel', async () => {
 })
 
 test('shows the login when the hash changes to an unknown route from any screen', async () => {
-  const startFlags = [['--dashboard'], ['--organization-dashboard'], ['--panel']]
+  const startFlags = [['--dashboard'], ['--organization-dashboard'], []]
 
   for (const flags of startFlags) {
     await withApp(flags, async (window) => {
+      if (flags.length === 0) {
+        await expectLoginScreen(window)
+        await changeHash(window, '#/teacher/panel')
+        await expectTeacherPanel(window)
+      }
       await expectNoLoginScreen(window)
 
       for (const hash of unknownHashes) {
@@ -155,14 +163,14 @@ test('opens the first flag in priority order when several flags are passed', asy
     await expectStudentDashboard(window)
   })
 
-  await withApp(['--panel', '--sign-up'], async (window) => {
+  await withApp(['--organization-dashboard', '--sign-up'], async (window) => {
     expect(await readRoute(window)).toBe('sign-up')
     await expectRegisterScreen(window)
   })
 
-  await withApp(['--panel', '--organization-dashboard'], async (window) => {
-    expect(await readRoute(window)).toBe('organization/dashboard')
-    await expectOrganizationDashboard(window)
+  await withApp(['--organization-dashboard', '--sign-up', '--dashboard'], async (window) => {
+    expect(await readRoute(window)).toBe('student/dashboard')
+    await expectStudentDashboard(window)
   })
 })
 
