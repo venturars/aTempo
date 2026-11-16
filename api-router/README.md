@@ -1,4 +1,4 @@
-# API-router
+# api-router
 
 Servicio REST con NestJS y TypeScript. Recibe las peticiones de los frontends (Electron y web), las adapta y las delegará en la **SDK (lógica de negocio)**. El router no implementa reglas de negocio.
 

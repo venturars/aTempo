@@ -2,9 +2,9 @@
 
 ## API-router y SDK
 
-Carpeta: `API-router/`.
+Carpeta: `api-router/`.
 
-Los frontends (Electron en `desktop/` y el futuro portal web) hablarán REST con este servicio NestJS. El API-router transforma HTTP y delegará en la **SDK (lógica de negocio)**. Esa SDK vivirá en `sdk/`, al mismo nivel que `desktop/` y `API-router/`; la carpeta aún no existe. Redis, Postgres y el resto de microservicios del backend quedan fuera del escritorio.
+Los frontends (Electron en `desktop/` y el futuro portal web) hablarán REST con este servicio NestJS. El API-router transforma HTTP y delegará en la **SDK (lógica de negocio)**. Esa SDK vivirá en `sdk/`, al mismo nivel que `desktop/` y `api-router/`; la carpeta aún no existe. Redis, Postgres y el resto de microservicios del backend quedan fuera del escritorio.
 
 Hoy solo existe `GET /health`. El login y el registro del renderer **no** llaman a esta API.
 
@@ -19,7 +19,7 @@ flowchart LR
   router --> sdk
 ```
 
-`sdk/` es un paquete hermano de `desktop/` y `API-router/`; el API-router y los frontends la consumirán cuando exista.
+`sdk/` es un paquete hermano de `desktop/` y `api-router/`; el API-router y los frontends la consumirán cuando exista.
 
 ## aTempo de escritorio
 

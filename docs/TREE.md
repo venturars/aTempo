@@ -4,10 +4,10 @@
 sdk/                  # lógica de negocio; paquete aún no creado
 ```
 
-# Árbol de `API-router/`
+# Árbol de `api-router/`
 
 ```text
-API-router/
+api-router/
   package.json
   pnpm-lock.yaml
   .npmrc
