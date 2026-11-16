@@ -21,6 +21,7 @@ async function withApp(flags: string[], run: (window: Page) => Promise<void>): P
   try {
     const window = await app.firstWindow()
     await window.setViewportSize({ width: 960, height: 720 })
+    await expect(window.getByRole('heading', { level: 1 })).toBeVisible()
     await window.evaluate(() => document.fonts.ready)
     await run(window)
   } finally {
@@ -271,11 +272,27 @@ test('shows the empty history of a new account', async () => {
   })
 })
 
+async function expectStudentScreenshot(
+  window: Page,
+  name: string,
+  options: { animations: 'disabled' }
+): Promise<void> {
+  await window.screenshot({ path: test.info().outputPath(name), ...options })
+  await expect.soft(window).toHaveScreenshot(name, options)
+}
+
 async function expectNoHorizontalScroll(window: Page): Promise<void> {
   const widths = await window.evaluate(() => ({
     content: document.documentElement.scrollWidth,
-    viewport: document.documentElement.clientWidth
+    viewport: document.documentElement.clientWidth,
+    route: location.hash,
+    dialogOpen: document.querySelector('dialog')?.hasAttribute('open') ?? false
   }))
+  await test.info().attach('student-width', {
+    body: JSON.stringify(widths),
+    contentType: 'application/json'
+  })
+  expect(widths.viewport).toBe(390)
   expect(widths.content).toBeLessThanOrEqual(widths.viewport)
 }
 
@@ -283,23 +300,27 @@ test('fits every student screen in 390 pixels without horizontal scroll', async 
   await withApp(['--sign-up'], async (window) => {
     await window.setViewportSize({ width: 390, height: 844 })
     await expectNoHorizontalScroll(window)
-    await expect(window).toHaveScreenshot('student-register-390.png', { animations: 'disabled' })
+    await expectStudentScreenshot(window, 'student-register-390.png', { animations: 'disabled' })
     await signUp(window, 'Lucía Pérez', 'lucia@clase.test', 'secreta12')
     await expectStudentDashboard(window)
     await expectNoHorizontalScroll(window)
-    await expect(window).toHaveScreenshot('student-dashboard-390.png', { animations: 'disabled' })
+    await expectStudentScreenshot(window, 'student-dashboard-390.png', { animations: 'disabled' })
     await openScan(window)
     await expectNoHorizontalScroll(window)
-    await expect(window).toHaveScreenshot('student-scan-390.png', { animations: 'disabled' })
+    await expectStudentScreenshot(window, 'student-scan-390.png', { animations: 'disabled' })
     await window.getByRole('button', { name: 'Escanear' }).click()
     await expect(window.getByRole('dialog')).toBeVisible()
     await expectNoHorizontalScroll(window)
+    await window.screenshot({
+      path: test.info().outputPath('student-reader-390.png'),
+      animations: 'disabled'
+    })
     await window.getByRole('button', { name: 'Cerrar' }).click()
     await window.getByRole('link', { name: 'Volver' }).click()
     await window.getByRole('button', { name: 'Resumen de asistencia' }).click()
     await expect(window.getByRole('heading', { name: 'Historial', level: 1 })).toBeVisible()
     await expectNoHorizontalScroll(window)
-    await expect(window).toHaveScreenshot('student-history-empty-390.png', {
+    await expectStudentScreenshot(window, 'student-history-empty-390.png', {
       animations: 'disabled'
     })
   })
@@ -308,7 +329,7 @@ test('fits every student screen in 390 pixels without horizontal scroll', async 
     await window.getByRole('button', { name: 'Resumen de asistencia' }).click()
     await expect(window.locator('ul.list li')).toHaveCount(exampleStudent.history.length)
     await expectNoHorizontalScroll(window)
-    await expect(window).toHaveScreenshot('student-history-390.png', { animations: 'disabled' })
+    await expectStudentScreenshot(window, 'student-history-390.png', { animations: 'disabled' })
   })
   await withApp(['--dashboard'], async (window) => {
     await window.setViewportSize({ width: 390, height: 844 })
@@ -316,12 +337,16 @@ test('fits every student screen in 390 pixels without horizontal scroll', async 
     await readWith(window, 'Llegar a las 08:58')
     await expect(window.getByRole('status')).toHaveText('Presente · 08:58')
     await expectNoHorizontalScroll(window)
-    await expect(window).toHaveScreenshot('student-scan-confirmed-390.png', {
+    await expectStudentScreenshot(window, 'student-scan-confirmed-390.png', {
       animations: 'disabled'
     })
   })
   await withApp([], async (window) => {
     await window.setViewportSize({ width: 390, height: 844 })
     await expectNoHorizontalScroll(window)
+    await window.screenshot({
+      path: test.info().outputPath('student-login-390.png'),
+      animations: 'disabled'
+    })
   })
 })

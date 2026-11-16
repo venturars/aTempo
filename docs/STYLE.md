@@ -6,7 +6,7 @@ Para ver la guía en el navegador, desde `docs/storybook`: `pnpm storybook`.
 
 Hay dos temas de daisyUI. `atempo-oscuro` es el de defecto y usa Geist. `atempo-claro` usa Inter. Las fuentes están en el repositorio, con licencia OFL.
 
-Los colores salen del tema. No se escribe un color a mano.
+Los colores salen del tema. No se escribe un color a mano. El escritorio importa ese tema desde `docs/storybook/src/system.css`.
 
 Las pantallas usan las clases de daisyUI. No hay un paquete de componentes.
 

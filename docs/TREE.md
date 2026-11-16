@@ -39,7 +39,7 @@ desktop/
             panel.tsx      # /teacher/panel, en construcción
         env.d.ts
         styles/
-          app.css       # Tailwind y daisyUI
+          app.css       # importa docs/storybook/src/system.css
           fonts/        # Geist e Inter, woff2 con licencia OFL
         login/
           LoginScreen.tsx
@@ -75,6 +75,7 @@ desktop/
     dashboard.spec.ts
     navigation.spec.ts  # rutas, flags de arranque y dashboard de cada perfil
     student.spec.ts     # alta y acceso del alumno, escaneo, historial y estado de asistencia
+    visual-system.spec.ts  # sistema visual compartido entre Storybook y escritorio
     snapshots/
       login-empty.png
       login-errors.png

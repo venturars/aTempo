@@ -51,6 +51,7 @@ async function openApp(): Promise<{ app: ElectronApplication; window: Page }> {
   })
   const window = await app.firstWindow()
   await window.setViewportSize({ width: 960, height: 720 })
+  await expect(window.getByRole('heading', { level: 1 })).toBeVisible()
   await window.evaluate(() => document.fonts.ready)
   return { app, window }
 }
