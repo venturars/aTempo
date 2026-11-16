@@ -1,15 +1,5 @@
-import {
-  _electron as electron,
-  expect,
-  test,
-  type ElectronApplication,
-  type Locator,
-  type Page
-} from '@playwright/test'
-import path from 'node:path'
-
-const appRoot = path.join(__dirname, '..')
-const mainFile = path.join(appRoot, 'out', 'main', 'index.js')
+import { expect, test, type ElectronApplication, type Locator, type Page } from '@playwright/test'
+import { launchHiddenElectron } from './helpers/electron'
 
 const dayNames = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes']
 const dayLetters = ['L', 'M', 'X', 'J', 'V']
@@ -45,10 +35,7 @@ type BodyStyle = {
 }
 
 async function openApp(): Promise<{ app: ElectronApplication; window: Page }> {
-  const app = await electron.launch({
-    args: ['--force-device-scale-factor=1', mainFile],
-    cwd: appRoot
-  })
+  const app = await launchHiddenElectron()
   const window = await app.firstWindow()
   await window.setViewportSize({ width: 960, height: 720 })
   await expect(window.getByRole('heading', { level: 1 })).toBeVisible()
@@ -163,7 +150,7 @@ function readBodyStyle(window: Page): Promise<BodyStyle> {
 
 test('shows the claim panel beside the form', async () => {
   await withApp(async (window) => {
-    const hash = await window.evaluate(() => window.location.hash)
+    const hash = await window.evaluate(() => globalThis.location.hash)
     expect(hash).toBe('')
     await expect(window.getByRole('heading', { name: 'Dashboard alumno' })).toHaveCount(0)
     await expect(window.getByRole('heading', { name: 'Esta semana' })).toHaveCount(0)
@@ -196,17 +183,60 @@ test('shows both errors when the fields are empty', async () => {
   })
 })
 
-test('shows the written email and password in an alert', async () => {
+test('keeps a valid login without a profile before navigating to the professor panel', async () => {
   await withApp(async (window) => {
     await window.getByLabel('Correo').fill('ana@clase.test')
     await window.getByLabel('Contraseña').fill('secreta')
     await window.getByRole('button', { name: 'Entrar' }).click()
 
-    const alert = window.getByRole('status')
-    await expect(alert).toContainText('Correo: ana@clase.test')
-    await expect(alert).toContainText('Contraseña: secreta')
+    await expect(window.getByRole('status')).toContainText('Correo: ana@clase.test')
+    await expect(window.getByRole('status')).toContainText('Contraseña: secreta')
+    expect(await window.evaluate(() => globalThis.location.hash)).toBe('')
+    await expectLoginFields(window)
     await expectNoErrorPhrases(window)
     await expect(window).toHaveScreenshot('login-alert.png', { animations: 'disabled' })
+    await window.evaluate(() => {
+      globalThis.location.hash = '#/teacher/panel'
+    })
+
+    await expect(window.getByRole('navigation', { name: 'Secciones' })).toBeVisible()
+    await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
+    await expect(window.getByRole('button', { name: 'Abrir lista' })).toBeVisible()
+    await expect(window.getByText('secreta')).toHaveCount(0)
+    await expect(window.getByRole('status')).toHaveCount(0)
+    await expectNoErrorPhrases(window)
+
+    await window.getByRole('button', { name: 'Abrir lista' }).click()
+    const molero = window.getByRole('row', { name: /Diego Molero/ })
+    await molero.getByText('Pendiente').click()
+    await window.getByRole('button', { name: 'Presente' }).click()
+    await expect(molero.getByText('Presente')).toBeVisible()
+    await expect(molero.getByText('09:05')).toBeVisible()
+
+    await window.getByRole('button', { name: 'Cerrar lista' }).click()
+    const dialog = window.getByRole('dialog')
+    await expect(dialog).toContainText('Los pendientes pasarán a ausentes.')
+    await dialog.getByRole('button', { name: 'Cerrar lista' }).click()
+    await expect(window.getByRole('button', { name: 'Volver a abrir' })).toBeVisible()
+    await expect(window.getByText('Cerrada')).toHaveCount(0)
+    await expect(
+      window.getByRole('row', { name: /Diego Torres/ }).getByText('Ausente')
+    ).toBeVisible()
+    await expect(molero.getByText('Presente')).toBeVisible()
+
+    await window.getByRole('button', { name: 'Sesiones' }).click()
+    await window.getByRole('button', { name: /Mar 10 nov/ }).click()
+    await expect(window.getByRole('heading', { level: 1, name: 'Mar 10 nov 2026' })).toBeVisible()
+    await window.getByRole('button', { name: 'Diego Torres' }).click()
+    await expect(window.getByRole('navigation', { name: 'Ruta' })).toBeVisible()
+    await expect(window.getByRole('button', { name: 'Mar 10 nov 2026' })).toBeVisible()
+    await expect(window.getByRole('heading', { level: 1, name: 'Diego Torres' })).toBeVisible()
+
+    await window.getByRole('button', { name: 'Ajustes' }).click()
+    await window.getByRole('button', { name: 'Tinta' }).click()
+    await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-claro')
+    await window.getByRole('button', { name: 'Noche' }).click()
+    await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-oscuro')
   })
 })
 

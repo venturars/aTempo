@@ -36,7 +36,7 @@ desktop/
           organization/
             dashboard.tsx  # /organization/dashboard, Resumen de la organización
           teacher/
-            panel.tsx      # /teacher/panel, en construcción
+            panel.tsx      # /teacher/panel, PanelScreen
         env.d.ts
         styles/
           app.css       # importa docs/storybook/src/system.css
@@ -46,6 +46,25 @@ desktop/
           loginStore.ts
           validateLogin.ts
           trimesterExample.ts
+        panel/
+          AttendanceStatus.tsx
+          DateFilter.tsx
+          JustificationAccess.tsx
+          MobileAttendance.tsx
+          PanelScreen.tsx
+          RecognitionAward.tsx
+          RecognitionIcon.tsx
+          SettingsView.tsx
+          StatsView.tsx
+          StudentHistory.tsx
+          avatar.tsx
+          markControl.tsx
+          marks.ts
+          panelStore.ts
+          riskHint.tsx
+          roster.ts
+          sessionQr.tsx
+          settingsStore.ts
         organization/
           OrganizationDashboardScreen.tsx
           organizationExample.ts
@@ -69,13 +88,20 @@ desktop/
         underConstruction/
           UnderConstructionScreen.tsx  # pantalla provisional con título
   tests/
+    helpers/
+      electron.ts          # arranque oculto y cierre auditado en macOS
+      hidden-electron.cjs  # guardas antes de cargar el main construido
+      hidden-preflight.cjs # comprobación de ventanas en fuente y build
+      hidden-watchdog.cjs  # observador de primer plano y procesos propios
+    hidden-electron.spec.ts # smoke del build real: entrada, navegación y captura
     login.spec.ts
+    panel.spec.ts
     organization-dashboard.spec.ts
     register.spec.ts
     dashboard.spec.ts
     navigation.spec.ts  # rutas, flags de arranque y dashboard de cada perfil
-    student.spec.ts     # alta y acceso del alumno, escaneo, historial y estado de asistencia
-    visual-system.spec.ts  # sistema visual compartido entre Storybook y escritorio
+    student.spec.ts     # alta y acceso del alumno, escaneo, historial y estado de asistencia; escaneo e historial en ambos temas a 390/1280 px (fuentes, espaciado y desbordamiento)
+    visual-system.spec.ts  # paridad de Storybook y escritorio, temas y rutas
     snapshots/
       login-empty.png
       login-errors.png
@@ -87,6 +113,13 @@ desktop/
       register-narrow.png
       register-claro.png
       dashboard-empty.png
+      panel-hoy.png
+      panel-sesiones.png
+      panel-estadisticas.png
+      panel-ajustes.png
+      panel-estadisticas-movil.png
+      panel-claro.png
+      panel-ficha.png
       dashboard-normal-atempo-oscuro-1280.png
       dashboard-normal-atempo-oscuro-390.png
       dashboard-normal-atempo-claro-1280.png

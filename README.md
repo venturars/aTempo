@@ -23,7 +23,26 @@ pnpm install
 pnpm dev
 ```
 
-`pnpm typecheck` comprueba los tipos. `pnpm run test:visual` construye la app y ejecuta las pruebas de Playwright.
+`pnpm typecheck` comprueba los tipos. `pnpm run test:visual` construye la app y ejecuta las pruebas de Playwright con Electron oculto en macOS. Antes de la suite se comprueba el arnés con el [smoke de escritorio](desktop/README.md#visual-test).
+
+Las pruebas Electron usan `tests/helpers/electron.ts` para ejecutar el main, preload y renderer construidos con las ventanas nativas ocultas. El arnés funciona en macOS y aborta en otras plataformas. Instala guardas antes de cargar el main, comprueba visibilidad y foco nativos y vigila el PID en primer plano desde antes del arranque hasta el cierre. Conserva las auditorías en el directorio temporal `atempo-hidden-*` indicado en la salida. El arranque normal con `pnpm dev` no cambia.
+
+Antes de las suites, es obligatorio construir sin abrir la app y pasar el smoke oculto, sin reintentos:
+
+```sh
+pnpm exec electron-vite build
+pnpm exec playwright test tests/hidden-electron.spec.ts --workers=1 --retries=0 --timeout=30000 --global-timeout=45000
+```
+
+El helper comprueba la fuente y el build antes de lanzar Electron. Si falla una guarda, la observación de macOS o el smoke, el arnés aborta y cierra sus procesos; las suites quedan bloqueadas. No hay alternativa con ventanas visibles.
+
+Tras pasar el smoke, construir Storybook desde `docs/storybook` con `pnpm build-storybook` y ejecutar las suites desde `desktop`:
+
+```sh
+pnpm run test:visual --workers=1 --retries=0 --global-timeout=300000 --update-snapshots=none
+```
+
+La suite del sistema visual sirve y cierra su propia vista previa local de Storybook. Esta rama combina el sistema compartido de #69, el panel real del profesor de #36 y el flujo de alumno de #64/#70: registro, login, dashboard, escaneo de ejemplo e historial en memoria. La aceptación conjunta requiere ejecutar el smoke y las suites sobre este árbol combinado.
 
 ## Guía visual
 

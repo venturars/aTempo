@@ -1,23 +1,11 @@
-import {
-  _electron as electron,
-  expect,
-  test,
-  type ElectronApplication,
-  type Page
-} from '@playwright/test'
-import path from 'node:path'
+import { expect, test, type Page } from '@playwright/test'
+import { launchHiddenElectron } from './helpers/electron'
 import { statusForArrival } from '../src/renderer/src/student/attendanceStatus'
 import { normalizeEmail } from '../src/renderer/src/student/studentAccounts'
 import { exampleStudent } from '../src/renderer/src/student/studentExample'
 
-const appRoot = path.join(__dirname, '..')
-const mainFile = path.join(appRoot, 'out', 'main', 'index.js')
-
 async function withApp(flags: string[], run: (window: Page) => Promise<void>): Promise<void> {
-  const app: ElectronApplication = await electron.launch({
-    args: ['--force-device-scale-factor=1', ...flags, mainFile],
-    cwd: appRoot
-  })
+  const app = await launchHiddenElectron(flags)
   try {
     const window = await app.firstWindow()
     await window.setViewportSize({ width: 960, height: 720 })
@@ -30,7 +18,7 @@ async function withApp(flags: string[], run: (window: Page) => Promise<void>): P
 }
 
 async function readHash(window: Page): Promise<string> {
-  return window.evaluate(() => window.location.hash)
+  return window.evaluate(() => globalThis.location.hash)
 }
 
 async function expectStudentDashboard(window: Page): Promise<void> {
@@ -75,7 +63,7 @@ test('logs in with an account created in the sign-up', async () => {
     await expectStudentDashboard(window)
 
     await window.evaluate(() => {
-      window.location.hash = '#/'
+      globalThis.location.hash = '#/'
     })
     await expect(window.getByRole('button', { name: 'Entrar' })).toBeVisible()
     await logIn(window, ' ana@clase.test ', 'secreta12')
@@ -236,7 +224,7 @@ test('closes the reader by clicking the backdrop without changing anything', asy
 test('uses the sample account in scan and history without a session', async () => {
   await withApp([], async (window) => {
     await window.evaluate(() => {
-      window.location.hash = '#/student/scan'
+      globalThis.location.hash = '#/student/scan'
     })
     await expect(
       window.getByRole('heading', { name: 'Registrar asistencia', level: 1 })
@@ -244,7 +232,7 @@ test('uses the sample account in scan and history without a session', async () =
     await readWith(window, 'Llegar a las 08:58')
     await expect(window.getByRole('status')).toHaveText('Presente · 08:58')
     await window.evaluate(() => {
-      window.location.hash = '#/student/history'
+      globalThis.location.hash = '#/student/history'
     })
     await expect(window.locator('ul.list li')).toHaveCount(exampleStudent.history.length + 1)
   })
@@ -350,3 +338,74 @@ test('fits every student screen in 390 pixels without horizontal scroll', async 
     })
   })
 })
+
+for (const theme of ['atempo-oscuro', 'atempo-claro']) {
+  for (const width of [390, 1280]) {
+    test(`scan and history preserve the shared system: ${theme} ${width}`, async () => {
+      await withApp(['--dashboard'], async (window) => {
+        await window.setViewportSize({ width, height: 900 })
+        await window.evaluate((theme) => {
+          document.documentElement.setAttribute('data-theme', theme)
+        }, theme)
+        const font = theme === 'atempo-oscuro' ? 'Geist' : 'Inter'
+        for (const [route, heading] of [
+          ['student/scan', 'Registrar asistencia'],
+          ['student/history', 'Historial']
+        ]) {
+          await window.evaluate((route) => {
+            globalThis.location.hash = `#/${route}`
+          }, route)
+          await expect(window.getByRole('heading', { name: heading, level: 1 })).toBeVisible()
+          await expect.poll(() => readHash(window)).toBe(`#/${route}`)
+          await window.evaluate(() => document.fonts.ready)
+          await expect(window.locator('body')).toHaveCSS('font-family', new RegExp(font))
+          for (const weight of [400, 500, 600]) {
+            expect(
+              await window.evaluate(
+                async ({ font, weight }) => {
+                  const faces = await document.fonts.load(`${weight} 16px "${font}"`)
+                  return faces.length > 0 && faces.every((face) => face.status === 'loaded')
+                },
+                { font, weight }
+              )
+            ).toBe(true)
+          }
+          const evidence = await window.evaluate(() => ({
+            route: globalThis.location.hash,
+            theme: document.documentElement.getAttribute('data-theme'),
+            content: document.documentElement.scrollWidth,
+            viewport: document.documentElement.clientWidth,
+            tracking: [...document.querySelectorAll('h1, button, a, li')].map(
+              (node) => getComputedStyle(node).letterSpacing
+            )
+          }))
+          expect(evidence.theme).toBe(theme)
+          expect(evidence.viewport).toBe(width)
+          expect(evidence.content).toBeLessThanOrEqual(width)
+          expect(evidence.tracking.length).toBeGreaterThan(0)
+          expect(evidence.tracking.every((value) => value === 'normal' || value === '0px')).toBe(
+            true
+          )
+          if (route === 'student/scan') {
+            await expect(window.getByText('Clase de hoy: Mié 11 nov, 09:00')).toBeVisible()
+            await expect(
+              window.getByRole('button', { name: 'Escanear', exact: true })
+            ).toBeVisible()
+          } else {
+            await expect(window.locator('ul.list li')).toHaveCount(exampleStudent.history.length)
+            await expect(window.locator('ul.list li').first()).toContainText('08:57')
+          }
+          await test.info().attach(`${route.replace('/', '-')}-${theme}-${width}`, {
+            body: JSON.stringify(evidence),
+            contentType: 'application/json'
+          })
+          await window.screenshot({
+            path: test.info().outputPath(`${route.replace('/', '-')}-${theme}-${width}.png`),
+            fullPage: true,
+            animations: 'disabled'
+          })
+        }
+      })
+    })
+  }
+}

@@ -1,14 +1,5 @@
-import {
-  _electron as electron,
-  expect,
-  test,
-  type ElectronApplication,
-  type Page
-} from '@playwright/test'
-import path from 'node:path'
-
-const appRoot = path.join(__dirname, '..')
-const mainFile = path.join(appRoot, 'out', 'main', 'index.js')
+import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
+import { launchHiddenElectron } from './helpers/electron'
 
 const dashboardButtonIds = [
   'registrar-asistencia',
@@ -18,10 +9,7 @@ const dashboardButtonIds = [
 ] as const
 
 async function openDashboardApp(): Promise<{ app: ElectronApplication; window: Page }> {
-  const app = await electron.launch({
-    args: ['--force-device-scale-factor=1', '--dashboard', mainFile],
-    cwd: appRoot
-  })
+  const app = await launchHiddenElectron(['--dashboard'])
   const window = await app.firstWindow()
   await window.setViewportSize({ width: 960, height: 720 })
   await window.evaluate(() => document.fonts.ready)
@@ -39,7 +27,7 @@ async function withDashboardApp(run: (window: Page) => Promise<void>): Promise<v
 
 test('shows the student dashboard mockup', async () => {
   await withDashboardApp(async (window) => {
-    const hash = await window.evaluate(() => window.location.hash)
+    const hash = await window.evaluate(() => globalThis.location.hash)
     expect(hash.replace(/^#\/?/, '')).toBe('student/dashboard')
     await expect(window.getByRole('heading', { name: 'Dashboard alumno', level: 1 })).toBeVisible()
     await expect(window.getByText('Bienvenido Ada López')).toBeVisible()
@@ -61,7 +49,7 @@ test('keeps the dashboard when a button without action is pressed', async () => 
         window.getByRole('heading', { name: 'Dashboard alumno', level: 1 })
       ).toBeVisible()
       await expect(window.getByText('Bienvenido Ada López')).toBeVisible()
-      const hash = await window.evaluate(() => window.location.hash)
+      const hash = await window.evaluate(() => globalThis.location.hash)
       expect(hash.replace(/^#\/?/, '')).toBe('student/dashboard')
     }
   })
