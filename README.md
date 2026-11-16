@@ -68,3 +68,4 @@ Reemplaza los valores por el login exacto del revisor solicitado y su ID numéri
 | [docs/guia](docs/guia/README.md) | Markdown generado desde Storybook. No se versiona. |
 | [docs/TREE.md](docs/TREE.md) | Carpetas de `desktop/`. |
 | [AGENTS.md](AGENTS.md) | Cómo se trabaja una spec. |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Cómo contribuir: issues, ramas, commits y pull requests. |
