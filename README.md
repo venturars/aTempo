@@ -81,6 +81,27 @@ pnpm run test:visual --workers=1 --retries=0 --global-timeout=300000 --update-sn
 La suite del sistema visual sirve y cierra su propia vista previa local de Storybook. Esta rama combina el sistema compartido de #69 con el panel real del profesor de #36. La verificación de esa combinación corresponde a #48 y requiere ejecutar el smoke y las suites sobre este árbol; los resultados previos de #69 no la acreditan. La incorporación del dashboard del alumno queda para #70.
 `pnpm run test:visual` construye la app y ejecuta las pruebas de Playwright. Necesita la ventana, así que también va en tu ordenador.
 
+### Probar el panel del profesor
+
+Desde la raíz de tu copia del repositorio, selecciona la PR del panel:
+
+```sh
+gh pr checkout 36
+```
+
+Si ya estás en `feat/panel-profesor`, actualízala con `git pull --ff-only`. Con Docker Desktop en marcha, prepara las dependencias y abre Electron en tu ordenador:
+
+```sh
+docker compose run --rm setup
+cd desktop
+pnpm install
+pnpm dev
+```
+
+En el login, escribe `profesor@atempo.test` y la contraseña `Profesor123!`, y pulsa **Entrar**. Se abre **Hoy**, en el panel del profesor. Una contraseña distinta o un correo desconocido muestran un error y conservan el login.
+
+Es una cuenta de ejemplo pública. La sesión y los datos del panel viven en memoria del renderer, sin servicio de autenticación; al recargar o reiniciar la app, se vacía la sesión y se restablecen los datos de ejemplo. Un nuevo arranque normal muestra el login.
+
 ### Ventana de Electron desde Docker (experimental)
 
 `desktop-gui` construye la app dentro de Docker y abre su ventana en tu pantalla, a través del servidor X11 de tu ordenador. Es más lenta que `pnpm dev` en el ordenador: no usa la GPU y no recarga al editar. Solo está probada en macOS.

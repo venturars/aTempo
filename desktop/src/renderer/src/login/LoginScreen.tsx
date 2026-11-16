@@ -64,16 +64,16 @@ function LoginForm(): React.JSX.Element {
   const password = useLoginStore((state) => state.password)
   const emailError = useLoginStore((state) => state.emailError)
   const passwordError = useLoginStore((state) => state.passwordError)
-  const submitted = useLoginStore((state) => state.submitted)
+  const loginError = useLoginStore((state) => state.loginError)
   const setEmail = useLoginStore((state) => state.setEmail)
   const setPassword = useLoginStore((state) => state.setPassword)
   const submit = useLoginStore((state) => state.submit)
-  const profile = useSessionStore((state) => state.profile)
   const navigate = useNavigate()
 
   function onSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault()
     const isValid = submit()
+    const profile = useSessionStore.getState().profile
 
     if (isValid && profile !== null) {
       navigate({ to: dashboardPathForProfile(profile) })
@@ -129,10 +129,9 @@ function LoginForm(): React.JSX.Element {
         <button className="btn btn-primary" type="submit">
           Entrar
         </button>
-        {submitted !== null ? (
-          <div className="alert alert-success" role="status">
-            <span>Correo: {submitted.email}</span>
-            <span>Contraseña: {submitted.password}</span>
+        {loginError !== '' ? (
+          <div className="alert alert-error" role="alert">
+            <span>{loginError}</span>
           </div>
         ) : null}
       </form>

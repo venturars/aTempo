@@ -52,7 +52,7 @@ Es Node, dentro de Electron. Abre la ventana y abre SQLite. `startupHash()` mira
 
 Sin ninguno de esos flags, carga el renderer sin hash y muestra el login. En desarrollo la ruta va detrás de `#` en `ELECTRON_RENDERER_URL`. En la app empaquetada va en la opción `hash` de `loadFile`. En los dos casos el renderer recibe `#/ruta`.
 
-Tras el arranque normal, TanStack Router abre el panel del profesor cuando el hash del renderer cambia a `#/teacher/panel`. `--organization-dashboard` abre el Resumen de la organización.
+Tras el arranque normal, el login valida la cuenta de ejemplo del profesor y TanStack Router abre `#/teacher/panel` al pulsar «Entrar». `--organization-dashboard` abre el Resumen de la organización.
 
 Desde `desktop/`, `pnpm dev -- --organization-dashboard` abre directamente el Resumen de la organización sin credenciales.
 
@@ -85,9 +85,9 @@ El plugin de TanStack Router lee `routes/` y genera `routeTree.gen.ts` al lanzar
 
 El panel del claim y la figura del trimestre se pintan en el renderer y no salen de la base. La figura es la constante `trimesterDays` de `trimesterExample.ts`.
 
-El login guarda el formulario en Zustand (`loginStore.ts`). La validación está en `validateLogin.ts`. Comprueba el correo y la contraseña antes de mostrar el alert. No llama a la red. `submit()` devuelve `true` si el envío es válido y `false` si no.
+El login guarda el formulario en Zustand (`loginStore.ts`). `validateLogin.ts` comprueba el formato del correo y los campos obligatorios. Después, `submit()` compara con la cuenta pública de `teacherDemoAccount.ts`: `profesor@atempo.test` / `Profesor123!`. Normaliza el correo con `trim().toLowerCase()` y compara la contraseña exacta. Si coinciden, guarda `profile: 'teacher'` y el correo normalizado en la sesión y devuelve `true`. Si no, devuelve `false` y muestra un error sin crear una sesión ni navegar; el aviso no reproduce la contraseña. Es una demo local, sin llamadas a la red ni backend de autenticación.
 
-La sesión está en `session/sessionStore.ts`. Define los tipos `Profile` (`'student'`, `'teacher'` u `'organization'`) y `DashboardPath`, la función `dashboardPathForProfile(profile)` y el store de Zustand `useSessionStore`, con `profile: null` al arrancar. Hoy nada escribe `profile`.
+La sesión está en `session/sessionStore.ts`. Define los tipos `Profile` (`'student'`, `'teacher'` u `'organization'`) y `DashboardPath`, la función `dashboardPathForProfile(profile)` y el store de Zustand `useSessionStore`, con `profile: null` y `email: null` al arrancar. El login escribe ambos al reconocer la cuenta de ejemplo. La sesión vive en memoria y se pierde al recargar el renderer o reiniciar la app.
 
 `dashboardPathForProfile` da la ruta de cada perfil:
 
@@ -95,7 +95,7 @@ La sesión está en `session/sessionStore.ts`. Define los tipos `Profile` (`'stu
 - `teacher` → `/teacher/panel`.
 - `organization` → `/organization/dashboard`.
 
-Tras un envío válido, si hay perfil, el login navega a esa ruta con `navigate({ to: dashboardPathForProfile(profile) })`. Si `profile` es `null`, muestra el alert y no navega. Como hoy `profile` siempre es `null`, el login se queda en su pantalla.
+Tras un envío correcto, el login lee el perfil actualizado con `useSessionStore.getState()` y navega con `navigate({ to: dashboardPathForProfile(profile) })`. La cuenta de ejemplo abre Hoy en `/teacher/panel`. Un envío fallido conserva la ruta del login.
 
 El panel del profesor está en `desktop/src/renderer/src/panel/`. La lista, las sesiones y la asistencia de ejemplo viven en memoria, en `roster.ts`. El estado de esa pantalla está en `panelStore.ts`. El margen de retraso y los avisos de ejemplo están en `settingsStore.ts`. Todo ese estado vive en Zustand, dentro del renderer, y vuelve a los datos de ejemplo al cerrar la aplicación.
 
