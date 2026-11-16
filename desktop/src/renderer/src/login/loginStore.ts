@@ -1,19 +1,15 @@
 import { create } from 'zustand'
 import { useSessionStore } from '../session/sessionStore'
-import { useStudentAccountsStore } from '../student/studentAccounts'
+import { normalizeEmail, useStudentAccountsStore } from '../student/studentAccounts'
+import { teacherDemoAccount } from './teacherDemoAccount'
 import { validateLogin } from './validateLogin'
-
-export type SubmittedLogin = {
-  email: string
-  password: string
-}
 
 type LoginState = {
   email: string
   password: string
   emailError: string
   passwordError: string
-  submitted: SubmittedLogin | null
+  loginError: string
   setEmail: (email: string) => void
   setPassword: (password: string) => void
   submit: () => boolean
@@ -24,12 +20,12 @@ export const useLoginStore = create<LoginState>((set, get) => ({
   password: '',
   emailError: '',
   passwordError: '',
-  submitted: null,
+  loginError: '',
   setEmail: (email) => {
-    set({ email, submitted: null })
+    set({ email, loginError: '' })
   },
   setPassword: (password) => {
-    set({ password, submitted: null })
+    set({ password, loginError: '' })
   },
   submit: () => {
     const { email, password } = get()
@@ -39,9 +35,26 @@ export const useLoginStore = create<LoginState>((set, get) => ({
       set({
         emailError: errors.email,
         passwordError: errors.password,
-        submitted: null
+        loginError: ''
       })
       return false
+    }
+
+    const normalizedEmail = normalizeEmail(email)
+
+    if (normalizedEmail === teacherDemoAccount.email) {
+      if (password !== teacherDemoAccount.password) {
+        set({
+          emailError: '',
+          passwordError: '',
+          loginError: 'El correo o la contraseña no coinciden con la cuenta de ejemplo.'
+        })
+        return false
+      }
+
+      useSessionStore.setState({ profile: 'teacher', email: normalizedEmail })
+      set({ emailError: '', passwordError: '', loginError: '' })
+      return true
     }
 
     const account = useStudentAccountsStore.getState().findByEmail(email)
@@ -51,12 +64,12 @@ export const useLoginStore = create<LoginState>((set, get) => ({
         set({
           emailError: '',
           passwordError: 'La contraseña no es la de esta cuenta.',
-          submitted: null
+          loginError: ''
         })
         return false
       }
 
-      set({ emailError: '', passwordError: '', submitted: null })
+      set({ emailError: '', passwordError: '', loginError: '' })
       useSessionStore.getState().startStudentSession(account.email)
       return true
     }
@@ -64,10 +77,7 @@ export const useLoginStore = create<LoginState>((set, get) => ({
     set({
       emailError: '',
       passwordError: '',
-      submitted: {
-        email: email.trim(),
-        password
-      }
+      loginError: 'El correo o la contraseña no coinciden con la cuenta de ejemplo.'
     })
     return false
   }

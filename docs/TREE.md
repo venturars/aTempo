@@ -76,6 +76,7 @@ desktop/
         login/
           LoginScreen.tsx
           loginStore.ts
+          teacherDemoAccount.ts # cuenta pública de ejemplo del profesor
           validateLogin.ts
           trimesterExample.ts
         panel/
@@ -116,7 +117,7 @@ desktop/
           history/
             HistoryScreen.tsx  # clases de la cuenta con hora y estado
         session/
-          sessionStore.ts  # perfil y correo de la sesión, y ruta de su dashboard
+          sessionStore.ts  # perfil, correo en memoria y ruta de su dashboard
         underConstruction/
           UnderConstructionScreen.tsx  # pantalla provisional con título
   tests/
@@ -127,6 +128,7 @@ desktop/
       hidden-watchdog.cjs  # observador de primer plano y procesos propios
     hidden-electron.spec.ts # smoke del build real: entrada, navegación y captura
     login.spec.ts
+    teacher-login.spec.ts # acceso con la cuenta pública del profesor
     panel.spec.ts
     organization-dashboard.spec.ts
     register.spec.ts

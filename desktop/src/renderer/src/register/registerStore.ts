@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { useSessionStore } from '../session/sessionStore'
-import { useStudentAccountsStore } from '../student/studentAccounts'
+import { normalizeEmail, useStudentAccountsStore } from '../student/studentAccounts'
+import { teacherDemoAccount } from '../login/teacherDemoAccount'
 import { validateRegister } from './validateRegister'
 
 type RegisterState = {
@@ -61,7 +62,10 @@ export const useRegisterStore = create<RegisterState>((set, get) => ({
 
     const accounts = useStudentAccountsStore.getState()
 
-    if (accounts.findByEmail(email) !== undefined) {
+    if (
+      normalizeEmail(email) === teacherDemoAccount.email ||
+      accounts.findByEmail(email) !== undefined
+    ) {
       set({
         nameError: '',
         emailError: 'Ya hay una cuenta con este correo.',

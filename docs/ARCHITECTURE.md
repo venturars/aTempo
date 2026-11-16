@@ -52,7 +52,7 @@ Es Node, dentro de Electron. Abre la ventana y abre SQLite. `startupHash()` mira
 
 Sin ninguno de esos flags, carga el renderer sin hash y muestra el login. En desarrollo la ruta va detrás de `#` en `ELECTRON_RENDERER_URL`. En la app empaquetada va en la opción `hash` de `loadFile`. En los dos casos el renderer recibe `#/ruta`.
 
-Tras el arranque normal, TanStack Router abre el panel del profesor cuando el hash del renderer cambia a `#/teacher/panel`. `--organization-dashboard` abre el Resumen de la organización.
+Tras el arranque normal, el login valida la cuenta del profesor o del alumno y TanStack Router abre el dashboard de su perfil al pulsar «Entrar». `--organization-dashboard` abre el Resumen de la organización.
 
 Desde `desktop/`, `pnpm dev -- --organization-dashboard` abre directamente el Resumen de la organización sin credenciales.
 
@@ -87,15 +87,11 @@ El plugin de TanStack Router lee `routes/` y genera `routeTree.gen.ts` al lanzar
 
 El panel del claim y la figura del trimestre se pintan en el renderer y no salen de la base. La figura es la constante `trimesterDays` de `trimesterExample.ts`.
 
-El login guarda el formulario en Zustand (`loginStore.ts`). La validación está en `validateLogin.ts`. Comprueba el correo y la contraseña. No llama a la red. Con datos válidos, `submit()` busca una cuenta de alumno con ese correo:
+El login guarda el formulario en Zustand (`loginStore.ts`). `validateLogin.ts` comprueba el formato del correo y los campos obligatorios. Después, `submit()` normaliza el correo con `normalizeEmail` (`trim().toLowerCase()`) y compara primero con la cuenta pública de `teacherDemoAccount.ts`: `profesor@atempo.test` / `Profesor123!`. La contraseña debe coincidir exactamente. Si coincide, guarda `profile: 'teacher'` y el correo normalizado en la sesión y devuelve `true`.
 
-- Si existe y la contraseña coincide, abre su sesión con `startStudentSession` y devuelve `true`.
-- Si existe y la contraseña no coincide, pone bajo la contraseña «La contraseña no es la de esta cuenta.» y devuelve `false`.
-- Si no existe, muestra el alert con los datos escritos y devuelve `false`.
+Para otros correos, busca una cuenta en `useStudentAccountsStore`: la demo `ada.lopez@clase.test` / `clase-2026` o un alumno registrado durante ese arranque. Si la contraseña coincide, abre su sesión con `startStudentSession(account.email)` y devuelve `true`. Una contraseña de alumno incorrecta muestra «La contraseña no es la de esta cuenta.» bajo el campo. Un correo desconocido o una contraseña de profesor incorrecta muestran un alert de error. Los fallos devuelven `false`, sin crear sesión, navegar ni repetir las credenciales en el aviso. El login no llama a la red.
 
-Con datos no válidos devuelve `false`.
-
-La sesión está en `session/sessionStore.ts`. Define los tipos `Profile` (`'student'`, `'teacher'` u `'organization'`) y `DashboardPath`, la función `dashboardPathForProfile(profile)` y el store de Zustand `useSessionStore`. El store guarda el perfil y el correo de la cuenta abierta; al arrancar los dos son `null`. `startStudentSession(email)` pone `profile: 'student'` y ese correo. El login y el registro la llaman.
+La sesión está en `session/sessionStore.ts`. Define los tipos `Profile` (`'student'`, `'teacher'` u `'organization'`) y `DashboardPath`, la función `dashboardPathForProfile(profile)` y el store de Zustand `useSessionStore`, con `profile: null` y `email: null` al arrancar. `startStudentSession(email)` pone el perfil de alumno y su correo; la usan el login y el registro de alumnos. La sesión y las cuentas mock viven en memoria: al recargar el renderer o reiniciar la app se vacía la sesión, se pierden los alumnos registrados y se restablecen los datos de ejemplo. Para repetir ambos accesos desde el login se reinicia la app.
 
 `dashboardPathForProfile` da la ruta de cada perfil:
 
@@ -103,13 +99,13 @@ La sesión está en `session/sessionStore.ts`. Define los tipos `Profile` (`'stu
 - `teacher` → `/teacher/panel`.
 - `organization` → `/organization/dashboard`.
 
-Cuando `submit()` devuelve `true`, el login navega con `navigate({ to: dashboardPathForProfile('student') })`. Si no, se queda en su pantalla.
+Tras un envío correcto, el login lee el perfil actualizado con `useSessionStore.getState()` y navega con `navigate({ to: dashboardPathForProfile(profile) })`. El profesor abre Hoy en `/teacher/panel` y el alumno, `/student/dashboard`. Un envío fallido conserva la ruta del login.
 
 El panel del profesor está en `desktop/src/renderer/src/panel/`. La lista, las sesiones y la asistencia de ejemplo viven en memoria, en `roster.ts`. El estado de esa pantalla está en `panelStore.ts`. El margen de retraso y los avisos de ejemplo están en `settingsStore.ts`. Todo ese estado vive en Zustand, dentro del renderer, y vuelve a los datos de ejemplo al cerrar la aplicación.
 
 El registro guarda el formulario en Zustand (`registerStore.ts`). La semana del registro es la constante `weekDays` de `weekExample.ts` y no sale de la base.
 
-La validación está en `validateRegister.ts`. Comprueba el nombre, el correo, la contraseña y que la repetida coincida. No llama a la red. Con datos válidos, si el correo ya es de una cuenta, `submit()` pone bajo el correo «Ya hay una cuenta con este correo.» y devuelve `false`. Si no, crea la cuenta, abre su sesión con `startStudentSession`, devuelve `true` y el registro navega a `/student/dashboard`. «Inicia sesión» lleva al login con `navigate({ to: '/' })`, de `useNavigate()` de TanStack Router.
+La validación está en `validateRegister.ts`. Comprueba el nombre, el correo, la contraseña y que la repetida coincida. No llama a la red. Con datos válidos, si el correo normalizado está reservado al profesor o ya es de una cuenta de alumno, `submit()` pone bajo el correo «Ya hay una cuenta con este correo.» y devuelve `false`. Si no, crea la cuenta, abre su sesión con `startStudentSession`, devuelve `true` y el registro navega a `/student/dashboard`. «Inicia sesión» lleva al login con `navigate({ to: '/' })`, de `useNavigate()` de TanStack Router.
 
 El Resumen de la organización vive en `organization/`. `OrganizationDashboardScreen.tsx` pinta los datos ficticios tipados de `organizationExample.ts`. No calcula asistencia ni llama a servicios.
 

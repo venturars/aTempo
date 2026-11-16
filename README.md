@@ -78,8 +78,35 @@ Tras pasar el smoke, construir Storybook desde `docs/storybook` con `pnpm build-
 pnpm run test:visual --workers=1 --retries=0 --global-timeout=300000 --update-snapshots=none
 ```
 
-La suite del sistema visual sirve y cierra su propia vista previa local de Storybook. Esta rama combina el sistema compartido de #69 con el panel real del profesor de #36. La verificación de esa combinación corresponde a #48 y requiere ejecutar el smoke y las suites sobre este árbol; los resultados previos de #69 no la acreditan. La incorporación del dashboard del alumno queda para #70.
-`pnpm run test:visual` construye la app y ejecuta las pruebas de Playwright. Necesita la ventana, así que también va en tu ordenador.
+La suite del sistema visual sirve y cierra su propia vista previa local de Storybook.
+
+### Probar las demos de profesor y alumno
+
+Desde la raíz de tu copia del repositorio, selecciona la corrección de acceso de la PR #104:
+
+```sh
+gh pr checkout 104
+```
+
+Si ya estás en `102-fix-teacher-demo-login`, actualízala con `git pull --ff-only`. Con Docker Desktop en marcha, prepara las dependencias y abre Electron en tu ordenador (con pnpm 10.33.0 instalado como se indica arriba):
+
+```sh
+docker compose run --rm setup
+cd desktop
+pnpm install
+pnpm dev
+```
+
+Desde un arranque nuevo, usa el formulario normal **Entrar** con una de estas cuentas públicas:
+
+| Perfil | Correo | Contraseña | Destino |
+| --- | --- | --- | --- |
+| Profesor | `profesor@atempo.test` | `Profesor123!` | Hoy, en el panel del profesor |
+| Alumno | `ada.lopez@clase.test` | `clase-2026` | Dashboard de Ada López, con escaneo e historial |
+
+El correo admite mayúsculas y espacios laterales; la contraseña debe coincidir exactamente. Una contraseña incorrecta o un correo desconocido muestran un error y conservan el login, sin mostrar las credenciales introducidas ni un aviso de éxito. El registro crea alumnos y reserva el correo del profesor.
+
+Las cuentas, la sesión y los datos de ejemplo viven en memoria del renderer, sin servicio de autenticación. Para probar la otra cuenta desde una sesión nueva, cierra la app y vuelve a ejecutar `pnpm dev`: aparece el login. Al recargar el renderer o reiniciar la app se vacía la sesión y se restablecen los datos de ejemplo; también se pierden los alumnos registrados durante ese arranque.
 
 ### Ventana de Electron desde Docker (experimental)
 
