@@ -49,7 +49,8 @@ services:
       target: desktop-gui
     image: atempo-dev-gui
     working_dir: /work/desktop
-    command: pnpm exec electron-vite preview -- --no-sandbox --disable-gpu
+    # pnpm start es electron-vite preview: construye la app y la abre en Electron. Los flags van a Electron.
+    command: pnpm run start -- --no-sandbox --disable-gpu
     environment:
       DISPLAY: ${ATEMPO_DISPLAY:-host.docker.internal:0}
     # Chromium necesita más memoria compartida que los 64 MB de Docker para pintar la ventana.
