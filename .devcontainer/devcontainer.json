@@ -1,0 +1,21 @@
+{
+  // Opcional: la misma imagen que docker-compose.yml, como Dev Container, para quien pueda abrirlo
+  // (VS Code, Cursor con su extensión, o una terminal con Claude Code o Codex CLI). El porqué está en docs/ARCHITECTURE.md.
+  // Construye el Dockerfile directamente: con docker-compose.yml, Docker Compose 5 rechaza el Dockerfile que genera la herramienta.
+  "name": "aTempo",
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "context": "..",
+    "target": "base"
+  },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/work,type=bind",
+  "workspaceFolder": "/work",
+  // Los node_modules de Linux, en volúmenes propios de esta copia del repositorio.
+  "mounts": [
+    "source=${localWorkspaceFolderBasename}-devcontainer-desktop-node-modules,target=/work/desktop/node_modules,type=volume",
+    "source=${localWorkspaceFolderBasename}-devcontainer-storybook-node-modules,target=/work/docs/storybook/node_modules,type=volume",
+    "source=${localWorkspaceFolderBasename}-devcontainer-pnpm-store,target=/pnpm-store,type=volume"
+  ],
+  "postCreateCommand": "bash docker/setup.sh",
+  "forwardPorts": [6006]
+}

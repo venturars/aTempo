@@ -1,6 +1,31 @@
-# Arquitectura de aTempo de escritorio
+# Arquitectura de aTempo
 
-La aplicación tiene tres capas. Cada una vive en su carpeta y no hace el trabajo de las otras.
+## API-router y SDK
+
+Carpeta: `api-router/`.
+
+Los frontends (Electron en `desktop/` y el futuro portal web) hablarán REST con este servicio NestJS. El API-router transforma HTTP y delegará en la **SDK (lógica de negocio)**. Esa SDK vivirá en `sdk/`, al mismo nivel que `desktop/` y `api-router/`; la carpeta aún no existe. Redis, Postgres y el resto de microservicios del backend quedan fuera del escritorio.
+
+Hoy solo existe `GET /health`. El login y el registro del renderer **no** llaman a esta API.
+
+La documentación interactiva (OpenAPI y Swagger UI) vive en **`/docs`** con el servicio en marcha; sirve para probar endpoints a mano, no implementa lógica de negocio.
+
+```mermaid
+flowchart LR
+  electron[FrontendElectron]
+  web[FrontendWeb]
+  router[APIRouterNest]
+  sdk[sdk_logicaDeNegocio]
+  electron --> router
+  web --> router
+  router --> sdk
+```
+
+`sdk/` es un paquete hermano de `desktop/` y `api-router/`; el API-router y los frontends la consumirán cuando exista.
+
+## aTempo de escritorio
+
+La aplicación de escritorio tiene tres capas. Cada una vive en su carpeta y no hace el trabajo de las otras.
 
 ```mermaid
 flowchart LR
@@ -87,3 +112,29 @@ La única métrica global es el número de estudiantes distintos con al menos 3 
 Las suites Playwright lanzan el build real a través de `desktop/tests/helpers/electron.ts`. El arnés de tests comprueba la fuente y el build antes del arranque e instala guardas nativas antes de cargar el main. En macOS mantiene las ventanas ocultas, bloquea su activación y vigila el primer plano y el cierre de los procesos propios, con auditoría persistente. Aborta si no puede observar o mantener esas condiciones; no admite un arranque visible. El smoke obligatorio y los comandos están en [README.md](../README.md#escritorio).
 
 El arnés vive exclusivamente en `desktop/tests/`: el arranque normal y las capas de la aplicación conservan su comportamiento.
+## Entorno de instalación
+
+Docker instala lo que el proyecto necesita con las mismas versiones para todo el equipo: Node 24.22.3, que es la versión mayor de Electron 44, pnpm 10.33.0 y APM 0.35.0. Está en `Dockerfile`, `docker-compose.yml` y `docker/setup.sh`.
+
+- La imagen parte de `node:24.22.3-trixie`, con la versión exacta. APM llega como su binario oficial para Linux, comprobado con su SHA-256: trae su propio Python, así que la imagen no instala ninguno. El binario necesita glibc 2.38 o superior, y por eso la base es Debian 13 (trixie) y no Debian 12.
+- `setup` lanza `apm install` en la raíz y `pnpm install` en `desktop/` y `docs/storybook/`.
+- Las skills y los agentes de delivery-workflow quedan en la carpeta del proyecto, para Cursor, Codex y Claude Code. Son texto y valen en cualquier sistema.
+- Los `node_modules` quedan en volúmenes de Docker. Los de Linux no sirven en macOS ni en Windows, ni al revés: Electron, SQLite y Vite traen binarios de cada sistema.
+- `desktop/` y `docs/storybook/` tienen cada uno su `node_modules`, porque cada uno tiene su `package.json` y su lockfile. Solo comparten la caché de pnpm. Cada servicio monta solo los volúmenes que usa.
+- `storybook` sirve Storybook en el puerto 6006. `desktop` lanza las comprobaciones de `desktop/`.
+- `desktop-gui`, opcional, usa la etapa `desktop-gui` del `Dockerfile`: añade las librerías de escritorio que necesita Chromium, con versión fija y descargadas de snapshot.debian.org en una fecha fija, y abre la app con `--no-sandbox`, `--disable-gpu` y 1 GB de memoria compartida. Muestra la ventana en el servidor X11 del ordenador (XQuartz en macOS). Va en el perfil `gui`, así que `docker compose up` sin nombre no lo arranca.
+- Los hooks de `.githooks/` lanzan `setup` después de `git pull`, de cambiar de rama o de un rebase, solo si cambió la instalación o el `Dockerfile`, y reconstruyen la imagen si hace falta. Si Docker no está en marcha, avisan y git sigue.
+
+Docker es el instalador, no el entorno de trabajo. Cursor y Codex se usan sobre todo desde sus apps de escritorio, y esas apps trabajan sobre la carpeta del ordenador: el agente lanza allí sus comandos, no dentro de un contenedor. Por eso cada ordenador sigue necesitando `git`, `gh`, Node y bash para el flujo de delivery-workflow, y la ventana de Electron se abre en el ordenador. `desktop-gui` puede abrirla desde Docker en la pantalla del ordenador, a través de X11, pero es opcional y experimental.
+
+Se descartó trabajar dentro de un Dev Container:
+
+| | Docker como instalador | Dev Container |
+| --- | --- | --- |
+| App de escritorio de Codex | Funciona | No abre proyectos dentro de un contenedor |
+| App de escritorio de Cursor | Funciona | Con su extensión de Dev Containers, que falla a menudo |
+| Ventana de Electron | En el ordenador, o desde Docker con `desktop-gui` y X11 | Sin pantalla dentro del contenedor |
+| Lo que necesita cada ordenador | Docker, git, `gh`, Node y bash | Docker y git |
+| Windows | WSL o Git Bash para el flujo | Resuelto: el contenedor es Linux |
+
+`.devcontainer/devcontainer.json` usa la misma imagen para quien pueda abrir un Dev Container. Es opcional.
