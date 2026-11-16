@@ -1,3 +1,35 @@
+# Árbol de `sdk/` (pendiente)
+
+```text
+sdk/                  # lógica de negocio; paquete aún no creado
+```
+
+# Árbol de `api-router/`
+
+```text
+api-router/
+  package.json
+  pnpm-lock.yaml
+  .npmrc
+  nest-cli.json
+  tsconfig.json
+  tsconfig.build.json
+  eslint.config.mjs
+  README.md
+  src/
+    main.ts
+    configure-app.ts   # CORS, ValidationPipe, Swagger /docs
+    app.module.ts
+    health/
+      health.module.ts
+      health.controller.ts
+      health-response.dto.ts
+  test/
+    health.e2e-spec.ts
+    swagger.e2e-spec.ts
+    jest-e2e.json
+```
+
 # Árbol de `desktop/`
 
 ```text
@@ -31,6 +63,8 @@ desktop/
           sign-up.tsx   # /sign-up, registro
           student/
             dashboard.tsx  # /student/dashboard
+            scan.tsx       # /student/scan, registrar asistencia
+            history.tsx    # /student/history, historial
           organization/
             dashboard.tsx  # /organization/dashboard, Resumen de la organización
           teacher/
@@ -42,6 +76,7 @@ desktop/
         login/
           LoginScreen.tsx
           loginStore.ts
+          teacherDemoAccount.ts # cuenta pública de ejemplo del profesor
           validateLogin.ts
           trimesterExample.ts
         panel/
@@ -72,10 +107,17 @@ desktop/
           validateRegister.ts
           weekExample.ts
         student/
+          attendanceStatus.ts  # estado de asistencia y margen de tarde
+          studentAccounts.ts   # cuentas de alumno en memoria y cuenta de la sesión
+          studentExample.ts    # cuenta de ejemplo, clase de hoy y lecturas del QR
           dashboard/
             DashboardScreen.tsx
+          scan/
+            ScanScreen.tsx     # clase de hoy y lector con lecturas de ejemplo
+          history/
+            HistoryScreen.tsx  # clases de la cuenta con hora y estado
         session/
-          sessionStore.ts  # perfil de la sesión y ruta de su dashboard
+          sessionStore.ts  # perfil, correo en memoria y ruta de su dashboard
         underConstruction/
           UnderConstructionScreen.tsx  # pantalla provisional con título
   tests/
@@ -86,12 +128,14 @@ desktop/
       hidden-watchdog.cjs  # observador de primer plano y procesos propios
     hidden-electron.spec.ts # smoke del build real: entrada, navegación y captura
     login.spec.ts
+    teacher-login.spec.ts # acceso con la cuenta pública del profesor
     panel.spec.ts
     teacher-qr.spec.ts  # temporizador, llegadas y dos temas a 390/1280 px
     organization-dashboard.spec.ts
     register.spec.ts
     dashboard.spec.ts
     navigation.spec.ts  # rutas, flags de arranque y dashboard de cada perfil
+    student.spec.ts     # alta y acceso del alumno, escaneo, historial y estado de asistencia; escaneo e historial en ambos temas a 390/1280 px (fuentes, espaciado y desbordamiento)
     visual-system.spec.ts  # paridad de Storybook y escritorio, temas y rutas
     snapshots/
       login-empty.png
@@ -101,7 +145,6 @@ desktop/
       login-claro.png
       register-empty.png
       register-errors.png
-      register-alert.png
       register-narrow.png
       register-claro.png
       dashboard-empty.png
@@ -122,6 +165,12 @@ desktop/
       teacher-qr-claro-desktop.png
       teacher-qr-oscuro-movil.png
       teacher-qr-claro-movil.png
+      student-register-390.png
+      student-dashboard-390.png
+      student-scan-390.png
+      student-scan-confirmed-390.png
+      student-history-empty-390.png
+      student-history-390.png
   build/                # iconos de empaquetado de la plantilla
   resources/            # icono de la ventana en Linux
 ```

@@ -123,19 +123,24 @@ test('shows the login when the hash changes to an unknown route from any screen'
   }
 })
 
-test('keeps the login and shows the alert after a valid login without profile', async () => {
+test('keeps the login and shows an error for an unknown email without credential echo', async () => {
   await withApp([], async (window) => {
     const routeBefore = await readRoute(window)
     await window.getByLabel('Correo').fill('ana@clase.test')
     await window.getByLabel('Contraseña').fill('secreta12')
     await window.getByRole('button', { name: 'Entrar' }).click()
 
-    const alert = window.getByRole('status')
-    await expect(alert).toBeVisible()
-    await expect(alert).toContainText('Correo: ana@clase.test')
-    await expect(alert).toContainText('Contraseña: secreta12')
+    const alert = window.getByRole('alert')
+    await expect(alert).toHaveText(
+      'El correo o la contraseña no coinciden con la cuenta de ejemplo.'
+    )
+    await expect(window.getByRole('status')).toHaveCount(0)
+    const text = await window.locator('body').innerText()
+    expect(text).not.toContain('ana@clase.test')
+    expect(text).not.toContain('secreta12')
     expect(await readRoute(window)).toBe(routeBefore)
     await expectLoginScreen(window)
+    await expect(window).toHaveScreenshot('login-alert.png', { animations: 'disabled' })
   })
 })
 

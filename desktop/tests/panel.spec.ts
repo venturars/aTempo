@@ -326,14 +326,20 @@ test('scrolls the fifteen students inside the card and keeps the header visible'
   })
 })
 
-test('keeps the login without a profile and opens the panel through the router', async () => {
+test('rejects an unknown account and still opens the panel through the shared router', async () => {
   await withApp([], { width: 1440, height: 900 }, async (window) => {
     expect(await window.evaluate(() => globalThis.location.hash)).toBe('')
     await window.getByLabel('Correo').fill('ana@clase.test')
     await window.getByLabel('Contraseña').fill('secreta')
     await window.getByRole('button', { name: 'Entrar' }).click()
 
-    await expect(window.getByRole('status')).toContainText('Correo: ana@clase.test')
+    await expect(window.getByRole('alert')).toHaveText(
+      'El correo o la contraseña no coinciden con la cuenta de ejemplo.'
+    )
+    await expect(window.getByRole('status')).toHaveCount(0)
+    const text = await window.locator('body').innerText()
+    expect(text).not.toContain('ana@clase.test')
+    expect(text).not.toContain('secreta')
     expect(await window.evaluate(() => globalThis.location.hash)).toBe('')
     await window.evaluate(() => {
       document.body.dataset.navigationMarker = 'same-page'

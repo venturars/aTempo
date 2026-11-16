@@ -35,9 +35,9 @@ async function withPanel(
     await expect(p.getByRole('button', { name: 'Entrar', exact: true })).toBeVisible()
     await p.clock.pauseAt(time)
     await p.setViewportSize({ width, height })
-    await p.evaluate(() => {
-      location.hash = '#/teacher/panel'
-    })
+    await p.getByLabel('Correo', { exact: true }).fill('profesor@atempo.test')
+    await p.getByLabel('Contraseña', { exact: true }).fill('Profesor123!')
+    await p.getByRole('button', { name: 'Entrar', exact: true }).click()
     await expect(p.getByRole('heading', { name: 'Hoy', exact: true })).toBeVisible()
     await run(p)
   } finally {
