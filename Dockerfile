@@ -1,7 +1,8 @@
 # Entorno de instalación de aTempo: Node, pnpm, git y APM con las mismas versiones para todo el equipo.
 # Lo usan docker-compose.yml y .devcontainer/devcontainer.json.
+# Dos etapas: base (instalar y comprobar) y desktop-gui (abrir la ventana de Electron, opcional).
 # Debian 13 (trixie): el binario de APM necesita glibc 2.38 o superior, y Debian 12 trae la 2.36.
-FROM node:24.22.3-trixie
+FROM node:24.22.3-trixie AS base
 
 # Electron 44 trae Node 24. pnpm sale de packageManager en desktop/ y docs/storybook/.
 ARG PNPM_VERSION=10.33.0
@@ -38,3 +39,16 @@ USER node
 ENV CI=true \
   npm_config_store_dir=/pnpm-store
 WORKDIR /work
+
+# Opcional: las librerías de escritorio que Chromium necesita para abrir la ventana de Electron.
+# Solo las usa el servicio desktop-gui. Nombres de Debian 13: varias acaban en t64.
+FROM base AS desktop-gui
+USER root
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    libnss3 libnspr4 libatk1.0-0t64 libatk-bridge2.0-0t64 libcups2t64 libdrm2 \
+    libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 \
+    libasound2t64 libpango-1.0-0 libcairo2 libgtk-3-0t64 libx11-xcb1 \
+    libxcb-dri3-0 libxshmfence1 fonts-liberation \
+  && rm -rf /var/lib/apt/lists/*
+USER node

@@ -2,9 +2,12 @@
 #   docker compose run --rm setup               instala APM y las dependencias
 #   docker compose up storybook                 sirve Storybook en http://localhost:6006
 #   docker compose run --rm desktop pnpm lint   comprueba desktop/ con las versiones del equipo
+#   docker compose up desktop-gui               abre la ventana de Electron (opcional, ver el README)
 
 x-base: &base
-  build: .
+  build:
+    context: .
+    target: base
   image: atempo-dev
 
 services:
@@ -31,6 +34,26 @@ services:
   desktop:
     <<: *base
     working_dir: /work/desktop
+    volumes:
+      - .:/work
+      - desktop-node-modules:/work/desktop/node_modules
+      - pnpm-store:/pnpm-store
+
+  # Opcional: construye y abre la app en la pantalla del ordenador, a través de su servidor X11.
+  # En macOS, XQuartz. DISPLAY se puede cambiar con ATEMPO_DISPLAY para Linux o Windows.
+  desktop-gui:
+    # Con un perfil, docker compose up sin nombre de servicio no lo arranca.
+    profiles: [gui]
+    build:
+      context: .
+      target: desktop-gui
+    image: atempo-dev-gui
+    working_dir: /work/desktop
+    command: pnpm exec electron-vite preview -- --no-sandbox --disable-gpu
+    environment:
+      DISPLAY: ${ATEMPO_DISPLAY:-host.docker.internal:0}
+    # Chromium necesita más memoria compartida que los 64 MB de Docker para pintar la ventana.
+    shm_size: 1gb
     volumes:
       - .:/work
       - desktop-node-modules:/work/desktop/node_modules
