@@ -8,12 +8,26 @@ La visión, los perfiles y las decisiones de producto están en [principles.md](
 
 | Carpeta | Qué es |
 | --- | --- |
-| `desktop/` | Aplicación del profesor. Electron, React y SQLite. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/sign-up` para el registro. |
+| `desktop/` | Aplicación del profesor. Electron, React y SQLite local. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/sign-up` para el registro. |
+| `backend/` | API independiente con NestJS 11, Node.js y TypeScript. Incluye configuración por entorno, validación global y `GET /api/health`; Auth0 y la base de datos central aún no están integrados. |
 | `docs/storybook/` | Fuente de verdad visual: Tailwind y daisyUI. Las pantallas usan las clases. No hay un paquete de componentes. |
 | `docs/guia/` | Markdown generado desde Storybook. No se versiona. Lo leen los agentes. |
 | `docs/` | Cómo se construye: constitución, arquitectura, estilo y árbol de carpetas. |
 
 Cada carpeta con código tiene su propio `package.json`. No hay workspace en la raíz. El gestor es pnpm 10.33.0 y las versiones van fijas.
+
+## Backend
+
+Desde `backend/`, instala las dependencias y arranca la API:
+
+```powershell
+corepack pnpm install
+corepack pnpm start:dev
+```
+
+La API usa `PORT=3000` por defecto. Si necesitas otro puerto, crea `backend/.env` manualmente y añade, por ejemplo, `PORT=3001`. Ese archivo es local y Git lo ignora. Comprueba la API en `http://localhost:3000/api/health`.
+
+Consulta [backend/README.md](backend/README.md) para compilar y ejecutar las pruebas.
 
 ## Escritorio
 
@@ -63,8 +77,8 @@ Reemplaza los valores por el login exacto del revisor solicitado y su ID numéri
 | --- | --- |
 | [principles.md](principles.md) | Visión, usuarios, pantallas y decisiones de producto. |
 | [docs/CONSTITUTION.md](docs/CONSTITUTION.md) | Lo que ya está decidido para construir. |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Las tres capas del escritorio. |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Arquitectura del escritorio y del backend. |
 | [docs/STYLE.md](docs/STYLE.md) | Temas y enlace a la guía visual. |
 | [docs/guia](docs/guia/README.md) | Markdown generado desde Storybook. No se versiona. |
-| [docs/TREE.md](docs/TREE.md) | Carpetas de `desktop/`. |
+| [docs/TREE.md](docs/TREE.md) | Carpetas principales de `desktop/` y `backend/`. |
 | [AGENTS.md](AGENTS.md) | Cómo se trabaja una spec. |

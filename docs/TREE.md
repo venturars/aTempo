@@ -1,4 +1,6 @@
-# Árbol de `desktop/`
+# Carpetas de las aplicaciones
+
+## `desktop/`
 
 ```text
 desktop/
@@ -86,3 +88,37 @@ desktop/
   build/                # iconos de empaquetado de la plantilla
   resources/            # icono de la ventana en Linux
 ```
+
+## `backend/`
+
+```text
+backend/
+  package.json
+  pnpm-lock.yaml
+  .npmrc
+  .gitignore
+  README.md
+  nest-cli.json
+  tsconfig.json
+  src/
+    main.ts
+    app.module.ts
+    health/
+      health.controller.ts
+      health.module.ts
+    auth/
+      auth.module.ts
+    users/
+      users.module.ts
+    organizations/
+      organizations.module.ts
+    courses/
+      courses.module.ts
+    sessions/
+      sessions.module.ts
+    attendance/
+      attendance.module.ts
+  test/
+```
+
+Los módulos de dominio están vacíos por ahora; la API no integra Auth0 ni una base de datos central.

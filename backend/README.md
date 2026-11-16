@@ -13,11 +13,10 @@ Desde la carpeta `backend/`:
 
 ```powershell
 corepack pnpm install
-Copy-Item .env.example .env
 corepack pnpm start:dev
 ```
 
-La API arranca en `http://localhost:3000`. Comprueba `http://localhost:3000/api/health`; debe responder `{"status":"ok"}`. El puerto se configura con `PORT` en `.env`.
+La API arranca en `http://localhost:3000`. Comprueba `http://localhost:3000/api/health`; debe responder `{"status":"ok"}`. El puerto predeterminado es `3000`, así que no necesitas crear `.env`. Para usar otro, crea `backend/.env` manualmente, por ejemplo con `PORT=3001`. Git ignora `.env`.
 
 Para compilar y ejecutar pruebas:
 

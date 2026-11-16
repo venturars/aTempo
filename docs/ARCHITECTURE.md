@@ -1,4 +1,27 @@
-# Arquitectura de aTempo de escritorio
+# Arquitectura de aTempo
+
+El escritorio y la API son aplicaciones independientes: Electron ejecuta el escritorio del profesor; NestJS ejecuta el servidor HTTP.
+
+```mermaid
+flowchart LR
+  desktop[Electron + React]
+  api[NestJS API]
+  desktop -->|HTTP, cuando se integre| api
+```
+
+La comunicación de negocio entre ambas aplicaciones aún no está implementada. Auth0 y la base de datos central también quedan pendientes.
+
+## Backend
+
+Carpeta: `backend/`.
+
+Es un servicio Node.js con NestJS 11 y TypeScript estricto. `main.ts` lee la configuración, valida `PORT` (3000 por defecto), establece el prefijo `/api` y activa la validación global de los DTO. `GET /api/health` responde `{ "status": "ok" }`.
+
+La aplicación registra los módulos `auth`, `users`, `organizations`, `courses`, `sessions` y `attendance`. Por ahora reservan la organización del código; no implementan autenticación ni persistencia. La base SQLite descrita abajo pertenece al escritorio y no está conectada con este backend.
+
+Se puede omitir `.env` para usar el puerto predeterminado. Para cambiarlo, crea `backend/.env` manualmente con `PORT=3001`, por ejemplo. Git ignora el archivo.
+
+## Escritorio
 
 La aplicación tiene tres capas. Cada una vive en su carpeta y no hace el trabajo de las otras.
 
