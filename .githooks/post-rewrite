@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Después de git pull --rebase o git rebase. Un git commit --amend no cambia la instalación.
+[[ "${1:-}" == rebase ]] || exit 0
+exec bash "$(dirname "$0")/run-setup.sh" ORIG_HEAD HEAD
