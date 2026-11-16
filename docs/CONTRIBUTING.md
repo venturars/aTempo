@@ -8,17 +8,14 @@ aTempo registra la asistencia de los alumnos de una clase. Este repositorio tien
 
 Antes de contribuir, conviene leer:
 
-- [README.md](README.md): qué hay en el repositorio.
-- [principles.md](principles.md): la visión del producto, los perfiles de usuario y las decisiones de producto.
-- [docs/CONSTITUTION.md](docs/CONSTITUTION.md): lo que ya está decidido para construir, como el stack y dónde está cada cosa.
-
-Si es tu primera contribución, no hace falta que lo entiendas todo. Empieza por una issue pequeña y pregunta lo que necesites en la propia issue.
+- [README.md](../README.md): qué hay en el repositorio.
+- [principles.md](../principles.md): la visión del producto, los perfiles de usuario y las decisiones de producto.
+- [CONSTITUTION.md](CONSTITUTION.md): lo que ya está decidido para construir, como el stack y dónde está cada cosa.
 
 ## Cómo nos tratamos
 
 - Trata a todo el mundo con respeto, sea cual sea su experiencia.
 - Critica el código, no a la persona. Explica el porqué de cada comentario y propón una alternativa cuando puedas.
-- Nadie nace sabiendo: las preguntas básicas son bienvenidas.
 - Si alguien no respeta estas normas, escríbele a [@venturars](https://github.com/venturars).
 
 ## Qué contribuciones buscamos
@@ -62,28 +59,6 @@ Si es un error, añade en "Qué hay que hacer" los pasos para reproducirlo, qué
 
 Espera a que te asignen la issue antes de empezar a programar. Así nadie trabaja dos veces en lo mismo y te aseguras de que el cambio encaja en el proyecto.
 
-## Preparar el entorno
-
-Necesitas [Git](https://git-scm.com/), [Node.js](https://nodejs.org/) y [pnpm](https://pnpm.io/) 10.33.0. Con [Corepack](https://pnpm.io/installation#using-corepack), pnpm usa sola la versión que pide el proyecto.
-
-Cada carpeta con código tiene su propio `package.json`. No hay workspace en la raíz.
-
-Aplicación de escritorio:
-
-```sh
-cd desktop
-pnpm install
-pnpm dev
-```
-
-Guía visual:
-
-```sh
-cd docs/storybook
-pnpm install
-pnpm storybook
-```
-
 ## Flujo de trabajo
 
 1. **Haz un fork** del repositorio, o crea una rama si tienes permiso de escritura.
@@ -120,42 +95,15 @@ Los commits deciden la versión, así que el tipo importa:
 
 ## Cómo se escribe el código
 
-- **Que lo entienda un junior:** nombres que dicen qué hacen, una cosa por función y un flujo que se sigue sin adivinar.
-- **Cada herramienta se usa como dice su documentación oficial.** No se inventa un estilo propio ni se copia el de otro proyecto.
-- **La guía visual manda.** Storybook, en `docs/storybook`, es la fuente de verdad. Las pantallas usan sus clases de Tailwind y daisyUI.
-- **Si cambias algo de `docs/storybook`**, vuelve a generar la guía desde esa carpeta con `pnpm guide`.
-- **Las versiones de las dependencias van fijas**, sin `^` ni `~`.
+Sigue lo que ya está escrito en [AGENTS.md](../AGENTS.md) y en la carpeta `docs/`. Esos documentos mandan sobre cualquier otra costumbre:
 
-## Antes de pedir revisión
-
-Desde `desktop/`:
-
-```sh
-pnpm lint
-pnpm typecheck
-pnpm run test:visual
-```
-
-Si has tocado `docs/storybook/`, desde esa carpeta:
-
-```sh
-pnpm guide:check
-```
-
-Todo tiene que salir bien. Revisa también que:
-
-- La pull request va contra `staging` y enlaza su issue.
-- Los commits siguen las convenciones.
-- Has probado el cambio siguiendo el "Cómo probarlo" de la issue.
-
-## Agentes de IA
-
-Puedes usar agentes de IA para programar. [AGENTS.md](AGENTS.md) explica cómo trabajan en este proyecto: leen la constitución y la guía visual, y siguen el desarrollo guiado por specs.
-
-No es obligatorio usarlos, pero sí lo es revisar lo que escriben. Quien abre la pull request responde de todo el código, lo haya escrito una persona o una IA.
+- [CONSTITUTION.md](CONSTITUTION.md): lo que ya está decidido para construir.
+- [ARCHITECTURE.md](ARCHITECTURE.md): las tres capas del escritorio.
+- [STYLE.md](STYLE.md): los temas y la guía visual.
+- [TREE.md](TREE.md): dónde va cada carpeta de `desktop/`.
 
 ## Licencia
 
-aTempo usa la licencia [Apache 2.0](LICENSE). Al contribuir, aceptas que tu aportación se publique con esa misma licencia, como dice su sección 5.
+aTempo usa la licencia [Apache 2.0](../LICENSE). Al contribuir, aceptas que tu aportación se publique con esa misma licencia, como dice su sección 5.
 
-Si reutilizas aTempo, tienes que conservar el aviso de [NOTICE](NOTICE) y mencionar el proyecto original.
+Si reutilizas aTempo, tienes que conservar el aviso de [NOTICE](../NOTICE) y mencionar el proyecto original.
