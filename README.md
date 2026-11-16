@@ -81,6 +81,8 @@ pnpm run test:visual --workers=1 --retries=0 --global-timeout=300000 --update-sn
 La suite del sistema visual sirve y cierra su propia vista previa local de Storybook. Esta rama combina el sistema compartido de #69 con el panel real del profesor de #36. La verificación de esa combinación corresponde a #48 y requiere ejecutar el smoke y las suites sobre este árbol; los resultados previos de #69 no la acreditan. La incorporación del dashboard del alumno queda para #70.
 `pnpm run test:visual` construye la app y ejecuta las pruebas de Playwright. Necesita la ventana, así que también va en tu ordenador.
 
+Cada pull request a `staging` pasa lint, typecheck y el build de Storybook en GitHub Actions ([ci.yml](.github/workflows/ci.yml)). Si una comprobación falla, la pull request queda en rojo.
+
 ### Ventana de Electron desde Docker (experimental)
 
 `desktop-gui` construye la app dentro de Docker y abre su ventana en tu pantalla, a través del servidor X11 de tu ordenador. Es más lenta que `pnpm dev` en el ordenador: no usa la GPU y no recarga al editar. Solo está probada en macOS.
@@ -100,8 +102,6 @@ docker compose up desktop-gui
 Para pararla, `Ctrl+C`. Al terminar, `/opt/X11/bin/xhost -localhost` vuelve a cerrar la pantalla.
 
 En Linux o Windows con WSL2, cambia la pantalla con `ATEMPO_DISPLAY`. Por ejemplo, `ATEMPO_DISPLAY=:0 docker compose up desktop-gui`, además de montar el socket de X11 de tu sistema. Está sin probar.
-
-Cada pull request a `staging` pasa lint, typecheck y el build de Storybook en GitHub Actions ([ci.yml](.github/workflows/ci.yml)). Si una comprobación falla, la pull request queda en rojo.
 
 ## Guía visual
 
