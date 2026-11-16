@@ -42,6 +42,7 @@ WORKDIR /work
 
 # Opcional: las librerías de escritorio que Chromium necesita para abrir la ventana de Electron.
 # Solo las usa el servicio desktop-gui. Nombres de Debian 13: varias acaban en t64.
+# Con estas cuatro, apt instala el resto como dependencias (atk, cups, drm, las de X11…).
 FROM base AS desktop-gui
 
 # Los paquetes salen de snapshot.debian.org tal como estaban en esa fecha: así las versiones fijadas
@@ -52,25 +53,9 @@ ARG DEBIAN_SNAPSHOT=20261116T000000Z
 USER root
 RUN apt-get update --snapshot "$DEBIAN_SNAPSHOT" \
   && apt-get install -y --no-install-recommends --snapshot "$DEBIAN_SNAPSHOT" \
-    libnss3=2:3.110-1+deb13u5 \
-    libnspr4=2:4.36-1 \
-    libatk1.0-0t64=2.56.2-1+deb13u2 \
-    libatk-bridge2.0-0t64=2.56.2-1+deb13u2 \
-    libcups2t64=2.4.10-3+deb13u2 \
-    libdrm2=2.4.124-2 \
-    libxkbcommon0=1.7.0-2 \
-    libxcomposite1=1:0.4.6-1 \
-    libxdamage1=1:1.1.6-1+b2 \
-    libxfixes3=1:6.0.0-2+b4 \
-    libxrandr2=2:1.5.4-1+b3 \
-    libgbm1=25.0.7-2+deb13u1 \
-    libasound2t64=1.2.14-1+deb13u1 \
-    libpango-1.0-0=1.56.3-1 \
-    libcairo2=1.18.4-1+b1 \
     libgtk-3-0t64=3.24.49-3 \
-    libx11-xcb1=2:1.8.12-1 \
-    libxcb-dri3-0=1.17.0-2+b1 \
-    libxshmfence1=1.3.3-1 \
-    fonts-liberation=1:2.1.5-3 \
+    libnss3=2:3.110-1+deb13u5 \
+    libasound2t64=1.2.14-1+deb13u1 \
+    libgbm1=25.0.7-2+deb13u1 \
   && rm -rf /var/lib/apt/lists/*
 USER node
