@@ -65,6 +65,13 @@ desktop/
     register.spec.ts
     dashboard.spec.ts
     navigation.spec.ts  # rutas, flags de arranque y dashboard de cada perfil
+    visual-system.spec.ts  # paridad de Storybook y escritorio, temas y rutas
+    hidden-electron.spec.ts  # smoke del build real sin ventanas nativas visibles
+    helpers/
+      electron.ts          # launcher oculto y cierre; exige macOS
+      hidden-electron.cjs   # guardas nativas antes de cargar el main construido
+      hidden-preflight.cjs  # comprueba constructores ocultos en fuente y build
+      hidden-watchdog.cjs   # vigila primer plano y procesos propios
     snapshots/
       login-empty.png
       login-errors.png

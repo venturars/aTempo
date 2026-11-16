@@ -1,4 +1,5 @@
-import { _electron as electron, expect, test, type Locator, type Page } from '@playwright/test'
+import { launchHiddenElectron } from './helpers/electron'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { spawn, type ChildProcess } from 'node:child_process'
 import path from 'node:path'
 
@@ -49,10 +50,7 @@ async function story(page: Page, id: string, theme: string): Promise<void> {
   await page.evaluate(() => document.fonts.ready)
 }
 async function withApp(run: (page: Page) => Promise<void>): Promise<void> {
-  const app = await electron.launch({
-    args: ['--force-device-scale-factor=1', path.join(appRoot, 'out/main/index.js')],
-    cwd: appRoot
-  })
+  const app = await launchHiddenElectron([])
   try {
     const page = await app.firstWindow()
     await page.evaluate(() => document.fonts.ready)
