@@ -195,11 +195,21 @@ test('shows both errors when the fields are empty', async () => {
   })
 })
 
-test('opens the professor panel after a valid login', async () => {
+test('keeps a valid login without a profile before navigating to the professor panel', async () => {
   await withApp(async (window) => {
     await window.getByLabel('Correo').fill('ana@clase.test')
     await window.getByLabel('Contraseña').fill('secreta')
     await window.getByRole('button', { name: 'Entrar' }).click()
+
+    await expect(window.getByRole('status')).toContainText('Correo: ana@clase.test')
+    await expect(window.getByRole('status')).toContainText('Contraseña: secreta')
+    expect(await window.evaluate(() => window.location.hash)).toBe('')
+    await expectLoginFields(window)
+    await expectNoErrorPhrases(window)
+    await expect(window).toHaveScreenshot('login-alert.png', { animations: 'disabled' })
+    await window.evaluate(() => {
+      window.location.hash = '#/teacher/panel'
+    })
 
     await expect(window.getByRole('navigation', { name: 'Secciones' })).toBeVisible()
     await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()

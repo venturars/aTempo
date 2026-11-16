@@ -1,4 +1,6 @@
 import { FormEvent } from 'react'
+import { useNavigate } from '@tanstack/react-router'
+import { dashboardPathForProfile, useSessionStore } from '../session/sessionStore'
 import { useLoginStore } from './loginStore'
 import { markClass, markLabel, trimesterDays, type AttendanceMark } from './trimesterExample'
 
@@ -62,15 +64,19 @@ function LoginForm(): React.JSX.Element {
   const password = useLoginStore((state) => state.password)
   const emailError = useLoginStore((state) => state.emailError)
   const passwordError = useLoginStore((state) => state.passwordError)
+  const submitted = useLoginStore((state) => state.submitted)
   const setEmail = useLoginStore((state) => state.setEmail)
   const setPassword = useLoginStore((state) => state.setPassword)
   const submit = useLoginStore((state) => state.submit)
+  const profile = useSessionStore((state) => state.profile)
+  const navigate = useNavigate()
 
   function onSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault()
-    submit()
-    if (useLoginStore.getState().submitted !== null) {
-      window.location.hash = '#/teacher/panel'
+    const isValid = submit()
+
+    if (isValid && profile !== null) {
+      navigate({ to: dashboardPathForProfile(profile) })
     }
   }
 
@@ -123,6 +129,12 @@ function LoginForm(): React.JSX.Element {
         <button className="btn btn-primary" type="submit">
           Entrar
         </button>
+        {submitted !== null ? (
+          <div className="alert alert-success" role="status">
+            <span>Correo: {submitted.email}</span>
+            <span>Contraseña: {submitted.password}</span>
+          </div>
+        ) : null}
       </form>
     </section>
   )

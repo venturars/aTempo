@@ -41,14 +41,11 @@ test.describe.configure({ timeout: 60_000 })
 
 async function openPanel(): Promise<{ app: ElectronApplication; window: Page }> {
   const app = await electron.launch({
-    args: ['--force-device-scale-factor=1', mainFile],
+    args: ['--force-device-scale-factor=1', '--panel', mainFile],
     cwd: appRoot
   })
   const window = await app.firstWindow()
   await window.setViewportSize({ width: 1440, height: 900 })
-  await window.getByLabel('Correo').fill('ana@clase.test')
-  await window.getByLabel('Contraseña').fill('secreta')
-  await window.getByRole('button', { name: 'Entrar' }).click()
   await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
   return { app, window }
 }
@@ -95,7 +92,7 @@ async function expectScreen(window: Page, name: string): Promise<void> {
   if (size === null) throw new Error('La ventana no tiene tamaño.')
   await window.mouse.move(size.width - 1, size.height - 1)
   await window.evaluate(() => document.fonts.ready)
-  await expect(window).toHaveScreenshot(name, { animations: 'disabled' })
+  await expect.soft(window).toHaveScreenshot(name, { animations: 'disabled' })
 }
 
 function readBodyStyle(window: Page): Promise<BodyStyle> {
@@ -347,15 +344,22 @@ test('scrolls the fifteen students inside the card and keeps the header visible'
   })
 })
 
-test('opens #/teacher/panel after a valid login', async () => {
+test('keeps the login without a profile and opens the panel through the router', async () => {
   await withApp([], { width: 1440, height: 900 }, async (window) => {
     expect(await window.evaluate(() => window.location.hash)).toBe('')
     await window.getByLabel('Correo').fill('ana@clase.test')
     await window.getByLabel('Contraseña').fill('secreta')
     await window.getByRole('button', { name: 'Entrar' }).click()
 
+    await expect(window.getByRole('status')).toContainText('Correo: ana@clase.test')
+    expect(await window.evaluate(() => window.location.hash)).toBe('')
+    await window.evaluate(() => {
+      document.body.dataset.navigationMarker = 'same-page'
+      window.location.hash = '#/teacher/panel'
+    })
     await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
     expect(await window.evaluate(() => window.location.hash)).toBe('#/teacher/panel')
+    expect(await window.evaluate(() => document.body.dataset.navigationMarker)).toBe('same-page')
   })
 })
 
@@ -430,6 +434,11 @@ test('matches a student file on desktop with its snapshot', async () => {
     await expect(window.getByRole('heading', { level: 1, name: 'Meghan Martin' })).toBeVisible()
     await expect(window.getByText('Asistencia', { exact: true })).toBeVisible()
     await expect(window.getByRole('heading', { name: 'Historial de asistencia' })).toBeVisible()
+    const breadcrumbs = window.getByRole('navigation', { name: 'Ruta' })
+    await expect(breadcrumbs).toContainText('Hoy')
+    await expect(breadcrumbs).toContainText('Meghan Martin')
+    const fits = await breadcrumbs.evaluate((element) => element.scrollWidth <= element.clientWidth)
+    expect(fits).toBe(true)
     await expectScreen(window, 'panel-ficha.png')
   })
 })
