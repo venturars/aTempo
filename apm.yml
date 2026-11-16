@@ -7,6 +7,8 @@ author: xFNighTMaRe
 # Accepted values: agent-skills, antigravity, claude, codex, copilot, cursor, gemini, grok-bot, grok-build, hermes, kiro, opencode, vscode, windsurf
 targets:
   - cursor
+  - codex
+  - claude
 dependencies:
   apm:
     - venturars/delivery-workflow#v0.1.2

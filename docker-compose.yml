@@ -1,0 +1,69 @@
+# Entorno de instalación de aTempo. El porqué está en docs/ARCHITECTURE.md.
+#   docker compose run --rm setup               instala APM y las dependencias
+#   docker compose up storybook                 sirve Storybook en http://localhost:6006
+#   docker compose run --rm desktop pnpm lint   comprueba desktop/ con las versiones del equipo
+#   docker compose up desktop-gui               abre la ventana de Electron (opcional, ver el README)
+
+x-base: &base
+  build:
+    context: .
+    target: base
+  image: atempo-dev
+
+services:
+  setup:
+    <<: *base
+    command: bash docker/setup.sh
+    volumes:
+      - .:/work
+      - desktop-node-modules:/work/desktop/node_modules
+      - storybook-node-modules:/work/docs/storybook/node_modules
+      - pnpm-store:/pnpm-store
+
+  storybook:
+    <<: *base
+    working_dir: /work/docs/storybook
+    command: pnpm storybook --host 0.0.0.0 --ci
+    ports:
+      - "6006:6006"
+    volumes:
+      - .:/work
+      - storybook-node-modules:/work/docs/storybook/node_modules
+      - pnpm-store:/pnpm-store
+
+  desktop:
+    <<: *base
+    working_dir: /work/desktop
+    volumes:
+      - .:/work
+      - desktop-node-modules:/work/desktop/node_modules
+      - pnpm-store:/pnpm-store
+
+  # Opcional: construye y abre la app en la pantalla del ordenador, a través de su servidor X11.
+  # En macOS, XQuartz. DISPLAY se puede cambiar con ATEMPO_DISPLAY para Linux o Windows.
+  desktop-gui:
+    # Con un perfil, docker compose up sin nombre de servicio no lo arranca.
+    profiles: [gui]
+    build:
+      context: .
+      target: desktop-gui
+    image: atempo-dev-gui
+    working_dir: /work/desktop
+    # pnpm start es electron-vite preview: construye la app y la abre en Electron. Los flags van a Electron.
+    command: pnpm run start -- --no-sandbox --disable-gpu
+    environment:
+      DISPLAY: ${ATEMPO_DISPLAY:-host.docker.internal:0}
+    # Chromium necesita más memoria compartida que los 64 MB de Docker para pintar la ventana.
+    shm_size: 1gb
+    volumes:
+      - .:/work
+      - desktop-node-modules:/work/desktop/node_modules
+      - pnpm-store:/pnpm-store
+
+# Cada proyecto tiene sus node_modules: desktop/ y docs/storybook/ tienen cada uno su lockfile.
+# pnpm-store es la caché de pnpm y sí se comparte.
+# Docker les pone delante el nombre de la carpeta: cada copia del repositorio tiene los suyos.
+volumes:
+  desktop-node-modules:
+  storybook-node-modules:
+  pnpm-store:
