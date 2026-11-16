@@ -68,7 +68,15 @@ async function setTheme(page: Page, theme: string | null): Promise<void> {
   }, theme)
   await page.evaluate(() => document.fonts.ready)
 }
-async function foundations(page: Page): Promise<unknown> {
+type Foundations = {
+  colors: Record<string, string>
+  fontFamily: string
+  background: string
+  color: string
+  letterSpacing: string
+  colorScheme: string
+}
+async function foundations(page: Page): Promise<Foundations> {
   return page.locator('body').evaluate((body) => {
     const style = getComputedStyle(body)
     const colors = [
@@ -105,6 +113,52 @@ async function foundations(page: Page): Promise<unknown> {
     }
   })
 }
+function expectFoundations(values: Foundations): void {
+  expect(Object.keys(values.colors)).toHaveLength(20)
+  for (const color of Object.values(values.colors)) expect(color).not.toBe('')
+  expect(values.fontFamily).not.toBe('')
+  expect(values.background).not.toBe('rgba(0, 0, 0, 0)')
+  expect(values.color).not.toBe('rgba(0, 0, 0, 0)')
+  expect(['dark', 'light']).toContain(values.colorScheme)
+}
+async function expectTeacherRoute(page: Page): Promise<void> {
+  await expect.poll(() => page.evaluate(() => location.hash)).toBe('#/teacher/panel')
+  await expect(page.locator('main')).toHaveCount(1)
+  await expect(page.locator('main')).toBeVisible()
+  await expect(page.locator('main h1')).toHaveCount(1)
+  await expect(page.locator('main h1')).toBeVisible()
+  await expect(page.locator('main h1')).toHaveText(/\S/)
+  await expect(page.getByRole('button', { name: /^(Entrar|Crear mi cuenta)$/ })).toHaveCount(0)
+  await expect(page.getByLabel('Correo', { exact: true })).toHaveCount(0)
+  await expect(page.locator('input[type="password"]')).toHaveCount(0)
+  const panels = page.locator('.teacher-panel')
+  if ((await panels.count()) > 0) {
+    await expect(panels).toHaveCount(1)
+    await expect(panels).toBeVisible()
+    await expect(panels.locator(':scope > aside')).toHaveCount(1)
+    await expect(panels.locator(':scope > aside')).toBeVisible()
+    const navigation = panels
+      .locator(':scope > aside')
+      .getByRole('navigation', { name: 'Secciones', exact: true })
+    await expect(navigation).toHaveCount(1)
+    await expect(navigation).toBeVisible()
+    const dashboard = navigation.getByRole('button', { name: 'Dashboard', exact: true })
+    await expect(dashboard).toHaveCount(1)
+    await expect(dashboard).toBeVisible()
+    await expect(dashboard).toHaveAttribute('aria-current', 'page')
+    await expect(navigation.locator('[aria-current="page"]')).toHaveCount(1)
+    await expect(panels.locator(':scope > main')).toHaveCount(1)
+    await expect(panels.locator(':scope > main h1')).toHaveCount(1)
+  } else {
+    const section = page.locator('main > section')
+    await expect(section).toHaveCount(1)
+    await expect(section).toBeVisible()
+    await expect(section.locator(':scope > h1')).toHaveCount(1)
+    await expect(section.locator(':scope > p')).toHaveCount(1)
+    await expect(section.locator(':scope > p')).toHaveText('En construcción')
+    await expect(section.locator(':scope > p')).toBeVisible()
+  }
+}
 async function expectLoadedFont(page: Page, font: string): Promise<void> {
   await expect(page.locator('body')).toHaveCSS('font-family', new RegExp(font))
   for (const weight of [400, 500, 600]) {
@@ -130,6 +184,7 @@ for (const theme of themes) {
   test(`fundamentos coinciden en ambos consumidores: ${theme}`, async ({ page }) => {
     await story(page, 'fundamentos-tema--gallery', theme)
     const expected = await foundations(page)
+    expectFoundations(expected)
     const font = theme === 'atempo-oscuro' ? 'Geist' : 'Inter'
     await expectLoadedFont(page, font)
     for (const [size, pixels] of [
@@ -148,7 +203,9 @@ for (const theme of themes) {
     }
     await withApp(async (window) => {
       await setTheme(window, theme)
-      expect(await foundations(window)).toEqual(expected)
+      const actual = await foundations(window)
+      expectFoundations(actual)
+      expect(actual).toEqual(expected)
       await expectLoadedFont(window, font)
       await expect(window.locator('body')).toHaveCSS('letter-spacing', 'normal')
       await expect(window.locator('h1')).toHaveCSS('font-size', '28px')
@@ -226,6 +283,7 @@ for (const preference of ['light', 'dark'] as const) {
   test(`tema implícito conserva oscuro con preferencia ${preference}`, async ({ page }) => {
     await story(page, 'fundamentos-tema--gallery', 'atempo-oscuro')
     const dark = await foundations(page)
+    expectFoundations(dark)
     await withApp(async (window) => {
       for (const consumer of [page, window]) {
         await consumer.emulateMedia({ colorScheme: preference })
@@ -261,13 +319,10 @@ for (const theme of themes) {
                 exact: true
               })
             ).toBeVisible()
+          } else if (route === 'teacher/panel') {
+            await expectTeacherRoute(page)
           } else {
-            const title =
-              route === 'student/dashboard'
-                ? 'Dashboard alumno'
-                : route === 'organization/dashboard'
-                  ? 'Resumen'
-                  : 'Panel del profesor'
+            const title = route === 'student/dashboard' ? 'Dashboard alumno' : 'Resumen'
             await expect(page.getByRole('heading', { name: title, level: 1 })).toBeVisible()
           }
           await expect.poll(() => page.evaluate(() => location.hash)).toBe(`#/${route}`)
@@ -278,8 +333,9 @@ for (const theme of themes) {
             )
           ).toBe(true)
           const tracking = await page
-            .locator('h1, th, .btn, .input')
+            .locator('h1, th, button, input')
             .evaluateAll((nodes) => nodes.map((node) => getComputedStyle(node).letterSpacing))
+          expect(tracking.length).toBeGreaterThan(0)
           expect(tracking.every((value) => value === 'normal' || value === '0px')).toBe(true)
           await page.screenshot({
             path: info.outputPath(`${route.replaceAll('/', '-') || 'login'}.png`),
