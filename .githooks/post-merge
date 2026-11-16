@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Después de git pull o git merge.
+exec bash "$(dirname "$0")/run-setup.sh" ORIG_HEAD HEAD

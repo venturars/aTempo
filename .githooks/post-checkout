@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Después de cambiar de rama o clonar. Con $3 = 0 solo se restauraron ficheros: no hace nada.
+[[ "${3:-0}" == 1 ]] || exit 0
+exec bash "$(dirname "$0")/run-setup.sh" "$1" "$2"
