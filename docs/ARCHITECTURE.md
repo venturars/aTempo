@@ -8,6 +8,8 @@ Los frontends (Electron en `desktop/` y el futuro portal web) hablarán REST con
 
 Hoy solo existe `GET /health`. El login y el registro del renderer **no** llaman a esta API.
 
+La documentación interactiva (OpenAPI y Swagger UI) vive en **`/docs`** con el servicio en marcha; sirve para probar endpoints a mano, no implementa lógica de negocio.
+
 ```mermaid
 flowchart LR
   electron[FrontendElectron]

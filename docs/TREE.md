@@ -18,12 +18,15 @@ api-router/
   README.md
   src/
     main.ts
+    configure-app.ts   # CORS, ValidationPipe, Swagger /docs
     app.module.ts
     health/
       health.module.ts
       health.controller.ts
+      health-response.dto.ts
   test/
     health.e2e-spec.ts
+    swagger.e2e-spec.ts
     jest-e2e.json
 ```
 

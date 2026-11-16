@@ -1,16 +1,10 @@
-import { ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
+import { configureApp } from './configure-app'
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule)
-  app.enableCors()
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true
-    })
-  )
+  configureApp(app)
   const port = Number(process.env.PORT) || 3000
   await app.listen(port)
 }

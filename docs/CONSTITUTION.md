@@ -21,6 +21,7 @@ aTempo de escritorio es la aplicación del profesor. Sirve para registrar la asi
 ## 3. Stack de `api-router/`
 
 - **NestJS 11** expone REST y transforma las peticiones de los frontends.
+- **@nestjs/swagger** documenta la API y sirve Swagger UI en `/docs` para pruebas manuales.
 - **TypeScript** escribe el servicio.
 - **pnpm** es el gestor de paquetes de `api-router/`. Las versiones van fijas, sin `^`.
 
