@@ -25,6 +25,8 @@ pnpm dev
 
 `pnpm typecheck` comprueba los tipos. `pnpm run test:visual` construye la app y ejecuta las pruebas de Playwright.
 
+Cada pull request a `staging` pasa lint, typecheck y el build de Storybook en GitHub Actions ([ci.yml](.github/workflows/ci.yml)). Si una comprobación falla, la pull request queda en rojo.
+
 ## Guía visual
 
 ```sh
