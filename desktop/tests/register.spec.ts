@@ -1,15 +1,5 @@
-import {
-  _electron as electron,
-  expect,
-  test,
-  type ElectronApplication,
-  type Locator,
-  type Page
-} from '@playwright/test'
-import path from 'node:path'
-
-const appRoot = path.join(__dirname, '..')
-const mainFile = path.join(appRoot, 'out', 'main', 'index.js')
+import { expect, test, type ElectronApplication, type Locator, type Page } from '@playwright/test'
+import { launchHiddenElectron } from './helpers/electron'
 
 const dayNames = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes']
 const dayLetters = ['L', 'M', 'X', 'J', 'V']
@@ -62,10 +52,7 @@ function markClassForLabel(label: string | null): string {
 }
 
 async function openApp(): Promise<{ app: ElectronApplication; window: Page }> {
-  const app = await electron.launch({
-    args: ['--force-device-scale-factor=1', '--sign-up', mainFile],
-    cwd: appRoot
-  })
+  const app = await launchHiddenElectron(['--sign-up'])
   const window = await app.firstWindow()
   await window.setViewportSize({ width: 960, height: 720 })
   await window.evaluate(() => document.fonts.ready)
@@ -247,7 +234,7 @@ async function expectLoginScreen(window: Page): Promise<void> {
 
 test('shows the week panel beside the register form', async () => {
   await withApp(async (window) => {
-    const hash = await window.evaluate(() => window.location.hash)
+    const hash = await window.evaluate(() => globalThis.location.hash)
     expect(hash.replace(/^#\/?/, '')).toBe('sign-up')
     await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-oscuro')
     await expect(window.getByText('aTempo')).toBeVisible()
@@ -435,7 +422,7 @@ test('shows the login screen when Inicia sesión is pressed', async () => {
     await window.getByLabel('Contraseña', { exact: true }).fill('secreta12')
     await window.getByRole('button', { name: 'Inicia sesión' }).click()
 
-    const hash = await window.evaluate(() => window.location.hash)
+    const hash = await window.evaluate(() => globalThis.location.hash)
     expect(hash.replace(/^#\/?/, '')).toBe('')
     await expectLoginScreen(window)
     await expectNoAlert(window)
@@ -521,7 +508,7 @@ test('shows the login screen when the hash is not a known route', async () => {
   await withApp(async (window) => {
     for (const hash of unknownHashes) {
       await window.evaluate((nextHash) => {
-        window.location.hash = nextHash
+        globalThis.location.hash = nextHash
       }, hash)
       await expectLoginScreen(window)
     }
