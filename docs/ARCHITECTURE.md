@@ -1,6 +1,31 @@
-# Arquitectura de aTempo de escritorio
+# Arquitectura de aTempo
 
-La aplicación tiene tres capas. Cada una vive en su carpeta y no hace el trabajo de las otras.
+## API-router y SDK
+
+Carpeta: `api-router/`.
+
+Los frontends (Electron en `desktop/` y el futuro portal web) hablarán REST con este servicio NestJS. El API-router transforma HTTP y delegará en la **SDK (lógica de negocio)**. Esa SDK vivirá en `sdk/`, al mismo nivel que `desktop/` y `api-router/`; la carpeta aún no existe. Redis, Postgres y el resto de microservicios del backend quedan fuera del escritorio.
+
+Hoy solo existe `GET /health`. El login y el registro del renderer **no** llaman a esta API.
+
+La documentación interactiva (OpenAPI y Swagger UI) vive en **`/docs`** con el servicio en marcha; sirve para probar endpoints a mano, no implementa lógica de negocio.
+
+```mermaid
+flowchart LR
+  electron[FrontendElectron]
+  web[FrontendWeb]
+  router[APIRouterNest]
+  sdk[sdk_logicaDeNegocio]
+  electron --> router
+  web --> router
+  router --> sdk
+```
+
+`sdk/` es un paquete hermano de `desktop/` y `api-router/`; el API-router y los frontends la consumirán cuando exista.
+
+## aTempo de escritorio
+
+La aplicación de escritorio tiene tres capas. Cada una vive en su carpeta y no hace el trabajo de las otras.
 
 ```mermaid
 flowchart LR
