@@ -1,8 +1,5 @@
 type DashboardActionId =
-  | 'registrar-asistencia'
-  | 'avisar-retrasos-ausencias'
-  | 'proxima-clase'
-  | 'resumen-asistencia'
+  'registrar-asistencia' | 'avisar-retrasos-ausencias' | 'proxima-clase' | 'resumen-asistencia'
 
 type DashboardAction = {
   id: DashboardActionId
@@ -26,7 +23,7 @@ export function DashboardScreen(): React.JSX.Element {
   return (
     <main className="flex min-h-screen items-center justify-center p-8">
       <section className="w-full max-w-3xl rounded-box bg-base-100 p-8">
-        <h1 className="text-3xl font-semibold text-base-content">Dashboard alumno</h1>
+        <h1 className="text-2xl font-semibold text-base-content">Dashboard alumno</h1>
         <p className="mt-2 text-secondary">Bienvenido {studentName}</p>
         <div className="mt-8 grid grid-cols-2 gap-5">
           {dashboardActions.map((action) => (
