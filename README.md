@@ -51,7 +51,7 @@ docker compose run --rm desktop pnpm typecheck
 docker compose run --rm desktop pnpm lint
 ```
 
-La ventana de Electron se abre en tu ordenador, no en Docker. Para eso necesitas pnpm 10.33.0 en tu ordenador (`npm install --global pnpm@10.33.0`) e instalar allí sus dependencias, aparte de las de Docker:
+La forma recomendada de abrir la ventana de Electron es en tu ordenador. Para eso necesitas pnpm 10.33.0 en tu ordenador (`npm install --global pnpm@10.33.0`) e instalar allí sus dependencias, aparte de las de Docker:
 
 ```sh
 cd desktop
@@ -60,6 +60,26 @@ pnpm dev
 ```
 
 `pnpm run test:visual` construye la app y ejecuta las pruebas de Playwright. Necesita la ventana, así que también va en tu ordenador.
+
+### Ventana de Electron desde Docker (experimental)
+
+`desktop-gui` construye la app dentro de Docker y abre su ventana en tu pantalla, a través del servidor X11 de tu ordenador. Es más lenta que `pnpm dev` en el ordenador: no usa la GPU y no recarga al editar. Solo está probada en macOS.
+
+En macOS, una sola vez:
+
+1. Instala XQuartz: `brew install --cask xquartz`, desde una terminal donde puedas escribir tu contraseña.
+2. Abre XQuartz. En Ajustes → Seguridad, activa «Permitir conexiones de clientes de red». Cierra XQuartz y ábrelo otra vez.
+
+Cada vez que abras XQuartz, deja entrar a Docker y arranca la app:
+
+```sh
+/opt/X11/bin/xhost +localhost
+docker compose up desktop-gui
+```
+
+Para pararla, `Ctrl+C`. Al terminar, `/opt/X11/bin/xhost -localhost` vuelve a cerrar la pantalla.
+
+En Linux o Windows con WSL2, cambia la pantalla con `ATEMPO_DISPLAY`. Por ejemplo, `ATEMPO_DISPLAY=:0 docker compose up desktop-gui`, además de montar el socket de X11 de tu sistema. Está sin probar.
 
 ## Guía visual
 
