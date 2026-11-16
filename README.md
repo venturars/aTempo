@@ -64,6 +64,7 @@ Reemplaza los valores por el login exacto del revisor solicitado y su ID numéri
 | [principles.md](principles.md) | Visión, usuarios, pantallas y decisiones de producto. |
 | [docs/CONSTITUTION.md](docs/CONSTITUTION.md) | Lo que ya está decidido para construir. |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Las tres capas del escritorio. |
+| [docs/api/public-contract.md](docs/api/public-contract.md) | Propuesta del contrato REST de consumo frontend; pendiente de acuerdo con backend/SDK. |
 | [docs/STYLE.md](docs/STYLE.md) | Temas y enlace a la guía visual. |
 | [docs/guia](docs/guia/README.md) | Markdown generado desde Storybook. No se versiona. |
 | [docs/TREE.md](docs/TREE.md) | Carpetas de `desktop/`. |
