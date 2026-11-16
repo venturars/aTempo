@@ -6,16 +6,16 @@
 x-base: &base
   build: .
   image: atempo-dev
-  volumes:
-    - .:/work
-    - desktop-node-modules:/work/desktop/node_modules
-    - storybook-node-modules:/work/docs/storybook/node_modules
-    - pnpm-store:/pnpm-store
 
 services:
   setup:
     <<: *base
     command: bash docker/setup.sh
+    volumes:
+      - .:/work
+      - desktop-node-modules:/work/desktop/node_modules
+      - storybook-node-modules:/work/docs/storybook/node_modules
+      - pnpm-store:/pnpm-store
 
   storybook:
     <<: *base
@@ -23,11 +23,21 @@ services:
     command: pnpm storybook --host 0.0.0.0 --ci
     ports:
       - "6006:6006"
+    volumes:
+      - .:/work
+      - storybook-node-modules:/work/docs/storybook/node_modules
+      - pnpm-store:/pnpm-store
 
   desktop:
     <<: *base
     working_dir: /work/desktop
+    volumes:
+      - .:/work
+      - desktop-node-modules:/work/desktop/node_modules
+      - pnpm-store:/pnpm-store
 
+# Cada proyecto tiene sus node_modules: desktop/ y docs/storybook/ tienen cada uno su lockfile.
+# pnpm-store es la caché de pnpm y sí se comparte.
 # Docker les pone delante el nombre de la carpeta: cada copia del repositorio tiene los suyos.
 volumes:
   desktop-node-modules:
