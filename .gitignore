@@ -56,6 +56,8 @@ Desktop.ini
 *.swp
 *.swo
 
+.codex/
+
 *storybook.log
 storybook-static
 

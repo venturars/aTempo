@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { markClass, markLabel, type AttendanceMark } from '../login/trimesterExample'
 import { useRegisterStore } from './registerStore'
 import { weekDays, weekPresence } from './weekExample'
@@ -60,10 +61,6 @@ function WeekPanel(): React.JSX.Element {
   )
 }
 
-function goToLogin(): void {
-  window.location.hash = ''
-}
-
 function RegisterForm(): React.JSX.Element {
   const name = useRegisterStore((state) => state.name)
   const email = useRegisterStore((state) => state.email)
@@ -80,10 +77,15 @@ function RegisterForm(): React.JSX.Element {
   const setRepeatPassword = useRegisterStore((state) => state.setRepeatPassword)
   const submit = useRegisterStore((state) => state.submit)
   const [passwordVisible, setPasswordVisible] = useState(false)
+  const navigate = useNavigate()
 
   function onSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault()
     submit()
+  }
+
+  function goToLogin(): void {
+    navigate({ to: '/' })
   }
 
   function togglePasswordVisibility(): void {
