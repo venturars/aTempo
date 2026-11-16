@@ -48,7 +48,7 @@ export function PanelScreen(): React.JSX.Element {
       <aside className="flex flex-col border-base-content/4 bg-base-100 md:sticky md:top-0 md:h-screen md:border-r">
         <button
           type="button"
-          className="cursor-pointer border-0 bg-transparent px-5 pt-8 pb-4 text-left text-xl font-semibold tracking-tight"
+          className="cursor-pointer border-0 bg-transparent px-5 pt-8 pb-4 text-left text-xl font-semibold"
           onClick={() => setTab(0)}
         >
           aTempo
@@ -113,7 +113,7 @@ export function PanelScreen(): React.JSX.Element {
             <div className="flex items-center gap-3">
               <Avatar name={studentName} tall />
               <div>
-                <h1 className="text-xl font-medium tracking-tight">{studentName}</h1>
+                <h1 className="text-xl font-medium">{studentName}</h1>
                 <p className="text-sm text-base-content/60">{course.name}</p>
               </div>
             </div>
@@ -199,7 +199,7 @@ function Breadcrumb({
 }): React.JSX.Element {
   const trail = crumbs.some((crumb) => crumb.action !== 'current')
   if (!trail) {
-    return <h1 className="text-xl font-medium tracking-tight">{crumbs[0]?.label}</h1>
+    return <h1 className="text-xl font-medium">{crumbs[0]?.label}</h1>
   }
 
   return (

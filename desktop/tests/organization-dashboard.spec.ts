@@ -1,15 +1,5 @@
-import {
-  _electron as electron,
-  expect,
-  test,
-  type ElectronApplication,
-  type Locator,
-  type Page
-} from '@playwright/test'
-import path from 'node:path'
-
-const appRoot = path.join(__dirname, '..')
-const mainFile = path.join(appRoot, 'out', 'main', 'index.js')
+import { expect, test, type ElectronApplication, type Locator, type Page } from '@playwright/test'
+import { launchHiddenElectron } from './helpers/electron'
 
 const futureAreas = ['Cursos y calendario', 'Alumnos', 'Profesores', 'Juegos', 'Configuración']
 const reviewStudents = ['Ana López', 'Diego Martín', 'Sofía García', 'Lucas Pérez']
@@ -29,10 +19,7 @@ type Box = {
 }
 
 async function openApp(startupArgs: string[]): Promise<{ app: ElectronApplication; window: Page }> {
-  const app = await electron.launch({
-    args: ['--force-device-scale-factor=1', mainFile, ...startupArgs],
-    cwd: appRoot
-  })
+  const app = await launchHiddenElectron([...startupArgs])
   const window = await app.firstWindow()
   await window.setViewportSize({ width: 1280, height: 900 })
   await window.evaluate(() => document.fonts.ready)

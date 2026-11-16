@@ -1,24 +1,12 @@
-import {
-  _electron as electron,
-  expect,
-  test,
-  type ElectronApplication,
-  type Page
-} from '@playwright/test'
-import path from 'node:path'
+import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
+import { launchHiddenElectron } from './helpers/electron'
 import { dashboardPathForProfile } from '../src/renderer/src/session/sessionStore'
-
-const appRoot = path.join(__dirname, '..')
-const mainFile = path.join(appRoot, 'out', 'main', 'index.js')
 
 const unknownHashes = ['#/register', '#/signup', '#/login', '#/sign-in', '#/sign up']
 const loginErrorPhrases = ['El correo es obligatorio.', 'La contraseña es obligatoria.']
 
 async function openApp(flags: string[]): Promise<{ app: ElectronApplication; window: Page }> {
-  const app = await electron.launch({
-    args: ['--force-device-scale-factor=1', ...flags, mainFile],
-    cwd: appRoot
-  })
+  const app = await launchHiddenElectron([...flags])
   const window = await app.firstWindow()
   await window.setViewportSize({ width: 960, height: 720 })
   await window.evaluate(() => document.fonts.ready)

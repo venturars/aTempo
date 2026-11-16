@@ -1,15 +1,5 @@
-import {
-  _electron as electron,
-  expect,
-  test,
-  type ElectronApplication,
-  type Locator,
-  type Page
-} from '@playwright/test'
-import path from 'node:path'
-
-const appRoot = path.join(__dirname, '..')
-const mainFile = path.join(appRoot, 'out', 'main', 'index.js')
+import { expect, test, type ElectronApplication, type Locator, type Page } from '@playwright/test'
+import { launchHiddenElectron } from './helpers/electron'
 
 const dayNames = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes']
 const dayLetters = ['L', 'M', 'X', 'J', 'V']
@@ -62,10 +52,7 @@ function markClassForLabel(label: string | null): string {
 }
 
 async function openApp(): Promise<{ app: ElectronApplication; window: Page }> {
-  const app = await electron.launch({
-    args: ['--force-device-scale-factor=1', '--sign-up', mainFile],
-    cwd: appRoot
-  })
+  const app = await launchHiddenElectron(['--sign-up'])
   const window = await app.firstWindow()
   await window.setViewportSize({ width: 960, height: 720 })
   await window.evaluate(() => document.fonts.ready)

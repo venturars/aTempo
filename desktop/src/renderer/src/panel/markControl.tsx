@@ -181,7 +181,7 @@ function AbsenceNote({
               onMouseLeave={scheduleHide}
               onClick={(event) => event.stopPropagation()}
             >
-              <span className="font-medium tracking-tight">{header}</span>
+              <span className="font-medium">{header}</span>
               {filed ? (
                 <button
                   type="button"

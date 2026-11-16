@@ -1,8 +1,5 @@
-import { _electron as electron, expect, test, type Locator, type Page } from '@playwright/test'
-import path from 'node:path'
-
-const appRoot = path.join(__dirname, '..')
-const mainFile = path.join(appRoot, 'out', 'main', 'index.js')
+import { expect, test, type Locator, type Page } from '@playwright/test'
+import { launchHiddenElectron } from './helpers/electron'
 
 // Seis sesiones celebradas. Mié 4 nov está cancelada y no entra en el porcentaje.
 const shareWithoutCancelledSession: Record<string, string> = {
@@ -52,10 +49,7 @@ async function withApp(
   size: { width: number; height: number },
   run: (window: Page) => Promise<void>
 ): Promise<void> {
-  const app = await electron.launch({
-    args: ['--force-device-scale-factor=1', ...flags, mainFile],
-    cwd: appRoot
-  })
+  const app = await launchHiddenElectron([...flags])
   try {
     const window = await app.firstWindow()
     await window.setViewportSize(size)
@@ -430,5 +424,204 @@ test('matches a student file on desktop with its snapshot', async () => {
     const fits = await breadcrumbs.evaluate((element) => element.scrollWidth <= element.clientWidth)
     expect(fits).toBe(true)
     await expectScreen(window, 'panel-ficha.png')
+  })
+})
+
+// Compare against this branch's inherited tracking: #69 owns the global reset.
+async function expectInheritedType(
+  elements: Locator,
+  tracking: string,
+  family: string
+): Promise<void> {
+  expect(await elements.count()).toBeGreaterThan(0)
+  for (const element of await elements.all()) {
+    await expect(element).toHaveCSS('letter-spacing', tracking)
+    await expect(element).toHaveCSS('font-family', family)
+  }
+}
+
+async function expectCommonHeaders(window: Page, tracking: string): Promise<void> {
+  const headers = window.locator('.teacher-panel .table:not(.attendance-table) th')
+  expect(await headers.count()).toBeGreaterThan(0)
+  const token = await window.locator('body').evaluate((body) => {
+    const probe = document.createElement('span')
+    probe.style.fontSize = 'var(--text-xs)'
+    probe.style.lineHeight = 'var(--text-xs--line-height)'
+    body.append(probe)
+    const style = getComputedStyle(probe)
+    const values = { size: style.fontSize, line: style.lineHeight }
+    probe.remove()
+    return values
+  })
+  for (const header of await headers.all()) {
+    await expect(header).toHaveCSS('font-size', token.size)
+    await expect(header).toHaveCSS('line-height', token.line)
+    await expect(header).toHaveCSS('font-weight', '600')
+    await expect(header).toHaveCSS('letter-spacing', tracking)
+  }
+}
+
+for (const theme of ['atempo-oscuro', 'atempo-claro']) {
+  test(`inherits the theme typography in headings, headers and body portals: ${theme}`, async ({
+    browserName
+  }, info) => {
+    expect(browserName).toBe('chromium')
+    await withPanel(async (window) => {
+      await window
+        .locator('html')
+        .evaluate((html, value) => html.setAttribute('data-theme', value), theme)
+      await window.evaluate(() => document.fonts.ready)
+      const font = theme === 'atempo-oscuro' ? 'Geist' : 'Inter'
+      const inherited = await window.locator('body').evaluate((body) => {
+        const style = getComputedStyle(body)
+        return { tracking: style.letterSpacing, family: style.fontFamily }
+      })
+      expect(inherited.family).toContain(font)
+      for (const weight of [400, 500, 600]) {
+        expect(
+          await window.evaluate(
+            async ({ font, weight }) => {
+              const faces = await document.fonts.load(`${weight} 16px "${font}"`)
+              return faces.length > 0 && faces.every((face) => face.status === 'loaded')
+            },
+            { font, weight }
+          )
+        ).toBe(true)
+      }
+      const headings = (): Locator => window.locator('.teacher-panel h1, .teacher-panel h2')
+      await expectInheritedType(headings(), inherited.tracking, inherited.family)
+      await expect(window.getByRole('heading', { level: 1 })).toHaveCSS('font-size', '20px')
+      const brand = window.getByRole('button', { name: 'aTempo', exact: true })
+      await expectInheritedType(brand, inherited.tracking, inherited.family)
+
+      const risk = window
+        .getByRole('row', { name: /Meghan Martin/ })
+        .getByText('Puede faltar', { exact: true })
+      await expectInheritedType(risk, inherited.tracking, inherited.family)
+      await risk.hover()
+      const riskTip = window
+        .locator('body > .teacher-panel.tip')
+        .filter({ hasText: 'Ha faltado 2 veces' })
+      await expect(riskTip).toBeVisible()
+      await expectInheritedType(
+        riskTip.locator(':scope, :scope > span'),
+        inherited.tracking,
+        inherited.family
+      )
+      await window.screenshot({ path: info.outputPath('risk-hint.png'), animations: 'disabled' })
+      await window.mouse.move(1439, 899)
+      await expect(riskTip).toHaveCount(0)
+
+      await window.getByRole('button', { name: 'Abrir lista', exact: true }).click()
+      await expectCommonHeaders(window, inherited.tracking)
+      const mark = window
+        .getByRole('row', { name: /Diego Molero/ })
+        .getByRole('button', { name: 'Pendiente' })
+      await mark.click()
+      const menu = window.locator('body > .teacher-panel[role="menu"]')
+      await expect(menu).toBeVisible()
+      await expectInheritedType(
+        menu.locator(':scope, button, .badge'),
+        inherited.tracking,
+        inherited.family
+      )
+      await window.screenshot({
+        path: info.outputPath('attendance-menu.png'),
+        animations: 'disabled'
+      })
+      await menu.getByRole('button', { name: 'Ausente', exact: true }).click()
+      const absent = window
+        .getByRole('row', { name: /Diego Molero/ })
+        .getByRole('button', { name: 'Ausente' })
+      await absent.hover()
+      const absenceTip = window
+        .locator('body > .teacher-panel.tip')
+        .filter({ hasText: 'Sin justificante' })
+      await expect(absenceTip).toBeVisible()
+      await expectInheritedType(
+        absenceTip.locator(':scope, :scope > span'),
+        inherited.tracking,
+        inherited.family
+      )
+      await window.screenshot({ path: info.outputPath('absence-note.png'), animations: 'disabled' })
+      await window.mouse.move(1439, 899)
+      await expect(absenceTip).toHaveCount(0)
+
+      await openTab(window, 'Sesiones', 'Sesiones')
+      await expectInheritedType(headings(), inherited.tracking, inherited.family)
+      await expectCommonHeaders(window, inherited.tracking)
+      await window.getByRole('button', { name: 'Mar 10 nov 2026', exact: true }).click()
+      await expectCommonHeaders(window, inherited.tracking)
+      await expectInheritedType(headings(), inherited.tracking, inherited.family)
+      await openTab(window, 'Estadísticas', 'Estadísticas')
+      await expectInheritedType(headings(), inherited.tracking, inherited.family)
+      // The attendance grid deliberately keeps tracking-normal for compact date labels.
+      await expect(window.locator('.attendance-grid .tracking-normal').first()).toHaveCSS(
+        'letter-spacing',
+        /^(normal|0px)$/
+      )
+      await openTab(window, 'Ajustes', 'Ajustes')
+      await expectInheritedType(headings(), inherited.tracking, inherited.family)
+      await expect(window.locator('html')).toHaveAttribute('data-theme', theme)
+      await openTab(window, 'Dashboard', 'Hoy')
+      await window.getByRole('button', { name: 'Meghan Martin', exact: true }).click()
+      await expect(window.getByRole('heading', { level: 1, name: 'Meghan Martin' })).toBeVisible()
+      await expectInheritedType(headings(), inherited.tracking, inherited.family)
+      const crumbs = window.getByRole('navigation', { name: 'Ruta' })
+      expect(await crumbs.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true)
+      await window.screenshot({ path: info.outputPath('student-file.png'), animations: 'disabled' })
+    })
+  })
+
+  test(`keeps the mobile panel typography and summary: ${theme}`, async ({ browserName }, info) => {
+    expect(browserName).toBe('chromium')
+    await withPanel(
+      async (window) => {
+        await window
+          .locator('html')
+          .evaluate((html, value) => html.setAttribute('data-theme', value), theme)
+        await window.evaluate(() => document.fonts.ready)
+        const inherited = await window.locator('body').evaluate((body) => {
+          const style = getComputedStyle(body)
+          return { tracking: style.letterSpacing, family: style.fontFamily }
+        })
+        await expectInheritedType(
+          window.locator('.teacher-panel h1, .teacher-panel h2'),
+          inherited.tracking,
+          inherited.family
+        )
+        await window.screenshot({
+          path: info.outputPath('mobile-today.png'),
+          animations: 'disabled'
+        })
+        await openTab(window, 'Estadísticas', 'Estadísticas')
+        await expect(window.getByRole('region', { name: 'Asistencia por alumno' })).toBeVisible()
+        await expectInheritedType(
+          window.locator('.teacher-panel h1, .teacher-panel h2'),
+          inherited.tracking,
+          inherited.family
+        )
+        await window.screenshot({
+          path: info.outputPath('mobile-statistics.png'),
+          animations: 'disabled'
+        })
+      },
+      { width: 390, height: 844 }
+    )
+  })
+}
+
+test('keeps the available inherited typography without an explicit theme', async () => {
+  await withPanel(async (window) => {
+    await window.locator('html').evaluate((html) => html.removeAttribute('data-theme'))
+    const inherited = await window.locator('body').evaluate((body) => {
+      const style = getComputedStyle(body)
+      return { tracking: style.letterSpacing, family: style.fontFamily }
+    })
+    await expectInheritedType(
+      window.locator('.teacher-panel h1, .teacher-panel h2'),
+      inherited.tracking,
+      inherited.family
+    )
   })
 })

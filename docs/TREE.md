@@ -79,6 +79,12 @@ desktop/
         underConstruction/
           UnderConstructionScreen.tsx  # pantalla provisional con título
   tests/
+    helpers/
+      electron.ts          # arranque oculto y cierre auditado en macOS
+      hidden-electron.cjs  # guardas antes de cargar el main construido
+      hidden-preflight.cjs # comprobación de ventanas en fuente y build
+      hidden-watchdog.cjs  # observador de primer plano y procesos propios
+    hidden-electron.spec.ts # smoke del build real: entrada, navegación y captura
     login.spec.ts
     panel.spec.ts
     organization-dashboard.spec.ts

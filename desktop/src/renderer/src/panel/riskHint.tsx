@@ -61,7 +61,7 @@ export function RiskHint({ name }: { name: string }): React.JSX.Element | null {
                 left: box.left
               }}
             >
-              <span className="font-medium tracking-tight">{risk.header}</span>
+              <span className="font-medium">{risk.header}</span>
               <span className="tip-body">{risk.explanation}</span>
             </span>,
             document.body
