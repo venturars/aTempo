@@ -1,12 +1,12 @@
 # Arquitectura de aTempo
 
-## API-router y SDK
+## API-router, SDK y persistencia
 
 Carpeta: `api-router/`.
 
-Los frontends (Electron en `desktop/` y el futuro portal web) hablarán REST con este servicio NestJS. El API-router transforma HTTP y delegará en la **SDK (lógica de negocio)**. Esa SDK vivirá en `sdk/`, al mismo nivel que `desktop/` y `api-router/`; la carpeta aún no existe. Redis, Postgres y el resto de microservicios del backend quedan fuera del escritorio.
+Los frontends (Electron en `desktop/` y el futuro portal web) hablarán REST con `api-router/` (NestJS). El router transforma HTTP y delega en la **SDK (lógica de negocio)**, que vivirá en `sdk/` y aún está pendiente. La SDK accederá a las APIs de persistencia; `api-sqlite/` ofrece persistencia local con Flask y SQLite. Este flujo describe la arquitectura prevista: la SDK todavía no existe y los servicios aún no están conectados entre sí. `api-router/` no accede directamente a SQLite.
 
-Hoy solo existe `GET /health`. El login y el registro del renderer **no** llaman a esta API.
+Hoy `api-router/` solo expone `GET /health`. El login y el registro del renderer **no** llaman a esta API. `api-sqlite/` tiene su propio `GET /health` para comprobar SQLite.
 
 La documentación interactiva (OpenAPI y Swagger UI) vive en **`/docs`** con el servicio en marcha; sirve para probar endpoints a mano, no implementa lógica de negocio.
 
@@ -15,13 +15,17 @@ flowchart LR
   electron[FrontendElectron]
   web[FrontendWeb]
   router[APIRouterNest]
-  sdk[sdk_logicaDeNegocio]
+  sdk[sdk_logicaDeNegocio_pendiente]
+  sqliteApi[APISQLite_Flask]
+  sqlite[(SQLite_del_servicio)]
   electron --> router
   web --> router
   router --> sdk
+  sdk --> sqliteApi
+  sqliteApi --> sqlite
 ```
 
-`sdk/` es un paquete hermano de `desktop/` y `api-router/`; el API-router y los frontends la consumirán cuando exista.
+`sdk/` es un paquete hermano de `desktop/`, `api-router/` y `api-sqlite/`; cuando exista, contendrá la lógica de negocio y podrá delegar la persistencia local a `api-sqlite/`. `api-sqlite/` expone hoy `GET /health`, que ejecuta `SELECT 1` en la base configurada. Su Swagger UI está en `/docs` y el documento JSON en `/docs-json`. El puerto por defecto es 3002 y `SQLITE_DATABASE_URL` configura la base; por defecto usa `sqlite:///./api-sqlite.sqlite`. Esta base no es `desktop/atempo.sqlite`, que sigue siendo local al proceso principal de Electron.
 
 ## aTempo de escritorio
 

@@ -27,7 +27,17 @@ aTempo de escritorio es la aplicación del profesor. Sirve para registrar la asi
 
 La SDK de lógica de negocio vivirá en `sdk/` (carpeta pendiente), al mismo nivel que `desktop/` y `api-router/`. El API-router no implementa reglas de negocio; solo delegará en esa SDK.
 
-## 4. Dónde seguir
+## 4. Stack de `api-sqlite/`
+
+- **Flask** expone el servicio local de persistencia.
+- **Pydantic** valida los modelos de entrada y salida.
+- **SQLAlchemy Core** gestiona conexiones y consultas SQLite sin esquema de dominio.
+- **Flasgger** sirve Swagger UI y OpenAPI para comprobar el servicio.
+- **Python** ejecuta el paquete, que tiene sus dependencias fijadas en `api-sqlite/pyproject.toml`.
+
+`api-sqlite/` está detrás de la SDK: el `api-router` delega en la SDK y esta accede a las APIs de persistencia. La SQLite de este servicio es independiente de `desktop/atempo.sqlite`.
+
+## 5. Dónde seguir
 
 - [STYLE.md](STYLE.md): los dos temas y el enlace a la guía visual.
 - [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio y del API-router.

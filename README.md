@@ -10,11 +10,12 @@ La visión, los perfiles y las decisiones de producto están en [principles.md](
 | --- | --- |
 | `desktop/` | Aplicación del profesor. Electron, React y SQLite. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/sign-up` para el registro. |
 | `api-router/` | API REST con NestJS entre los frontends y la SDK de lógica de negocio (pendiente). |
+| `api-sqlite/` | Servicio Flask de persistencia local SQLite, preparado para ser consumido por la SDK (pendiente). |
 | `docs/storybook/` | Fuente de verdad visual: Tailwind y daisyUI. Las pantallas usan las clases. No hay un paquete de componentes. |
 | `docs/guia/` | Markdown generado desde Storybook. No se versiona. Lo leen los agentes. |
 | `docs/` | Cómo se construye: constitución, arquitectura, estilo y árbol de carpetas. |
 
-Cada carpeta con código tiene su propio `package.json`. No hay workspace en la raíz. El gestor es pnpm 10.33.0 y las versiones van fijas.
+Cada carpeta con código tiene sus dependencias propias; no hay workspace en la raíz. `desktop/`, `docs/storybook/` y `api-router/` usan pnpm 10.33.0 con versiones fijadas. `api-sqlite/` usa Python y dependencias fijadas en `pyproject.toml`.
 
 ## Instalación
 
@@ -135,6 +136,25 @@ docker compose run --rm api-router pnpm test
 ```
 
 Más detalle en [api-router/README.md](api-router/README.md).
+
+## API-sqlite
+
+`api-sqlite/` es el servicio de persistencia local previsto para la SDK. La SDK todavía está pendiente y no hay integración entre estos servicios. Su base SQLite es distinta de la base local de Electron.
+
+Desde `api-sqlite/`, crea un entorno virtual, instala el paquete editable y arráncalo:
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -e .
+python -m api_sqlite
+```
+
+En macOS/Linux usa `python3 -m venv .venv`, `source .venv/bin/activate` y después los mismos comandos `python -m pip` y `python -m api_sqlite`. El servicio escucha en `http://127.0.0.1:3002`; `PORT` cambia el puerto y `SQLITE_DATABASE_URL` cambia la URL SQLAlchemy de SQLite. Por defecto usa `sqlite:///./api-sqlite.sqlite`.
+
+`GET /health` ejecuta `SELECT 1` y responde `{ "status": "ok" }` si SQLite está disponible. Swagger UI está en <http://localhost:3002/docs/> y el documento JSON en <http://localhost:3002/docs-json>. No se anuncia cuerpo para el GET. Si se envía JSON, solo se acepta `{}`; campos extra producen `400` antes del acceso a SQLite.
+
+Más detalle en [api-sqlite/README.md](api-sqlite/README.md).
 
 ## Avisos opcionales de PR en Discord
 
