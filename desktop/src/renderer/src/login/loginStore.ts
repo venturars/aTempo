@@ -7,6 +7,15 @@ import { validateLogin } from './validateLogin'
 // Mismo aviso para cualquier fallo: así no se sabe qué correos tienen cuenta.
 const loginErrorText = 'El correo o la contraseña no coinciden con la cuenta de ejemplo.'
 
+// El formulario vacío: al arrancar, al entrar y al salir de la pantalla.
+const emptyLoginForm = {
+  email: '',
+  password: '',
+  emailError: '',
+  passwordError: '',
+  loginError: ''
+}
+
 type LoginState = {
   email: string
   password: string
@@ -16,14 +25,11 @@ type LoginState = {
   setEmail: (email: string) => void
   setPassword: (password: string) => void
   submit: () => boolean
+  reset: () => void
 }
 
 export const useLoginStore = create<LoginState>((set, get) => ({
-  email: '',
-  password: '',
-  emailError: '',
-  passwordError: '',
-  loginError: '',
+  ...emptyLoginForm,
   setEmail: (email) => {
     set({ email, loginError: '' })
   },
@@ -52,8 +58,8 @@ export const useLoginStore = create<LoginState>((set, get) => ({
       }
 
       useSessionStore.setState({ profile: 'teacher', email: normalizedEmail })
-      // El formulario se vacía al entrar: ni el correo ni la contraseña se quedan en memoria.
-      set({ email: '', password: '', emailError: '', passwordError: '', loginError: '' })
+      // El formulario se vacía al entrar. El correo sigue en la sesión.
+      set(emptyLoginForm)
       return true
     }
 
@@ -65,12 +71,15 @@ export const useLoginStore = create<LoginState>((set, get) => ({
         return false
       }
 
-      set({ email: '', password: '', emailError: '', passwordError: '', loginError: '' })
+      set(emptyLoginForm)
       useSessionStore.getState().startStudentSession(account.email)
       return true
     }
 
     set({ emailError: '', passwordError: '', loginError: loginErrorText })
     return false
+  },
+  reset: () => {
+    set(emptyLoginForm)
   }
 }))

@@ -4,6 +4,18 @@ import { normalizeEmail, useStudentAccountsStore } from '../student/studentAccou
 import { teacherDemoAccount } from '../login/teacherDemoAccount'
 import { validateRegister } from './validateRegister'
 
+// El formulario vacío: al arrancar, al crear la cuenta y al salir de la pantalla.
+const emptyRegisterForm = {
+  name: '',
+  email: '',
+  password: '',
+  repeatPassword: '',
+  nameError: '',
+  emailError: '',
+  passwordError: '',
+  repeatPasswordError: ''
+}
+
 type RegisterState = {
   name: string
   email: string
@@ -18,17 +30,11 @@ type RegisterState = {
   setPassword: (password: string) => void
   setRepeatPassword: (repeatPassword: string) => void
   submit: () => boolean
+  reset: () => void
 }
 
 export const useRegisterStore = create<RegisterState>((set, get) => ({
-  name: '',
-  email: '',
-  password: '',
-  repeatPassword: '',
-  nameError: '',
-  emailError: '',
-  passwordError: '',
-  repeatPasswordError: '',
+  ...emptyRegisterForm,
   setName: (name) => {
     set({ name })
   },
@@ -76,18 +82,12 @@ export const useRegisterStore = create<RegisterState>((set, get) => ({
     }
 
     const account = accounts.addAccount(name, email, password)
-    // El formulario se vacía al crear la cuenta: las contraseñas no se quedan en memoria.
-    set({
-      name: '',
-      email: '',
-      password: '',
-      repeatPassword: '',
-      nameError: '',
-      emailError: '',
-      passwordError: '',
-      repeatPasswordError: ''
-    })
+    // El formulario se vacía al crear la cuenta. La cuenta (con su contraseña) sigue en el store de cuentas.
+    set(emptyRegisterForm)
     useSessionStore.getState().startStudentSession(account.email)
     return true
+  },
+  reset: () => {
+    set(emptyRegisterForm)
   }
 }))

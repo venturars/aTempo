@@ -243,6 +243,34 @@ test('does not show or record student data with a teacher session', async () => 
   }
 })
 
+test('empties the login and sign-up forms after leaving them without a successful submit', async () => {
+  const app = await launchHiddenElectron()
+  try {
+    const window = await app.firstWindow()
+    await enter(window, demoEmail, 'clave-incorrecta')
+    await expect(window.getByText(loginError)).toBeVisible()
+    await window.evaluate(() => {
+      globalThis.location.hash = '#/sign-up'
+    })
+    await window.getByLabel('Nombre completo').fill('Otra alumna')
+    await window.getByLabel('Correo electrónico').fill('otra@clase.test')
+    await window.getByLabel('Contraseña', { exact: true }).fill('secreta12')
+    await window.getByLabel('Repetir contraseña').fill('secreta12')
+    await window.getByRole('button', { name: 'Inicia sesión' }).click()
+    await expect(window.getByLabel('Correo', { exact: true })).toHaveValue('')
+    await expect(window.getByLabel('Contraseña', { exact: true })).toHaveValue('')
+    await expect(window.getByText(loginError)).toHaveCount(0)
+    await window.evaluate(() => {
+      globalThis.location.hash = '#/sign-up'
+    })
+    await expect(window.getByLabel('Correo electrónico')).toHaveValue('')
+    await expect(window.getByLabel('Contraseña', { exact: true })).toHaveValue('')
+    await expect(window.getByLabel('Repetir contraseña')).toHaveValue('')
+  } finally {
+    await app.close()
+  }
+})
+
 test('opens Hoy from a second fresh normal process after closing the first', async () => {
   for (let attempt = 0; attempt < 2; attempt++) {
     const app = await launchHiddenElectron()
