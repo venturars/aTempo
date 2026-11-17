@@ -4,6 +4,35 @@
 sdk/                  # lógica de negocio; paquete aún no creado
 ```
 
+# Árbol de `api-postgresql/`
+
+```text
+api-postgresql/
+  package.json
+  pnpm-lock.yaml
+  .npmrc
+  nest-cli.json
+  tsconfig.json
+  tsconfig.build.json
+  eslint.config.mjs
+  README.md
+  src/
+    main.ts              # puerto 3001, o PORT
+    configure-app.ts     # CORS, ValidationPipe, Swagger /docs
+    app.module.ts
+    postgres/
+      postgres.module.ts
+      postgres.service.ts  # Pool de pg; SELECT 1 con DATABASE_URL
+    health/
+      health.module.ts
+      health.controller.ts
+      health-response.dto.ts
+  test/
+    health.e2e-spec.ts
+    swagger.e2e-spec.ts
+    jest-e2e.json
+```
+
 # Árbol de `api-router/`
 
 ```text
