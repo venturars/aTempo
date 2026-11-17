@@ -4,7 +4,7 @@ Vamos a desarrollar una app para registrar la asistencia (aTempo) de los alumnos
 
 Antes de construir una pantalla, lanza `docker compose run --rm storybook pnpm guide` desde la raíz y lee [docs/guia](docs/guia/README.md).
 
-Las dependencias de `desktop/` y `docs/storybook/` viven en Docker. Los comandos de pnpm de esas carpetas se lanzan con `docker compose run --rm desktop …` o `docker compose run --rm storybook …`, como explica el [README](README.md#instalación). La ventana de Electron y `pnpm run test:visual` son la excepción: van en el ordenador. `docker compose up desktop-gui` abre la ventana desde Docker, pero es opcional y experimental.
+Las dependencias de `desktop/`, `docs/storybook/` y `api-router/` viven en Docker. Los comandos de pnpm de esas carpetas se lanzan con `docker compose run --rm desktop …`, `docker compose run --rm storybook …` o `docker compose run --rm api-router …`, como explica el [README](README.md#instalación). La ventana de Electron y `pnpm run test:visual` son la excepción: van en el ordenador. `docker compose up api-router` sirve el Nest en el puerto 3000. `docker compose up desktop-gui` abre la ventana desde Docker, pero es opcional y experimental.
 
 ## Guía visual
 
