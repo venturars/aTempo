@@ -158,16 +158,22 @@ export const usePanelStore = create<PanelState>((set, get) => ({
     if (get().phase !== 'abierta') {
       return
     }
-    const next = { ...get().times }
     const marks = { ...get().marks }
-    if (!/^\d{2}:\d{2}$/.test(time)) {
-      delete next[index]
-    } else {
+    // Un ausente no tiene hora de entrada.
+    if (marks[index] === 'ausente') {
+      return
+    }
+    const next = { ...get().times }
+    if (validArrival(time)) {
       next[index] = time
-      // Si ya había llegado, la hora corregida decide si es puntual o tarde.
-      if (marks[index] === 'presente' || marks[index] === 'retraso') {
-        marks[index] = markForArrival(time)
-      }
+    } else {
+      delete next[index]
+    }
+    // Si ya había llegado, la hora que se ve decide si es puntual o tarde.
+    // Al borrar la hora corregida, vuelve a contar la del registro.
+    const shown = next[index] ?? todayEntry[index]
+    if ((marks[index] === 'presente' || marks[index] === 'retraso') && validArrival(shown)) {
+      marks[index] = markForArrival(shown)
     }
     set({ times: next, marks })
   },
