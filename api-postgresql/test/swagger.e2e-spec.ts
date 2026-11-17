@@ -11,7 +11,7 @@ describe('Swagger (e2e)', () => {
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule]
+      imports: [AppModule],
     })
       .overrideProvider(PostgresService)
       .useValue({ check: async () => undefined })
@@ -34,7 +34,9 @@ describe('Swagger (e2e)', () => {
   })
 
   it('GET /docs-json exposes OpenAPI with /health', async () => {
-    const response = await request(app.getHttpServer()).get('/docs-json').expect(200)
+    const response = await request(app.getHttpServer())
+      .get('/docs-json')
+      .expect(200)
 
     expect(response.body.paths).toHaveProperty('/health')
   })

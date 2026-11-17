@@ -6,13 +6,15 @@ export function configureApp(app: INestApplication): void {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
-      transform: true
-    })
+      transform: true,
+    }),
   )
 
   const documentConfig = new DocumentBuilder()
     .setTitle('aTempo api-postgresql')
-    .setDescription('Persistencia entre la SDK de lógica de negocio y PostgreSQL.')
+    .setDescription(
+      'Persistencia entre la SDK de lógica de negocio y PostgreSQL.',
+    )
     .setVersion('1.0.0')
     .build()
 

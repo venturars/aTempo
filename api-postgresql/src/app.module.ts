@@ -5,6 +5,6 @@ import { HealthModule } from './health/health.module'
 // El API-router no llama a PostgreSQL.
 
 @Module({
-  imports: [HealthModule]
+  imports: [HealthModule],
 })
 export class AppModule {}

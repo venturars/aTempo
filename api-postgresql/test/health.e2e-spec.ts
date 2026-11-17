@@ -11,7 +11,7 @@ describe('Health (e2e)', () => {
 
   async function initApp(check: () => Promise<void>): Promise<void> {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule]
+      imports: [AppModule],
     })
       .overrideProvider(PostgresService)
       .useValue({ check })

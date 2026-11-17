@@ -1,5 +1,9 @@
 import { Controller, Get, ServiceUnavailableException } from '@nestjs/common'
-import { ApiOkResponse, ApiServiceUnavailableResponse, ApiTags } from '@nestjs/swagger'
+import {
+  ApiOkResponse,
+  ApiServiceUnavailableResponse,
+  ApiTags,
+} from '@nestjs/swagger'
 import { PostgresService } from '../postgres/postgres.service'
 import { HealthResponseDto } from './health-response.dto'
 
@@ -15,7 +19,10 @@ export class HealthController {
     try {
       await this.postgres.check()
     } catch {
-      throw new ServiceUnavailableException({ status: 'error', postgres: 'error' })
+      throw new ServiceUnavailableException({
+        status: 'error',
+        postgres: 'error',
+      })
     }
 
     return { status: 'ok', postgres: 'ok' }
