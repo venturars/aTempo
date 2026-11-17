@@ -10,10 +10,10 @@ export const openApiDocument = {
     '/health': {
       get: {
         tags: ['health'],
-        summary: 'Comprueba el servicio y la conexión a MinIO',
+        summary: 'Comprueba que el servicio responde',
         responses: {
           '200': {
-            description: 'MinIO responde',
+            description: 'Servicio en marcha',
             content: {
               'application/json': {
                 schema: {
@@ -25,9 +25,6 @@ export const openApiDocument = {
                 },
               },
             },
-          },
-          '503': {
-            description: 'MinIO no responde',
           },
         },
       },

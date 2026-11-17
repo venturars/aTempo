@@ -2,21 +2,12 @@ import { Router, type Request, type Response } from 'express'
 
 import type { HealthResponse } from './health-response'
 
-export type HealthRouterOptions = {
-  checkMinio: () => Promise<void>
-}
-
-export function createHealthRouter(options: HealthRouterOptions): Router {
+export function createHealthRouter(): Router {
   const router = Router()
 
-  router.get('/', async (_request: Request, response: Response) => {
-    try {
-      await options.checkMinio()
-      const body: HealthResponse = { status: 'ok' }
-      response.status(200).json(body)
-    } catch {
-      response.sendStatus(503)
-    }
+  router.get('/', (_request: Request, response: Response) => {
+    const body: HealthResponse = { status: 'ok' }
+    response.status(200).json(body)
   })
 
   return router

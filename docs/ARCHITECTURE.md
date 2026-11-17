@@ -31,7 +31,7 @@ flowchart LR
 
 Carpeta: `api-minio/`.
 
-Servicio Express y TypeScript. La SDK delegará en él la lectura y escritura de objetos en MinIO. Hoy solo expone `GET /health`, que confirma conectividad con MinIO. Swagger UI en **`/docs`** y OpenAPI en **`/docs-json`**, igual que en `api-router/`. Por defecto escucha en el puerto **3003** (`PORT`). No está en Docker Compose en este paso.
+Servicio Express y TypeScript. La SDK delegará en él la lectura y escritura de objetos en MinIO. Hoy solo expone `GET /health`, que confirma que el servicio HTTP responde (igual que `api-router/`). Swagger UI en **`/docs`** y OpenAPI en **`/docs-json`**, igual que en `api-router/`. Por defecto escucha en el puerto **3003** (`PORT`). No está en Docker Compose en este paso.
 
 ## aTempo de escritorio
 

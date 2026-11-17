@@ -4,7 +4,7 @@ import type { App } from 'supertest/types'
 import { createApp } from '../src/create-app'
 
 describe('Swagger (e2e)', () => {
-  const app = createApp({ checkMinio: async () => {} })
+  const app = createApp()
   const agent = request(app as unknown as App)
 
   it('GET /docs serves Swagger UI', async () => {
