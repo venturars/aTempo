@@ -48,4 +48,4 @@ La suite cubre health con SQLite, fallo de conexión, validación Pydantic antes
 
 `GET /health` ejecuta `SELECT 1` en SQLite y devuelve `200` con `{ "status": "ok" }` si la conexión funciona; si no, responde `503`. La petición habitual no lleva cuerpo. Si se envía un objeto JSON, Pydantic solo permite `{}`; cualquier campo extra devuelve `400` antes de acceder a SQLite. OpenAPI no declara un request body para este GET.
 
-Con el servidor activo, abre <http://localhost:3002/docs/> y ejecuta **health → GET /health → Try it out → Execute**. El esquema OpenAPI JSON está en <http://localhost:3002/docs-json>.
+Con el servidor activo, abre <http://localhost:3002/docs> y ejecuta **health → GET /health → Try it out → Execute**. El esquema OpenAPI JSON está en <http://localhost:3002/docs-json>.

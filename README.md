@@ -152,7 +152,7 @@ python -m api_sqlite
 
 En macOS/Linux usa `python3 -m venv .venv`, `source .venv/bin/activate` y después los mismos comandos `python -m pip` y `python -m api_sqlite`. El servicio escucha en `http://127.0.0.1:3002`; `PORT` cambia el puerto y `SQLITE_DATABASE_URL` cambia la URL SQLAlchemy de SQLite. Por defecto usa `sqlite:///./api-sqlite.sqlite`.
 
-`GET /health` ejecuta `SELECT 1` y responde `{ "status": "ok" }` si SQLite está disponible. Swagger UI está en <http://localhost:3002/docs/> y el documento JSON en <http://localhost:3002/docs-json>. No se anuncia cuerpo para el GET. Si se envía JSON, solo se acepta `{}`; campos extra producen `400` antes del acceso a SQLite.
+`GET /health` ejecuta `SELECT 1` y responde `{ "status": "ok" }` si SQLite está disponible. Swagger UI está en <http://localhost:3002/docs> y el documento JSON en <http://localhost:3002/docs-json>. No se anuncia cuerpo para el GET. Si se envía JSON, solo se acepta `{}`; campos extra producen `400` antes del acceso a SQLite.
 
 Más detalle en [api-sqlite/README.md](api-sqlite/README.md).
 
