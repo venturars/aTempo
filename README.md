@@ -82,7 +82,7 @@ pnpm run test:visual --workers=1 --retries=0 --global-timeout=300000 --update-sn
 La suite del sistema visual sirve y cierra su propia vista previa local de Storybook. Esta rama combina el sistema compartido de #69 con el panel real del profesor de #36. La verificación de esa combinación corresponde a #48 y requiere ejecutar el smoke y las suites sobre este árbol; los resultados previos de #69 no la acreditan. La incorporación del dashboard del alumno queda para #70.
 `pnpm run test:visual` construye la app y ejecuta las pruebas de Playwright. Necesita la ventana, así que también va en tu ordenador.
 
-Cada pull request a `staging` pasa lint, typecheck y el build de Storybook en GitHub Actions ([ci.yml](.github/workflows/ci.yml)). Si una comprobación falla, la pull request queda en rojo.
+Cada pull request a `staging` pasa lint, typecheck y el build de Storybook en GitHub Actions ([ci.yml](.github/workflows/ci.yml)), en cada paquete que cambia. Un paquete es cualquier carpeta con un `pnpm-lock.yaml`, así que uno nuevo entra solo. Si una comprobación falla, «CI / ci» queda en rojo.
 
 ### Ventana de Electron desde Docker (experimental)
 
