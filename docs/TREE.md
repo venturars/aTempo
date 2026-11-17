@@ -28,6 +28,8 @@ api-minio/
     openapi/
       document.ts
   test/
+    helpers/
+      test-server.ts
     health.e2e-spec.ts
     swagger.e2e-spec.ts
     jest-e2e.json
