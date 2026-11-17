@@ -385,7 +385,7 @@ function RosterTable({
                 <td>
                   <TimeField
                     time={rollTime(status, index, times)}
-                    enabled={phase === 'abierta'}
+                    enabled={phase === 'abierta' && status !== 'ausente'}
                     onCommit={(value) => setTime(index, value)}
                   />
                 </td>
@@ -796,6 +796,8 @@ function TimeField({
 }): React.JSX.Element {
   const [draft, setDraft] = useState<string | null>(null)
   const skip = useRef(false)
+  // La hora con la que se abrió el campo: salir sin cambiarla no guarda nada.
+  const opened = useRef('')
 
   if (!enabled) {
     return <span className="tabular-nums text-base-content/50">{time}</span>
@@ -809,7 +811,8 @@ function TimeField({
           event.stopPropagation()
           // Escape quita el campo sin blur, así que el aviso de Escape anterior puede seguir puesto.
           skip.current = false
-          setDraft(time === '—' ? '' : time)
+          opened.current = time === '—' ? '' : time
+          setDraft(opened.current)
         }}
       >
         {time}
@@ -830,7 +833,10 @@ function TimeField({
           skip.current = false
           return
         }
-        onCommit(draft)
+        // Mirar la hora y salir sin cambiarla no guarda nada: no deshace una marca hecha a mano.
+        if (draft !== opened.current) {
+          onCommit(draft)
+        }
         setDraft(null)
       }}
       onKeyDown={(event) => {
