@@ -4,6 +4,35 @@
 sdk/                  # lógica de negocio; paquete aún no creado
 ```
 
+# Árbol de `api-minio/`
+
+```text
+api-minio/
+  package.json
+  pnpm-lock.yaml
+  .npmrc
+  tsconfig.json
+  tsconfig.build.json
+  eslint.config.mjs
+  README.md
+  src/
+    main.ts
+    create-app.ts
+    configure-app.ts
+    health/
+      health-router.ts
+      health-response.ts
+    minio/
+      minio-config.ts
+      check-minio.ts
+    openapi/
+      document.ts
+  test/
+    health.e2e-spec.ts
+    swagger.e2e-spec.ts
+    jest-e2e.json
+```
+
 # Árbol de `api-router/`
 
 ```text

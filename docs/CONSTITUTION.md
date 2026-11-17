@@ -27,8 +27,18 @@ aTempo de escritorio es la aplicación del profesor. Sirve para registrar la asi
 
 La SDK de lógica de negocio vivirá en `sdk/` (carpeta pendiente), al mismo nivel que `desktop/` y `api-router/`. El API-router no implementa reglas de negocio; solo delegará en esa SDK.
 
-## 4. Dónde seguir
+## 4. Stack de `api-minio/`
+
+- **Express 5** expone REST hacia la SDK para persistencia de objetos en MinIO.
+- **Cliente oficial `minio`** habla con el almacén S3-compatible.
+- **swagger-ui-express** documenta la API y sirve Swagger UI en `/docs` para pruebas manuales.
+- **TypeScript** escribe el servicio.
+- **pnpm** es el gestor de paquetes de `api-minio/`. Las versiones van fijas, sin `^`.
+
+El API-router no accede a MinIO; la SDK consumirá este servicio cuando exista.
+
+## 5. Dónde seguir
 
 - [STYLE.md](STYLE.md): los dos temas y el enlace a la guía visual.
-- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio y del API-router.
-- [TREE.md](TREE.md): árboles de `desktop/` y `api-router/`.
+- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, del API-router y de las APIs de persistencia.
+- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/` y `api-minio/`.
