@@ -1,6 +1,6 @@
 # Cómo contribuir a aTempo
 
-Este documento está escrito para agentes de IA. Si vas a cambiar este repositorio, síguelo en orden y al pie de la letra. Una persona solo lee la issue y la pull request, así que todo lo que necesite saber tiene que quedar escrito ahí.
+Esta guía explica cómo proponer un cambio en aTempo, desde la issue hasta la pull request. Sigue los pasos en orden. Las personas solo leen la issue y la pull request, así que todo lo que necesiten saber tiene que quedar escrito ahí.
 
 ## Contexto
 
