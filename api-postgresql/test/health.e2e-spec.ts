@@ -7,7 +7,9 @@ import { configureApp } from '../src/configure-app'
 import { PostgresService } from '../src/postgres/postgres.service'
 
 describe('Health (e2e)', () => {
-  async function createApp(check: () => Promise<void>): Promise<INestApplication<App>> {
+  let app: INestApplication<App>
+
+  async function initApp(check: () => Promise<void>): Promise<void> {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule]
     })
@@ -15,25 +17,26 @@ describe('Health (e2e)', () => {
       .useValue({ check })
       .compile()
 
-    const app = moduleFixture.createNestApplication()
+    app = moduleFixture.createNestApplication()
     configureApp(app)
     await app.init()
-    return app
   }
 
+  afterEach(async () => {
+    await app.close()
+  })
+
   it('GET /health returns ok when Postgres responds', async () => {
-    const app = await createApp(async () => undefined)
+    await initApp(async () => undefined)
 
     await request(app.getHttpServer())
       .get('/health')
       .expect(200)
       .expect({ status: 'ok', postgres: 'ok' })
-
-    await app.close()
   })
 
   it('GET /health returns 503 when Postgres does not respond', async () => {
-    const app = await createApp(async () => {
+    await initApp(async () => {
       throw new Error('Falta DATABASE_URL')
     })
 
@@ -41,7 +44,5 @@ describe('Health (e2e)', () => {
       .get('/health')
       .expect(503)
       .expect({ status: 'error', postgres: 'error' })
-
-    await app.close()
   })
 })
