@@ -807,6 +807,8 @@ function TimeField({
         className="cursor-pointer tabular-nums text-base-content/50 hover:text-base-content"
         onClick={(event) => {
           event.stopPropagation()
+          // Escape quita el campo sin blur, así que el aviso de Escape anterior puede seguir puesto.
+          skip.current = false
           setDraft(time === '—' ? '' : time)
         }}
       >
