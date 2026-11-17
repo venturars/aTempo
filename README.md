@@ -42,7 +42,6 @@ El lector del alumno ofrece lecturas simuladas y no usa cámara. Estos flujos no
 | Carpeta | Qué es |
 | --- | --- |
 | `desktop/` | Prototipo para profesor y alumno con Electron y React; las demos usan datos en memoria. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/sign-up` para el registro. |
-| `desktop/` | Aplicación del profesor. Electron, React y SQLite. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/sign-up` para el registro. |
 | `api-router/` | API REST con NestJS entre los frontends y la SDK de lógica de negocio (pendiente). |
 | `docs/storybook/` | Fuente de verdad visual: Tailwind y daisyUI. Las pantallas usan las clases. No hay un paquete de componentes. |
 | `docs/guia/` | Markdown generado desde Storybook. No se versiona. Lo leen los agentes. |
