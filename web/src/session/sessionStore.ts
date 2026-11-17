@@ -9,6 +9,7 @@ export type ThemeName = 'atempo-oscuro' | 'atempo-claro'
 type SessionState = {
   email: string | null
   startStudentSession: (email: string) => void
+  endStudentSession: () => void
 }
 
 function readEmail(): string | null {
@@ -37,5 +38,9 @@ export const useSessionStore = create<SessionState>((set) => ({
     const normalized = normalizeEmail(email)
     sessionStorage.setItem(sessionKey, normalized)
     set({ email: normalized })
+  },
+  endStudentSession: () => {
+    sessionStorage.removeItem(sessionKey)
+    set({ email: null })
   }
 }))

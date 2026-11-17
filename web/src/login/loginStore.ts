@@ -35,14 +35,14 @@ export const useLoginStore = create<LoginState>((set, get) => ({
       set({
         emailError: '',
         passwordError: '',
-        loginError: 'No hay una cuenta de alumno con este correo.'
+        loginError: 'No encontramos una cuenta con este correo. ¿Lo revisas?'
       })
       return false
     }
     if (account.password !== password) {
       set({
         emailError: '',
-        passwordError: 'La contraseña no es la de esta cuenta.',
+        passwordError: 'Esa contraseña no es la de esta cuenta. Prueba otra vez.',
         loginError: ''
       })
       return false

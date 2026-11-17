@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
+import { useFlashStore } from '../student/flashStore'
 import { useRegisterStore } from './registerStore'
 
 export function RegisterScreen(): React.JSX.Element {
@@ -18,19 +19,25 @@ export function RegisterScreen(): React.JSX.Element {
   const submit = useRegisterStore((state) => state.submit)
   const [visible, setVisible] = useState(false)
   const navigate = useNavigate()
+  const showFlash = useFlashStore((state) => state.showFlash)
 
   function onSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault()
-    if (submit()) void navigate({ to: '/student/dashboard' })
+    if (!submit()) return
+    showFlash('¡Te damos la bienvenida a aTempo!')
+    void navigate({ to: '/student/dashboard' })
   }
 
   return (
     <main className="flex min-h-screen items-center justify-center p-4 md:p-8">
-      <section className="flex w-full max-w-md flex-col gap-6 rounded-box bg-base-100 p-4 md:p-8">
-        <Link to="/" className="link w-fit">
-          Inicia sesión
-        </Link>
-        <h1 className="text-2xl font-medium">Crea tu cuenta.</h1>
+      <section className="page-enter panel-card flex w-full max-w-md flex-col gap-7 rounded-box p-6 md:p-10">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <p className="text-lg font-semibold tracking-tight">aTempo</p>
+          <div className="flex flex-col gap-1">
+            <h1 className="text-2xl font-semibold tracking-tight">Crea tu cuenta</h1>
+            <p className="text-sm text-base-content/60">Solo te lleva un minuto.</p>
+          </div>
+        </div>
         <form className="flex flex-col gap-5" noValidate onSubmit={onSubmit}>
           <Field
             id="name"
@@ -50,9 +57,9 @@ export function RegisterScreen(): React.JSX.Element {
             autoComplete="email"
             onChange={setEmail}
           />
-          <div className="flex flex-col gap-2">
+          <div className="field">
             <label htmlFor="password">Contraseña</label>
-            <div className="flex items-center gap-2">
+            <div className="field-row">
               <input
                 id="password"
                 className={passwordError !== '' ? 'input input-error w-full' : 'input w-full'}
@@ -62,11 +69,16 @@ export function RegisterScreen(): React.JSX.Element {
                 aria-invalid={passwordError !== ''}
                 onChange={(event) => setPassword(event.target.value)}
               />
-              <button className="btn" type="button" onClick={() => setVisible((value) => !value)}>
+              <button
+                className="btn btn-ghost shrink-0"
+                type="button"
+                aria-pressed={visible}
+                onClick={() => setVisible((value) => !value)}
+              >
                 {visible ? 'Ocultar' : 'Mostrar'}
               </button>
             </div>
-            {passwordError !== '' ? <p className="text-sm">{passwordError}</p> : null}
+            {passwordError !== '' ? <p className="text-sm text-error">{passwordError}</p> : null}
           </div>
           <Field
             id="repeat-password"
@@ -81,6 +93,12 @@ export function RegisterScreen(): React.JSX.Element {
             Crear mi cuenta
           </button>
         </form>
+        <p className="text-center text-sm text-base-content/60">
+          ¿Ya tienes cuenta?{' '}
+          <Link to="/" className="link link-primary font-medium">
+            Inicia sesión
+          </Link>
+        </p>
       </section>
     </main>
   )
@@ -96,7 +114,7 @@ function Field(props: {
   onChange: (value: string) => void
 }): React.JSX.Element {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="field">
       <label htmlFor={props.id}>{props.label}</label>
       <input
         id={props.id}
@@ -107,7 +125,7 @@ function Field(props: {
         aria-invalid={props.error !== ''}
         onChange={(event) => props.onChange(event.target.value)}
       />
-      {props.error !== '' ? <p className="text-sm">{props.error}</p> : null}
+      {props.error !== '' ? <p className="text-sm text-error">{props.error}</p> : null}
     </div>
   )
 }

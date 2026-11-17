@@ -12,6 +12,16 @@ const statusClass: Record<AttendanceStatus, string> = {
   ausente: 'status status-error'
 }
 
+const statusBadge: Record<AttendanceStatus, string> = {
+  presente: 'badge badge-sm badge-soft badge-success',
+  tarde: 'badge badge-sm badge-soft badge-warning',
+  ausente: 'badge badge-sm badge-soft badge-error'
+}
+
+export function statusBadgeClass(status: AttendanceStatus): string {
+  return statusBadge[status]
+}
+
 export function statusMarkClass(status: AttendanceStatus): string {
   return statusClass[status]
 }

@@ -9,6 +9,7 @@ import {
   type StudentAccount
 } from './studentExample'
 import { clockTime, statusForArrival, statusLabel } from './attendanceStatus'
+import { formatDay } from './studentDate'
 
 const accountsKey = 'atempo-student-accounts'
 
@@ -83,22 +84,40 @@ export function useCurrentStudent(): StudentAccount {
   )
 }
 
+const wrongCode = 'Ese código no es de esta clase. Revísalo y prueba otra vez.'
+
+function isClassDay(now: Date): boolean {
+  return todayClass.weekdays.includes(now.getDay())
+}
+
+function minutesNow(now: Date): number {
+  return now.getHours() * 60 + now.getMinutes()
+}
+
+function classIsOver(now: Date): boolean {
+  const [hours = 0, minutes = 0] = todayClass.end.split(':').map(Number)
+  return minutesNow(now) >= hours * 60 + minutes
+}
+
 export function registerReading(payload: string, now = new Date()): string {
   const value = payload.trim()
-  if (value === '' || /^https?:/i.test(value)) return 'Este código no es de esta clase.'
+  if (value === '' || /^https?:/i.test(value)) return wrongCode
   if (value !== todayClass.code && value !== todayClass.pin) {
-    return 'Este código no es de esta clase.'
+    return wrongCode
   }
+  if (!isClassDay(now)) return 'Hoy no tienes clase.'
+  if (classIsOver(now)) return 'La clase de hoy ya terminó.'
 
   const email = useSessionStore.getState().email ?? exampleStudent.email
   const account = useStudentAccountsStore.getState().findByEmail(email)
-  const previous = account?.history.find((entry) => entry.label === todayClass.label)
-  if (previous) return `Ya registraste tu entrada a las ${previous.arrival ?? '—'}.`
+  const todayLabel = formatDay(now)
+  const previous = account?.history.find((entry) => entry.label === todayLabel)
+  if (previous) return `Ya estás dentro desde las ${previous.arrival ?? '—'}. ¡Disfruta la clase!`
 
   const arrival = clockTime(now)
   const status = statusForArrival(arrival, todayClass.start, lateMinutes)
   useStudentAccountsStore.getState().recordEntry(email, {
-    label: todayClass.label,
+    label: todayLabel,
     arrival,
     status
   })

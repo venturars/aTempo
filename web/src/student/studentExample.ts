@@ -14,8 +14,11 @@ export type StudentAccount = {
 }
 
 export type TodayClass = {
-  label: string
+  name: string
   start: string
+  end: string
+  // Días con clase, como Date.getDay(): 0 es domingo, 1 es lunes.
+  weekdays: number[]
   code: string
   pin: string
 }
@@ -35,8 +38,11 @@ export const exampleStudent: StudentAccount = {
 }
 
 export const todayClass: TodayClass = {
-  label: 'Mié 11 nov',
+  name: 'AI Engineering',
   start: '09:00',
+  // La demo deja registrar toda la tarde. Con ?hora=21:30 se ve la clase terminada.
+  end: '21:00',
+  weekdays: [1, 2, 3, 4, 5],
   code: 'ATEMPO-CLASE-1109',
   pin: '482913'
 }
