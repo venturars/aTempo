@@ -52,8 +52,8 @@ export const useLoginStore = create<LoginState>((set, get) => ({
       }
 
       useSessionStore.setState({ profile: 'teacher', email: normalizedEmail })
-      // La contraseña no se queda en memoria después de entrar.
-      set({ password: '', emailError: '', passwordError: '', loginError: '' })
+      // El formulario se vacía al entrar: ni el correo ni la contraseña se quedan en memoria.
+      set({ email: '', password: '', emailError: '', passwordError: '', loginError: '' })
       return true
     }
 
@@ -65,7 +65,7 @@ export const useLoginStore = create<LoginState>((set, get) => ({
         return false
       }
 
-      set({ password: '', emailError: '', passwordError: '', loginError: '' })
+      set({ email: '', password: '', emailError: '', passwordError: '', loginError: '' })
       useSessionStore.getState().startStudentSession(account.email)
       return true
     }

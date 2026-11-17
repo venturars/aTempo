@@ -76,7 +76,17 @@ export const useRegisterStore = create<RegisterState>((set, get) => ({
     }
 
     const account = accounts.addAccount(name, email, password)
-    set({ nameError: '', emailError: '', passwordError: '', repeatPasswordError: '' })
+    // El formulario se vacía al crear la cuenta: las contraseñas no se quedan en memoria.
+    set({
+      name: '',
+      email: '',
+      password: '',
+      repeatPassword: '',
+      nameError: '',
+      emailError: '',
+      passwordError: '',
+      repeatPasswordError: ''
+    })
     useSessionStore.getState().startStudentSession(account.email)
     return true
   }
