@@ -91,6 +91,53 @@ test('saves a time edit made after cancelling a previous edit with Escape', asyn
   })
 })
 
+test('store ignores a time for an absent student and re-derives lateness when a corrected time is cleared', () => {
+  usePanelStore.setState(usePanelStore.getInitialState(), true)
+  useSettingsStore.setState(useSettingsStore.getInitialState(), true)
+  const state = (): ReturnType<typeof usePanelStore.getState> => usePanelStore.getState()
+  try {
+    state().openSession()
+    state().setMark(1, 'ausente')
+    state().setTime(1, '09:10')
+    expect(state().times[1]).toBeUndefined()
+    state().simulateArrival(0)
+    state().setTime(0, '09:33')
+    expect(state().marks[0]).toBe('retraso')
+    state().setTime(0, '')
+    expect(state().times[0]).toBeUndefined()
+    expect(state().marks[0]).toBe('presente')
+    state().setTime(0, '24:00')
+    expect(state().times[0]).toBeUndefined()
+  } finally {
+    usePanelStore.setState(usePanelStore.getInitialState(), true)
+    useSettingsStore.setState(useSettingsStore.getInitialState(), true)
+  }
+})
+
+test('keeps a manual mark when a time is opened and left without changes', async () => {
+  await withPanel(async (p) => {
+    await open(p)
+    const diego = row(p, 'Diego Molero')
+    await diego.getByRole('button', { name: 'Pendiente', exact: true }).click()
+    await p.getByRole('menu').getByRole('button', { name: 'Tarde', exact: true }).click()
+    await diego.getByRole('button', { name: todayEntry[0], exact: true }).click()
+    await diego.locator('input[type=time]').press('Enter')
+    await expect(diego.getByRole('button', { name: 'Tarde', exact: true })).toBeVisible()
+  })
+})
+
+test('closes the mark menu when the keyboard focus moves to another control', async () => {
+  await withPanel(async (p) => {
+    await open(p)
+    await row(p, 'Diego Molero')
+      .getByRole('button', { name: 'Pendiente', exact: true })
+      .press('Enter')
+    await expect(p.getByRole('menu')).toHaveCount(1)
+    await row(p, 'Diego Torres').getByRole('button', { name: 'Pendiente', exact: true }).focus()
+    await expect(p.getByRole('menu')).toHaveCount(0)
+  })
+})
+
 test('keeps one mark menu open at a time and closes it on scroll', async () => {
   await withPanel(async (p) => {
     await open(p)
