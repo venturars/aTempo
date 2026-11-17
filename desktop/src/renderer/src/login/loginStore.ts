@@ -4,6 +4,9 @@ import { normalizeEmail, useStudentAccountsStore } from '../student/studentAccou
 import { teacherDemoAccount } from './teacherDemoAccount'
 import { validateLogin } from './validateLogin'
 
+// Mismo aviso para cualquier fallo: así no se sabe qué correos tienen cuenta.
+const loginErrorText = 'El correo o la contraseña no coinciden con la cuenta de ejemplo.'
+
 type LoginState = {
   email: string
   password: string
@@ -44,16 +47,13 @@ export const useLoginStore = create<LoginState>((set, get) => ({
 
     if (normalizedEmail === teacherDemoAccount.email) {
       if (password !== teacherDemoAccount.password) {
-        set({
-          emailError: '',
-          passwordError: '',
-          loginError: 'El correo o la contraseña no coinciden con la cuenta de ejemplo.'
-        })
+        set({ emailError: '', passwordError: '', loginError: loginErrorText })
         return false
       }
 
       useSessionStore.setState({ profile: 'teacher', email: normalizedEmail })
-      set({ emailError: '', passwordError: '', loginError: '' })
+      // La contraseña no se queda en memoria después de entrar.
+      set({ password: '', emailError: '', passwordError: '', loginError: '' })
       return true
     }
 
@@ -61,24 +61,16 @@ export const useLoginStore = create<LoginState>((set, get) => ({
 
     if (account !== undefined) {
       if (account.password !== password) {
-        set({
-          emailError: '',
-          passwordError: 'La contraseña no es la de esta cuenta.',
-          loginError: ''
-        })
+        set({ emailError: '', passwordError: '', loginError: loginErrorText })
         return false
       }
 
-      set({ emailError: '', passwordError: '', loginError: '' })
+      set({ password: '', emailError: '', passwordError: '', loginError: '' })
       useSessionStore.getState().startStudentSession(account.email)
       return true
     }
 
-    set({
-      emailError: '',
-      passwordError: '',
-      loginError: 'El correo o la contraseña no coinciden con la cuenta de ejemplo.'
-    })
+    set({ emailError: '', passwordError: '', loginError: loginErrorText })
     return false
   }
 }))

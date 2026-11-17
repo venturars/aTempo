@@ -1,14 +1,28 @@
 import { useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { statusForArrival, statusLabel } from '../attendanceStatus'
+import { NoStudentSession } from '../NoStudentSession'
 import { useCurrentStudent, useStudentAccountsStore } from '../studentAccounts'
-import { lateMinutes, sampleReadings, todayClass, type SampleReading } from '../studentExample'
+import {
+  lateMinutes,
+  sampleReadings,
+  todayClass,
+  type SampleReading,
+  type StudentAccount
+} from '../studentExample'
 
 type ScanResult =
   { kind: 'confirmed' | 'repeated'; arrival: string; text: string } | { kind: 'other' }
 
 export function ScanScreen(): React.JSX.Element {
   const student = useCurrentStudent()
+  if (student === null) {
+    return <NoStudentSession />
+  }
+  return <StudentScan student={student} />
+}
+
+function StudentScan({ student }: { student: StudentAccount }): React.JSX.Element {
   const recordEntry = useStudentAccountsStore((state) => state.recordEntry)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const [result, setResult] = useState<ScanResult | null>(null)
