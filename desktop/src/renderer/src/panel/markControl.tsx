@@ -41,7 +41,7 @@ export function MarkControl({
     }
     // En fase de captura: llega aunque otro control pare la propagación del clic.
     // Así, abrir el menú de otra fila cierra este.
-    function closeIfOutside(event: PointerEvent): void {
+    function closeIfOutside(event: Event): void {
       const target = event.target as Node
       if (menuRef.current?.contains(target) || buttonRef.current?.contains(target)) {
         return
@@ -55,11 +55,14 @@ export function MarkControl({
     }
     // El menú está fijo en la pantalla: si la tabla se mueve, se cierra para no quedar sobre otra fila.
     window.addEventListener('pointerdown', closeIfOutside, true)
+    // Con teclado: llevar el foco a otro control también cierra el menú.
+    window.addEventListener('focusin', closeIfOutside, true)
     window.addEventListener('scroll', close, true)
     window.addEventListener('resize', close)
     window.addEventListener('keydown', onKey)
     return () => {
       window.removeEventListener('pointerdown', closeIfOutside, true)
+      window.removeEventListener('focusin', closeIfOutside, true)
       window.removeEventListener('scroll', close, true)
       window.removeEventListener('resize', close)
       window.removeEventListener('keydown', onKey)
