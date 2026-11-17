@@ -107,6 +107,7 @@ desktop/
           validateRegister.ts
           weekExample.ts
         student/
+          NoStudentSession.tsx # aviso cuando la sesión no es de un alumno con cuenta
           attendanceStatus.ts  # estado de asistencia y margen de tarde
           studentAccounts.ts   # cuentas de alumno en memoria y cuenta de la sesión
           studentExample.ts    # cuenta de ejemplo, clase de hoy y lecturas del QR

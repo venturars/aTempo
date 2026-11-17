@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { markClass } from '../../login/trimesterExample'
 import { statusLabel, type AttendanceStatus } from '../attendanceStatus'
+import { NoStudentSession } from '../NoStudentSession'
 import { useCurrentStudent } from '../studentAccounts'
 
 const markOf = { presente: 'presente', tarde: 'retraso', ausente: 'ausencia' } as const
@@ -11,6 +12,9 @@ function dot(status: AttendanceStatus): string {
 
 export function HistoryScreen(): React.JSX.Element {
   const student = useCurrentStudent()
+  if (student === null) {
+    return <NoStudentSession />
+  }
 
   return (
     <main className="flex min-h-screen items-center justify-center p-4 md:p-8">

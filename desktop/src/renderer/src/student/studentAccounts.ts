@@ -41,15 +41,20 @@ export const useStudentAccountsStore = create<StudentAccountsState>((set, get) =
   }
 }))
 
-export function useCurrentStudent(): StudentAccount {
+// Sin sesión se muestra la alumna de ejemplo (así abre `--dashboard`).
+// Con una sesión que no es de alumno, o sin cuenta para ese correo, devuelve null:
+// nunca se enseñan ni se escriben los datos de otra persona.
+export function useCurrentStudent(): StudentAccount | null {
+  const profile = useSessionStore((state) => state.profile)
   const email = useSessionStore((state) => state.email)
   const accounts = useStudentAccountsStore((state) => state.accounts)
-  const wanted = normalizeEmail(email ?? exampleStudent.email)
-  return (
-    accounts.find((account) => normalizeEmail(account.email) === wanted) ??
-    accounts.find(
-      (account) => normalizeEmail(account.email) === normalizeEmail(exampleStudent.email)
-    ) ??
-    accounts[0]
-  )
+  if (profile === null) {
+    const wanted = normalizeEmail(exampleStudent.email)
+    return accounts.find((account) => normalizeEmail(account.email) === wanted) ?? null
+  }
+  if (profile !== 'student' || email === null) {
+    return null
+  }
+  const wanted = normalizeEmail(email)
+  return accounts.find((account) => normalizeEmail(account.email) === wanted) ?? null
 }

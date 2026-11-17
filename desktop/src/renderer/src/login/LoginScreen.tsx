@@ -1,4 +1,4 @@
-import { FormEvent } from 'react'
+import { FormEvent, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { dashboardPathForProfile, useSessionStore } from '../session/sessionStore'
 import { useLoginStore } from './loginStore'
@@ -60,6 +60,9 @@ function ClaimPanel(): React.JSX.Element {
 }
 
 function LoginForm(): React.JSX.Element {
+  const reset = useLoginStore((state) => state.reset)
+  // Al salir de la pantalla se vacía el formulario: no queda nada escrito para la próxima vez.
+  useEffect(() => reset, [reset])
   const email = useLoginStore((state) => state.email)
   const password = useLoginStore((state) => state.password)
   const emailError = useLoginStore((state) => state.emailError)

@@ -88,7 +88,37 @@ test.describe('teacher demo session logic', () => {
     useLoginStore.getState().setPassword(demoPassword)
     expect(useLoginStore.getState().submit()).toBe(false)
     expect(useSessionStore.getState()).toMatchObject({ profile: null, email: null })
-    expect(useLoginStore.getState().passwordError).toBe('La contraseña no es la de esta cuenta.')
+    // Mismo aviso que un correo desconocido: no revela que la cuenta existe.
+    expect(useLoginStore.getState().passwordError).toBe('')
+    expect(useLoginStore.getState().loginError).toBe(loginError)
+  })
+
+  for (const [name, email, password] of [
+    ['teacher', demoEmail, demoPassword],
+    ['student', 'ada.lopez@clase.test', 'clase-2026']
+  ]) {
+    test(`clears the form after a successful ${name} login`, () => {
+      useLoginStore.getState().setEmail(email)
+      useLoginStore.getState().setPassword(password)
+      expect(useLoginStore.getState().submit()).toBe(true)
+      expect(useLoginStore.getState().email).toBe('')
+      expect(useLoginStore.getState().password).toBe('')
+    })
+  }
+
+  test('clears the sign-up form after creating the account', () => {
+    const register = useRegisterStore.getState()
+    register.setName('Otra alumna')
+    register.setEmail('otra@clase.test')
+    register.setPassword('secreta12')
+    register.setRepeatPassword('secreta12')
+    expect(register.submit()).toBe(true)
+    expect(useRegisterStore.getState()).toMatchObject({
+      name: '',
+      email: '',
+      password: '',
+      repeatPassword: ''
+    })
   })
 
   test('registers a separate student and preserves its identity on subsequent login', () => {
@@ -170,6 +200,72 @@ test('can log in again after renderer reload without persisting a session', asyn
     await expect(window.getByLabel('Contraseña', { exact: true })).toHaveValue('')
     await enter(window, demoEmail, demoPassword)
     await expectHoy(window)
+  } finally {
+    await app.close()
+  }
+})
+
+test('keeps the login empty when returning to it without a reload', async () => {
+  const app = await launchHiddenElectron()
+  try {
+    const window = await app.firstWindow()
+    await enter(window, demoEmail, demoPassword)
+    await expectHoy(window)
+    await window.evaluate(() => {
+      globalThis.location.hash = '#/'
+    })
+    await expect(window.getByRole('button', { name: 'Entrar', exact: true })).toBeVisible()
+    await expect(window.getByLabel('Correo', { exact: true })).toHaveValue('')
+    await expect(window.getByLabel('Contraseña', { exact: true })).toHaveValue('')
+  } finally {
+    await app.close()
+  }
+})
+
+test('does not show or record student data with a teacher session', async () => {
+  const app = await launchHiddenElectron()
+  try {
+    const window = await app.firstWindow()
+    await enter(window, demoEmail, demoPassword)
+    await expectHoy(window)
+    for (const hash of ['#/student/dashboard', '#/student/scan', '#/student/history']) {
+      await window.evaluate((next) => {
+        globalThis.location.hash = next
+      }, hash)
+      await expect(
+        window.getByRole('heading', { level: 1, name: 'No hay una sesión de alumno' })
+      ).toBeVisible()
+      await expect(window.getByText('Bienvenido')).toHaveCount(0)
+      await expect(window.getByRole('button', { name: 'Escanear' })).toHaveCount(0)
+    }
+  } finally {
+    await app.close()
+  }
+})
+
+test('empties the login and sign-up forms after leaving them without a successful submit', async () => {
+  const app = await launchHiddenElectron()
+  try {
+    const window = await app.firstWindow()
+    await enter(window, demoEmail, 'clave-incorrecta')
+    await expect(window.getByText(loginError)).toBeVisible()
+    await window.evaluate(() => {
+      globalThis.location.hash = '#/sign-up'
+    })
+    await window.getByLabel('Nombre completo').fill('Otra alumna')
+    await window.getByLabel('Correo electrónico').fill('otra@clase.test')
+    await window.getByLabel('Contraseña', { exact: true }).fill('secreta12')
+    await window.getByLabel('Repetir contraseña').fill('secreta12')
+    await window.getByRole('button', { name: 'Inicia sesión' }).click()
+    await expect(window.getByLabel('Correo', { exact: true })).toHaveValue('')
+    await expect(window.getByLabel('Contraseña', { exact: true })).toHaveValue('')
+    await expect(window.getByText(loginError)).toHaveCount(0)
+    await window.evaluate(() => {
+      globalThis.location.hash = '#/sign-up'
+    })
+    await expect(window.getByLabel('Correo electrónico')).toHaveValue('')
+    await expect(window.getByLabel('Contraseña', { exact: true })).toHaveValue('')
+    await expect(window.getByLabel('Repetir contraseña')).toHaveValue('')
   } finally {
     await app.close()
   }
