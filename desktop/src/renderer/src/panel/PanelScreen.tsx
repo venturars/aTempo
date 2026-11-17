@@ -830,7 +830,10 @@ function TimeField({
           skip.current = false
           return
         }
-        onCommit(draft)
+        // Mirar la hora y salir sin cambiarla no guarda nada: no deshace una marca hecha a mano.
+        if (draft !== (time === '—' ? '' : time)) {
+          onCommit(draft)
+        }
         setDraft(null)
       }}
       onKeyDown={(event) => {
