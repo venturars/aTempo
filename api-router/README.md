@@ -6,6 +6,8 @@ Hoy solo expone `GET /health`. La lógica de negocio vivirá en [`sdk/`](../sdk/
 
 ## Arranque
 
+Desde `api-router/`:
+
 ```sh
 pnpm install
 pnpm dev
@@ -21,8 +23,16 @@ Por defecto escucha en el puerto `3000`. Puedes usar la variable `PORT`.
 
 El documento OpenAPI en JSON está en `/docs-json`.
 
-Otros comandos:
+Otros comandos, desde `api-router/`:
+
+```sh
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm build
+```
 
 - `pnpm typecheck` — comprobación de tipos.
-- `pnpm test` — prueba e2e de `/health`.
+- `pnpm lint` — ESLint sobre `src/` y `test/`.
+- `pnpm test` — prueba e2e de `/health` y Swagger.
 - `pnpm build` — compilación a `dist/`.
