@@ -29,7 +29,7 @@ jobs:
       pull-requests: read
     steps:
       # Ejecuta solo la acción fijada del paquete; nunca descarga código de la PR.
-      - uses: venturars/delivery-workflow/.github/actions/discord-pr-notifications@aa0cad762f8e9dc6223df82263987634d2f1f258
+      - uses: venturars/delivery-workflow/.github/actions/discord-pr-notifications@9d12e301ce3ae504cb5b441c21704d9c80025251
         with:
           github-token: ${{ github.token }}
           bot-token: ${{ secrets.DISCORD_BOT_TOKEN }}
