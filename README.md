@@ -136,6 +136,10 @@ docker compose run --rm api-router pnpm test
 
 Más detalle en [api-router/README.md](api-router/README.md).
 
+## API-postgresql
+
+Más detalle en [api-postgresql/README.md](api-postgresql/README.md).
+
 ## Avisos opcionales de PR en Discord
 
 El workflow `.github/workflows/discord-pr-notifications.yml` activa los avisos desde `main` para las PR dirigidas a `staging` y los comentarios de asociación. Usa la acción compartida fijada a un commit y no ejecuta código de la PR. APM no instala este workflow ni lo incorpora a los pasos de los agentes.

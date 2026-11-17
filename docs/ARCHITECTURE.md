@@ -1,14 +1,14 @@
 # Arquitectura de aTempo
 
-## API-router y SDK
+## API-router, SDK y PostgreSQL
 
-Carpeta: `api-router/`.
+Carpeta del router: `api-router/`. Carpeta de la persistencia: `api-postgresql/`.
 
-Los frontends (Electron en `desktop/` y el futuro portal web) hablarán REST con este servicio NestJS. El API-router transforma HTTP y delegará en la **SDK (lógica de negocio)**. Esa SDK vivirá en `sdk/`, al mismo nivel que `desktop/` y `api-router/`; la carpeta aún no existe. Redis, Postgres y el resto de microservicios del backend quedan fuera del escritorio.
+Los frontends (Electron en `desktop/` y el futuro portal web) hablarán REST con el API-router, un servicio NestJS. El API-router transforma HTTP y delegará en la **SDK (lógica de negocio)**. Esa SDK vivirá en `sdk/`, al mismo nivel que `desktop/` y `api-router/`; la carpeta aún no existe. La SDK hablará con `api-postgresql/` para leer y escribir en PostgreSQL. El API-router no habla con la base. Redis, Postgres y el resto de microservicios del backend quedan fuera del escritorio.
 
-Hoy solo existe `GET /health`. El login y el registro del renderer **no** llaman a esta API.
+Hoy `api-router/` solo expone `GET /health`. `api-postgresql/` solo expone `GET /health`, que confirma que PostgreSQL responde. El login y el registro del renderer no llaman a ninguna de las dos APIs. PostgreSQL y `api-postgresql/` no están en Docker Compose.
 
-La documentación interactiva (OpenAPI y Swagger UI) vive en **`/docs`** con el servicio en marcha; sirve para probar endpoints a mano, no implementa lógica de negocio.
+La documentación interactiva (OpenAPI y Swagger UI) de cada servicio vive en **`/docs`** con el servicio en marcha; sirve para probar endpoints a mano, no implementa lógica de negocio. `api-postgresql/` escucha en el puerto 3001.
 
 ```mermaid
 flowchart LR
@@ -16,12 +16,16 @@ flowchart LR
   web[FrontendWeb]
   router[APIRouterNest]
   sdk[sdk_logicaDeNegocio]
+  apiPg[apiPostgresql]
+  postgres[(PostgreSQL)]
   electron --> router
   web --> router
   router --> sdk
+  sdk --> apiPg
+  apiPg --> postgres
 ```
 
-`sdk/` es un paquete hermano de `desktop/` y `api-router/`; el API-router y los frontends la consumirán cuando exista.
+`sdk/` es un paquete hermano de `desktop/`, `api-router/` y `api-postgresql/`. El API-router y los frontends la consumirán cuando exista. `api-postgresql/` ya está y espera a esa SDK.
 
 ## aTempo de escritorio
 

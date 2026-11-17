@@ -27,8 +27,18 @@ aTempo de escritorio es la aplicación del profesor. Sirve para registrar la asi
 
 La SDK de lógica de negocio vivirá en `sdk/` (carpeta pendiente), al mismo nivel que `desktop/` y `api-router/`. El API-router no implementa reglas de negocio; solo delegará en esa SDK.
 
-## 4. Dónde seguir
+## 4. Stack de `api-postgresql/`
+
+- **NestJS 11** expone la persistencia que usará la SDK para leer y escribir en PostgreSQL.
+- **pg** abre la conexión y comprueba que la base responde.
+- **@nestjs/swagger** documenta la API y sirve Swagger UI en `/docs` para pruebas manuales.
+- **TypeScript** escribe el servicio.
+- **pnpm** es el gestor de paquetes de `api-postgresql/`. Las versiones van fijas, sin `^`.
+
+Este servicio no implementa reglas de negocio. El API-router no habla con PostgreSQL. El escritorio no llama a este servicio.
+
+## 5. Dónde seguir
 
 - [STYLE.md](STYLE.md): los dos temas y el enlace a la guía visual.
-- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio y del API-router.
-- [TREE.md](TREE.md): árboles de `desktop/` y `api-router/`.
+- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, del API-router y de `api-postgresql/`.
+- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/` y `api-postgresql/`.
