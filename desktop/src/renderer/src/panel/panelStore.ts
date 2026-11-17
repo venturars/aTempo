@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import {
   course,
+  rollTime,
   todayEntry,
   rosterNames,
   type Attendance,
@@ -163,17 +164,21 @@ export const usePanelStore = create<PanelState>((set, get) => ({
     if (marks[index] === 'ausente') {
       return
     }
-    const next = { ...get().times }
+    const times = get().times
+    const next = { ...times }
     if (validArrival(time)) {
       next[index] = time
     } else {
       delete next[index]
     }
-    // Si ya había llegado, la hora que se ve decide si es puntual o tarde.
-    // Al borrar la hora corregida, vuelve a contar la del registro.
-    const shown = next[index] ?? todayEntry[index]
-    if ((marks[index] === 'presente' || marks[index] === 'retraso') && validArrival(shown)) {
-      marks[index] = markForArrival(shown)
+    // Si ya había llegado y la hora que se ve cambia, esa hora decide si es puntual o tarde.
+    // Si la hora que se ve no cambia (por ejemplo, al borrar una hora que no se había corregido),
+    // se respeta la marca puesta a mano.
+    const arrived = marks[index] === 'presente' || marks[index] === 'retraso'
+    const shownBefore = rollTime(marks[index] ?? 'pendiente', index, times)
+    const shownAfter = rollTime(marks[index] ?? 'pendiente', index, next)
+    if (arrived && shownAfter !== shownBefore && validArrival(shownAfter)) {
+      marks[index] = markForArrival(shownAfter)
     }
     set({ times: next, marks })
   },
