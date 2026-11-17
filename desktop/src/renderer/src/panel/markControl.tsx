@@ -31,6 +31,16 @@ export function MarkControl({
   const menuRef = useRef<HTMLUListElement>(null)
   const [menu, setMenu] = useState<{ top: number; left: number } | null>(null)
   const isOpen = menu !== null
+  // Al elegir o pulsar Escape, el foco vuelve al botón de la fila, no al principio de la página.
+  const returnFocus = useRef(false)
+
+  // Después de pintar: si se eligió Ausente, el botón se vuelve a crear dentro del aviso.
+  useEffect(() => {
+    if (!isOpen && returnFocus.current) {
+      returnFocus.current = false
+      buttonRef.current?.focus()
+    }
+  }, [isOpen, status])
 
   useEffect(() => {
     if (!isOpen) {
@@ -50,9 +60,13 @@ export function MarkControl({
     }
     function onKey(event: KeyboardEvent): void {
       if (event.key === 'Escape') {
+        returnFocus.current = true
         setMenu(null)
       }
     }
+    // El menú se pinta al final de la página: el foco entra en él al abrirlo,
+    // para poder elegir con el teclado sin pasar por otros controles.
+    menuRef.current?.querySelector<HTMLButtonElement>('button')?.focus()
     // El menú está fijo en la pantalla: si la tabla se mueve, se cierra para no quedar sobre otra fila.
     window.addEventListener('pointerdown', closeIfOutside, true)
     // Con teclado: llevar el foco a otro control también cierra el menú.
@@ -139,6 +153,7 @@ export function MarkControl({
                       type="button"
                       className="cursor-pointer"
                       onClick={() => {
+                        returnFocus.current = true
                         setMenu(null)
                         onPick(mark)
                       }}
