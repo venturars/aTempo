@@ -17,10 +17,6 @@ function startupHash(): string | undefined {
     return '/organization/dashboard'
   }
 
-  if (process.argv.includes('--panel')) {
-    return '/teacher/panel'
-  }
-
   return undefined
 }
 

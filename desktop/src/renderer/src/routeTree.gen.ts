@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as OrganizationDashboardRouteImport } from './routes/organization/dashboard'
 import { Route as StudentDashboardRouteImport } from './routes/student/dashboard'
+import { Route as StudentHistoryRouteImport } from './routes/student/history'
+import { Route as StudentScanRouteImport } from './routes/student/scan'
 import { Route as TeacherPanelRouteImport } from './routes/teacher/panel'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +37,16 @@ const StudentDashboardRoute = StudentDashboardRouteImport.update({
   path: '/student/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudentHistoryRoute = StudentHistoryRouteImport.update({
+  id: '/student/history',
+  path: '/student/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentScanRoute = StudentScanRouteImport.update({
+  id: '/student/scan',
+  path: '/student/scan',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TeacherPanelRoute = TeacherPanelRouteImport.update({
   id: '/teacher/panel',
   path: '/teacher/panel',
@@ -46,6 +58,8 @@ export interface FileRoutesByFullPath {
   '/sign-up': typeof SignUpRoute
   '/organization/dashboard': typeof OrganizationDashboardRoute
   '/student/dashboard': typeof StudentDashboardRoute
+  '/student/history': typeof StudentHistoryRoute
+  '/student/scan': typeof StudentScanRoute
   '/teacher/panel': typeof TeacherPanelRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +67,8 @@ export interface FileRoutesByTo {
   '/sign-up': typeof SignUpRoute
   '/organization/dashboard': typeof OrganizationDashboardRoute
   '/student/dashboard': typeof StudentDashboardRoute
+  '/student/history': typeof StudentHistoryRoute
+  '/student/scan': typeof StudentScanRoute
   '/teacher/panel': typeof TeacherPanelRoute
 }
 export interface FileRoutesById {
@@ -61,6 +77,8 @@ export interface FileRoutesById {
   '/sign-up': typeof SignUpRoute
   '/organization/dashboard': typeof OrganizationDashboardRoute
   '/student/dashboard': typeof StudentDashboardRoute
+  '/student/history': typeof StudentHistoryRoute
+  '/student/scan': typeof StudentScanRoute
   '/teacher/panel': typeof TeacherPanelRoute
 }
 export interface FileRouteTypes {
@@ -70,6 +88,8 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/organization/dashboard'
     | '/student/dashboard'
+    | '/student/history'
+    | '/student/scan'
     | '/teacher/panel'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -77,6 +97,8 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/organization/dashboard'
     | '/student/dashboard'
+    | '/student/history'
+    | '/student/scan'
     | '/teacher/panel'
   id:
     | '__root__'
@@ -84,6 +106,8 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/organization/dashboard'
     | '/student/dashboard'
+    | '/student/history'
+    | '/student/scan'
     | '/teacher/panel'
   fileRoutesById: FileRoutesById
 }
@@ -92,6 +116,8 @@ export interface RootRouteChildren {
   SignUpRoute: typeof SignUpRoute
   OrganizationDashboardRoute: typeof OrganizationDashboardRoute
   StudentDashboardRoute: typeof StudentDashboardRoute
+  StudentHistoryRoute: typeof StudentHistoryRoute
+  StudentScanRoute: typeof StudentScanRoute
   TeacherPanelRoute: typeof TeacherPanelRoute
 }
 
@@ -125,6 +151,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/student/history': {
+      id: '/student/history'
+      path: '/student/history'
+      fullPath: '/student/history'
+      preLoaderRoute: typeof StudentHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student/scan': {
+      id: '/student/scan'
+      path: '/student/scan'
+      fullPath: '/student/scan'
+      preLoaderRoute: typeof StudentScanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/teacher/panel': {
       id: '/teacher/panel'
       path: '/teacher/panel'
@@ -140,6 +180,8 @@ const rootRouteChildren: RootRouteChildren = {
   SignUpRoute: SignUpRoute,
   OrganizationDashboardRoute: OrganizationDashboardRoute,
   StudentDashboardRoute: StudentDashboardRoute,
+  StudentHistoryRoute: StudentHistoryRoute,
+  StudentScanRoute: StudentScanRoute,
   TeacherPanelRoute: TeacherPanelRoute,
 }
 export const routeTree = rootRouteImport
