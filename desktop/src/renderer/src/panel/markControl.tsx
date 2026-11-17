@@ -28,13 +28,24 @@ export function MarkControl({
   onPick: (mark: Attendance) => void
 }): React.JSX.Element {
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLUListElement>(null)
   const [menu, setMenu] = useState<{ top: number; left: number } | null>(null)
+  const isOpen = menu !== null
 
   useEffect(() => {
-    if (menu === null) {
+    if (!isOpen) {
       return
     }
     function close(): void {
+      setMenu(null)
+    }
+    // En fase de captura: llega aunque otro control pare la propagación del clic.
+    // Así, abrir el menú de otra fila cierra este.
+    function closeIfOutside(event: PointerEvent): void {
+      const target = event.target as Node
+      if (menuRef.current?.contains(target) || buttonRef.current?.contains(target)) {
+        return
+      }
       setMenu(null)
     }
     function onKey(event: KeyboardEvent): void {
@@ -42,13 +53,18 @@ export function MarkControl({
         setMenu(null)
       }
     }
-    window.addEventListener('click', close)
+    // El menú está fijo en la pantalla: si la tabla se mueve, se cierra para no quedar sobre otra fila.
+    window.addEventListener('pointerdown', closeIfOutside, true)
+    window.addEventListener('scroll', close, true)
+    window.addEventListener('resize', close)
     window.addEventListener('keydown', onKey)
     return () => {
-      window.removeEventListener('click', close)
+      window.removeEventListener('pointerdown', closeIfOutside, true)
+      window.removeEventListener('scroll', close, true)
+      window.removeEventListener('resize', close)
       window.removeEventListener('keydown', onKey)
     }
-  }, [menu])
+  }, [isOpen])
 
   if (status === 'none') {
     return <span className="opacity-50">—</span>
@@ -106,6 +122,7 @@ export function MarkControl({
       {menu !== null
         ? createPortal(
             <ul
+              ref={menuRef}
               role="menu"
               className="teacher-panel menu float-panel popover-in rounded-box fixed z-50 p-1.5 shadow-sm"
               style={{ top: menu.top, left: menu.left }}

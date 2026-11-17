@@ -49,6 +49,60 @@ async function open(p: Page): Promise<void> {
   await seconds(p, 30)
 }
 
+test('store re-derives lateness on a corrected time and never keeps a time for an absent student', () => {
+  usePanelStore.setState(usePanelStore.getInitialState(), true)
+  useSettingsStore.setState(useSettingsStore.getInitialState(), true)
+  const state = (): ReturnType<typeof usePanelStore.getState> => usePanelStore.getState()
+  try {
+    state().openSession()
+    state().simulateArrival(0)
+    expect(state().marks[0]).toBe('presente')
+    state().setTime(0, '09:33')
+    expect(state().marks[0]).toBe('retraso')
+    state().setTime(0, '09:05')
+    expect(state().marks[0]).toBe('presente')
+    state().setMark(1, 'presente')
+    state().setTime(1, '09:20')
+    state().setMark(1, 'ausente')
+    expect(state().times[1]).toBeUndefined()
+    state().setTime(2, '09:40')
+    expect(state().marks[2]).toBeUndefined()
+    state().closeSession()
+    expect(state().marks[2]).toBe('ausente')
+    expect(state().times[2]).toBeUndefined()
+  } finally {
+    usePanelStore.setState(usePanelStore.getInitialState(), true)
+    useSettingsStore.setState(useSettingsStore.getInitialState(), true)
+  }
+})
+
+test('saves a time edit made after cancelling a previous edit with Escape', async () => {
+  await withPanel(async (p) => {
+    await open(p)
+    await p.getByRole('button', { name: 'Simular llegada', exact: true }).click()
+    const diego = row(p, 'Diego Molero')
+    await diego.getByRole('button', { name: todayEntry[0], exact: true }).click()
+    await diego.locator('input[type=time]').press('Escape')
+    await diego.getByRole('button', { name: todayEntry[0], exact: true }).click()
+    await diego.locator('input[type=time]').fill('09:05')
+    await diego.locator('input[type=time]').press('Enter')
+    await expect(diego.getByRole('button', { name: '09:05', exact: true })).toBeVisible()
+    await expect(diego.locator('input[type=time]')).toHaveCount(0)
+  })
+})
+
+test('keeps one mark menu open at a time and closes it on scroll', async () => {
+  await withPanel(async (p) => {
+    await open(p)
+    await row(p, 'Diego Molero').getByRole('button', { name: 'Pendiente', exact: true }).click()
+    await expect(p.getByRole('menu')).toHaveCount(1)
+    await row(p, 'Diego Torres').getByRole('button', { name: 'Pendiente', exact: true }).click()
+    await expect(p.getByRole('menu')).toHaveCount(1)
+    await p.mouse.wheel(0, 200)
+    await expect(p.getByRole('menu')).toHaveCount(0)
+  })
+})
+
 test('store rejects invalid and duplicate arrivals, guards only evidence, respects margin and resets new sessions', () => {
   const initial = usePanelStore.getInitialState()
   const preferences = useSettingsStore.getInitialState()
@@ -230,7 +284,8 @@ test('simulates next eligible arrival, preserves manual marks and exhausts valid
     await diego.getByRole('button', { name: todayEntry[0], exact: true }).click()
     await diego.locator('input[type=time]').fill('09:33')
     await diego.locator('input[type=time]').press('Enter')
-    await diego.getByRole('button', { name: 'Presente', exact: true }).click()
+    // La hora corregida pasa el margen: el estado cambia solo a Tarde.
+    await diego.getByRole('button', { name: 'Tarde', exact: true }).click()
     await expect(
       p.getByRole('menu').getByRole('button', { name: 'Ausente', exact: true })
     ).toHaveCount(0)

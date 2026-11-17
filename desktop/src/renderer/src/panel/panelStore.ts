@@ -9,6 +9,7 @@ import {
 } from './roster'
 
 import { useSettingsStore } from './settingsStore'
+import { statusForArrival } from '../student/attendanceStatus'
 
 function validArrival(time: string | undefined): time is string {
   return time !== undefined && /^([01]\d|2[0-3]):[0-5]\d$/.test(time)
@@ -26,9 +27,10 @@ export function nextDemoArrival(
   )
 }
 
-function minutes(time: string): number {
-  const [hour, minute] = time.split(':').map(Number)
-  return hour * 60 + minute
+// Misma regla de retraso que el alumno: puntual hasta el inicio más el margen, incluido.
+function markForArrival(time: string): Attendance {
+  const status = statusForArrival(time, course.startsAt, useSettingsStore.getState().lateMinutes)
+  return status === 'tarde' ? 'retraso' : 'presente'
 }
 
 export type PanelTab = 0 | 1 | 2 | 3
@@ -103,12 +105,17 @@ export const usePanelStore = create<PanelState>((set, get) => ({
   },
   closeSession: () => {
     const marks = { ...get().marks }
+    const times = { ...get().times }
     rosterNames.forEach((_, index) => {
-      if (marks[index] === undefined) {
+      if (marks[index] === undefined || marks[index] === 'pendiente') {
         marks[index] = 'ausente'
       }
+      // Un ausente no tiene hora de entrada.
+      if (marks[index] === 'ausente') {
+        delete times[index]
+      }
     })
-    set({ phase: 'cerrada', marks, confirmClose: false })
+    set({ phase: 'cerrada', marks, times, confirmClose: false })
   },
   reopenSession: () => {
     set({ phase: 'abierta', openedAt: Date.now(), confirmClose: false })
@@ -128,9 +135,8 @@ export const usePanelStore = create<PanelState>((set, get) => ({
     ) {
       return
     }
-    const lateAt = minutes(course.startsAt) + useSettingsStore.getState().lateMinutes
     set({
-      marks: { ...state.marks, [index]: minutes(time) > lateAt ? 'retraso' : 'presente' },
+      marks: { ...state.marks, [index]: markForArrival(time) },
       times: { ...state.times, [index]: time },
       demoArrivals: { ...state.demoArrivals, [index]: true }
     })
@@ -142,19 +148,28 @@ export const usePanelStore = create<PanelState>((set, get) => ({
     ) {
       return
     }
-    set({ marks: { ...get().marks, [index]: mark } })
+    const times = { ...get().times }
+    if (mark === 'ausente') {
+      delete times[index]
+    }
+    set({ marks: { ...get().marks, [index]: mark }, times })
   },
   setTime: (index, time) => {
     if (get().phase !== 'abierta') {
       return
     }
     const next = { ...get().times }
+    const marks = { ...get().marks }
     if (!/^\d{2}:\d{2}$/.test(time)) {
       delete next[index]
     } else {
       next[index] = time
+      // Si ya había llegado, la hora corregida decide si es puntual o tarde.
+      if (marks[index] === 'presente' || marks[index] === 'retraso') {
+        marks[index] = markForArrival(time)
+      }
     }
-    set({ times: next })
+    set({ times: next, marks })
   },
   setSessionMark: (sessionId, name, mark) => {
     const book = get().sessionMarks
