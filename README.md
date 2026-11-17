@@ -1,14 +1,47 @@
 # aTempo
 
-aTempo registra la asistencia de los alumnos de una clase. Este repositorio tiene la aplicación de escritorio del profesor y la guía visual compartida.
+aTempo registra la asistencia de los alumnos de una clase. Este repositorio tiene el prototipo de escritorio para profesor y alumno y la guía visual compartida.
 
 La visión, los perfiles y las decisiones de producto están en [principles.md](principles.md).
+
+## Probar las demos de profesor y alumno
+
+Para abrir Electron en tu ordenador necesitas Node 24 y pnpm 10.33.0. Desde la raíz de la copia que vas a revisar, instala las dependencias nativas y arranca la aplicación:
+
+```sh
+cd desktop
+node --version
+pnpm --version
+pnpm install --frozen-lockfile
+pnpm dev
+```
+
+Comprueba que las versiones muestran `v24.x` y `10.33.0`.
+
+Desde un arranque nuevo, usa el formulario **Entrar** con una de estas cuentas públicas de ejemplo:
+
+| Perfil | Correo | Contraseña | Destino |
+| --- | --- | --- | --- |
+| Profesor | `profesor@atempo.test` | `Profesor123!` | Hoy, en el panel del profesor |
+| Alumno | `ada.lopez@clase.test` | `clase-2026` | Dashboard de Ada López |
+
+Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alumnos y pasar lista.
+
+Para probar al alumno desde el login, sal completamente de la aplicación: en macOS usa **Cmd+Q**; cerrar solo la ventana no termina el proceso. Detén también `pnpm dev` con **Ctrl+C** en su terminal y vuelve a ejecutar `pnpm dev` desde `desktop/`.
+
+Como alumno, pulsa **Registrar asistencia**, **Escanear** y **Llegar a las 08:58**. Debe aparecer el estado **Presente** con la hora **08:58**. Pulsa **Volver** y **Resumen de asistencia** para comprobar la nueva entrada en el historial.
+
+El correo admite mayúsculas y espacios laterales; la contraseña debe coincidir exactamente. Una contraseña incorrecta o un correo desconocido muestran un error y conservan el login. El registro crea alumnos y reserva el correo del profesor.
+
+Las cuentas, la sesión y la asistencia de ejemplo viven en memoria del renderer. Recargarlo o reiniciar completamente la aplicación vacía la sesión, restablece los datos de ejemplo y elimina los alumnos registrados durante ese arranque. Repite la salida completa y el arranque para probar otra cuenta desde cero.
+
+El lector del alumno ofrece lecturas simuladas y no usa cámara. Estos flujos no se conectan al backend ni a un servicio de autenticación.
 
 ## Qué hay
 
 | Carpeta | Qué es |
 | --- | --- |
-| `desktop/` | Aplicación del profesor. Electron, React y SQLite. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/sign-up` para el registro. |
+| `desktop/` | Prototipo para profesor y alumno con Electron y React; las demos usan datos en memoria. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/sign-up` para el registro. |
 | `docs/storybook/` | Fuente de verdad visual: Tailwind y daisyUI. Las pantallas usan las clases. No hay un paquete de componentes. |
 | `docs/guia/` | Markdown generado desde Storybook. No se versiona. Lo leen los agentes. |
 | `docs/` | Cómo se construye: constitución, arquitectura, estilo y árbol de carpetas. |
@@ -79,36 +112,6 @@ pnpm run test:visual --workers=1 --retries=0 --global-timeout=300000 --update-sn
 ```
 
 La suite del sistema visual sirve y cierra su propia vista previa local de Storybook.
-
-### Probar las demos de profesor y alumno
-
-Desde la raíz de tu copia del repositorio, selecciona la demo de QR del profesor de la PR #95:
-
-```sh
-gh pr checkout 95
-```
-
-Si ya estás en `65-feat-rotating-teacher-qr`, actualízala con `git pull --ff-only`. Con Docker Desktop en marcha, prepara las dependencias y abre Electron en tu ordenador (con pnpm 10.33.0 instalado como se indica arriba):
-
-```sh
-docker compose run --rm setup
-cd desktop
-pnpm install
-pnpm dev
-```
-
-Desde un arranque nuevo, usa el formulario normal **Entrar** con una de estas cuentas públicas:
-
-| Perfil | Correo | Contraseña | Destino |
-| --- | --- | --- | --- |
-| Profesor | `profesor@atempo.test` | `Profesor123!` | Hoy, en el panel del profesor |
-| Alumno | `ada.lopez@clase.test` | `clase-2026` | Dashboard de Ada López, con escaneo e historial |
-
-Tras entrar como profesor, pulsa **Abrir lista** en Hoy: aparecen el **QR de ejemplo**, que cambia cada 30 segundos, la cuenta atrás y la lista. **Simular llegada** actualiza el siguiente alumno pendiente; también puedes marcar a mano. Cerrar la lista oculta el QR y volver a abrir conserva las marcas e inicia otro periodo. El patrón es sintético y no se conecta al lector de ejemplo del alumno ni a un backend.
-
-El correo admite mayúsculas y espacios laterales; la contraseña debe coincidir exactamente. Una contraseña incorrecta o un correo desconocido muestran un error y conservan el login, sin mostrar las credenciales introducidas ni un aviso de éxito. El registro crea alumnos y reserva el correo del profesor.
-
-Las cuentas, la sesión y los datos de ejemplo viven en memoria del renderer, sin servicio de autenticación. Para probar la otra cuenta desde una sesión nueva, cierra la app y vuelve a ejecutar `pnpm dev`: aparece el login. Al recargar el renderer o reiniciar la app se vacía la sesión y se restablecen los datos de ejemplo; también se pierden los alumnos registrados durante ese arranque.
 
 ### Ventana de Electron desde Docker (experimental)
 
