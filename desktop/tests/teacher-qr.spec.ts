@@ -126,6 +126,49 @@ test('keeps a manual mark when a time is opened and left without changes', async
   })
 })
 
+test('keeps a manual mark when clearing a time that was never corrected', () => {
+  usePanelStore.setState(usePanelStore.getInitialState(), true)
+  useSettingsStore.setState(useSettingsStore.getInitialState(), true)
+  const state = (): ReturnType<typeof usePanelStore.getState> => usePanelStore.getState()
+  try {
+    state().openSession()
+    state().setMark(0, 'retraso')
+    state().setTime(0, '')
+    expect(state().marks[0]).toBe('retraso')
+    state().setTime(0, todayEntry[0])
+    expect(state().marks[0]).toBe('retraso')
+  } finally {
+    usePanelStore.setState(usePanelStore.getInitialState(), true)
+    useSettingsStore.setState(useSettingsStore.getInitialState(), true)
+  }
+})
+
+test('chooses a mark with the keyboard and returns focus to the row button', async () => {
+  await withPanel(async (p) => {
+    await open(p)
+    const diego = row(p, 'Diego Molero')
+    await diego.getByRole('button', { name: 'Pendiente', exact: true }).press('Enter')
+    const menu = p.getByRole('menu')
+    await expect(menu.getByRole('button', { name: 'Presente', exact: true })).toBeFocused()
+    await p.keyboard.press('Tab')
+    await expect(menu.getByRole('button', { name: 'Tarde', exact: true })).toBeFocused()
+    await p.keyboard.press('Enter')
+    await expect(p.getByRole('menu')).toHaveCount(0)
+    await expect(diego.getByRole('button', { name: 'Tarde', exact: true })).toBeFocused()
+  })
+})
+
+test('does not offer a time editor for an absent student', async () => {
+  await withPanel(async (p) => {
+    await open(p)
+    const torres = row(p, 'Diego Torres')
+    await torres.getByRole('button', { name: 'Pendiente', exact: true }).click()
+    await p.getByRole('menu').getByRole('button', { name: 'Ausente', exact: true }).click()
+    await expect(torres.getByRole('button', { name: '—', exact: true })).toHaveCount(0)
+    await expect(torres.getByText('—', { exact: true })).toBeVisible()
+  })
+})
+
 test('closes the mark menu when the keyboard focus moves to another control', async () => {
   await withPanel(async (p) => {
     await open(p)
