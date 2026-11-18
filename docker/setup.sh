@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Instala lo que el proyecto necesita, dentro del contenedor:
-# el paquete de APM en la raíz y las dependencias de desktop/, docs/storybook/ y api-router/ en sus volúmenes.
+# el paquete de APM en la raíz y las dependencias de desktop/, docs/storybook/, api-router/, blockend/ y postgres/ en sus volúmenes.
 # Se lanza con docker compose run --rm setup.
 
 set -euo pipefail
@@ -10,7 +10,7 @@ cd /work
 echo "APM: instalando lo que fijan apm.yml y apm.lock.yaml."
 apm install
 
-for folder in desktop docs/storybook api-router; do
+for folder in desktop docs/storybook api-router blockend postgres; do
   echo "pnpm: instalando ${folder}."
   pnpm --dir "$folder" install --frozen-lockfile
 done
