@@ -48,6 +48,26 @@ export const Gallery: Story = {
           </div>
         </div>
       </Section>
+      <Section title="Iniciales con tono">
+        <div className="avatar avatar-placeholder">
+          <div className="w-8 rounded-full text-xs font-semibold avatar-tone-primary"><span>AL</span></div>
+        </div>
+        <div className="avatar avatar-placeholder">
+          <div className="w-8 rounded-full text-xs font-semibold avatar-tone-success"><span>MD</span></div>
+        </div>
+        <div className="avatar avatar-placeholder">
+          <div className="w-8 rounded-full text-xs font-semibold avatar-tone-info"><span>SC</span></div>
+        </div>
+        <div className="avatar avatar-placeholder">
+          <div className="w-8 rounded-full text-xs font-semibold avatar-tone-warning"><span>ED</span></div>
+        </div>
+        <div className="avatar avatar-placeholder">
+          <div className="w-8 rounded-full text-xs font-semibold avatar-tone-secondary"><span>MM</span></div>
+        </div>
+        <div className="avatar avatar-placeholder">
+          <div className="w-8 rounded-full text-xs font-semibold avatar-tone-error"><span>JR</span></div>
+        </div>
+      </Section>
     </Frame>
   )
 }

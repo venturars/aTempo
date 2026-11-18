@@ -1,8 +1,12 @@
 # aTempo
 
-aTempo registra la asistencia de los alumnos de una clase. Este repositorio tiene el prototipo de escritorio para profesor y alumno y la guía visual compartida.
+aTempo registra la asistencia de los alumnos de una clase. Este repositorio tiene los prototipos de escritorio y web y la guía visual compartida.
 
 La visión, los perfiles y las decisiones de producto están en [principles.md](principles.md).
+
+## Probar administración en la web
+
+La demo de administración se abre en el navegador, en `/admin`, dentro del mismo paquete `web/` del alumno. Permite preparar invitaciones, cursos y sesiones con datos en memoria. Sigue los [pasos para abrir y probar administración](web/README.md#probar-administración); la entrada es **Abrir demo de administración**, sin usuario ni contraseña.
 
 ## Probar las demos de profesor y alumno
 
@@ -42,6 +46,7 @@ El lector del alumno ofrece lecturas simuladas y no usa cámara. Estos flujos no
 | Carpeta | Qué es |
 | --- | --- |
 | `desktop/` | Prototipo para profesor y alumno con Electron y React; las demos usan datos en memoria. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/sign-up` para el registro. |
+| `web/` | Portal del alumno y demo de administración en `/admin`, con el tema compartido de Storybook y datos simulados. |
 | `api-router/` | API REST con NestJS entre los frontends y la SDK de lógica de negocio (pendiente). |
 | `api-postgresql/` | API REST con NestJS entre la SDK y PostgreSQL. |
 | `api-rustfs/` | API REST con Express entre la SDK y RustFS (persistencia de objetos). |

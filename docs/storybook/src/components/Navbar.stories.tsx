@@ -20,6 +20,12 @@ export const Gallery: Story = {
           </div>
         </div>
       </Section>
+      <Section title="Enlaces de página">
+        <div className="flex h-14 w-full items-stretch border-b border-base-content/12">
+          <a className="nav-link" href="#avisar" aria-current="page">Avisar</a>
+          <a className="nav-link" href="#resumen">Resumen</a>
+        </div>
+      </Section>
     </Frame>
   )
 }
