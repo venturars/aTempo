@@ -1,6 +1,6 @@
-import type { AttendanceMark, TrimesterDay } from '../login/trimesterExample'
+import type { AttendanceMark, TrimesterDay } from './trimesterExample'
 
-export const weekPresence = '94% presentes'
+export const weekPresence = '94 % presentes'
 
 function weekMarks(presentCount: number, otherMarks: AttendanceMark[]): AttendanceMark[] {
   const marks: AttendanceMark[] = []

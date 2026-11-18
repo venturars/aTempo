@@ -108,7 +108,6 @@ async function expectLegend(window: Page): Promise<void> {
 }
 
 async function expectLoginFields(window: Page): Promise<void> {
-  await expect(window.getByText('Entra con tu correo.')).toBeVisible()
   await expect(window.getByLabel('Correo')).toBeVisible()
   await expect(window.getByLabel('Contraseña')).toBeVisible()
   await expect(window.getByRole('button', { name: 'Entrar' })).toBeVisible()
@@ -138,6 +137,27 @@ async function expectAbsentCopy(window: Page): Promise<void> {
   }
 }
 
+// Fondo de la casilla y de la tarjeta, y los dos tokens del tema, resueltos por el navegador.
+function fieldColors(field: Locator): Promise<string[]> {
+  return field.evaluate((input) => {
+    const token = (name: string): string => {
+      const probe = document.createElement('span')
+      probe.style.backgroundColor = `var(${name})`
+      document.body.append(probe)
+      const value = getComputedStyle(probe).backgroundColor
+      probe.remove()
+      return value
+    }
+    const card = input.closest('section')
+    return [
+      getComputedStyle(input).backgroundColor,
+      card === null ? '' : getComputedStyle(card).backgroundColor,
+      token('--color-base-200'),
+      token('--color-base-100')
+    ]
+  })
+}
+
 function readBodyStyle(window: Page): Promise<BodyStyle> {
   return window.locator('body').evaluate((body) => {
     const style = getComputedStyle(body)
@@ -157,16 +177,42 @@ test('shows the claim panel beside the form', async () => {
     await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-oscuro')
     await expect(window.getByText('aTempo')).toBeVisible()
     await expect(
-      window.getByRole('heading', { name: 'Tu trimestre, sesión a sesión' })
+      window.getByRole('heading', { level: 2, name: 'Trimestre de ejemplo' })
     ).toBeVisible()
     await expectSingleClaim(window)
     await expectTrimester(window)
     await expectLegend(window)
     await expectLoginFields(window)
+    // Sin aviso de invitación, la tarjeta empieza por «Correo».
+    await expect(window.getByText('Entra con tu correo.')).toHaveCount(0)
+    const firstInCard = await window
+      .locator('section')
+      .filter({ has: window.locator('form') })
+      .evaluate((card) => card.firstElementChild?.querySelector('label')?.textContent ?? '')
+    expect(firstInCard).toBe('Correo')
     await expectPanelLeftOfForm(window)
     await expectNoAlert(window)
     await expectAbsentCopy(window)
     await expect(window).toHaveScreenshot('login-empty.png', { animations: 'disabled' })
+  })
+})
+
+test('fills the login fields with base-200 over the base-100 card in both themes', async () => {
+  await withApp(async (window) => {
+    for (const theme of ['atempo-oscuro', 'atempo-claro']) {
+      await window.evaluate(
+        (value) => document.documentElement.setAttribute('data-theme', value),
+        theme
+      )
+      for (const label of ['Correo', 'Contraseña']) {
+        await expect
+          .poll(async () => {
+            const [field, card, base200, base100] = await fieldColors(window.getByLabel(label))
+            return field === base200 && card === base100 && field !== card
+          }, `${theme} ${label}`)
+          .toBe(true)
+      }
+    }
   })
 })
 

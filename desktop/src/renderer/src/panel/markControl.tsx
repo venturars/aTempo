@@ -215,24 +215,44 @@ function MarkNote({
     excuse === 'ok' ? 'Con justificante' : excuse === 'pend' ? 'Por revisar' : 'Sin justificante'
   const newestFirst = [...changes].reverse()
 
+  // Si la fila se va (por ejemplo, al cambiar de pantalla), no queda un cierre pendiente.
+  useEffect(
+    () => () => {
+      if (hide.current !== null) {
+        window.clearTimeout(hide.current)
+      }
+    },
+    []
+  )
+
   function show(): void {
-    if (hide.current !== null) {
-      window.clearTimeout(hide.current)
-    }
+    cancelHide()
     const rect = anchorRef.current?.getBoundingClientRect()
     if (rect === undefined) {
       return
     }
-    setBox({ top: rect.bottom + 6, left: rect.left })
+    // Sin hueco con el estado: la nota empieza justo debajo y su margen de arriba es parte de ella.
+    setBox({ top: rect.bottom, left: rect.left })
   }
 
+  // Un margen para llevar el ratón del estado a la nota sin que se cierre.
+  // Queda un solo cierre pendiente: si salen el ratón y el foco, el primero no cierra después.
   function scheduleHide(): void {
-    hide.current = window.setTimeout(() => setBox(null), 140)
+    cancelHide()
+    hide.current = window.setTimeout(() => setBox(null), 300)
+  }
+
+  function cancelHide(): void {
+    if (hide.current !== null) {
+      window.clearTimeout(hide.current)
+      hide.current = null
+    }
   }
 
   return (
     <span
       ref={anchorRef}
+      className="-my-1 inline-flex py-1"
       onMouseEnter={show}
       onMouseLeave={scheduleHide}
       onFocus={show}
@@ -247,41 +267,43 @@ function MarkNote({
             .join(' ')}
         </span>
       ) : null}
+      {/* La nota está en un portal, pero React la trata como hija del ancla: pasar del estado
+          a la nota, o de la nota al estado, no sale del ancla; salir de la nota, sí. */}
       {box !== null
         ? createPortal(
             <span
-              className="teacher-panel tip popover-in fixed z-50 flex w-64 flex-col gap-3 px-3.5 py-3 text-sm leading-snug"
+              className="teacher-panel fixed z-50 pt-1.5"
               style={{ top: box.top, left: box.left }}
               role="tooltip"
-              onMouseEnter={show}
-              onMouseLeave={scheduleHide}
               onClick={(event) => event.stopPropagation()}
             >
-              {newestFirst.map((change, index) => (
-                <span key={`${change.at}-${index}`} className="flex flex-col gap-1">
-                  <span className="font-medium">{changeText(change)}</span>
-                  <span>{change.reason}</span>
-                  <span className="tip-body">
-                    {change.by} · {changeTime(change.at)}
+              <span className="tip popover-in flex w-64 flex-col gap-3 px-3.5 py-3 text-sm leading-snug">
+                {newestFirst.map((change, index) => (
+                  <span key={`${change.at}-${index}`} className="flex flex-col gap-1">
+                    <span className="font-medium">{changeText(change)}</span>
+                    <span>{change.reason}</span>
+                    <span className="tip-body">
+                      {change.by} · {changeTime(change.at)}
+                    </span>
                   </span>
-                </span>
-              ))}
-              {excuse !== null ? (
-                <span className="flex flex-col gap-1">
-                  <span className="font-medium">{header}</span>
-                  {filed ? (
-                    <button
-                      type="button"
-                      className="mt-1 w-fit cursor-pointer border-0 bg-transparent p-0 text-sm font-medium underline"
-                      onClick={() => downloadSampleNote(name, when)}
-                    >
-                      Descargar
-                    </button>
-                  ) : (
-                    <span className="tip-body">No hay documento.</span>
-                  )}
-                </span>
-              ) : null}
+                ))}
+                {excuse !== null ? (
+                  <span className="flex flex-col gap-1">
+                    <span className="font-medium">{header}</span>
+                    {filed ? (
+                      <button
+                        type="button"
+                        className="mt-1 w-fit cursor-pointer border-0 bg-transparent p-0 text-sm font-medium underline"
+                        onClick={() => downloadSampleNote(name, when)}
+                      >
+                        Descargar
+                      </button>
+                    ) : (
+                      <span className="tip-body">No hay documento.</span>
+                    )}
+                  </span>
+                ) : null}
+              </span>
             </span>,
             document.body
           )

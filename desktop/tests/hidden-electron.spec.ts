@@ -22,9 +22,9 @@ test('real build renders and accepts input without native visibility or focus', 
     await page.keyboard.type('.es')
     await expect(page.getByLabel('Correo')).toHaveValue('hidden@clase.test.es')
     await page.evaluate(() => {
-      window.location.hash = '#/sign-up'
+      window.location.hash = '#/student/dashboard'
     })
-    await expect(page.getByRole('button', { name: 'Crear mi cuenta' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Dashboard alumno', level: 1 })).toBeVisible()
     const screenshot = await page.screenshot({ path: test.info().outputPath('hidden-smoke.png') })
     expect(screenshot.length).toBeGreaterThan(10000)
     const audit = await app.evaluate(({ BrowserWindow, app }) => {

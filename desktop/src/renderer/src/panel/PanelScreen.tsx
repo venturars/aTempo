@@ -4,6 +4,7 @@ import { teacherDemoAccount } from '../login/teacherDemoAccount'
 import { BackButton } from '../navigation/BackButton'
 import { useSessionStore } from '../session/sessionStore'
 import { nextDemoArrival, usePanelStore, type MarkChange, type PanelTab } from './panelStore'
+import { AccountMenu } from './AccountMenu'
 import { Avatar } from './avatar'
 import { JustificationAccess } from './JustificationAccess'
 import { MarkControl } from './markControl'
@@ -91,22 +92,7 @@ export function PanelScreen(): React.JSX.Element {
             ))}
           </ul>
         </nav>
-        <div className="mt-auto flex flex-col gap-2 border-t border-base-content/4 px-5 py-4">
-          <div className="flex items-stretch gap-3">
-            <Avatar name={teacherName} tall />
-            <span className="flex flex-col">
-              <span className="text-sm font-medium">{teacherName}</span>
-              <span className="text-meta text-base-content/60">Profesor</span>
-            </span>
-          </div>
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm -ml-2 w-fit px-2 font-normal text-base-content/70"
-            onClick={logOut}
-          >
-            Salir
-          </button>
-        </div>
+        <AccountMenu name={teacherName} onLogOut={logOut} />
       </aside>
       <main
         className={`mx-auto flex w-full min-w-0 justify-self-center flex-col gap-5 px-8 py-8 ${
@@ -203,7 +189,8 @@ function TodayView(): React.JSX.Element {
     .map((name, index) => ({ name, index, mark: statuses[index] ?? 'none' }))
     .sort((a, b) => compareByName(a.name, b.name))
 
-  // Con la lista abierta se marca sin más. Cerrada, el cambio pide un motivo.
+  // Con la lista abierta, el estado cambia sin pedir motivo. Con la lista cerrada, abre el diálogo
+  // que pide el motivo.
   function pick(index: number, mark: Attendance): void {
     if (phase === 'abierta') {
       setMark(index, mark)

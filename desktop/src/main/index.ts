@@ -9,10 +9,6 @@ function startupHash(): string | undefined {
     return '/student/dashboard'
   }
 
-  if (process.argv.includes('--sign-up')) {
-    return '/sign-up'
-  }
-
   if (process.argv.includes('--organization-dashboard')) {
     return '/organization/dashboard'
   }

@@ -27,6 +27,21 @@ async function readRoute(window: Page): Promise<string> {
   return hash.replace(/^#\/?/, '')
 }
 
+// La ruta con la que el proceso principal abrió la ventana, antes de que el router la reescriba.
+async function readStartupRoute(window: Page): Promise<string> {
+  const address = await window.evaluate(
+    () => (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming).name
+  )
+  return new URL(address).hash.replace(/^#\/?/, '')
+}
+
+// El código de la invitación tal como lo lee el login: el router guarda los textos con comillas.
+async function readInvitation(window: Page): Promise<string | null> {
+  const route = await readRoute(window)
+  const value = new URLSearchParams(route.replace(/^[^?]*/, '')).get('invitation')
+  return value === null ? null : value.replace(/^"(.*)"$/, '$1')
+}
+
 async function changeHash(window: Page, nextHash: string): Promise<void> {
   await window.evaluate((hash) => {
     globalThis.location.hash = hash
@@ -37,20 +52,15 @@ async function expectLoginScreen(window: Page): Promise<void> {
   await expect(
     window.getByRole('heading', { name: 'Pasar lista ya no es parte de la clase.', level: 1 })
   ).toBeVisible()
-  await expect(window.getByText('Entra con tu correo.')).toBeVisible()
+  await expect(window.getByLabel('Correo', { exact: true })).toBeVisible()
   await expect(window.getByRole('button', { name: 'Entrar' })).toBeVisible()
   await expect(window.getByRole('button', { name: 'Crear mi cuenta' })).toHaveCount(0)
   await expect(window.getByText('En construcción')).toHaveCount(0)
 }
 
 async function expectNoLoginScreen(window: Page): Promise<void> {
-  await expect(window.getByText('Entra con tu correo.')).toHaveCount(0)
+  await expect(window.getByLabel('Correo', { exact: true })).toHaveCount(0)
   await expect(window.getByRole('button', { name: 'Entrar' })).toHaveCount(0)
-}
-
-async function expectRegisterScreen(window: Page): Promise<void> {
-  await expect(window.getByRole('button', { name: 'Crear mi cuenta' })).toBeVisible()
-  await expectNoLoginScreen(window)
 }
 
 async function expectStudentDashboard(window: Page): Promise<void> {
@@ -123,6 +133,22 @@ test('shows the login when the hash changes to an unknown route from any screen'
   }
 })
 
+test('shows the login for the removed sign-up flag and route', async () => {
+  await withApp(['--sign-up'], async (window) => {
+    expect(await readStartupRoute(window)).toBe('')
+    expect(await readRoute(window)).toBe('')
+    await expectLoginScreen(window)
+    await expect(window.getByRole('status')).toHaveCount(0)
+
+    // Pasa por otra pantalla para que el login de #/sign-up sea un render nuevo.
+    await changeHash(window, '#/student/dashboard')
+    await expectStudentDashboard(window)
+    await changeHash(window, '#/sign-up')
+    expect(await readRoute(window)).toBe('sign-up')
+    await expectLoginScreen(window)
+  })
+})
+
 test('keeps the login and shows an error for an unknown email without credential echo', async () => {
   await withApp([], async (window) => {
     const routeBefore = await readRoute(window)
@@ -154,20 +180,72 @@ test('opens the first flag in priority order when several flags are passed', asy
     await expectStudentDashboard(window)
   })
 
+  // --sign-up ya no tiene destino: se ignora junto a otros flags.
   await withApp(['--organization-dashboard', '--sign-up'], async (window) => {
-    expect(await readRoute(window)).toBe('sign-up')
-    await expectRegisterScreen(window)
+    expect(await readRoute(window)).toBe('organization/dashboard')
+    await expectOrganizationDashboard(window)
   })
 
   await withApp(['--organization-dashboard', '--sign-up', '--dashboard'], async (window) => {
     expect(await readRoute(window)).toBe('student/dashboard')
     await expectStudentDashboard(window)
   })
+
+  await withApp(['--sign-up', '--invitation=731905'], async (window) => {
+    expect(await readStartupRoute(window)).toBe('?invitation=731905')
+    expect(await readInvitation(window)).toBe('731905')
+    await expect(window.getByRole('heading', { level: 1, name: 'Hola, Lucía' })).toBeVisible()
+    await expect(window.getByRole('button', { name: 'Crear mi cuenta' })).toHaveCount(0)
+  })
+
+  // --dashboard y --organization-dashboard ganan a --invitation.
+  await withApp(['--invitation=731905', '--dashboard'], async (window) => {
+    expect(await readRoute(window)).toBe('student/dashboard')
+    await expectStudentDashboard(window)
+  })
+
+  await withApp(['--invitation=731905', '--organization-dashboard'], async (window) => {
+    expect(await readRoute(window)).toBe('organization/dashboard')
+    await expectOrganizationDashboard(window)
+  })
+
+  await withApp(['--invitation=731905'], async (window) => {
+    expect(await readStartupRoute(window)).toBe('?invitation=731905')
+    expect(await readInvitation(window)).toBe('731905')
+    await expect(window.getByRole('heading', { level: 1, name: 'Hola, Lucía' })).toBeVisible()
+  })
+})
+
+test('ignores an invitation flag with characters outside letters, digits and hyphens', async () => {
+  for (const flag of [
+    '--invitation=',
+    '--invitation=731 905',
+    '--invitation=731905&x=1',
+    '--invitation=../731905',
+    '--invitation=<b>731905</b>',
+    '--invitation=731905#/teacher/panel'
+  ]) {
+    await withApp([flag], async (window) => {
+      expect(await readStartupRoute(window), flag).toBe('')
+      expect(await readRoute(window), flag).toBe('')
+      await expectLoginScreen(window)
+      await expect(window.getByRole('status'), flag).toHaveCount(0)
+      await expect(window.getByRole('heading', { name: /^Hola,/ }), flag).toHaveCount(0)
+    })
+  }
+
+  // Letras, números y guiones sí valen: un código así que no existe da el aviso de enlace no válido.
+  await withApp(['--invitation=Ab-12'], async (window) => {
+    expect(await readStartupRoute(window)).toBe('?invitation=Ab-12')
+    expect(await readInvitation(window)).toBe('Ab-12')
+    await expectLoginScreen(window)
+    await expect(window.getByRole('status')).toHaveText('Este enlace de invitación no es válido.')
+  })
 })
 
 test('shows the login for a hash with spaces or capital letters', async () => {
   await withApp(['--dashboard'], async (window) => {
-    for (const hash of ['#/sign up', '#/Sign-Up']) {
+    for (const hash of ['#/student dashboard', '#/Student/Dashboard']) {
       await changeHash(window, hash)
       await expectLoginScreen(window)
     }
@@ -180,8 +258,8 @@ test('changes the screen without reloading when the hash changes', async () => {
       document.body.dataset.navigationMarker = 'same-page'
     })
 
-    await changeHash(window, '#/sign-up')
-    await expectRegisterScreen(window)
+    await changeHash(window, '#/organization/dashboard')
+    await expectOrganizationDashboard(window)
 
     await changeHash(window, '#/student/dashboard')
     await expectStudentDashboard(window)

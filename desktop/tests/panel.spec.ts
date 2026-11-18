@@ -424,11 +424,43 @@ test('matches a student file on desktop with its snapshot', async () => {
     await expect(window.getByRole('heading', { name: 'Historial de asistencia' })).toBeVisible()
     const back = window.getByRole('button', { name: 'Volver a Hoy', exact: true })
     await expect(back).toBeVisible()
+    await expect(back).toHaveText('Hoy')
     const fits = await back.evaluate((element) => element.scrollWidth <= element.clientWidth)
     expect(fits).toBe(true)
     await expectScreen(window, 'panel-ficha.png')
     await back.click()
     await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
+    await expect(window.getByRole('button', { name: /^Volver a/ })).toHaveCount(0)
+  })
+})
+
+test('goes back to Estadísticas from a student file', async () => {
+  await withPanel(async (window) => {
+    // Las secciones de la barra lateral no tienen botón de volver.
+    for (const [label, title] of [
+      ['Dashboard', 'Hoy'],
+      ['Sesiones', 'Sesiones'],
+      ['Ajustes', 'Ajustes'],
+      ['Estadísticas', 'Estadísticas']
+    ]) {
+      await openTab(window, label, title)
+      await expect(window.getByRole('button', { name: /^Volver a/ }), title).toHaveCount(0)
+    }
+    await window
+      .getByRole('region', { name: /^Asistencia por fecha/ })
+      .getByRole('button', { name: 'Diego Torres', exact: true })
+      .click()
+    await expect(window.getByRole('heading', { level: 1, name: 'Diego Torres' })).toBeVisible()
+    const back = window.getByRole('button', { name: 'Volver a Estadísticas', exact: true })
+    await expect(back).toHaveText('Estadísticas')
+    await back.click()
+    await expect(window.getByRole('heading', { level: 1, name: 'Estadísticas' })).toBeVisible()
+    await expect(
+      window
+        .getByRole('navigation', { name: 'Secciones' })
+        .getByRole('button', { name: 'Estadísticas' })
+    ).toHaveAttribute('aria-current', 'page')
+    await expect(window.getByRole('button', { name: /^Volver a/ })).toHaveCount(0)
   })
 })
 
@@ -539,12 +571,13 @@ for (const theme of ['atempo-oscuro', 'atempo-claro']) {
         .getByRole('row', { name: /Diego Molero/ })
         .getByRole('button', { name: 'Ausente' })
       await absent.hover()
+      // La nota del estado va en un portal sin hueco con el estado: la tarjeta es su span interior.
       const absenceTip = window
-        .locator('body > .teacher-panel.tip')
+        .locator('body > .teacher-panel[role="tooltip"]')
         .filter({ hasText: 'Sin justificante' })
       await expect(absenceTip).toBeVisible()
       await expectInheritedType(
-        absenceTip.locator(':scope, :scope > span'),
+        absenceTip.locator(':scope, .tip, .tip > span'),
         inherited.tracking,
         inherited.family
       )

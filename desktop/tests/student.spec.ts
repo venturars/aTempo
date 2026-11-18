@@ -26,12 +26,13 @@ async function expectStudentDashboard(window: Page): Promise<void> {
   expect(await readHash(window)).toBe('#/student/dashboard')
 }
 
-async function signUp(window: Page, name: string, email: string, password: string): Promise<void> {
-  await window.getByLabel('Nombre completo').fill(name)
-  await window.getByLabel('Correo electrónico').fill(email)
-  await window.getByLabel('Contraseña', { exact: true }).fill(password)
-  await window.getByLabel('Repetir contraseña').fill(password)
-  await window.getByRole('button', { name: 'Crear mi cuenta' }).click()
+// Bruno Sanz llega por su invitación y empieza sin clases.
+const invitedStudent = { code: '264018', name: 'Bruno Sanz' }
+
+async function activateInvitation(window: Page): Promise<void> {
+  await expect(window.getByRole('heading', { level: 1, name: 'Hola, Bruno' })).toBeVisible()
+  await window.getByLabel('Contraseña', { exact: true }).fill('Bruno2026!')
+  await window.getByRole('button', { name: 'Entrar', exact: true }).click()
 }
 
 async function logIn(window: Page, email: string, password: string): Promise<void> {
@@ -40,35 +41,11 @@ async function logIn(window: Page, email: string, password: string): Promise<voi
   await window.getByRole('button', { name: 'Entrar' }).click()
 }
 
-test('opens the student dashboard after a valid sign-up', async () => {
-  await withApp(['--sign-up'], async (window) => {
-    await signUp(window, 'Lucía Pérez', 'lucia@clase.test', 'secreta12')
-    await expectStudentDashboard(window)
-    await expect(window.getByText('Bienvenido Lucía Pérez')).toBeVisible()
-    await expect(window.getByRole('status')).toHaveCount(0)
-  })
-})
-
 test('opens the student dashboard after logging in with the sample account', async () => {
   await withApp([], async (window) => {
     await logIn(window, exampleStudent.email, exampleStudent.password)
     await expectStudentDashboard(window)
     await expect(window.getByText('Bienvenido Ada López')).toBeVisible()
-  })
-})
-
-test('logs in with an account created in the sign-up', async () => {
-  await withApp(['--sign-up'], async (window) => {
-    await signUp(window, 'Ana', 'Ana@Clase.test', 'secreta12')
-    await expectStudentDashboard(window)
-
-    await window.evaluate(() => {
-      globalThis.location.hash = '#/'
-    })
-    await expect(window.getByRole('button', { name: 'Entrar' })).toBeVisible()
-    await logIn(window, ' ana@clase.test ', 'secreta12')
-    await expectStudentDashboard(window)
-    await expect(window.getByText('Bienvenido Ana')).toBeVisible()
   })
 })
 
@@ -238,10 +215,10 @@ test('uses the sample account in scan and history without a session', async () =
   })
 })
 
-test('scans with an account created in the sign-up and records into its own history', async () => {
-  await withApp(['--sign-up'], async (window) => {
-    await signUp(window, 'Lucía Pérez', 'lucia@clase.test', 'secreta12')
-    await expect(window.getByText('Bienvenido Lucía Pérez')).toBeVisible()
+test('scans with an invited account and records into its own history', async () => {
+  await withApp([`--invitation=${invitedStudent.code}`], async (window) => {
+    await activateInvitation(window)
+    await expect(window.getByText(`Bienvenido ${invitedStudent.name}`)).toBeVisible()
     await openScan(window)
     await readWith(window, 'Llegar a las 09:14')
     await expect(window.getByRole('status')).toHaveText('Tarde · 09:14')
@@ -253,8 +230,8 @@ test('scans with an account created in the sign-up and records into its own hist
 })
 
 test('shows the empty history of a new account', async () => {
-  await withApp(['--sign-up'], async (window) => {
-    await signUp(window, 'Lucía Pérez', 'lucia@clase.test', 'secreta12')
+  await withApp([`--invitation=${invitedStudent.code}`], async (window) => {
+    await activateInvitation(window)
     await window.getByRole('button', { name: 'Resumen de asistencia' }).click()
     await expect(window.getByText('Todavía no tienes clases.')).toBeVisible()
   })
@@ -285,12 +262,12 @@ async function expectNoHorizontalScroll(window: Page): Promise<void> {
 }
 
 test('fits every student screen in 390 pixels without horizontal scroll', async () => {
-  await withApp(['--sign-up'], async (window) => {
+  await withApp([`--invitation=${invitedStudent.code}`], async (window) => {
     await window.setViewportSize({ width: 390, height: 844 })
     await expectNoHorizontalScroll(window)
-    await expectStudentScreenshot(window, 'student-register-390.png', { animations: 'disabled' })
-    await signUp(window, 'Lucía Pérez', 'lucia@clase.test', 'secreta12')
+    await activateInvitation(window)
     await expectStudentDashboard(window)
+    await expect(window.getByText(`Bienvenido ${invitedStudent.name}`)).toBeVisible()
     await expectNoHorizontalScroll(window)
     await expectStudentScreenshot(window, 'student-dashboard-390.png', { animations: 'disabled' })
     await openScan(window)

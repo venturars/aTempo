@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { encode } from 'uqr'
-import { backupCode, codePeriod, qrText, secondsLeft } from './classCode'
+import { backupCode, checkInUrl, codePeriod, secondsLeft } from './classCode'
+import { studentSiteUrl } from './studentSite'
 
 // Un trazo por módulo oscuro. Así el SVG pesa poco aunque el QR sea grande.
 function modulesPath(data: boolean[][]): string {
@@ -24,7 +25,10 @@ export function SessionQr(): React.JSX.Element {
   const period = codePeriod(now)
   const seconds = secondsLeft(now)
   const code = backupCode(period)
-  const qr = useMemo(() => encode(qrText(period), { ecc: 'M', border: 2 }), [period])
+  const qr = useMemo(
+    () => encode(checkInUrl(studentSiteUrl, period), { ecc: 'M', border: 2 }),
+    [period]
+  )
 
   return (
     <div className="flex w-72 max-w-full flex-col items-center gap-3">

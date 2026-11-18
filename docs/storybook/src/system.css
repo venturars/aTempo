@@ -220,6 +220,20 @@ body {
   --divider-color: color-mix(in oklab, var(--color-base-content) 12%, transparent);
 }
 
+/* Un dropdown hecho con <details> se abre y se cierra al pulsar, también en Safari.
+   Solo se ve con [open]: el foco que queda en el botón no lo deja abierto. */
+details.dropdown:not([open]) > .dropdown-content {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+details.dropdown > summary {
+  list-style: none;
+}
+details.dropdown > summary::-webkit-details-marker {
+  display: none;
+}
+
 /* En la tarjeta, el menú y el diálogo son del mismo color que el fondo. El borde del tema es 0. La línea es de adorno. */
 .dropdown-content,
 .modal-box {

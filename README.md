@@ -25,22 +25,28 @@ Desde un arranque nuevo, usa el formulario **Entrar** con una de estas cuentas p
 | Profesor | `profesor@atempo.test` | `Profesor123!` | Hoy, en el panel del profesor |
 | Alumno | `ada.lopez@clase.test` | `clase-2026` | Dashboard de Ada López |
 
-No hay registro abierto: la organización invita a profesores y alumnos. La invitación llega por correo con un enlace que abre el login con el nombre y el correo de la persona y una sola casilla, **Contraseña nueva**. Al pulsar **Entrar** se crea la cuenta y se abre su dashboard. Para simular el enlace, arranca desde `desktop/` con su flag:
+No hay registro abierto: la organización invita a profesores y alumnos. La invitación llega por correo con un enlace. El enlace abre el login con un panel que explica aTempo con una semana de ejemplo y una tarjeta que saluda a la persona por su nombre de pila, dice con qué correo va a entrar y pide una contraseña de 8 caracteres o más en **Contraseña**. Al pulsar **Entrar** se crea la cuenta y se abre su dashboard. Para simular el enlace, arranca desde `desktop/` con su flag:
 
 | Perfil | Arranque | Destino |
 | --- | --- | --- |
 | Profesora | `pnpm dev -- --invitation=731905` | Hoy, como Lucía Martín (`lucia.martin@atempo.test`) |
 | Alumno | `pnpm dev -- --invitation=264018` | Dashboard de Bruno Sanz (`bruno.sanz@clase.test`) |
 
-Una invitación se activa una vez; después se entra con el correo y la contraseña elegida. Un enlace ya usado o desconocido abre el login normal con un aviso.
+Una invitación se activa una vez; después se entra con el correo y la contraseña elegida. Un enlace ya usado o desconocido abre el login con **Correo** y **Contraseña** y un aviso encima.
 
-Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alumnos y pasar lista. El QR y el código de 4 cifras de debajo cambian cada 30 segundos. Con la lista cerrada, cambiar un estado pide un motivo. Al pasar el ratón por encima del estado se ve quién lo cambió, cuándo y por qué.
+Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alumnos y pasar lista. El QR y el código de 4 cifras de debajo cambian cada 30 segundos. El QR es un enlace al sitio del alumno, `http://localhost:5191/student/check-in?code=ATEMPO-CLASE-1109-<código>`. Ese sitio es `web/`, que está en otra rama (#122, #137 y PR #123). Desde el móvil, `localhost` es el propio móvil. Para escanear con el móvil en la misma wifi, arranca desde `desktop/` con la IP del ordenador:
 
-Para cambiar de cuenta, pulsa **Salir**: en la barra lateral del panel o en el inicio del alumno.
+```sh
+VITE_STUDENT_SITE_URL=http://<ip-del-ordenador>:5191 pnpm dev
+```
+
+Con la lista cerrada, cambiar un estado pide un motivo. Al pasar el ratón por encima del estado se ve quién lo cambió, cuándo y por qué.
+
+Para cambiar de cuenta en el panel, pulsa tu nombre abajo en la barra lateral y elige **Salir**. En el inicio del alumno, pulsa **Salir**.
 
 Como alumno, pulsa **Registrar asistencia**, **Escanear** y **Llegar a las 08:58**. Debe aparecer el estado **Presente** con la hora **08:58**. Pulsa **Volver** y **Resumen de asistencia** para comprobar la nueva entrada en el historial.
 
-El correo admite mayúsculas y espacios laterales; la contraseña debe coincidir exactamente. Una contraseña incorrecta o un correo desconocido muestran un error y conservan el login. El registro crea alumnos y reserva los correos de profesor.
+El correo admite mayúsculas y espacios laterales; la contraseña debe coincidir exactamente. Una contraseña incorrecta o un correo desconocido muestran un error y conservan el login.
 
 Las cuentas, las invitaciones activadas, la sesión, la asistencia y los cambios de ejemplo viven en memoria del renderer. Recargarlo o reiniciar completamente la aplicación vacía la sesión y restablece los datos de ejemplo. Para empezar desde cero, sal con **Cmd+Q** en macOS (cerrar solo la ventana no termina el proceso), detén `pnpm dev` con **Ctrl+C** y vuelve a ejecutarlo desde `desktop/`.
 
@@ -50,7 +56,7 @@ El lector del alumno ofrece lecturas simuladas y no usa cámara. Estos flujos no
 
 | Carpeta | Qué es |
 | --- | --- |
-| `desktop/` | Prototipo para profesor y alumno con Electron y React; las demos usan datos en memoria. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/sign-up` para el registro. |
+| `desktop/` | Prototipo para profesor y alumno con Electron y React; las demos usan datos en memoria. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/student/dashboard` para el dashboard del alumno. |
 | `api-router/` | API REST con NestJS entre los frontends y la SDK de lógica de negocio (pendiente). |
 | `docs/storybook/` | Fuente de verdad visual: Tailwind y daisyUI. Las pantallas usan las clases. No hay un paquete de componentes. |
 | `docs/guia/` | Markdown generado desde Storybook. No se versiona. Lo leen los agentes. |

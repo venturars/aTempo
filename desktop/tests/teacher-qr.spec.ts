@@ -3,19 +3,25 @@ import { launchHiddenElectron } from './helpers/electron'
 import { nextDemoArrival, usePanelStore } from '../src/renderer/src/panel/panelStore'
 import { rosterNames, todayEntry } from '../src/renderer/src/panel/roster'
 import { useSettingsStore } from '../src/renderer/src/panel/settingsStore'
-import { backupCode, codePeriod, qrText, secondsLeft } from '../src/renderer/src/panel/classCode'
+import {
+  backupCode,
+  codePeriod,
+  checkInCode,
+  checkInUrl,
+  secondsLeft
+} from '../src/renderer/src/panel/classCode'
 const time = new Date('2026-11-11T09:00:00Z')
+// La app de los tests se construye sin VITE_STUDENT_SITE_URL: el QR abre el sitio del alumno local.
+const checkInLink = (code: string): string =>
+  `http://localhost:5191/student/check-in?code=ATEMPO-CLASE-1109-${code}`
 const qr = (p: Page): Locator => p.getByRole('img', { name: 'QR de la clase', exact: true })
+type QrReader = new (options: { formats: string[] }) => {
+  detect: (source: CanvasImageSource) => Promise<{ rawValue: string }[]>
+}
 // Lee el QR pintado con el lector de códigos de Chromium, como haría la cámara del alumno.
 async function scan(p: Page): Promise<string> {
   return qr(p).evaluate(async (svg) => {
-    const reader = (
-      window as unknown as {
-        BarcodeDetector: new (options: { formats: string[] }) => {
-          detect: (source: CanvasImageSource) => Promise<{ rawValue: string }[]>
-        }
-      }
-    ).BarcodeDetector
+    const reader = (window as unknown as { BarcodeDetector: QrReader }).BarcodeDetector
     const style = getComputedStyle(svg)
     const image = new Image()
     const markup = new XMLSerializer()
@@ -33,6 +39,50 @@ async function scan(p: Page): Promise<string> {
     const found = await new reader({ formats: ['qr_code'] }).detect(canvas)
     return found.map((code) => code.rawValue).join(',')
   })
+}
+// Lee los píxeles de la ventana, con el tema que tenga en ese momento.
+async function scanPixels(p: Page): Promise<string> {
+  const png = (await qr(p).screenshot()).toString('base64')
+  return p.evaluate(async (data) => {
+    const reader = (window as unknown as { BarcodeDetector: QrReader }).BarcodeDetector
+    const image = new Image()
+    image.src = `data:image/png;base64,${data}`
+    await image.decode()
+    const found = await new reader({ formats: ['qr_code'] }).detect(image)
+    return found.map((code) => code.rawValue).join(',')
+  }, png)
+}
+// Color de los módulos, color del fondo y los dos tokens del tema, resueltos por el navegador.
+async function qrColors(p: Page): Promise<{ ink: number[]; paper: number[]; tokens: number[][] }> {
+  return qr(p).evaluate((svg) => {
+    const rgb = (value: string): number[] => (value.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number)
+    const probe = document.createElement('span')
+    document.body.append(probe)
+    const tokens = ['--color-base-100', '--color-base-content'].map((token) => {
+      probe.style.color = `var(${token})`
+      return rgb(getComputedStyle(probe).color)
+    })
+    probe.remove()
+    const style = getComputedStyle(svg)
+    return { ink: rgb(style.color), paper: rgb(style.backgroundColor), tokens }
+  })
+}
+// Luminancia relativa de un color sRGB (WCAG 2).
+function luminance(rgb: number[]): number {
+  const [r, g, b] = rgb.map((channel) => {
+    const value = channel / 255
+    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
+  })
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+// FNV-1a de 32 bits sobre los bytes UTF-8, escrito aparte de classCode.ts para comparar.
+function referenceFnv1a(text: string): number {
+  let hash = 0x811c9dc5n
+  for (const byte of new TextEncoder().encode(text)) {
+    hash ^= BigInt(byte)
+    hash = (hash * 0x01000193n) % 0x100000000n
+  }
+  return Number(hash)
 }
 const row = (p: Page, name: string): Locator =>
   p.getByRole('row').filter({ has: p.getByRole('button', { name, exact: true }) })
@@ -213,11 +263,22 @@ test('closes the mark menu when the keyboard focus moves to another control', as
 test('keeps one mark menu open at a time and closes it on scroll', async () => {
   await withPanel(async (p) => {
     await open(p)
-    await row(p, 'Diego Molero').getByRole('button', { name: 'Pendiente', exact: true }).click()
+    const mark = (name: string): Locator =>
+      row(p, name).getByRole('button', { name: 'Pendiente', exact: true })
+    const scrollTop = (): Promise<number> =>
+      p.evaluate(() => document.scrollingElement?.scrollTop ?? 0)
+    // El menú de Diego Torres sale debajo de su fila y no tapa a Diego Molero, la fila de encima.
+    await mark('Diego Torres').click()
     await expect(p.getByRole('menu')).toHaveCount(1)
-    await row(p, 'Diego Torres').getByRole('button', { name: 'Pendiente', exact: true }).click()
+    await expect(mark('Diego Torres')).toHaveAttribute('aria-expanded', 'true')
+    await mark('Diego Molero').click()
     await expect(p.getByRole('menu')).toHaveCount(1)
+    await expect(mark('Diego Molero')).toHaveAttribute('aria-expanded', 'true')
+    await expect(mark('Diego Torres')).toHaveAttribute('aria-expanded', 'false')
+    // El cierre al desplazar se comprueba con la rueda, y solo si la página se ha movido.
+    const before = await scrollTop()
     await p.mouse.wheel(0, 200)
+    await expect.poll(scrollTop).not.toBe(before)
     await expect(p.getByRole('menu')).toHaveCount(0)
   })
 })
@@ -299,25 +360,98 @@ test('code follows the clock: 30 s periods, 4 digits and the class in the QR tex
   const codes = new Set<string>()
   for (let period = codePeriod(start); period < codePeriod(start) + 20; period++) {
     expect(backupCode(period)).toMatch(/^\d{4}$/)
-    expect(qrText(period)).toBe(`ATEMPO-CLASE-1109-${backupCode(period)}`)
+    expect(checkInCode(period)).toBe(`ATEMPO-CLASE-1109-${backupCode(period)}`)
     codes.add(backupCode(period))
   }
   expect(codes.size).toBeGreaterThan(15)
 })
 
+test('the code matches an independent FNV-1a of the shared text', () => {
+  // Valores publicados de FNV-1a de 32 bits: comprueban la referencia antes de usarla.
+  expect(referenceFnv1a('')).toBe(0x811c9dc5)
+  expect(referenceFnv1a('a')).toBe(0xe40c292c)
+  expect(referenceFnv1a('foobar')).toBe(0xbf9cf968)
+  const start = codePeriod(time.getTime())
+  expect(start).toBe(59812920)
+  // Los dos valores fijos que el sitio del alumno puede comprobar igual.
+  expect(backupCode(59812920)).toBe('6470')
+  expect(backupCode(59812921)).toBe('4089')
+  expect(checkInCode(59812920)).toBe('ATEMPO-CLASE-1109-6470')
+  expect(checkInCode(59812921)).toBe('ATEMPO-CLASE-1109-4089')
+  expect(checkInUrl('http://localhost:5191', 59812920)).toBe(checkInLink('6470'))
+  expect(checkInUrl('http://localhost:5191', 59812921)).toBe(checkInLink('4089'))
+  const codes: string[] = []
+  for (let period = start; period < start + 20; period++) {
+    const expected = String(referenceFnv1a(`ATEMPO-CLASE-1109:${period}`) % 10000).padStart(4, '0')
+    expect(backupCode(period), `periodo ${period}`).toBe(expected)
+    expect(checkInCode(period), `periodo ${period}`).toBe(`ATEMPO-CLASE-1109-${expected}`)
+    expect(checkInUrl('http://localhost:5191', period), `periodo ${period}`).toBe(
+      `http://localhost:5191/student/check-in?code=${checkInCode(period)}`
+    )
+    codes.push(expected)
+  }
+  // Entre los veinte hay un código menor que 1000: se escribe con un cero a la izquierda.
+  expect(codes.some((code) => code.startsWith('0'))).toBe(true)
+})
+
+test('the QR link joins the site and the code without a double slash', () => {
+  const period = 59812920
+  const link = 'http://192.168.1.20:5191/student/check-in?code=ATEMPO-CLASE-1109-6470'
+  for (const site of [
+    'http://192.168.1.20:5191',
+    'http://192.168.1.20:5191/',
+    'http://192.168.1.20:5191//'
+  ]) {
+    expect(checkInUrl(site, period), site).toBe(link)
+  }
+  expect(checkInUrl('http://localhost:5191/', period)).toBe(checkInLink('6470'))
+  // Solo la barra que separa la dirección de la ruta: no hay «//» fuera de «http://».
+  expect(checkInUrl('http://192.168.1.20:5191/', period).replace('http://', '')).not.toContain('//')
+})
+
 test('shows a scannable QR and the 4-digit code of the current period', async () => {
   await withPanel(async (p) => {
     await open(p)
-    const period = codePeriod(time.getTime())
-    expect(await scan(p)).toBe(qrText(period))
-    await expect(p.getByText(backupCode(period), { exact: true })).toBeVisible()
-    await p.clock.runFor(30000)
-    await seconds(p, 30)
-    expect(await scan(p)).toBe(qrText(period + 1))
-    await expect(p.getByText(backupCode(period + 1), { exact: true })).toBeVisible()
-    await expect(p.getByText(backupCode(period), { exact: true })).toHaveCount(0)
+    expect(codePeriod(time.getTime())).toBe(59812920)
+    // La cámara del móvil lee el enlace al sitio del alumno con el código del periodo.
+    expect(await scan(p)).toBe('http://localhost:5191/student/check-in?code=ATEMPO-CLASE-1109-6470')
+    const code = p.getByText('6470', { exact: true })
+    await expect(code).toBeVisible()
     const box = await qr(p).boundingBox()
+    const codeBox = await code.boundingBox()
     expect(box?.width).toBeGreaterThanOrEqual(280)
+    // El código va debajo del QR.
+    expect(box).not.toBeNull()
+    expect(codeBox).not.toBeNull()
+    if (box && codeBox) expect(codeBox.y).toBeGreaterThanOrEqual(box.y + box.height)
+    // A los 29 segundos el QR y el código siguen siendo los del mismo periodo.
+    await p.clock.runFor(29000)
+    await seconds(p, 1)
+    expect(await scan(p)).toBe(checkInLink('6470'))
+    await expect(code).toBeVisible()
+    // En el límite cambian los dos a la vez y la cuenta atrás vuelve a 30.
+    await p.clock.runFor(1000)
+    await seconds(p, 30)
+    expect(await scan(p)).toBe('http://localhost:5191/student/check-in?code=ATEMPO-CLASE-1109-4089')
+    await expect(p.getByText('4089', { exact: true })).toBeVisible()
+    await expect(p.getByText('6470', { exact: true })).toHaveCount(0)
+  })
+})
+
+test('reads the QR in the dark and the light theme', async () => {
+  await withPanel(async (p) => {
+    await expect(p.locator('html')).toHaveAttribute('data-theme', 'atempo-oscuro')
+    await open(p)
+    for (const theme of ['atempo-oscuro', 'atempo-claro']) {
+      await p.evaluate((value) => document.documentElement.setAttribute('data-theme', value), theme)
+      const { ink, paper, tokens } = await qrColors(p)
+      expect(luminance(ink), `${theme}: módulos oscuros sobre fondo claro`).toBeLessThan(
+        luminance(paper)
+      )
+      // Los dos colores son los tokens base-100 y base-content del tema, sin colores literales.
+      expect(new Set([String(ink), String(paper)]), theme).toEqual(new Set(tokens.map(String)))
+      expect(await scanPixels(p), theme).toBe(checkInLink('6470'))
+    }
   })
 })
 
@@ -418,6 +552,14 @@ test('unmount clears the QR interval and recovery listeners before remount', asy
     expect(await counts()).toEqual([0, 0])
     await p.clock.fastForward(66000)
     await tab(p, 'Dashboard')
+    await seconds(p, 24)
+    expect(await counts()).toEqual([1, 1])
+    // Cerrar la lista también limpia el intervalo y las escuchas; volver a abrirla los crea otra vez.
+    await p.getByRole('button', { name: 'Cerrar lista', exact: true }).click()
+    await p.getByRole('dialog').getByRole('button', { name: 'Cerrar lista', exact: true }).click()
+    await expect(qr(p)).toHaveCount(0)
+    expect(await counts()).toEqual([0, 0])
+    await p.getByRole('button', { name: 'Volver a abrir', exact: true }).click()
     await seconds(p, 24)
     expect(await counts()).toEqual([1, 1])
     await p.getByRole('button', { name: 'Diego Molero', exact: true }).click()

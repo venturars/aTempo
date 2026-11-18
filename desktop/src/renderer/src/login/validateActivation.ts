@@ -1,4 +1,4 @@
-// La contraseña nueva de una invitación sigue la misma regla que el registro.
+// La contraseña nueva de una invitación tiene que tener 8 caracteres o más.
 export function validateActivation(password: string): string {
   if (password === '') {
     return 'La contraseña es obligatoria.'

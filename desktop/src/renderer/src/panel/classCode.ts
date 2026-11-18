@@ -1,6 +1,7 @@
 // El QR y el código de la clase cambian cada 30 segundos, alineados con el reloj, como Google
-// Authenticator. El sitio del alumno hace la misma cuenta con su reloj y acepta el periodo actual
-// y el anterior. Sin servidor no protege de verdad: la regla está en las dos apps.
+// Authenticator. El sitio del alumno hace la misma cuenta con su reloj y acepta el periodo
+// anterior, el actual y el siguiente (por si el reloj del móvil va unos segundos detrás).
+// Sin servidor, la regla está en las dos apps.
 
 export const classCode = 'ATEMPO-CLASE-1109'
 
@@ -31,7 +32,12 @@ export function backupCode(period: number): string {
   return String(hashText(`${classCode}:${period}`) % 10000).padStart(4, '0')
 }
 
-// Texto que lleva el QR: la clase y el código del periodo.
-export function qrText(period: number): string {
+// Lo que registra el alumno: la clase y el código del periodo.
+export function checkInCode(period: number): string {
   return `${classCode}-${backupCode(period)}`
+}
+
+// El enlace que lleva el QR: la cámara del móvil abre el sitio del alumno y registra la entrada.
+export function checkInUrl(siteUrl: string, period: number): string {
+  return `${siteUrl.replace(/\/+$/, '')}/student/check-in?code=${checkInCode(period)}`
 }
