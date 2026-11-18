@@ -2,11 +2,11 @@
 
 Servicio de persistencia con NestJS y TypeScript. La SDK de lógica de negocio hablará con este servicio para leer y escribir en PostgreSQL. El API-router no habla con la base.
 
-Hoy solo expone `GET /health`, que confirma que PostgreSQL responde. No hay esquema de dominio. El escritorio no llama a este servicio.
+Expone `GET /health`, que confirma que PostgreSQL responde, y `GET /person-course`, que lista las asociaciones de personas y cursos. El escritorio no llama a este servicio.
 
 ## Arranque
 
-Hace falta un PostgreSQL que ya esté en marcha. Este paquete no lo levanta.
+Para usar la base real hace falta un PostgreSQL que ya esté en marcha. Este paquete no lo levanta. Sin `DATABASE_URL`, o con `POSTGRES_MOCK=1`, el endpoint `GET /person-course` devuelve datos fijos para desarrollo y Swagger.
 
 Desde `api-postgresql/`:
 
@@ -31,10 +31,11 @@ Por defecto escucha en el puerto `3001`. Puedes cambiarlo con `PORT`.
 
 ## Probar con Swagger
 
-1. Con el servicio en marcha (`pnpm dev`) y `DATABASE_URL` apuntando a un PostgreSQL que responda, abre `http://localhost:3001/docs` (o el mismo puerto que uses con `PORT`).
-2. En la sección **health**, abre `GET /health` → **Try it out** → **Execute**.
-3. Si la base responde, la respuesta es `200` con cuerpo `{ "status": "ok", "postgres": "ok" }`.
-4. Si falta `DATABASE_URL` o PostgreSQL no responde, la respuesta es `503` con cuerpo `{ "status": "error", "postgres": "error" }`.
+1. Arranca el servicio con `pnpm dev` y abre `http://localhost:3001/docs` (o el puerto configurado con `PORT`).
+2. En la sección **person-course**, ejecuta `GET /person-course`.
+3. Sin `DATABASE_URL`, el endpoint responde `200` con un array fijo de ejemplo. También puedes forzar ese modo con `POSTGRES_MOCK=1`, incluso si `DATABASE_URL` está definida.
+4. Para leer la base real, define `DATABASE_URL`, asegúrate de que PostgreSQL tiene la tabla `person_course` y quita `POSTGRES_MOCK`. El endpoint ejecuta `SELECT person_id, course_id FROM person_course` y responde `200` con todas las filas; si no hay filas, devuelve `[]`.
+5. Si la conexión o la consulta falla en modo real, `GET /person-course` responde `503`. `GET /health` también responde `503` si falta `DATABASE_URL` o PostgreSQL no responde.
 
 El documento OpenAPI en JSON está en `/docs-json`.
 
@@ -49,5 +50,5 @@ pnpm build
 
 - `pnpm typecheck` — comprobación de tipos.
 - `pnpm lint` — ESLint sobre `src/` y `test/`.
-- `pnpm test` — prueba e2e de `/health` (200 y 503) y de Swagger. No necesita PostgreSQL: sustituye el servicio de conexión.
+- `pnpm test` — pruebas e2e de `/health`, `/person-course` y Swagger. No necesita PostgreSQL: los tests sustituyen el servicio de conexión.
 - `pnpm build` — compilación a `dist/`.

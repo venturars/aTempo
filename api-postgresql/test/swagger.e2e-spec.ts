@@ -14,7 +14,10 @@ describe('Swagger (e2e)', () => {
       imports: [AppModule],
     })
       .overrideProvider(PostgresService)
-      .useValue({ check: async () => undefined })
+      .useValue({
+        check: async () => undefined,
+        listPersonCourses: async () => [],
+      })
       .compile()
 
     app = moduleFixture.createNestApplication()
@@ -39,5 +42,16 @@ describe('Swagger (e2e)', () => {
       .expect(200)
 
     expect(response.body.paths).toHaveProperty('/health')
+  })
+
+  it('GET /docs-json exposes GET /person-course with its tag', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/docs-json')
+      .expect(200)
+
+    expect(response.body.paths['/person-course']).toHaveProperty('get')
+    expect(response.body.paths['/person-course'].get.tags).toContain(
+      'person-course',
+    )
   })
 })
