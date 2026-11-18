@@ -148,6 +148,12 @@ desktop/
         styles/
           app.css       # importa docs/storybook/src/system.css
           fonts/        # Geist e Inter, woff2 con licencia OFL
+        api/
+          client.ts        # ApiClient: una función por endpoint y elección del transporte
+          contract.ts      # tipos del contrato API v1
+          fixtures.ts      # datos y casos del mock (--api-fixture)
+          isoTime.ts       # fechas ISO 8601 de los datos de ejemplo
+          mockTransport.ts # mock en memoria con las reglas del contrato
         login/
           LoginScreen.tsx
           loginStore.ts
@@ -156,6 +162,7 @@ desktop/
           trimesterExample.ts
         panel/
           AttendanceStatus.tsx
+          CorrectionReasonDialog.tsx # diálogo provisional del motivo de una corrección
           DateFilter.tsx
           JustificationAccess.tsx
           MobileAttendance.tsx
@@ -165,6 +172,7 @@ desktop/
           SettingsView.tsx
           StatsView.tsx
           StudentHistory.tsx
+          apiValues.ts     # valores del contrato a los de la pantalla
           avatar.tsx
           markControl.tsx
           marks.ts
@@ -206,6 +214,7 @@ desktop/
     login.spec.ts
     teacher-login.spec.ts # acceso con la cuenta pública del profesor
     panel.spec.ts
+    panel-api.spec.ts   # pestaña Hoy con el cliente mock: reglas y fixtures
     teacher-qr.spec.ts  # temporizador, llegadas y dos temas a 390/1280 px
     organization-dashboard.spec.ts
     register.spec.ts
