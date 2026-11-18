@@ -2,19 +2,22 @@
 
 Servicio de persistencia con NestJS y TypeScript. La SDK de lógica de negocio hablará con este servicio para leer y escribir en PostgreSQL. El API-router no habla con la base.
 
-Hoy solo expone `GET /health`, que confirma que PostgreSQL responde. No hay esquema de dominio. El escritorio no llama a este servicio.
+Hoy expone `GET /health` y `GET /course`, que lista la tabla `course` del esquema core (#32) cuando hay `DATABASE_URL`. Sin `DATABASE_URL`, el servicio usa un **mock de PostgreSQL** (`src/postgres/postgres-mock.ts`): health y course responden **200** con datos de prueba fijos. `POSTGRES_MOCK=1` fuerza el mock aunque exista `DATABASE_URL`. El escritorio no llama a este servicio.
 
 ## Arranque
-
-Hace falta un PostgreSQL que ya esté en marcha. Este paquete no lo levanta.
 
 Desde `api-postgresql/`:
 
 ```sh
 pnpm install
+pnpm dev
 ```
 
-Define la conexión y arranca. El ejemplo usa el puerto `5432` y la base `atempo`:
+Por defecto escucha en el puerto `3001`. Puedes cambiarlo con `PORT`.
+
+Modo mock (Swagger sin instalar Postgres): no definas `DATABASE_URL` o usa `POSTGRES_MOCK=1`.
+
+Modo real:
 
 ```sh
 # PowerShell
@@ -27,14 +30,11 @@ pnpm dev
 DATABASE_URL=postgres://usuario:clave@localhost:5432/atempo pnpm dev
 ```
 
-Por defecto escucha en el puerto `3001`. Puedes cambiarlo con `PORT`.
-
 ## Probar con Swagger
 
-1. Con el servicio en marcha (`pnpm dev`) y `DATABASE_URL` apuntando a un PostgreSQL que responda, abre `http://localhost:3001/docs` (o el mismo puerto que uses con `PORT`).
-2. En la sección **health**, abre `GET /health` → **Try it out** → **Execute**.
-3. Si la base responde, la respuesta es `200` con cuerpo `{ "status": "ok", "postgres": "ok" }`.
-4. Si falta `DATABASE_URL` o PostgreSQL no responde, la respuesta es `503` con cuerpo `{ "status": "error", "postgres": "error" }`.
+1. Con `pnpm dev`, abre `http://localhost:3001/docs`.
+2. **course** → `GET /course` → **Execute**: **200** con el mock o con filas reales de la tabla `course`.
+3. **health** → `GET /health` → **Execute**: **200** en mock; con Postgres real, **503** si la base no responde.
 
 El documento OpenAPI en JSON está en `/docs-json`.
 
@@ -47,7 +47,4 @@ pnpm test
 pnpm build
 ```
 
-- `pnpm typecheck` — comprobación de tipos.
-- `pnpm lint` — ESLint sobre `src/` y `test/`.
-- `pnpm test` — prueba e2e de `/health` (200 y 503) y de Swagger. No necesita PostgreSQL: sustituye el servicio de conexión.
-- `pnpm build` — compilación a `dist/`.
+- `pnpm test` — e2e con mocks en el propio servicio y sustitución de `PostgresService` donde hace falta.
