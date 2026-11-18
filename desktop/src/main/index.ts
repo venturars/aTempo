@@ -20,6 +20,12 @@ function startupHash(): string | undefined {
   return undefined
 }
 
+// --api-fixture=<nombre> elige los datos del mock de la API. El renderer la lee de ?apiFixture.
+function apiFixture(): string | undefined {
+  const flag = process.argv.find((argument) => argument.startsWith('--api-fixture='))
+  return flag?.slice('--api-fixture='.length)
+}
+
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -46,19 +52,20 @@ function createWindow(): void {
   })
 
   const hash = startupHash()
+  const fixture = apiFixture()
+  const query = fixture === undefined ? undefined : { apiFixture: fixture }
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    const search = fixture === undefined ? '' : `?apiFixture=${encodeURIComponent(fixture)}`
     const rendererUrl =
       hash === undefined
-        ? process.env['ELECTRON_RENDERER_URL']
-        : `${process.env['ELECTRON_RENDERER_URL']}#${hash}`
+        ? `${process.env['ELECTRON_RENDERER_URL']}${search}`
+        : `${process.env['ELECTRON_RENDERER_URL']}${search}#${hash}`
     mainWindow.loadURL(rendererUrl)
-  } else if (hash === undefined) {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'), { hash })
+    mainWindow.loadFile(join(__dirname, '../renderer/index.html'), { hash, query })
   }
 }
 
