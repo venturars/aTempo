@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { useSessionStore } from '../session/sessionStore'
-import { normalizeEmail, useStudentAccountsStore } from '../student/studentAccounts'
-import { teacherDemoAccount } from '../login/teacherDemoAccount'
+import { useStudentAccountsStore } from '../student/studentAccounts'
+import { useTeacherAccountsStore } from '../login/teacherAccounts'
 import { validateRegister } from './validateRegister'
 
 // El formulario vacío: al arrancar, al crear la cuenta y al salir de la pantalla.
@@ -69,7 +69,7 @@ export const useRegisterStore = create<RegisterState>((set, get) => ({
     const accounts = useStudentAccountsStore.getState()
 
     if (
-      normalizeEmail(email) === teacherDemoAccount.email ||
+      useTeacherAccountsStore.getState().findByEmail(email) !== undefined ||
       accounts.findByEmail(email) !== undefined
     ) {
       set({

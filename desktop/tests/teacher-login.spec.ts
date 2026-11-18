@@ -8,7 +8,7 @@ import { launchHiddenElectron } from './helpers/electron'
 // Public fixture specified in #48, deliberately independent of the implementation constant.
 const demoEmail = 'profesor@atempo.test'
 const demoPassword = 'Profesor123!'
-const loginError = 'El correo o la contraseña no coinciden con la cuenta de ejemplo.'
+const loginError = 'El correo o la contraseña no coinciden.'
 
 async function enter(window: Page, email: string, password: string): Promise<void> {
   await window.getByLabel('Correo', { exact: true }).fill(email)

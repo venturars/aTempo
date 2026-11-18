@@ -219,8 +219,7 @@ test('opens the professor panel from the demo login and keeps attendance navigat
     await window.getByRole('button', { name: /Mar 10 nov/ }).click()
     await expect(window.getByRole('heading', { level: 1, name: 'Mar 10 nov 2026' })).toBeVisible()
     await window.getByRole('button', { name: 'Diego Torres' }).click()
-    await expect(window.getByRole('navigation', { name: 'Ruta' })).toBeVisible()
-    await expect(window.getByRole('button', { name: 'Mar 10 nov 2026' })).toBeVisible()
+    await expect(window.getByRole('button', { name: 'Volver a Mar 10 nov 2026' })).toBeVisible()
     await expect(window.getByRole('heading', { level: 1, name: 'Diego Torres' })).toBeVisible()
 
     await window.getByRole('button', { name: 'Ajustes' }).click()

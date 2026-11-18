@@ -131,9 +131,7 @@ test('keeps the login and shows an error for an unknown email without credential
     await window.getByRole('button', { name: 'Entrar' }).click()
 
     const alert = window.getByRole('alert')
-    await expect(alert).toHaveText(
-      'El correo o la contraseña no coinciden con la cuenta de ejemplo.'
-    )
+    await expect(alert).toHaveText('El correo o la contraseña no coinciden.')
     await expect(window.getByRole('status')).toHaveCount(0)
     const text = await window.locator('body').innerText()
     expect(text).not.toContain('ana@clase.test')

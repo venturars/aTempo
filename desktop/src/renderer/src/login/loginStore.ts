@@ -1,11 +1,11 @@
 import { create } from 'zustand'
 import { useSessionStore } from '../session/sessionStore'
 import { normalizeEmail, useStudentAccountsStore } from '../student/studentAccounts'
-import { teacherDemoAccount } from './teacherDemoAccount'
+import { useTeacherAccountsStore } from './teacherAccounts'
 import { validateLogin } from './validateLogin'
 
 // Mismo aviso para cualquier fallo: así no se sabe qué correos tienen cuenta.
-const loginErrorText = 'El correo o la contraseña no coinciden con la cuenta de ejemplo.'
+const loginErrorText = 'El correo o la contraseña no coinciden.'
 
 // El formulario vacío: al arrancar, al entrar y al salir de la pantalla.
 const emptyLoginForm = {
@@ -49,15 +49,15 @@ export const useLoginStore = create<LoginState>((set, get) => ({
       return false
     }
 
-    const normalizedEmail = normalizeEmail(email)
+    const teacher = useTeacherAccountsStore.getState().findByEmail(email)
 
-    if (normalizedEmail === teacherDemoAccount.email) {
-      if (password !== teacherDemoAccount.password) {
+    if (teacher !== undefined) {
+      if (password !== teacher.password) {
         set({ emailError: '', passwordError: '', loginError: loginErrorText })
         return false
       }
 
-      useSessionStore.setState({ profile: 'teacher', email: normalizedEmail })
+      useSessionStore.getState().startTeacherSession(normalizeEmail(email), teacher.name)
       // El formulario se vacía al entrar. El correo sigue en la sesión.
       set(emptyLoginForm)
       return true

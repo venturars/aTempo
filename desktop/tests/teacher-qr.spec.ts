@@ -3,8 +3,37 @@ import { launchHiddenElectron } from './helpers/electron'
 import { nextDemoArrival, usePanelStore } from '../src/renderer/src/panel/panelStore'
 import { rosterNames, todayEntry } from '../src/renderer/src/panel/roster'
 import { useSettingsStore } from '../src/renderer/src/panel/settingsStore'
+import { backupCode, codePeriod, qrText, secondsLeft } from '../src/renderer/src/panel/classCode'
 const time = new Date('2026-11-11T09:00:00Z')
-const qr = (p: Page): Locator => p.getByRole('img', { name: 'QR de ejemplo', exact: true })
+const qr = (p: Page): Locator => p.getByRole('img', { name: 'QR de la clase', exact: true })
+// Lee el QR pintado con el lector de códigos de Chromium, como haría la cámara del alumno.
+async function scan(p: Page): Promise<string> {
+  return qr(p).evaluate(async (svg) => {
+    const reader = (
+      window as unknown as {
+        BarcodeDetector: new (options: { formats: string[] }) => {
+          detect: (source: CanvasImageSource) => Promise<{ rawValue: string }[]>
+        }
+      }
+    ).BarcodeDetector
+    const style = getComputedStyle(svg)
+    const image = new Image()
+    const markup = new XMLSerializer()
+      .serializeToString(svg)
+      .replace(
+        '<svg',
+        `<svg width="300" height="300" style="background:${style.backgroundColor};color:${style.color}"`
+      )
+    image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(markup)}`
+    await image.decode()
+    const canvas = document.createElement('canvas')
+    canvas.width = 300
+    canvas.height = 300
+    canvas.getContext('2d')?.drawImage(image, 0, 0)
+    const found = await new reader({ formats: ['qr_code'] }).detect(canvas)
+    return found.map((code) => code.rawValue).join(',')
+  })
+}
 const row = (p: Page, name: string): Locator =>
   p.getByRole('row').filter({ has: p.getByRole('button', { name, exact: true }) })
 async function seconds(p: Page, n: number): Promise<void> {
@@ -231,7 +260,13 @@ test('store rejects invalid and duplicate arrivals, guards only evidence, respec
     useSettingsStore.getState().update({ lateMinutes: 14 })
     state().simulateArrival(14)
     expect(state().marks[14]).toBe('presente')
-    state().setSessionMark('Mar 10 nov', rosterNames[0], 'ausente')
+    state().correctSessionMark(
+      'Mar 10 nov',
+      rosterNames[0],
+      'ausente',
+      'No vino.',
+      'Ventura Rodriguez'
+    )
     expect(state().sessionMarks['Mar 10 nov'][rosterNames[0]]).toBe('ausente')
     state().closeSession()
     state().simulateArrival(3)
@@ -254,6 +289,38 @@ test('store rejects invalid and duplicate arrivals, guards only evidence, respec
   }
 })
 
+test('code follows the clock: 30 s periods, 4 digits and the class in the QR text', () => {
+  const start = time.getTime()
+  expect(secondsLeft(start)).toBe(30)
+  expect(secondsLeft(start + 1)).toBe(30)
+  expect(secondsLeft(start + 29000)).toBe(1)
+  expect(codePeriod(start + 29999)).toBe(codePeriod(start))
+  expect(codePeriod(start + 30000)).toBe(codePeriod(start) + 1)
+  const codes = new Set<string>()
+  for (let period = codePeriod(start); period < codePeriod(start) + 20; period++) {
+    expect(backupCode(period)).toMatch(/^\d{4}$/)
+    expect(qrText(period)).toBe(`ATEMPO-CLASE-1109-${backupCode(period)}`)
+    codes.add(backupCode(period))
+  }
+  expect(codes.size).toBeGreaterThan(15)
+})
+
+test('shows a scannable QR and the 4-digit code of the current period', async () => {
+  await withPanel(async (p) => {
+    await open(p)
+    const period = codePeriod(time.getTime())
+    expect(await scan(p)).toBe(qrText(period))
+    await expect(p.getByText(backupCode(period), { exact: true })).toBeVisible()
+    await p.clock.runFor(30000)
+    await seconds(p, 30)
+    expect(await scan(p)).toBe(qrText(period + 1))
+    await expect(p.getByText(backupCode(period + 1), { exact: true })).toBeVisible()
+    await expect(p.getByText(backupCode(period), { exact: true })).toHaveCount(0)
+    const box = await qr(p).boundingBox()
+    expect(box?.width).toBeGreaterThanOrEqual(280)
+  })
+})
+
 test('rotates exactly at 29/30/60/90 without attendance from ticks', async () => {
   await withPanel(async (p) => {
     await open(p)
@@ -270,7 +337,7 @@ test('rotates exactly at 29/30/60/90 without attendance from ticks', async () =>
     await expect(p.getByRole('button', { name: 'Pendiente', exact: true })).toHaveCount(15)
   })
 })
-test('recovers delayed callbacks and background, tab and student navigation without resetting opening', async () => {
+test('recovers delayed callbacks and background, tab and student navigation on the clock period', async () => {
   await withPanel(async (p) => {
     await open(p)
     const first = await pattern(p)
@@ -288,10 +355,7 @@ test('recovers delayed callbacks and background, tab and student navigation with
     await p.getByRole('button', { name: 'Diego Molero', exact: true }).click()
     await expect(qr(p)).toHaveCount(0)
     await p.clock.fastForward(60000)
-    await p
-      .getByRole('navigation', { name: 'Ruta' })
-      .getByRole('button', { name: 'Hoy', exact: true })
-      .click()
+    await p.getByRole('button', { name: 'Volver a Hoy', exact: true }).click()
     await seconds(p, 24)
     const beforeRecovery = await pattern(p)
     await p.clock.setSystemTime(new Date(time.getTime() + 247000))
@@ -398,7 +462,7 @@ test('simulates next eligible arrival, preserves manual marks and exhausts valid
     ).toBeVisible()
   })
 })
-test('cancel preserves period, close preserves arrival/manual marks, reopen starts at 30', async () => {
+test('cancel preserves period, close preserves arrival/manual marks, reopen shows the clock period', async () => {
   await withPanel(async (p) => {
     await open(p)
     await p.getByRole('button', { name: 'Simular llegada', exact: true }).click()
@@ -421,7 +485,8 @@ test('cancel preserves period, close preserves arrival/manual marks, reopen star
     await p.clock.fastForward(66000)
     expect(await p.locator('tbody').innerText()).toBe(closed)
     await p.getByRole('button', { name: 'Volver a abrir', exact: true }).click()
-    await seconds(p, 30)
+    // El código va con el reloj, no con la apertura: 96 s después de las 09:00 quedan 24.
+    await seconds(p, 24)
     await expect(
       row(p, 'Diego Molero').getByRole('button', { name: 'Presente', exact: true })
     ).toBeVisible()

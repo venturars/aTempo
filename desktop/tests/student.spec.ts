@@ -75,9 +75,7 @@ test('logs in with an account created in the sign-up', async () => {
 test('shows the generic login error and stays in the login with a wrong password', async () => {
   await withApp([], async (window) => {
     await logIn(window, exampleStudent.email, 'otra-clave-1')
-    await expect(
-      window.getByText('El correo o la contraseña no coinciden con la cuenta de ejemplo.')
-    ).toBeVisible()
+    await expect(window.getByText('El correo o la contraseña no coinciden.')).toBeVisible()
     await expect(window.getByRole('status')).toHaveCount(0)
     expect(await readHash(window)).not.toBe('#/student/dashboard')
   })
