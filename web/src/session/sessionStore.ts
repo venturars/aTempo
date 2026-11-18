@@ -14,19 +14,19 @@ type SessionState = {
 }
 
 function readEmail(): string | null {
-  if (typeof sessionStorage === 'undefined') return null
-  const email = sessionStorage.getItem(sessionKey)
+  if (typeof localStorage === 'undefined') return null
+  const email = localStorage.getItem(sessionKey)
   return email === null || email === '' ? null : email
 }
 
 export function readTheme(): ThemeName {
-  if (typeof sessionStorage === 'undefined') return 'atempo-oscuro'
-  return sessionStorage.getItem(themeKey) === 'atempo-claro' ? 'atempo-claro' : 'atempo-oscuro'
+  if (typeof localStorage === 'undefined') return 'atempo-oscuro'
+  return localStorage.getItem(themeKey) === 'atempo-claro' ? 'atempo-claro' : 'atempo-oscuro'
 }
 
 export function applyTheme(theme: ThemeName): void {
   document.documentElement.setAttribute('data-theme', theme)
-  sessionStorage.setItem(themeKey, theme)
+  localStorage.setItem(themeKey, theme)
 }
 
 export function toggleTheme(): void {
@@ -37,11 +37,11 @@ export const useSessionStore = create<SessionState>((set) => ({
   email: readEmail(),
   startStudentSession: (email) => {
     const normalized = normalizeEmail(email)
-    sessionStorage.setItem(sessionKey, normalized)
+    localStorage.setItem(sessionKey, normalized)
     set({ email: normalized })
   },
   endStudentSession: () => {
-    sessionStorage.removeItem(sessionKey)
+    localStorage.removeItem(sessionKey)
     set({ email: null })
   }
 }))

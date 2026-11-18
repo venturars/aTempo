@@ -63,7 +63,8 @@ export function subtitleFor(state: HomeState): string {
   }
 }
 
-// Solo se puede registrar antes de que acabe una clase de hoy a la que va a ir.
+// Se puede registrar mientras la clase de hoy no ha terminado,
+// también si avisó de que no venía y al final viene.
 export function canRegister(state: HomeState): boolean {
-  return state.kind === 'upcoming'
+  return state.kind === 'upcoming' || state.kind === 'absent-notice'
 }

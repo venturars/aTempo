@@ -3,7 +3,8 @@ import { useNavigate } from '@tanstack/react-router'
 import { StudentLayout } from '../StudentLayout'
 import { useFlashStore } from '../flashStore'
 import { useCurrentStudent } from '../studentAccounts'
-import { formatDay } from '../studentDate'
+import { todayClass } from '../studentExample'
+import { formatDay, minutesOfDay } from '../studentDate'
 import { DayField } from './DayField'
 import { TimeField } from './TimeField'
 import { saveNotice, type NoticeKind } from './studentNotices'
@@ -74,8 +75,20 @@ export function NoticeScreen(): React.JSX.Element {
 
   function onSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault()
+    if (!todayClass.weekdays.includes(day.getDay())) {
+      setError('Ese día no tienes clase.')
+      return
+    }
     if (kind === 'retraso' && arrival === '') {
       setError('¿A qué hora llegarás? Escríbela o elígela.')
+      return
+    }
+    if (kind === 'retraso' && minutesOfDay(arrival) <= minutesOfDay(todayClass.start)) {
+      setError(`La clase empieza a las ${todayClass.start}. Avisa solo si llegas después.`)
+      return
+    }
+    if (kind === 'retraso' && minutesOfDay(arrival) >= minutesOfDay(todayClass.end)) {
+      setError('A esa hora la clase ya terminó. Si no vas a llegar, elige «No puedo ir».')
       return
     }
     saveNotice({

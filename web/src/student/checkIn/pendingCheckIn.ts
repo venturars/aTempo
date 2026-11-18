@@ -11,14 +11,14 @@ const pendingCheckInKey = storageKeys.pendingCheckIn
 const maxWaitMilliseconds = 10 * 60 * 1000
 
 export function rememberCheckIn(scannedAt: Date): void {
-  sessionStorage.setItem(pendingCheckInKey, String(scannedAt.getTime()))
+  localStorage.setItem(pendingCheckInKey, String(scannedAt.getTime()))
 }
 
 const scanTooOld = 'Pasaron más de 10 minutos desde que escaneaste el QR. Escanéalo otra vez.'
 
 // La hora del escaneo guardado, o null si no hay ninguno.
 function readScannedAt(): number | null {
-  const raw = sessionStorage.getItem(pendingCheckInKey)
+  const raw = localStorage.getItem(pendingCheckInKey)
   if (raw === null) return null
   const scannedAt = Number(raw)
   return Number.isFinite(scannedAt) ? scannedAt : null
@@ -33,7 +33,7 @@ export function hasPendingCheckIn(now = new Date()): boolean {
 // Apunta la entrada del escaneo guardado y lo borra. Si ya no cuenta, dice por qué.
 function completePendingCheckIn(now: Date): CheckInResult | null {
   const scannedAt = readScannedAt()
-  sessionStorage.removeItem(pendingCheckInKey)
+  localStorage.removeItem(pendingCheckInKey)
   if (scannedAt === null) return null
   if (now.getTime() - scannedAt > maxWaitMilliseconds) {
     return { registered: false, message: scanTooOld }

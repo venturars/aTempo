@@ -27,8 +27,8 @@ function copyExample(): StudentAccount {
 }
 
 function readAccounts(): StudentAccount[] {
-  if (typeof sessionStorage === 'undefined') return [copyExample()]
-  const raw = sessionStorage.getItem(accountsKey)
+  if (typeof localStorage === 'undefined') return [copyExample()]
+  const raw = localStorage.getItem(accountsKey)
   if (raw === null) return [copyExample()]
   try {
     const parsed = JSON.parse(raw) as StudentAccount[]
@@ -40,7 +40,7 @@ function readAccounts(): StudentAccount[] {
 }
 
 function saveAccounts(accounts: StudentAccount[]): void {
-  sessionStorage.setItem(accountsKey, JSON.stringify(accounts))
+  localStorage.setItem(accountsKey, JSON.stringify(accounts))
 }
 
 export const useStudentAccountsStore = create<StudentAccountsState>((set, get) => ({
@@ -123,7 +123,9 @@ export function registerArrival(at: Date): CheckInResult {
   if (!isClassDay(at)) return { registered: false, message: 'Hoy no tienes clase.' }
   if (classIsOver(at)) return { registered: false, message: 'La clase de hoy ya terminó.' }
 
-  const email = useSessionStore.getState().email ?? exampleStudent.email
+  // Sin sesión no se apunta nada: la entrada siempre es de quien ha entrado.
+  const email = useSessionStore.getState().email
+  if (email === null) return { registered: false, message: 'Entra para registrar tu asistencia.' }
   const account = useStudentAccountsStore.getState().findByEmail(email)
   const todayLabel = formatDay(at)
   const previous = account?.history.find((entry) => entry.label === todayLabel)

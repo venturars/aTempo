@@ -24,13 +24,15 @@ const problemText: Record<CodeProblem, { title: string; body: string }> = {
 
 export function CheckInScreen({ code }: { code: string }): React.JSX.Element | null {
   const navigate = useNavigate()
-  // En desarrollo, React ejecuta los efectos dos veces. La entrada se apunta una sola vez.
-  const handled = useRef(false)
+  // En desarrollo, React ejecuta los efectos dos veces: cada código se atiende una sola vez.
+  // Si llega otro enlace a la misma pantalla, el código cambia y se atiende de nuevo.
+  const handledCode = useRef<string | null>(null)
   const [problem, setProblem] = useState<CodeProblem | null>(null)
 
   useEffect(() => {
-    if (handled.current) return
-    handled.current = true
+    if (handledCode.current === code) return
+    handledCode.current = code
+    setProblem(null)
 
     const now = new Date()
     const codeProblem = classCodeProblem(code, now)

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { StudentLayout } from '../StudentLayout'
 import { Tempito } from '../mascot/Tempito'
@@ -46,7 +46,9 @@ export function DashboardScreen(): React.JSX.Element {
   const now = useNow()
   const student = useCurrentStudent()
   const firstName = student.name.trim().split(/\s+/)[0] ?? ''
-  const state = homeStateFor(now, student.history, readNoticesFor(student.email))
+  // Los avisos solo cambian desde Avisar, que vuelve a montar esta pantalla.
+  const notices = useMemo(() => readNoticesFor(student.email), [student.email])
+  const state = homeStateFor(now, student.history, notices)
 
   return (
     <StudentLayout place="center">

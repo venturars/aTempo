@@ -32,7 +32,7 @@ function isNotice(value: unknown): value is StudentNotice {
 
 function readAllNotices(): StudentNotice[] {
   try {
-    const stored = sessionStorage.getItem(noticesKey)
+    const stored = localStorage.getItem(noticesKey)
     const parsed = stored === null ? [] : (JSON.parse(stored) as unknown)
     return Array.isArray(parsed) ? parsed.filter(isNotice) : []
   } catch {
@@ -42,7 +42,7 @@ function readAllNotices(): StudentNotice[] {
 
 export function saveNotice(notice: StudentNotice): void {
   const notices = [...readAllNotices(), { ...notice, email: normalizeEmail(notice.email) }]
-  sessionStorage.setItem(noticesKey, JSON.stringify(notices))
+  localStorage.setItem(noticesKey, JSON.stringify(notices))
 }
 
 // El aviso más reciente va primero.
