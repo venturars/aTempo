@@ -1,8 +1,9 @@
 import { create } from 'zustand'
+import { storageKeys } from '../storageKeys'
 import { normalizeEmail } from '../student/studentExample'
 
-const themeKey = 'atempo-student-theme'
-const sessionKey = 'atempo-student-session'
+const themeKey = storageKeys.theme
+const sessionKey = storageKeys.session
 
 export type ThemeName = 'atempo-oscuro' | 'atempo-claro'
 

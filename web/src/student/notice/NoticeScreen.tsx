@@ -84,7 +84,7 @@ export function NoticeScreen(): React.JSX.Element {
       day: formatDay(day),
       arrival: kind === 'retraso' ? arrival : '',
       reason: reason.trim(),
-      justificante: documentName
+      attachmentName: documentName
     })
     showFlash('¡Gracias por avisar! Tu profe ya lo sabe.')
     void navigate({ to: '/student/dashboard' })
@@ -178,12 +178,12 @@ function DocumentField({
 
   return (
     <div className="field">
-      <label htmlFor="justificante">
+      <label htmlFor="attachment">
         Justificante <span className="field-optional">· opcional</span>
       </label>
       <div className="field-row">
         <button
-          id="justificante"
+          id="attachment"
           className="input field-button"
           type="button"
           data-empty={name === '' ? '' : undefined}

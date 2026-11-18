@@ -1,6 +1,7 @@
 import { statusBadgeClass, statusLabel } from '../attendanceStatus'
 import { StudentLayout } from '../StudentLayout'
 import { useCurrentStudent } from '../studentAccounts'
+import { weekdayName } from '../studentDate'
 import { type ClassEntry } from '../studentExample'
 import { readNoticesFor, type NoticeKind, type StudentNotice } from '../notice/studentNotices'
 
@@ -9,25 +10,10 @@ const noticeLabel: Record<NoticeKind, string> = {
   ausencia: 'Ausencia'
 }
 
-const weekdays: Record<string, string> = {
-  Lun: 'Lunes',
-  Mar: 'Martes',
-  Mié: 'Miércoles',
-  Jue: 'Jueves',
-  Vie: 'Viernes',
-  Sáb: 'Sábado',
-  Dom: 'Domingo'
-}
-
-// «Mié 11 nov» pasa a «11 nov 2026».
+// «Mié 11 nov» pasa a «11 nov». Las etiquetas no guardan el año.
 function sessionDate(label: string): string {
   const [, day, month] = label.split(' ')
-  return `${day} ${month} 2026`
-}
-
-// «Mié 11 nov» pasa a «Miércoles».
-function weekday(label: string): string {
-  return weekdays[label.split(' ')[0] ?? ''] ?? label
+  return `${day} ${month}`
 }
 
 // Llegar tarde cuenta como asistencia.
@@ -139,7 +125,7 @@ function DateCell({ label }: { label: string }): React.JSX.Element {
   return (
     <td>
       <span className="font-medium">{sessionDate(label)}</span>
-      <span className="ml-2 hidden text-base-content/50 sm:inline">{weekday(label)}</span>
+      <span className="ml-2 hidden text-base-content/50 sm:inline">{weekdayName(label)}</span>
     </td>
   )
 }
@@ -162,7 +148,7 @@ function noticeDetail(notice: StudentNotice): string {
   const parts: string[] = []
   if (notice.arrival !== '') parts.push(`Llegada ${notice.arrival}`)
   if (notice.reason !== '') parts.push(notice.reason)
-  if (notice.justificante !== '') parts.push(notice.justificante)
+  if (notice.attachmentName !== '') parts.push(notice.attachmentName)
   return parts.length === 0 ? '—' : parts.join(' · ')
 }
 

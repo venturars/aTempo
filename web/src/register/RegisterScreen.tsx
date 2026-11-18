@@ -25,9 +25,13 @@ export function RegisterScreen(): React.JSX.Element {
   function onSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault()
     if (!submit()) return
-    showFlash('¡Te damos la bienvenida a aTempo!')
-    // Si venía del QR de clase, la entrada queda apuntada y va a la pantalla de entrada.
-    void navigate({ to: destinationAfterSignIn() })
+    // Si venía del QR de clase, la entrada queda apuntada y va a la pantalla de entrada,
+    // que ya celebra. Si no, la bienvenida sale en el inicio, salvo que ya haya otro aviso.
+    const destination = destinationAfterSignIn()
+    if (destination === '/student/dashboard' && useFlashStore.getState().message === null) {
+      showFlash('¡Te damos la bienvenida a aTempo!')
+    }
+    void navigate({ to: destination })
   }
 
   return (

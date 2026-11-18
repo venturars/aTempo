@@ -9,20 +9,21 @@ import { canRegister, homeStateFor, moodFor, subtitleFor } from './homeState'
 
 const previewDays = ['dom', 'lun', 'mar', 'mie', 'jue', 'vie', 'sab']
 
-// Para enseñar los estados en la demo:
+// Solo en desarrollo, para enseñar los estados en la demo:
 //   /student/dashboard?hora=08:50          → otra hora de hoy
 //   /student/dashboard?hora=08:59:45       → con segundos
 //   /student/dashboard?dia=sab&hora=10:00  → otro día de esta semana
 function previewTime(): Date | null {
+  if (!import.meta.env.DEV) return null
   const params = new URLSearchParams(window.location.search)
-  const hora = params.get('hora')
-  const dia = params.get('dia')
-  if (hora === null && dia === null) return null
+  const hourParam = params.get('hora')
+  const dayParam = params.get('dia')
+  if (hourParam === null && dayParam === null) return null
 
   const preview = new Date()
-  const time = hora === null ? null : /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.exec(hora)
+  const time = hourParam === null ? null : /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.exec(hourParam)
   if (time !== null) preview.setHours(Number(time[1]), Number(time[2]), Number(time[3] ?? 0), 0)
-  const weekday = dia === null ? -1 : previewDays.indexOf(dia)
+  const weekday = dayParam === null ? -1 : previewDays.indexOf(dayParam)
   if (weekday !== -1) preview.setDate(preview.getDate() + (weekday - preview.getDay()))
   return preview
 }

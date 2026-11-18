@@ -7,14 +7,15 @@
 //
 // «happy» (ya registró la entrada) lo decide la pantalla de inicio, en homeState.ts.
 
+import { minutesOfDay } from '../studentDate'
+
 export type TempitoMood = 'chill' | 'late' | 'stressed' | 'rushed' | 'happy'
 
 const startsRunningAtSeconds = 5 * 60
 const startsStressAtSeconds = 30
 
 function secondsOfDay(time: string): number {
-  const [hours = 0, minutes = 0] = time.split(':').map(Number)
-  return hours * 3600 + minutes * 60
+  return minutesOfDay(time) * 60
 }
 
 // Segundos que faltan hasta una hora del día («09:00»). Negativo si ya pasó.

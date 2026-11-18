@@ -1,6 +1,7 @@
+import { storageKeys } from '../../storageKeys'
 import { normalizeEmail } from '../studentExample'
 
-const noticesKey = 'atempo-student-notices'
+const noticesKey = storageKeys.notices
 
 export type NoticeKind = 'retraso' | 'ausencia'
 
@@ -12,7 +13,8 @@ export type StudentNotice = {
   // «09:20» en un retraso. Vacío en una ausencia.
   arrival: string
   reason: string
-  justificante: string
+  // Nombre del archivo del justificante. Vacío si no hay.
+  attachmentName: string
 }
 
 function isNotice(value: unknown): value is StudentNotice {
@@ -24,7 +26,7 @@ function isNotice(value: unknown): value is StudentNotice {
     typeof notice.day === 'string' &&
     typeof notice.arrival === 'string' &&
     typeof notice.reason === 'string' &&
-    typeof notice.justificante === 'string'
+    typeof notice.attachmentName === 'string'
   )
 }
 

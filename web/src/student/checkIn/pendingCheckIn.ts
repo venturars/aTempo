@@ -1,10 +1,11 @@
 // Si el alumno abre el enlace del QR sin la sesión abierta, primero tiene que entrar.
 // Para que el código no caduque mientras escribe la contraseña, se guarda la hora del escaneo
 // (con el código ya comprobado) y la entrada se apunta al terminar de entrar o de crear la cuenta.
+import { storageKeys } from '../../storageKeys'
 import { useFlashStore } from '../flashStore'
 import { registerArrival, type CheckInResult } from '../studentAccounts'
 
-export const pendingCheckInKey = 'atempo-student-pending-check-in'
+const pendingCheckInKey = storageKeys.pendingCheckIn
 
 // Si tarda más que esto en entrar, el escaneo ya no cuenta.
 const maxWaitMilliseconds = 10 * 60 * 1000

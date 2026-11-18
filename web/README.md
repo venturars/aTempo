@@ -20,4 +20,5 @@ Para probarlo con el móvil, el móvil y el ordenador tienen que estar en la mis
 
 Para volver a probar el recorrido en desarrollo, abre http://localhost:5191/?reiniciar. Borra las entradas y los avisos de esa pestaña, entra con la cuenta de ejemplo y abre el inicio del alumno.
 
+También solo en desarrollo, el inicio acepta otra hora y otro día para ver cada estado de Tempito: `?hora=08:50`, `?hora=08:59:45` (con segundos) o `?dia=sab&hora=10:00` (otro día de esta semana).
 `pnpm build` comprueba los tipos y genera `dist/`.

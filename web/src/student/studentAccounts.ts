@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { useSessionStore } from '../session/sessionStore'
+import { storageKeys } from '../storageKeys'
 import {
   exampleStudent,
   lateMinutes,
@@ -10,9 +11,9 @@ import {
 } from './studentExample'
 import { clockTime, statusForArrival } from './attendanceStatus'
 import { isCodeValidNow, readClassCode } from './classCode'
-import { formatDay } from './studentDate'
+import { formatDay, minutesOfDay } from './studentDate'
 
-const accountsKey = 'atempo-student-accounts'
+const accountsKey = storageKeys.accounts
 
 type StudentAccountsState = {
   accounts: StudentAccount[]
@@ -89,8 +90,13 @@ export function useCurrentStudent(): StudentAccount {
 export type CheckInResult =
   { registered: true; arrival: string } | { registered: false; message: string }
 
-const wrongCode = 'Ese código no es de esta clase. Revísalo y prueba otra vez.'
-const codeNotValidNow = 'Ese código no vale ahora. Prueba con el que se ve en la pantalla de clase.'
+// Por qué no vale un código: no es de esta clase, o sí lo es pero ya caducó.
+export type CodeProblem = 'wrong-class' | 'expired'
+
+const codeProblemMessage: Record<CodeProblem, string> = {
+  'wrong-class': 'Ese código no es de esta clase. Revísalo y prueba otra vez.',
+  expired: 'Ese código no vale ahora. Prueba con el que se ve en la pantalla de clase.'
+}
 
 function isClassDay(now: Date): boolean {
   return todayClass.weekdays.includes(now.getDay())
@@ -101,15 +107,14 @@ function minutesNow(now: Date): number {
 }
 
 function classIsOver(now: Date): boolean {
-  const [hours = 0, minutes = 0] = todayClass.end.split(':').map(Number)
-  return minutesNow(now) >= hours * 60 + minutes
+  return minutesNow(now) >= minutesOfDay(todayClass.end)
 }
 
-// Comprueba lo leído del QR o lo escrito a mano. Devuelve el aviso si no vale, o null si vale.
-export function classCodeProblem(payload: string, now: Date): string | null {
+// Comprueba lo leído del QR o lo escrito a mano. Devuelve el problema si no vale, o null si vale.
+export function classCodeProblem(payload: string, now: Date): CodeProblem | null {
   const code = readClassCode(payload, todayClass.id)
-  if (code === null) return wrongCode
-  if (!isCodeValidNow(code, todayClass.id, now)) return codeNotValidNow
+  if (code === null) return 'wrong-class'
+  if (!isCodeValidNow(code, todayClass.id, now)) return 'expired'
   return null
 }
 
@@ -138,6 +143,6 @@ export function registerArrival(at: Date): CheckInResult {
 // El QR leído con la cámara o el código escrito en la pantalla de escanear.
 export function registerReading(payload: string, now = new Date()): CheckInResult {
   const problem = classCodeProblem(payload, now)
-  if (problem !== null) return { registered: false, message: problem }
+  if (problem !== null) return { registered: false, message: codeProblemMessage[problem] }
   return registerArrival(now)
 }

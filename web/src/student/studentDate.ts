@@ -1,4 +1,5 @@
 const weekdays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+const weekdayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
 
 const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
 
@@ -14,10 +15,14 @@ export function formatDay(date: Date): string {
   return `${weekdays[date.getDay()]} ${date.getDate()} ${months[date.getMonth()]}`
 }
 
-// Ejemplo: «09:02».
-export function formatTime(date: Date): string {
-  const hours = String(date.getHours()).padStart(2, '0')
-  const minutes = String(date.getMinutes()).padStart(2, '0')
-  return `${hours}:${minutes}`
+// «Mié 11 nov» pasa a «Miércoles».
+export function weekdayName(dayLabel: string): string {
+  const index = weekdays.indexOf(dayLabel.split(' ')[0] ?? '')
+  return weekdayNames[index] ?? dayLabel
 }
 
+// Minutos desde medianoche de una hora «HH:MM». Ejemplo: «09:30» → 570.
+export function minutesOfDay(time: string): number {
+  const [hours = 0, minutes = 0] = time.split(':').map(Number)
+  return hours * 60 + minutes
+}
