@@ -13,7 +13,7 @@ La visión, los perfiles y las decisiones de producto están en [principles.md](
 | `docs/storybook/` | Fuente de verdad visual: Tailwind y daisyUI. Las pantallas usan las clases. No hay un paquete de componentes. |
 | `docs/guia/` | Markdown generado desde Storybook. No se versiona. Lo leen los agentes. |
 | `docs/` | Cómo se construye: constitución, arquitectura, estilo y árbol de carpetas. |
-| `web/` | Sitio del alumno. Vite, React y TanStack Router. Guarda los datos en `sessionStorage`. Cómo arrancarlo está en [web/README.md](web/README.md). |
+| `web/` | Sitio del alumno. Vite, React y TanStack Router. Guarda los datos en `localStorage`. Cómo arrancarlo está en [web/README.md](web/README.md). |
 
 Cada carpeta con código tiene su propio `package.json`. No hay workspace en la raíz. El gestor es pnpm 10.33.0 y las versiones van fijas.
 

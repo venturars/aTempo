@@ -8,7 +8,7 @@ pnpm install
 pnpm dev
 ```
 
-Abre http://localhost:5191/. La cuenta de ejemplo es `ada.lopez@clase.test` / `clase-2026`.
+Abre http://localhost:5191/. La cuenta de ejemplo es `ada.lopez@clase.test` / `clase-2026`. La sesión, las cuentas, las entradas y los avisos se guardan en `localStorage`, así que siguen al abrir el enlace del QR en una pestaña nueva.
 
 Para registrar la asistencia hace falta el QR de la app del profesor de #130 (rama `129-feat-teacher-qr-invitations`, Hoy → Abrir lista). El QR y el código de 6 cifras de debajo cambian cada 30 segundos. La regla está en `src/student/classCode.ts` y es la misma que usa la app del profesor. La clase de ejemplo es de lunes a viernes a las 09:00. El código registra hasta las 21:00, en la hora del dispositivo del alumno. Desde las 21:00, y en sábado y domingo, no registra.
 
@@ -18,7 +18,7 @@ Para registrar la asistencia hace falta el QR de la app del profesor de #130 (ra
 
 Para probarlo con el móvil, el móvil y el ordenador tienen que estar en la misma wifi. Arranca la web con `pnpm dev --host`. Arranca la app del profesor desde `desktop/` con `VITE_STUDENT_SITE_URL=<dirección de red que enseña Vite> pnpm dev`, por ejemplo `VITE_STUDENT_SITE_URL=http://192.168.1.20:5191 pnpm dev`.
 
-Para volver a probar el recorrido en desarrollo, abre http://localhost:5191/?reiniciar. Borra las entradas, las cuentas nuevas, los avisos y el escaneo pendiente de esa pestaña, entra con la cuenta de ejemplo y abre el inicio del alumno.
+Para volver a probar el recorrido en desarrollo, abre http://localhost:5191/?reiniciar. Borra las entradas, las cuentas nuevas, los avisos y el escaneo pendiente de este navegador, entra con la cuenta de ejemplo y abre el inicio del alumno.
 
 También solo en desarrollo, el inicio (`/student/dashboard`) acepta otra hora y otro día para ver cada estado de Tempito: `?hora=08:50`, `?hora=08:59:45` (con segundos) o `?dia=sab&hora=10:00` (otro día de esta semana).
 
