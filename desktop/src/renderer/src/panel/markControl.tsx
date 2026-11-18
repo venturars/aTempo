@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { markBadge, markLabel } from './marks'
+import type { MarkChange } from './panelStore'
 import { course, type Attendance, type JustKey } from './roster'
 
 const markButton: Record<Attendance, string> = {
@@ -17,6 +18,7 @@ export function MarkControl({
   when = '',
   excuse = 'no',
   arrivalAccepted = false,
+  changes = [],
   onPick
 }: {
   status: Attendance | 'none'
@@ -25,6 +27,8 @@ export function MarkControl({
   when?: string
   arrivalAccepted?: boolean
   excuse?: JustKey
+  // Cambios de esta fila con la lista cerrada. Se leen al pasar por encima del estado.
+  changes?: MarkChange[]
   onPick: (mark: Attendance) => void
 }): React.JSX.Element {
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -88,10 +92,15 @@ export function MarkControl({
   }
 
   const noted = (pill: React.ReactNode): React.ReactNode =>
-    status === 'ausente' ? (
-      <AbsenceNote name={person} when={when} excuse={excuse}>
+    status === 'ausente' || changes.length > 0 ? (
+      <MarkNote
+        name={person}
+        when={when}
+        excuse={status === 'ausente' ? excuse : null}
+        changes={changes}
+      >
         {pill}
-      </AbsenceNote>
+      </MarkNote>
     ) : (
       pill
     )
@@ -170,15 +179,32 @@ export function MarkControl({
   )
 }
 
-function AbsenceNote({
+function changeTime(at: number): string {
+  return new Date(at).toLocaleString('es', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+function changeText(change: MarkChange): string {
+  return `De ${markLabel[change.from]} a ${markLabel[change.to]}`
+}
+
+// La nota que sale al pasar por encima del estado (o al llevarle el foco): los cambios hechos
+// con la lista cerrada, del más reciente al más antiguo, y el justificante si es una ausencia.
+function MarkNote({
   name,
   when,
   excuse,
+  changes,
   children
 }: {
   name: string
   when: string
-  excuse: JustKey
+  excuse: JustKey | null
+  changes: MarkChange[]
   children: React.ReactNode
 }): React.JSX.Element {
   const anchorRef = useRef<HTMLSpanElement>(null)
@@ -187,6 +213,7 @@ function AbsenceNote({
   const filed = excuse === 'ok' || excuse === 'pend'
   const header =
     excuse === 'ok' ? 'Con justificante' : excuse === 'pend' ? 'Por revisar' : 'Sin justificante'
+  const newestFirst = [...changes].reverse()
 
   function show(): void {
     if (hide.current !== null) {
@@ -208,30 +235,53 @@ function AbsenceNote({
       ref={anchorRef}
       onMouseEnter={show}
       onMouseLeave={scheduleHide}
+      onFocus={show}
+      onBlur={scheduleHide}
       onClick={() => setBox(null)}
     >
       {children}
+      {newestFirst.length > 0 ? (
+        <span className="sr-only">
+          {newestFirst
+            .map((change) => `${changeText(change)}. ${change.reason} ${change.by}.`)
+            .join(' ')}
+        </span>
+      ) : null}
       {box !== null
         ? createPortal(
             <span
-              className="teacher-panel tip popover-in fixed z-50 flex w-56 flex-col gap-1 px-3.5 py-3 text-sm leading-snug"
+              className="teacher-panel tip popover-in fixed z-50 flex w-64 flex-col gap-3 px-3.5 py-3 text-sm leading-snug"
               style={{ top: box.top, left: box.left }}
+              role="tooltip"
               onMouseEnter={show}
               onMouseLeave={scheduleHide}
               onClick={(event) => event.stopPropagation()}
             >
-              <span className="font-medium">{header}</span>
-              {filed ? (
-                <button
-                  type="button"
-                  className="mt-1 w-fit cursor-pointer border-0 bg-transparent p-0 text-sm font-medium underline"
-                  onClick={() => downloadSampleNote(name, when)}
-                >
-                  Descargar
-                </button>
-              ) : (
-                <span className="tip-body">No hay documento.</span>
-              )}
+              {newestFirst.map((change, index) => (
+                <span key={`${change.at}-${index}`} className="flex flex-col gap-1">
+                  <span className="font-medium">{changeText(change)}</span>
+                  <span>{change.reason}</span>
+                  <span className="tip-body">
+                    {change.by} · {changeTime(change.at)}
+                  </span>
+                </span>
+              ))}
+              {excuse !== null ? (
+                <span className="flex flex-col gap-1">
+                  <span className="font-medium">{header}</span>
+                  {filed ? (
+                    <button
+                      type="button"
+                      className="mt-1 w-fit cursor-pointer border-0 bg-transparent p-0 text-sm font-medium underline"
+                      onClick={() => downloadSampleNote(name, when)}
+                    >
+                      Descargar
+                    </button>
+                  ) : (
+                    <span className="tip-body">No hay documento.</span>
+                  )}
+                </span>
+              ) : null}
             </span>,
             document.body
           )

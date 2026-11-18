@@ -7,7 +7,7 @@ import { nextDemoArrival, usePanelStore, type MarkChange, type PanelTab } from '
 import { Avatar } from './avatar'
 import { JustificationAccess } from './JustificationAccess'
 import { MarkControl } from './markControl'
-import { ChangeLog, CorrectionDialog, type CorrectionDraft } from './markCorrection'
+import { CorrectionDialog, type CorrectionDraft } from './markCorrection'
 import { SettingsView } from './SettingsView'
 import { SessionQr } from './sessionQr'
 import { StatsView } from './StatsView'
@@ -361,21 +361,15 @@ function RosterTable({
               ) : null}
               {started ? (
                 <td>
-                  <div className="flex items-center gap-2">
-                    <MarkControl
-                      status={status}
-                      arrivalAccepted={demoArrivals[index] === true}
-                      enabled
-                      person={name}
-                      when={dashboardDate}
-                      onPick={(mark) => onPick(index, mark)}
-                    />
-                    <ChangeLog
-                      person={name}
-                      when={dashboardDate}
-                      changes={changes.filter((change) => change.student === name)}
-                    />
-                  </div>
+                  <MarkControl
+                    status={status}
+                    arrivalAccepted={demoArrivals[index] === true}
+                    enabled
+                    person={name}
+                    when={dashboardDate}
+                    changes={changes.filter((change) => change.student === name)}
+                    onPick={(mark) => onPick(index, mark)}
+                  />
                 </td>
               ) : null}
             </tr>
@@ -633,21 +627,15 @@ function AttendanceTable({
               </td>
               <td className="tabular-nums text-base-content/50">{row.time}</td>
               <td>
-                <div className="flex items-center gap-2">
-                  <MarkControl
-                    status={row.mark}
-                    enabled
-                    person={row.name}
-                    when={when}
-                    excuse={row.just}
-                    onPick={(mark) => onMark(row.name, mark)}
-                  />
-                  <ChangeLog
-                    person={row.name}
-                    when={when}
-                    changes={changes.filter((change) => change.student === row.name)}
-                  />
-                </div>
+                <MarkControl
+                  status={row.mark}
+                  enabled
+                  person={row.name}
+                  when={when}
+                  excuse={row.just}
+                  changes={changes.filter((change) => change.student === row.name)}
+                  onPick={(mark) => onMark(row.name, mark)}
+                />
               </td>
             </tr>
           ))}

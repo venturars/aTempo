@@ -34,7 +34,7 @@ No hay registro abierto: la organización invita a profesores y alumnos. La invi
 
 Una invitación se activa una vez; después se entra con el correo y la contraseña elegida. Un enlace ya usado o desconocido abre el login normal con un aviso.
 
-Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alumnos y pasar lista. El QR y el código de 4 cifras de debajo cambian cada 30 segundos. Con la lista cerrada, cambiar un estado pide un motivo y la fila queda marcada como **Editado**, con quién, cuándo y por qué.
+Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alumnos y pasar lista. El QR y el código de 4 cifras de debajo cambian cada 30 segundos. Con la lista cerrada, cambiar un estado pide un motivo. Al pasar el ratón por encima del estado se ve quién lo cambió, cuándo y por qué.
 
 Para cambiar de cuenta, pulsa **Salir**: en la barra lateral del panel o en el inicio del alumno.
 

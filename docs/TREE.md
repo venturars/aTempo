@@ -128,7 +128,7 @@ desktop/
           avatar.tsx
           classCode.ts       # código y texto del QR de cada periodo de 30 s
           markControl.tsx
-          markCorrection.tsx # motivo de un cambio con la lista cerrada y su registro
+          markCorrection.tsx # motivo de un cambio con la lista cerrada
           marks.ts
           panelStore.ts
           riskHint.tsx
