@@ -1,6 +1,6 @@
-import { FormEvent } from 'react'
+import { FormEvent, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { dashboardPathForProfile } from '../session/sessionStore'
+import { dashboardPathForProfile, useSessionStore } from '../session/sessionStore'
 import { useLoginStore } from './loginStore'
 import { markClass, markLabel, trimesterDays, type AttendanceMark } from './trimesterExample'
 
@@ -60,11 +60,14 @@ function ClaimPanel(): React.JSX.Element {
 }
 
 function LoginForm(): React.JSX.Element {
+  const reset = useLoginStore((state) => state.reset)
+  // Al salir de la pantalla se vacía el formulario: no queda nada escrito para la próxima vez.
+  useEffect(() => reset, [reset])
   const email = useLoginStore((state) => state.email)
   const password = useLoginStore((state) => state.password)
   const emailError = useLoginStore((state) => state.emailError)
   const passwordError = useLoginStore((state) => state.passwordError)
-  const submitted = useLoginStore((state) => state.submitted)
+  const loginError = useLoginStore((state) => state.loginError)
   const setEmail = useLoginStore((state) => state.setEmail)
   const setPassword = useLoginStore((state) => state.setPassword)
   const submit = useLoginStore((state) => state.submit)
@@ -72,8 +75,11 @@ function LoginForm(): React.JSX.Element {
 
   function onSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault()
-    if (submit()) {
-      navigate({ to: dashboardPathForProfile('student') })
+    const isValid = submit()
+    const profile = useSessionStore.getState().profile
+
+    if (isValid && profile !== null) {
+      navigate({ to: dashboardPathForProfile(profile) })
     }
   }
 
@@ -126,10 +132,9 @@ function LoginForm(): React.JSX.Element {
         <button className="btn btn-primary" type="submit">
           Entrar
         </button>
-        {submitted !== null ? (
-          <div className="alert alert-success" role="status">
-            <span>Correo: {submitted.email}</span>
-            <span>Contraseña: {submitted.password}</span>
+        {loginError !== '' ? (
+          <div className="alert alert-error" role="alert">
+            <span>{loginError}</span>
           </div>
         ) : null}
       </form>

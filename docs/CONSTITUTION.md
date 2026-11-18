@@ -37,8 +37,28 @@ La SDK de lógica de negocio vivirá en `sdk/` (carpeta pendiente), al mismo niv
 
 Este servicio no implementa reglas de negocio. El API-router no habla con PostgreSQL. El escritorio no llama a este servicio.
 
-## 5. Dónde seguir
+## 5. Stack de `api-rustfs/`
+
+- **Express 5** expone REST hacia la SDK para persistencia de objetos en RustFS.
+- **Cliente npm `minio` (API S3)** habla con RustFS.
+- **swagger-ui-express** documenta la API y sirve Swagger UI en `/docs` para pruebas manuales.
+- **TypeScript** escribe el servicio.
+- **pnpm** es el gestor de paquetes de `api-rustfs/`. Las versiones van fijas, sin `^`.
+
+El API-router no accede a RustFS; la SDK consumirá este servicio cuando exista.
+
+## 6. Stack de `api-sqlite/`
+
+- **Flask** expone el servicio local de persistencia.
+- **Pydantic** valida los modelos de entrada y salida.
+- **SQLAlchemy Core** gestiona conexiones y consultas SQLite sin esquema de dominio.
+- **Flasgger** sirve Swagger UI y OpenAPI para comprobar el servicio.
+- **Python** ejecuta el paquete, que tiene sus dependencias fijadas en `api-sqlite/pyproject.toml`.
+
+`api-sqlite/` está detrás de la SDK: el `api-router` delega en la SDK y esta accede a las APIs de persistencia. La SQLite de este servicio es independiente de `desktop/atempo.sqlite`.
+
+## 7. Dónde seguir
 
 - [STYLE.md](STYLE.md): los dos temas y el enlace a la guía visual.
-- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, del API-router y de `api-postgresql/`.
-- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/` y `api-postgresql/`.
+- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio y flujo de `api-router/` y las APIs de persistencia; se prevén la SDK y más APIs.
+- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/`, `api-postgresql/`, `api-rustfs/` y `api-sqlite/`; se prevén `sdk/` y más carpetas de APIs.
