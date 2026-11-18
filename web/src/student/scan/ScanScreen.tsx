@@ -2,12 +2,7 @@ import { FormEvent, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { RequireStudent } from '../../session/RequireStudent'
 import { flowTopBelowHeader } from '../flowLayout'
-import { registerReading } from '../studentAccounts'
-
-function registeredTime(message: string): string | null {
-  const match = /^(?:Presente|Tarde) · (\d{2}:\d{2})$/.exec(message)
-  return match?.[1] ?? null
-}
+import { registerReading, type CheckInResult } from '../studentAccounts'
 
 export function ScanScreen(): React.JSX.Element {
   const navigate = useNavigate()
@@ -26,9 +21,9 @@ export function ScanScreen(): React.JSX.Element {
     if (videoRef.current) videoRef.current.srcObject = null
   }
 
-  function finish(message: string): void {
-    if (registeredTime(message) === null) {
-      setCodeError(message)
+  function finish(result: CheckInResult): void {
+    if (!result.registered) {
+      setCodeError(result.message)
       return
     }
     stopCamera()
@@ -50,7 +45,10 @@ export function ScanScreen(): React.JSX.Element {
   }
 
   async function startCamera(): Promise<void> {
-    if (window.BarcodeDetector === undefined || navigator.mediaDevices?.getUserMedia === undefined) {
+    if (
+      window.BarcodeDetector === undefined ||
+      navigator.mediaDevices?.getUserMedia === undefined
+    ) {
       setCameraNote('Este navegador no puede usar la cámara')
       return
     }
@@ -123,7 +121,7 @@ export function ScanScreen(): React.JSX.Element {
                 id="codigo-clase"
                 className={codeError !== null ? 'input input-error w-full' : 'input w-full'}
                 type="text"
-                inputMode="text"
+                inputMode="numeric"
                 autoComplete="off"
                 value={typedCode}
                 aria-invalid={codeError !== null}

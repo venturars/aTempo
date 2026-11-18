@@ -19,8 +19,8 @@ export type TodayClass = {
   end: string
   // Días con clase, como Date.getDay(): 0 es domingo, 1 es lunes.
   weekdays: number[]
-  code: string
-  pin: string
+  // Va dentro del QR del profesor. El código de 4 cifras sale de aquí (classCode.ts).
+  id: string
 }
 
 export const exampleStudent: StudentAccount = {
@@ -43,8 +43,7 @@ export const todayClass: TodayClass = {
   // La demo deja registrar toda la tarde. Con ?hora=21:30 se ve la clase terminada.
   end: '21:00',
   weekdays: [1, 2, 3, 4, 5],
-  code: 'ATEMPO-CLASE-1109',
-  pin: '482913'
+  id: 'ATEMPO-CLASE-1109'
 }
 
 export const lateMinutes = 10

@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
+import { destinationAfterSignIn } from '../student/checkIn/pendingCheckIn'
 import { useFlashStore } from '../student/flashStore'
 import { useRegisterStore } from './registerStore'
 
@@ -25,7 +26,8 @@ export function RegisterScreen(): React.JSX.Element {
     event.preventDefault()
     if (!submit()) return
     showFlash('¡Te damos la bienvenida a aTempo!')
-    void navigate({ to: '/student/dashboard' })
+    // Si venía del QR de clase, la entrada queda apuntada y va a la pantalla de entrada.
+    void navigate({ to: destinationAfterSignIn() })
   }
 
   return (

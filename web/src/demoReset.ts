@@ -4,7 +4,11 @@
 // Se importa antes que nada en main.tsx, porque los stores leen sessionStorage al cargar.
 import { exampleStudent } from './student/studentExample'
 
-const demoKeys = ['atempo-student-accounts', 'atempo-student-notices']
+const demoKeys = [
+  'atempo-student-accounts',
+  'atempo-student-notices',
+  'atempo-student-pending-check-in'
+]
 const sessionKey = 'atempo-student-session'
 
 const url = new URL(window.location.href)
