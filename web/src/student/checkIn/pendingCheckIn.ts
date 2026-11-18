@@ -14,16 +14,30 @@ export function rememberCheckIn(scannedAt: Date): void {
   sessionStorage.setItem(pendingCheckInKey, String(scannedAt.getTime()))
 }
 
-export function hasPendingCheckIn(): boolean {
-  return sessionStorage.getItem(pendingCheckInKey) !== null
-}
+const scanTooOld = 'Pasaron más de 10 minutos desde que escaneaste el QR. Escanéalo otra vez.'
 
-function completePendingCheckIn(now: Date): CheckInResult | null {
+// La hora del escaneo guardado, o null si no hay ninguno.
+function readScannedAt(): number | null {
   const raw = sessionStorage.getItem(pendingCheckInKey)
   if (raw === null) return null
-  sessionStorage.removeItem(pendingCheckInKey)
   const scannedAt = Number(raw)
-  if (!Number.isFinite(scannedAt) || now.getTime() - scannedAt > maxWaitMilliseconds) return null
+  return Number.isFinite(scannedAt) ? scannedAt : null
+}
+
+// Hay un escaneo guardado y todavía cuenta.
+export function hasPendingCheckIn(now = new Date()): boolean {
+  const scannedAt = readScannedAt()
+  return scannedAt !== null && now.getTime() - scannedAt <= maxWaitMilliseconds
+}
+
+// Apunta la entrada del escaneo guardado y lo borra. Si ya no cuenta, dice por qué.
+function completePendingCheckIn(now: Date): CheckInResult | null {
+  const scannedAt = readScannedAt()
+  sessionStorage.removeItem(pendingCheckInKey)
+  if (scannedAt === null) return null
+  if (now.getTime() - scannedAt > maxWaitMilliseconds) {
+    return { registered: false, message: scanTooOld }
+  }
   return registerArrival(new Date(scannedAt))
 }
 
