@@ -1,14 +1,14 @@
 # Arquitectura de aTempo
 
-## API-router, SDK y PostgreSQL
+## API-router, SDK y persistencia
 
-Carpeta del router: `api-router/`. Carpeta de la persistencia: `api-postgresql/`.
+Carpeta del router: `api-router/`. Persistencia relacional: `api-postgresql/`. Objetos en almacén S3-compatible: `api-rustfs/`.
 
-Los frontends (Electron en `desktop/` y el futuro portal web) hablarán REST con el API-router, un servicio NestJS. El API-router transforma HTTP y delegará en la **SDK (lógica de negocio)**. Esa SDK vivirá en `sdk/`, al mismo nivel que `desktop/` y `api-router/`; la carpeta aún no existe. La SDK hablará con `api-postgresql/` para leer y escribir en PostgreSQL. El API-router no habla con la base. Redis, Postgres y el resto de microservicios del backend quedan fuera del escritorio.
+Los frontends (Electron en `desktop/` y el futuro portal web) hablarán REST con el API-router, un servicio NestJS. El API-router transforma HTTP y delegará en la **SDK (lógica de negocio)**. Esa SDK vivirá en `sdk/`, al mismo nivel que `desktop/` y `api-router/`; la carpeta aún no existe. La SDK hablará con `api-postgresql/` para leer y escribir en PostgreSQL y con `api-rustfs/` para objetos en RustFS. El API-router no habla con la base ni con RustFS. Redis, Postgres y el resto de microservicios del backend quedan fuera del escritorio.
 
-Hoy `api-router/` solo expone `GET /health`. `api-postgresql/` solo expone `GET /health`, que confirma que PostgreSQL responde. El login y el registro del renderer no llaman a ninguna de las dos APIs. PostgreSQL y `api-postgresql/` no están en Docker Compose.
+Hoy `api-router/` solo expone `GET /health`. `api-postgresql/` solo expone `GET /health`, que confirma que PostgreSQL responde. `api-rustfs/` solo expone `GET /health`, que confirma que el servicio HTTP responde (igual que `api-router/`). El login y el registro del renderer no llaman a ninguna de estas APIs. PostgreSQL, `api-postgresql/`, RustFS y `api-rustfs/` no están en Docker Compose.
 
-La documentación interactiva (OpenAPI y Swagger UI) de cada servicio vive en **`/docs`** con el servicio en marcha; sirve para probar endpoints a mano, no implementa lógica de negocio. `api-postgresql/` escucha en el puerto 3001.
+La documentación interactiva (OpenAPI y Swagger UI) de cada servicio vive en **`/docs`** con el servicio en marcha; sirve para probar endpoints a mano, no implementa lógica de negocio. `api-postgresql/` escucha en el puerto **3001** y `api-rustfs/` en el **3003** (`PORT` en cada uno).
 
 ```mermaid
 flowchart LR
@@ -18,14 +18,24 @@ flowchart LR
   sdk[sdk_logicaDeNegocio]
   apiPg[apiPostgresql]
   postgres[(PostgreSQL)]
+  objectApi[api_rustfs_Express]
+  rustfs[(RustFS)]
   electron --> router
   web --> router
   router --> sdk
   sdk --> apiPg
+  sdk --> objectApi
   apiPg --> postgres
+  objectApi --> rustfs
 ```
 
-`sdk/` es un paquete hermano de `desktop/`, `api-router/` y `api-postgresql/`. El API-router y los frontends la consumirán cuando exista. `api-postgresql/` ya está y espera a esa SDK.
+`sdk/` es un paquete hermano de `desktop/`, `api-router/`, `api-postgresql/` y `api-rustfs/`. El API-router y los frontends la consumirán cuando exista. `api-postgresql/` ya está y espera a esa SDK. `api-rustfs/` también: la SDK lo usará para objetos en RustFS.
+
+## api-rustfs
+
+Carpeta: `api-rustfs/`.
+
+Servicio Express y TypeScript. La SDK delegará en él la lectura y escritura de objetos en RustFS. Hoy solo expone `GET /health`, que confirma que el servicio HTTP responde (igual que `api-router/`). Swagger UI en **`/docs`** y OpenAPI en **`/docs-json`**, igual que en `api-router/`. Por defecto escucha en el puerto **3003** (`PORT`). No está en Docker Compose en este paso.
 
 ## aTempo de escritorio
 

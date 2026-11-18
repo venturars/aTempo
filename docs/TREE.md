@@ -33,6 +33,35 @@ api-postgresql/
     jest-e2e.json
 ```
 
+# Árbol de `api-rustfs/`
+
+```text
+api-rustfs/
+  package.json
+  pnpm-lock.yaml
+  .npmrc
+  tsconfig.json
+  tsconfig.build.json
+  eslint.config.mjs
+  README.md
+  src/
+    main.ts
+    create-app.ts
+    configure-app.ts
+    health/
+      health-router.ts
+      health-response.ts
+    rustfs/
+      rustfs-config.ts
+      check-rustfs.ts
+    openapi/
+      document.ts
+  test/
+    health.e2e-spec.ts
+    swagger.e2e-spec.ts
+    jest-e2e.json
+```
+
 # Árbol de `api-router/`
 
 ```text
