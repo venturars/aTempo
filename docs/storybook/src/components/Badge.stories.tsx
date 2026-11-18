@@ -34,6 +34,12 @@ export const Gallery: Story = {
         <span className="badge badge-lg">lg</span>
         <span className="badge badge-xl">xl</span>
       </Section>
+      <Section title="Estado de asistencia">
+        <span className="badge badge-sm badge-soft badge-success">Presente</span>
+        <span className="badge badge-sm badge-soft badge-warning">Tarde</span>
+        <span className="badge badge-sm badge-soft badge-error">Ausente</span>
+        <span className="badge badge-sm badge-soft badge-neutral">Pendiente</span>
+      </Section>
     </Frame>
   )
 }
