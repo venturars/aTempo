@@ -1,23 +1,35 @@
 import { FormEvent, useEffect } from 'react'
-import { useNavigate } from '@tanstack/react-router'
-import { BackButton } from '../navigation/BackButton'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import { dashboardPathForProfile, useSessionStore } from '../session/sessionStore'
-import { useActivateStore } from './activateStore'
+import { isInvitationUsed, useActivateStore } from './activateStore'
+import { findInvitation, type Invitation } from './invitations'
 import { useLoginStore } from './loginStore'
 import { markClass, markLabel, trimesterDays, type AttendanceMark } from './trimesterExample'
 
 const legendMarks: AttendanceMark[] = ['presente', 'retraso', 'ausencia']
 
-// El login tiene dos modos: entrar con la contraseña o activar la cuenta de una invitación.
-export function LoginScreen({
-  mode = 'login'
-}: {
-  mode?: 'login' | 'activate'
-}): React.JSX.Element {
+const unknownLinkText = 'Este enlace de invitación no es válido.'
+const usedLinkText = 'Esta invitación ya está activada. Entra con tu contraseña.'
+
+export function LoginScreen(): React.JSX.Element {
+  // El enlace del correo de invitación abre este mismo login con ?invitation=<código>.
+  // Con una invitación pendiente, la tarjeta pide la contraseña nueva en vez de entrar.
+  const { invitation: code } = useSearch({ strict: false })
+  const invitation = code === undefined ? undefined : findInvitation(code)
+  const pending = invitation !== undefined && !isInvitationUsed(invitation) ? invitation : null
+  const notice =
+    code === undefined
+      ? ''
+      : invitation === undefined
+        ? unknownLinkText
+        : pending === null
+          ? usedLinkText
+          : ''
+
   return (
     <main className="flex min-h-screen flex-col gap-8 p-4 md:flex-row md:p-8">
       <ClaimPanel />
-      {mode === 'activate' ? <ActivateForm /> : <LoginForm />}
+      {pending !== null ? <ActivateForm invitation={pending} /> : <LoginForm notice={notice} />}
     </main>
   )
 }
@@ -66,7 +78,7 @@ function ClaimPanel(): React.JSX.Element {
   )
 }
 
-function LoginForm(): React.JSX.Element {
+function LoginForm({ notice }: { notice: string }): React.JSX.Element {
   const reset = useLoginStore((state) => state.reset)
   // Al salir de la pantalla se vacía el formulario: no queda nada escrito para la próxima vez.
   useEffect(() => reset, [reset])
@@ -93,6 +105,11 @@ function LoginForm(): React.JSX.Element {
   return (
     <section className="flex w-full max-w-md flex-col gap-8 rounded-box bg-base-100 p-4 md:p-8">
       <p>Entra con tu correo.</p>
+      {notice !== '' ? (
+        <div className="alert" role="status">
+          <span>{notice}</span>
+        </div>
+      ) : null}
       <form className="flex flex-col gap-5" noValidate onSubmit={onSubmit}>
         <Field
           id="email"
@@ -121,33 +138,24 @@ function LoginForm(): React.JSX.Element {
           </div>
         ) : null}
       </form>
-      <button className="btn btn-ghost" type="button" onClick={() => navigate({ to: '/activate' })}>
-        Tengo una invitación
-      </button>
     </section>
   )
 }
 
-function ActivateForm(): React.JSX.Element {
+// La tarjeta del login cuando se llega desde el enlace de una invitación pendiente.
+function ActivateForm({ invitation }: { invitation: Invitation }): React.JSX.Element {
   const reset = useActivateStore((state) => state.reset)
   // Al salir de la pantalla se vacía el formulario, como en el login.
   useEffect(() => reset, [reset])
-  const email = useActivateStore((state) => state.email)
-  const code = useActivateStore((state) => state.code)
   const password = useActivateStore((state) => state.password)
-  const emailError = useActivateStore((state) => state.emailError)
-  const codeError = useActivateStore((state) => state.codeError)
   const passwordError = useActivateStore((state) => state.passwordError)
-  const activateError = useActivateStore((state) => state.activateError)
-  const setEmail = useActivateStore((state) => state.setEmail)
-  const setCode = useActivateStore((state) => state.setCode)
   const setPassword = useActivateStore((state) => state.setPassword)
   const submit = useActivateStore((state) => state.submit)
   const navigate = useNavigate()
 
   function onSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault()
-    const isValid = submit()
+    const isValid = submit(invitation.code)
     const profile = useSessionStore.getState().profile
 
     if (isValid && profile !== null) {
@@ -157,30 +165,11 @@ function ActivateForm(): React.JSX.Element {
 
   return (
     <section className="flex w-full max-w-md flex-col gap-8 rounded-box bg-base-100 p-4 md:p-8">
-      <div className="flex flex-col gap-2">
-        <BackButton onClick={() => navigate({ to: '/' })} />
-        <p>Activa tu cuenta con el código de la invitación.</p>
+      <div className="flex flex-col gap-1">
+        <p className="font-medium">{invitation.name}</p>
+        <p className="text-sm text-base-content/60">{invitation.email}</p>
       </div>
       <form className="flex flex-col gap-5" noValidate onSubmit={onSubmit}>
-        <Field
-          id="email"
-          label="Correo"
-          type="email"
-          autoComplete="username"
-          value={email}
-          error={emailError}
-          onChange={setEmail}
-        />
-        <Field
-          id="code"
-          label="Código de invitación"
-          type="text"
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          value={code}
-          error={codeError}
-          onChange={setCode}
-        />
         <Field
           id="password"
           label="Contraseña nueva"
@@ -191,13 +180,8 @@ function ActivateForm(): React.JSX.Element {
           onChange={setPassword}
         />
         <button className="btn btn-primary" type="submit">
-          Activar cuenta
+          Entrar
         </button>
-        {activateError !== '' ? (
-          <div className="alert alert-error" role="alert">
-            <span>{activateError}</span>
-          </div>
-        ) : null}
       </form>
     </section>
   )
@@ -207,7 +191,6 @@ function Field({
   id,
   label,
   type,
-  inputMode,
   autoComplete,
   value,
   error,
@@ -215,8 +198,7 @@ function Field({
 }: {
   id: string
   label: string
-  type: 'email' | 'password' | 'text'
-  inputMode?: 'numeric'
+  type: 'email' | 'password'
   autoComplete: string
   value: string
   error: string
@@ -232,7 +214,6 @@ function Field({
         className={error !== '' ? 'input input-error w-full' : 'input w-full'}
         type={type}
         name={id}
-        inputMode={inputMode}
         autoComplete={autoComplete}
         value={value}
         aria-invalid={error !== ''}

@@ -3,5 +3,5 @@ import { LoginScreen } from '../login/LoginScreen'
 
 export const Route = createRootRoute({
   component: () => <Outlet />,
-  notFoundComponent: () => <LoginScreen />
+  notFoundComponent: LoginScreen
 })

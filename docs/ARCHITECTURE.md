@@ -53,6 +53,7 @@ Es Node, dentro de Electron. Abre la ventana y abre SQLite. `startupHash()` mira
 1. `--dashboard` → `/student/dashboard`.
 2. `--sign-up` → `/sign-up`.
 3. `--organization-dashboard` → `/organization/dashboard`.
+4. `--invitation=<código>` → `/?invitation=<código>`, como el enlace del correo de invitación. El código solo admite letras, números y guiones.
 
 Sin ninguno de esos flags, carga el renderer sin hash y muestra el login. En desarrollo la ruta va detrás de `#` en `ELECTRON_RENDERER_URL`. En la app empaquetada va en la opción `hash` de `loadFile`. En los dos casos el renderer recibe `#/ruta`.
 
@@ -77,7 +78,6 @@ Es React. Pinta las pantallas de la app (login, registro, dashboards, escaneo e 
 El enrutado es TanStack Router con hash history. `main.tsx` crea el router con `createHashHistory` y `caseSensitive: true`, y pinta `RouterProvider`. Con `caseSensitive: true` las rutas distinguen mayúsculas: `#/Sign-Up` no es `/sign-up` y muestra el login. Cada pantalla tiene su archivo en `routes/`:
 
 - `routes/index.tsx` → `/`: el login.
-- `routes/activate.tsx` → `/activate`: el login en modo de activar una invitación.
 - `routes/sign-up.tsx` → `/sign-up`: el registro.
 - `routes/student/dashboard.tsx` → `/student/dashboard`: el dashboard del alumno (`DashboardScreen`).
 - `routes/student/scan.tsx` → `/student/scan`: el registro de asistencia del alumno (`ScanScreen`).
@@ -94,7 +94,7 @@ El panel del claim y la figura del trimestre se pintan en el renderer y no salen
 
 El login guarda el formulario en Zustand (`loginStore.ts`). `validateLogin.ts` comprueba el formato del correo y los campos obligatorios. Después, `submit()` normaliza el correo con `normalizeEmail` (`trim().toLowerCase()`) y busca primero una cuenta de profesor en `useTeacherAccountsStore` (`teacherAccounts.ts`): la pública de `teacherDemoAccount.ts`, `profesor@atempo.test` / `Profesor123!`, o una invitación activada durante ese arranque. La contraseña debe coincidir exactamente. Si coincide, abre la sesión con `startTeacherSession(correo, nombre)`, vacía el formulario (correo y contraseña) y devuelve `true`. El correo y el nombre siguen guardados en la sesión.
 
-No hay registro abierto: la organización invita. «Tengo una invitación» lleva a `/activate`, el mismo login con otro formulario (`ActivateForm`, `activateStore.ts`). Pide correo, código de invitación y contraseña nueva; `validateActivation.ts` comprueba el correo, el código y una contraseña de 8 caracteres o más. `submit()` busca la invitación en `invitations.ts` por correo normalizado y código. Si no hay ninguna, avisa con el mismo texto para un correo o un código que no encajan. Si ya hay una cuenta con ese correo, la invitación está activada y lo dice. Si no, crea la cuenta de profesor o de alumno con su nombre, abre la sesión, vacía el formulario y navega al dashboard de su perfil. «Volver» lleva al login.
+No hay registro abierto: la organización invita. El correo de invitación lleva un enlace al login con `?invitation=<código>`; `routes/index.tsx` valida ese parámetro de búsqueda y `LoginScreen` lo lee con `useSearch`. Sin parámetro, el login es el de siempre. Con el código de una invitación pendiente (`invitations.ts`), la misma tarjeta enseña el nombre y el correo invitados y pide solo «Contraseña nueva» (`ActivateForm`, `activateStore.ts`); `validateActivation.ts` exige 8 caracteres o más. «Entrar» crea la cuenta de profesor o de alumno, abre la sesión, vacía el formulario y navega al dashboard de su perfil. Una invitación está usada si ya hay una cuenta con su correo (`isInvitationUsed`). Con un código usado o desconocido, el login normal enseña un aviso con `role="status"`.
 
 Para otros correos, busca una cuenta en `useStudentAccountsStore`: la demo `ada.lopez@clase.test` / `clase-2026` o un alumno registrado durante ese arranque. Si la contraseña coincide, abre su sesión con `startStudentSession(account.email)`, vacía el formulario y devuelve `true`. Cualquier fallo (correo desconocido o contraseña incorrecta, de profesor o de alumno) muestra el mismo alert de error, para no revelar qué correos tienen cuenta. Los fallos devuelven `false`, sin crear sesión, navegar ni repetir las credenciales en el aviso. El login no llama a la red. Al salir de la pantalla, `LoginForm` llama a `reset()` y el formulario se vacía, también tras un intento fallido.
 

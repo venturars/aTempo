@@ -25,14 +25,14 @@ Desde un arranque nuevo, usa el formulario **Entrar** con una de estas cuentas p
 | Profesor | `profesor@atempo.test` | `Profesor123!` | Hoy, en el panel del profesor |
 | Alumno | `ada.lopez@clase.test` | `clase-2026` | Dashboard de Ada López |
 
-No hay registro abierto: la organización invita a profesores y alumnos. Para activar una invitación, pulsa **Tengo una invitación** en el login y usa el correo, el código y una contraseña nueva de 8 caracteres o más:
+No hay registro abierto: la organización invita a profesores y alumnos. La invitación llega por correo con un enlace que abre el login con el nombre y el correo de la persona y una sola casilla, **Contraseña nueva**. Al pulsar **Entrar** se crea la cuenta y se abre su dashboard. Para simular el enlace, arranca desde `desktop/` con su flag:
 
-| Perfil | Correo | Código | Destino |
-| --- | --- | --- | --- |
-| Profesora | `lucia.martin@atempo.test` | `731905` | Hoy, con el nombre de Lucía Martín |
-| Alumno | `bruno.sanz@clase.test` | `264018` | Dashboard de Bruno Sanz |
+| Perfil | Arranque | Destino |
+| --- | --- | --- |
+| Profesora | `pnpm dev -- --invitation=731905` | Hoy, como Lucía Martín (`lucia.martin@atempo.test`) |
+| Alumno | `pnpm dev -- --invitation=264018` | Dashboard de Bruno Sanz (`bruno.sanz@clase.test`) |
 
-Una invitación se activa una vez; después se entra con la contraseña elegida.
+Una invitación se activa una vez; después se entra con el correo y la contraseña elegida. Un enlace ya usado o desconocido abre el login normal con un aviso.
 
 Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alumnos y pasar lista. El QR y el código de 4 cifras de debajo cambian cada 30 segundos. Con la lista cerrada, cambiar un estado pide un motivo y la fila queda marcada como **Editado**, con quién, cuándo y por qué.
 

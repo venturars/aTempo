@@ -1,7 +1,5 @@
-import { normalizeEmail } from '../student/studentAccounts'
-
 // La organización invita a profesores y alumnos; no hay registro abierto.
-// Sin backend, las invitaciones de ejemplo viven aquí.
+// El correo de invitación lleva un enlace con el código. Sin backend, las invitaciones de ejemplo viven aquí.
 export type Invitation = {
   name: string
   email: string
@@ -14,9 +12,6 @@ export const invitations: Invitation[] = [
   { name: 'Bruno Sanz', email: 'bruno.sanz@clase.test', code: '264018', profile: 'student' }
 ]
 
-export function findInvitation(email: string, code: string): Invitation | undefined {
-  const wanted = normalizeEmail(email)
-  return invitations.find(
-    (invitation) => invitation.email === wanted && invitation.code === code.trim()
-  )
+export function findInvitation(code: string): Invitation | undefined {
+  return invitations.find((invitation) => invitation.code === code.trim())
 }

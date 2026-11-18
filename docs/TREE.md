@@ -88,8 +88,7 @@ desktop/
         routeTree.gen.ts  # generado por el plugin de TanStack Router
         routes/
           __root.tsx    # ruta raíz; si no hay ruta, el login
-          index.tsx     # /, login
-          activate.tsx  # /activate, login en modo de activar una invitación
+          index.tsx     # /, login; ?invitation=<código> desde el correo de invitación
           sign-up.tsx   # /sign-up, registro
           student/
             dashboard.tsx  # /student/dashboard
@@ -104,9 +103,9 @@ desktop/
           app.css       # importa docs/storybook/src/system.css
           fonts/        # Geist e Inter, woff2 con licencia OFL
         login/
-          LoginScreen.tsx       # entrar o activar una invitación
+          LoginScreen.tsx       # entrar, o elegir contraseña desde el enlace de una invitación
           loginStore.ts
-          activateStore.ts      # formulario de activar una invitación
+          activateStore.ts      # contraseña nueva de una invitación
           invitations.ts        # invitaciones de ejemplo de profesor y alumno
           teacherAccounts.ts    # cuentas de profesor en memoria
           teacherDemoAccount.ts # cuenta pública de ejemplo del profesor

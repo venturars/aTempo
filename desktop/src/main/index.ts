@@ -17,6 +17,13 @@ function startupHash(): string | undefined {
     return '/organization/dashboard'
   }
 
+  // Abre el login como lo abre el enlace del correo de invitación: --invitation=731905.
+  const invitation = process.argv.find((arg) => arg.startsWith('--invitation='))
+  const code = invitation?.slice('--invitation='.length) ?? ''
+  if (/^[A-Za-z0-9-]+$/.test(code)) {
+    return `/?invitation=${code}`
+  }
+
   return undefined
 }
 
