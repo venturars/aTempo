@@ -1,11 +1,19 @@
 import { create } from 'zustand'
 import { useSessionStore } from '../session/sessionStore'
-import { useStudentAccountsStore } from '../student/studentAccounts'
+import { normalizeEmail, useStudentAccountsStore } from '../student/studentAccounts'
+import { teacherDemoAccount } from './teacherDemoAccount'
 import { validateLogin } from './validateLogin'
 
-export type SubmittedLogin = {
-  email: string
-  password: string
+// Mismo aviso para cualquier fallo: así no se sabe qué correos tienen cuenta.
+const loginErrorText = 'El correo o la contraseña no coinciden con la cuenta de ejemplo.'
+
+// El formulario vacío: al arrancar, al entrar y al salir de la pantalla.
+const emptyLoginForm = {
+  email: '',
+  password: '',
+  emailError: '',
+  passwordError: '',
+  loginError: ''
 }
 
 type LoginState = {
@@ -13,23 +21,20 @@ type LoginState = {
   password: string
   emailError: string
   passwordError: string
-  submitted: SubmittedLogin | null
+  loginError: string
   setEmail: (email: string) => void
   setPassword: (password: string) => void
   submit: () => boolean
+  reset: () => void
 }
 
 export const useLoginStore = create<LoginState>((set, get) => ({
-  email: '',
-  password: '',
-  emailError: '',
-  passwordError: '',
-  submitted: null,
+  ...emptyLoginForm,
   setEmail: (email) => {
-    set({ email, submitted: null })
+    set({ email, loginError: '' })
   },
   setPassword: (password) => {
-    set({ password, submitted: null })
+    set({ password, loginError: '' })
   },
   submit: () => {
     const { email, password } = get()
@@ -39,36 +44,42 @@ export const useLoginStore = create<LoginState>((set, get) => ({
       set({
         emailError: errors.email,
         passwordError: errors.password,
-        submitted: null
+        loginError: ''
       })
       return false
+    }
+
+    const normalizedEmail = normalizeEmail(email)
+
+    if (normalizedEmail === teacherDemoAccount.email) {
+      if (password !== teacherDemoAccount.password) {
+        set({ emailError: '', passwordError: '', loginError: loginErrorText })
+        return false
+      }
+
+      useSessionStore.setState({ profile: 'teacher', email: normalizedEmail })
+      // El formulario se vacía al entrar. El correo sigue en la sesión.
+      set(emptyLoginForm)
+      return true
     }
 
     const account = useStudentAccountsStore.getState().findByEmail(email)
 
     if (account !== undefined) {
       if (account.password !== password) {
-        set({
-          emailError: '',
-          passwordError: 'La contraseña no es la de esta cuenta.',
-          submitted: null
-        })
+        set({ emailError: '', passwordError: '', loginError: loginErrorText })
         return false
       }
 
-      set({ emailError: '', passwordError: '', submitted: null })
+      set(emptyLoginForm)
       useSessionStore.getState().startStudentSession(account.email)
       return true
     }
 
-    set({
-      emailError: '',
-      passwordError: '',
-      submitted: {
-        email: email.trim(),
-        password
-      }
-    })
+    set({ emailError: '', passwordError: '', loginError: loginErrorText })
     return false
+  },
+  reset: () => {
+    set(emptyLoginForm)
   }
 }))

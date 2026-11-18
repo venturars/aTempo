@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { usePanelStore, type PanelTab } from './panelStore'
+import { nextDemoArrival, usePanelStore, type PanelTab } from './panelStore'
 import { Avatar } from './avatar'
 import { JustificationAccess } from './JustificationAccess'
 import { MarkControl } from './markControl'
@@ -233,6 +233,9 @@ function Breadcrumb({
 }
 
 function TodayView(): React.JSX.Element {
+  const openedAt = usePanelStore((state) => state.openedAt)
+  const demoArrivals = usePanelStore((state) => state.demoArrivals)
+  const simulateArrival = usePanelStore((state) => state.simulateArrival)
   const phase = usePanelStore((state) => state.phase)
   const marks = usePanelStore((state) => state.marks)
   const openSession = usePanelStore((state) => state.openSession)
@@ -242,6 +245,7 @@ function TodayView(): React.JSX.Element {
   const setMark = usePanelStore((state) => state.setMark)
   const setTime = usePanelStore((state) => state.setTime)
   const times = usePanelStore((state) => state.times)
+  const nextArrival = nextDemoArrival(marks, times)
   const statuses = rosterNames.map((_, index) => rollStatus(phase, marks, index))
   const present = statuses.filter((status) => status === 'presente').length
   const late = statuses.filter((status) => status === 'retraso').length
@@ -254,10 +258,18 @@ function TodayView(): React.JSX.Element {
     <section className="card overflow-hidden bg-base-100 shadow-sm">
       {phase === 'abierta' ? (
         <div className="card-body flex-row flex-wrap items-center gap-6">
-          <SessionQr />
+          {openedAt !== null ? <SessionQr openedAt={openedAt} /> : null}
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <h2 className="text-lg font-medium">{course.name}</h2>
             <p className="text-sm text-base-content/60">{course.time}</p>
+            <button
+              type="button"
+              className="btn mt-2 w-fit"
+              disabled={nextArrival === -1}
+              onClick={() => simulateArrival(nextArrival)}
+            >
+              Simular llegada
+            </button>
           </div>
           <button type="button" className="btn btn-primary" onClick={askClose}>
             Cerrar lista
@@ -292,6 +304,7 @@ function TodayView(): React.JSX.Element {
       )}
       <RosterTable
         roster={roster}
+        demoArrivals={demoArrivals}
         phase={phase}
         times={times}
         openStudent={openStudent}
@@ -305,6 +318,7 @@ function TodayView(): React.JSX.Element {
 
 function RosterTable({
   roster,
+  demoArrivals = {},
   phase,
   times,
   openStudent,
@@ -313,6 +327,7 @@ function RosterTable({
   compact = false,
   embedded = false
 }: {
+  demoArrivals?: Record<number, true>
   roster: { name: string; index: number; mark: Attendance | 'none' }[]
   phase: Phase
   times: Record<number, string>
@@ -336,7 +351,7 @@ function RosterTable({
           compact
             ? 'table table-live'
             : started
-              ? 'table table-roster table-spread'
+              ? 'table table-roster table-spread min-w-[48rem]'
               : 'table table-roster'
         }
       >
@@ -370,7 +385,7 @@ function RosterTable({
                 <td>
                   <TimeField
                     time={rollTime(status, index, times)}
-                    enabled={phase === 'abierta'}
+                    enabled={phase === 'abierta' && status !== 'ausente'}
                     onCommit={(value) => setTime(index, value)}
                   />
                 </td>
@@ -379,6 +394,7 @@ function RosterTable({
                 <td>
                   <MarkControl
                     status={status}
+                    arrivalAccepted={demoArrivals[index] === true}
                     enabled={phase === 'abierta'}
                     person={name}
                     when={dashboardDate}
@@ -780,6 +796,8 @@ function TimeField({
 }): React.JSX.Element {
   const [draft, setDraft] = useState<string | null>(null)
   const skip = useRef(false)
+  // La hora con la que se abrió el campo: salir sin cambiarla no guarda nada.
+  const opened = useRef('')
 
   if (!enabled) {
     return <span className="tabular-nums text-base-content/50">{time}</span>
@@ -791,7 +809,10 @@ function TimeField({
         className="cursor-pointer tabular-nums text-base-content/50 hover:text-base-content"
         onClick={(event) => {
           event.stopPropagation()
-          setDraft(time === '—' ? '' : time)
+          // Escape quita el campo sin blur, así que el aviso de Escape anterior puede seguir puesto.
+          skip.current = false
+          opened.current = time === '—' ? '' : time
+          setDraft(opened.current)
         }}
       >
         {time}
@@ -812,7 +833,10 @@ function TimeField({
           skip.current = false
           return
         }
-        onCommit(draft)
+        // Mirar la hora y salir sin cambiarla no guarda nada: no deshace una marca hecha a mano.
+        if (draft !== opened.current) {
+          onCommit(draft)
+        }
         setDraft(null)
       }}
       onKeyDown={(event) => {

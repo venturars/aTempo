@@ -1,4 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
+import { NoStudentSession } from '../NoStudentSession'
 import { useCurrentStudent } from '../studentAccounts'
 
 type DashboardActionId =
@@ -23,6 +24,10 @@ export function DashboardScreen(): React.JSX.Element {
   function onDashboardAction(actionId: DashboardActionId): void {
     if (actionId === 'registrar-asistencia') void navigate({ to: '/student/scan' })
     if (actionId === 'resumen-asistencia') void navigate({ to: '/student/history' })
+  }
+
+  if (student === null) {
+    return <NoStudentSession />
   }
 
   return (

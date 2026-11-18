@@ -1,7 +1,20 @@
 import { create } from 'zustand'
 import { useSessionStore } from '../session/sessionStore'
-import { useStudentAccountsStore } from '../student/studentAccounts'
+import { normalizeEmail, useStudentAccountsStore } from '../student/studentAccounts'
+import { teacherDemoAccount } from '../login/teacherDemoAccount'
 import { validateRegister } from './validateRegister'
+
+// El formulario vacío: al arrancar, al crear la cuenta y al salir de la pantalla.
+const emptyRegisterForm = {
+  name: '',
+  email: '',
+  password: '',
+  repeatPassword: '',
+  nameError: '',
+  emailError: '',
+  passwordError: '',
+  repeatPasswordError: ''
+}
 
 type RegisterState = {
   name: string
@@ -17,17 +30,11 @@ type RegisterState = {
   setPassword: (password: string) => void
   setRepeatPassword: (repeatPassword: string) => void
   submit: () => boolean
+  reset: () => void
 }
 
 export const useRegisterStore = create<RegisterState>((set, get) => ({
-  name: '',
-  email: '',
-  password: '',
-  repeatPassword: '',
-  nameError: '',
-  emailError: '',
-  passwordError: '',
-  repeatPasswordError: '',
+  ...emptyRegisterForm,
   setName: (name) => {
     set({ name })
   },
@@ -61,7 +68,10 @@ export const useRegisterStore = create<RegisterState>((set, get) => ({
 
     const accounts = useStudentAccountsStore.getState()
 
-    if (accounts.findByEmail(email) !== undefined) {
+    if (
+      normalizeEmail(email) === teacherDemoAccount.email ||
+      accounts.findByEmail(email) !== undefined
+    ) {
       set({
         nameError: '',
         emailError: 'Ya hay una cuenta con este correo.',
@@ -72,8 +82,12 @@ export const useRegisterStore = create<RegisterState>((set, get) => ({
     }
 
     const account = accounts.addAccount(name, email, password)
-    set({ nameError: '', emailError: '', passwordError: '', repeatPasswordError: '' })
+    // El formulario se vacía al crear la cuenta. La cuenta (con su contraseña) sigue en el store de cuentas.
+    set(emptyRegisterForm)
     useSessionStore.getState().startStudentSession(account.email)
     return true
+  },
+  reset: () => {
+    set(emptyRegisterForm)
   }
 }))
