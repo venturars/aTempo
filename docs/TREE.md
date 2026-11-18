@@ -89,6 +89,7 @@ desktop/
         routes/
           __root.tsx    # ruta raíz; si no hay ruta, el login
           index.tsx     # /, login
+          activate.tsx  # /activate, login en modo de activar una invitación
           sign-up.tsx   # /sign-up, registro
           student/
             dashboard.tsx  # /student/dashboard
@@ -103,11 +104,17 @@ desktop/
           app.css       # importa docs/storybook/src/system.css
           fonts/        # Geist e Inter, woff2 con licencia OFL
         login/
-          LoginScreen.tsx
+          LoginScreen.tsx       # entrar o activar una invitación
           loginStore.ts
+          activateStore.ts      # formulario de activar una invitación
+          invitations.ts        # invitaciones de ejemplo de profesor y alumno
+          teacherAccounts.ts    # cuentas de profesor en memoria
           teacherDemoAccount.ts # cuenta pública de ejemplo del profesor
           validateLogin.ts
+          validateActivation.ts
           trimesterExample.ts
+        navigation/
+          BackButton.tsx        # volver a la pantalla anterior
         panel/
           AttendanceStatus.tsx
           DateFilter.tsx
@@ -120,12 +127,14 @@ desktop/
           StatsView.tsx
           StudentHistory.tsx
           avatar.tsx
+          classCode.ts       # código y texto del QR de cada periodo de 30 s
           markControl.tsx
+          markCorrection.tsx # motivo de un cambio con la lista cerrada y su registro
           marks.ts
           panelStore.ts
           riskHint.tsx
           roster.ts
-          sessionQr.tsx
+          sessionQr.tsx      # QR real y código de 4 cifras
           settingsStore.ts
         organization/
           OrganizationDashboardScreen.tsx
@@ -147,7 +156,7 @@ desktop/
           history/
             HistoryScreen.tsx  # clases de la cuenta con hora y estado
         session/
-          sessionStore.ts  # perfil, correo en memoria y ruta de su dashboard
+          sessionStore.ts  # perfil, correo y nombre en memoria, salir y ruta de su dashboard
         underConstruction/
           UnderConstructionScreen.tsx  # pantalla provisional con título
   tests/
@@ -159,8 +168,10 @@ desktop/
     hidden-electron.spec.ts # smoke del build real: entrada, navegación y captura
     login.spec.ts
     teacher-login.spec.ts # acceso con la cuenta pública del profesor
+    teacher-account.spec.ts # activar invitaciones y salir
+    teacher-corrections.spec.ts # cambios con la lista cerrada, motivo, registro y volver
     panel.spec.ts
-    teacher-qr.spec.ts  # temporizador, llegadas y dos temas a 390/1280 px
+    teacher-qr.spec.ts  # QR legible, código de 4 cifras, periodos del reloj, llegadas y dos temas a 390/1280 px
     organization-dashboard.spec.ts
     register.spec.ts
     dashboard.spec.ts
