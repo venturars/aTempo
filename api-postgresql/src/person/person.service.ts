@@ -1,12 +1,10 @@
 import { Injectable } from '@nestjs/common'
-import { PostgresService } from '../postgres/postgres.service'
+import { PERSON_DEMO } from './person-demo'
 import { PersonResponseDto } from './person-response.dto'
 
 @Injectable()
 export class PersonService {
-  constructor(private readonly postgres: PostgresService) {}
-
-  async listAll(): Promise<PersonResponseDto[]> {
-    return this.postgres.listPersons()
+  listAll(): PersonResponseDto[] {
+    return PERSON_DEMO
   }
 }

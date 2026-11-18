@@ -14,10 +14,7 @@ describe('Swagger (e2e)', () => {
       imports: [AppModule],
     })
       .overrideProvider(PostgresService)
-      .useValue({
-        check: async () => undefined,
-        listPersons: async () => [],
-      })
+      .useValue({ check: async () => undefined })
       .compile()
 
     app = moduleFixture.createNestApplication()

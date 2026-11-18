@@ -39,7 +39,7 @@ api-postgresql/
     app.module.ts
     postgres/
       postgres.module.ts
-      postgres.service.ts  # Pool de pg; SELECT 1 y listado de person
+      postgres.service.ts  # Pool de pg; SELECT 1 con DATABASE_URL
     health/
       health.module.ts
       health.controller.ts
@@ -49,6 +49,7 @@ api-postgresql/
       person.controller.ts
       person.service.ts
       person-response.dto.ts
+      person-demo.ts       # datos de prueba fijos (#131)
   test/
     health.e2e-spec.ts
     person.e2e-spec.ts

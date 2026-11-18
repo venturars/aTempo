@@ -1,13 +1,5 @@
-import {
-  Controller,
-  Get,
-  ServiceUnavailableException,
-} from '@nestjs/common'
-import {
-  ApiOkResponse,
-  ApiServiceUnavailableResponse,
-  ApiTags,
-} from '@nestjs/swagger'
+import { Controller, Get } from '@nestjs/common'
+import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
 import { PersonResponseDto } from './person-response.dto'
 import { PersonService } from './person.service'
 
@@ -18,12 +10,7 @@ export class PersonController {
 
   @Get()
   @ApiOkResponse({ type: PersonResponseDto, isArray: true })
-  @ApiServiceUnavailableResponse({ description: 'PostgreSQL no responde' })
-  async listPersons(): Promise<PersonResponseDto[]> {
-    try {
-      return await this.personService.listAll()
-    } catch {
-      throw new ServiceUnavailableException()
-    }
+  listPersons(): PersonResponseDto[] {
+    return this.personService.listAll()
   }
 }

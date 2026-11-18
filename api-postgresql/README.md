@@ -2,19 +2,20 @@
 
 Servicio de persistencia con NestJS y TypeScript. La SDK de lógica de negocio hablará con este servicio para leer y escribir en PostgreSQL. El API-router no habla con la base.
 
-Hoy expone `GET /health`, que confirma que PostgreSQL responde, y `GET /person`, que lista todas las filas de la tabla `person` del esquema core (#32). El escritorio no llama a este servicio.
+Hoy expone `GET /health`, que comprueba PostgreSQL cuando hay `DATABASE_URL`, y `GET /person`, que devuelve **datos de prueba fijos** en JSON (forma del modelo `person` de #32; no consulta la base en este paso). El escritorio no llama a este servicio.
 
 ## Arranque
-
-Hace falta un PostgreSQL que ya esté en marcha. Este paquete no lo levanta.
 
 Desde `api-postgresql/`:
 
 ```sh
 pnpm install
+pnpm dev
 ```
 
-Define la conexión y arranca. El ejemplo usa el puerto `5432` y la base `atempo`:
+Por defecto escucha en el puerto `3001`. Puedes cambiarlo con `PORT`.
+
+`GET /person` no requiere PostgreSQL. Para probar `GET /health` con **200**, define `DATABASE_URL` y ten un PostgreSQL en marcha:
 
 ```sh
 # PowerShell
@@ -22,21 +23,11 @@ $env:DATABASE_URL = "postgres://usuario:clave@localhost:5432/atempo"
 pnpm dev
 ```
 
-```sh
-# bash
-DATABASE_URL=postgres://usuario:clave@localhost:5432/atempo pnpm dev
-```
-
-Por defecto escucha en el puerto `3001`. Puedes cambiarlo con `PORT`.
-
 ## Probar con Swagger
 
-1. Con el servicio en marcha (`pnpm dev`) y `DATABASE_URL` apuntando a un PostgreSQL que responda, abre `http://localhost:3001/docs` (o el mismo puerto que uses con `PORT`).
-2. En la sección **health**, abre `GET /health` → **Try it out** → **Execute**.
-3. Si la base responde, la respuesta es `200` con cuerpo `{ "status": "ok", "postgres": "ok" }`.
-4. Si falta `DATABASE_URL` o PostgreSQL no responde, la respuesta es `503` con cuerpo `{ "status": "error", "postgres": "error" }`.
-5. En la sección **person**, abre `GET /person` → **Try it out** → **Execute**.
-6. Con un PostgreSQL que tenga la tabla `person` del esquema de #32, la respuesta es **200** con un array JSON (o `[]` si está vacía). Si falta `DATABASE_URL` o la base no responde, la respuesta es **503**.
+1. Con `pnpm dev`, abre `http://localhost:3001/docs` (o el mismo puerto que uses con `PORT`).
+2. En **person**, `GET /person` → **Try it out** → **Execute** → **200** con el array de datos de prueba (misma forma que en la issue #131).
+3. En **health**, `GET /health` → **Execute**. Con `DATABASE_URL` y Postgres accesible: **200** `{ "status": "ok", "postgres": "ok" }`. Sin conexión: **503**.
 
 El documento OpenAPI en JSON está en `/docs-json`.
 
@@ -51,5 +42,5 @@ pnpm build
 
 - `pnpm typecheck` — comprobación de tipos.
 - `pnpm lint` — ESLint sobre `src/` y `test/`.
-- `pnpm test` — prueba e2e de `/health` (200 y 503) y de Swagger. No necesita PostgreSQL: sustituye el servicio de conexión.
+- `pnpm test` — e2e de `/health`, `/person` y Swagger. No necesita PostgreSQL: sustituye el servicio de conexión de health.
 - `pnpm build` — compilación a `dist/`.
