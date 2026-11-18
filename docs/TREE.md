@@ -1,3 +1,43 @@
+# Árbol de almacenes
+
+Cada almacén se instala y arranca en el ordenador. Compose orquesta los mismos procesos. No forman parte de `desktop/` ni de `api-router/`.
+
+```text
+postgres/
+  README.md
+  .env.example
+  package.json
+  pnpm-lock.yaml
+  tsconfig.json
+  drizzle.config.ts
+  init/01_schema.sql
+  test/run.sh
+  test/valid.sql
+sqlite/
+  README.md
+  schema.sql
+  test/run.sh
+  test/valid.sql
+rustfs/
+  README.md
+  .env.example
+  .gitignore
+  create-bucket.sh
+  test/run.sh
+blockend/
+  README.md
+  package.json
+  hardhat.config.cjs
+  contracts/CourseAttendance.sol
+  scripts/deploy.cjs
+  test/CourseAttendance.cjs
+docs/POSTGRES.md
+docs/SQLITE.md
+docs/RUSTFS.md
+docs/BLOCKEND.md
+permanent-data.md
+```
+
 # Árbol de `sdk/` (pendiente)
 
 ```text

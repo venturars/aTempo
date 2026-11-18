@@ -46,11 +46,23 @@ El lector del alumno ofrece lecturas simuladas y no usa cámara. Estos flujos no
 | `api-postgresql/` | API REST con NestJS entre la SDK y PostgreSQL. |
 | `api-rustfs/` | API REST con Express entre la SDK y RustFS (persistencia de objetos). |
 | `api-sqlite/` | Servicio Flask con Pydantic y SQLAlchemy Core entre la SDK prevista y SQLite. |
+| `postgres/` | Core PostgreSQL y Drizzle Studio para ver sus tablas. No se abre desde el escritorio ni desde el API-router. |
+| `sqlite/` | SQLite operativo de fichaje y Datasette. Distinto del `atempo.sqlite` del escritorio. |
+| `rustfs/` | Justificantes (bucket `justifications`) y consola de RustFS. |
+| `blockend/` | Anvil, Hardhat, contrato por curso y Otterscan. |
 | `docs/storybook/` | Fuente de verdad visual: Tailwind y daisyUI. Las pantallas usan las clases. No hay un paquete de componentes. |
 | `docs/guia/` | Markdown generado desde Storybook. No se versiona. Lo leen los agentes. |
-| `docs/` | Cómo se construye: constitución, arquitectura, estilo y árbol de carpetas. |
+| `docs/` | Cómo se construye: constitución, arquitectura, estilo, árbol y modelo de cada almacén. |
+| `permanent-data.md` | Enlaces entre las cuatro bases. No es un quinto almacén. |
 
-Cada servicio tiene sus dependencias propias y no hay workspace en la raíz. Los paquetes JavaScript usan pnpm 10.33.0 y versiones fijas. `api-sqlite/` usa Python y dependencias fijadas en `pyproject.toml`.
+Cada servicio tiene sus dependencias propias y no hay workspace en la raíz. Los paquetes JavaScript usan pnpm 10.33.0 y versiones fijas. `api-sqlite/` usa Python y dependencias fijadas en `pyproject.toml`. `postgres/`, `sqlite/`, `blockend/` y `rustfs/` se instalan y arrancan en el ordenador. Compose de la raíz orquesta los mismos procesos, cada uno con su perfil (`db`, `sqlite`, `blockend` y `rustfs`); no es requisito. Ninguno entra en el compose de instalación. El modelo de cada una está en `docs/` (nombres en MAYÚSCULAS) y el arranque nativo en su `README.md`.
+
+| Almacén | Visor | URL |
+| --- | --- | --- |
+| PostgreSQL | Drizzle Studio | <https://local.drizzle.studio> |
+| SQLite operativo | Datasette | <http://localhost:8001> |
+| RustFS | Consola | <http://localhost:9001/rustfs/console/> |
+| Anvil | Otterscan | <http://localhost:5100> |
 
 ## Instalación
 
@@ -71,13 +83,179 @@ docker compose run --rm setup
 
 La primera vez, `setup` construye la imagen de Docker: tarda unos minutos. Las siguientes, unos segundos.
 
-`setup` instala delivery-workflow para Cursor, Codex y Claude Code en la raíz del proyecto, y las dependencias de `desktop/`, `docs/storybook/` y `api-router/` dentro de Docker, en volúmenes. Los `node_modules` de Linux no llegan a tu carpeta.
+`setup` instala delivery-workflow para Cursor, Codex y Claude Code en la raíz del proyecto, y las dependencias de `desktop/`, `docs/storybook/`, `api-router/`, `blockend/` y `postgres/` dentro de Docker, en volúmenes. Los `node_modules` de Linux no llegan a tu carpeta.
 
-Desde entonces, git lo lanza solo después de `git pull`, de cambiar de rama o de un rebase, si la rama nueva tiene otro `apm.yml`, `apm.lock.yaml`, `pnpm-lock.yaml` o `Dockerfile`. Si cambió el `Dockerfile`, reconstruye antes la imagen. Si Docker no está en marcha, git avisa y sigue: lanza `docker compose run --build --rm setup` cuando lo arranques.
+Desde entonces, git lo lanza solo después de `git pull`, de cambiar de rama o de un rebase, si la rama nueva tiene otro `apm.yml`, `apm.lock.yaml`, `pnpm-lock.yaml` o `Dockerfile`. Si cambió el `Dockerfile`, reconstruye la imagen antes de lanzar nada:
+
+```sh
+docker compose build
+```
+
+Hace falta porque `docker compose run` solo construye la imagen cuando todavía no existe. Si ya existe, usa la que tienes, aunque el `Dockerfile` haya cambiado. Después de `docker compose build`, cualquier `run` usa la imagen nueva. Si prefieres hacerlo en un paso, `docker compose run --build --rm setup` construye y ejecuta.
+
+Si Docker no está en marcha, git avisa y sigue: lanza `docker compose run --build --rm setup` cuando lo arranques.
 
 Para cambiar de versión de delivery-workflow, cambia la etiqueta en `apm.yml` (por ejemplo, `#v0.1.2` por `#v0.1.3`), lanza `docker compose run --rm setup` y sube `apm.yml` y `apm.lock.yaml` en una pull request `chore`.
 
 Si tu herramienta abre Dev Containers, como VS Code, puedes abrir el proyecto con `.devcontainer/devcontainer.json`: usa la misma imagen. Es opcional.
+
+## Postgres
+
+Instalación y arranque en el ordenador: [postgres/README.md](postgres/README.md). Visor: Drizzle Studio en <https://local.drizzle.studio>. Tests: `createdb atempo_schema_test` y `PGDATABASE=atempo_schema_test sh test/run.sh` desde `postgres/`.
+
+### Con Docker (orquestador)
+
+Necesitas Docker Desktop en marcha, como en [Instalación](#instalación).
+
+Desde la raíz del repositorio:
+
+1. Arranca PostgreSQL y Drizzle Studio:
+
+   ```sh
+   docker compose --profile db up -d postgres drizzle-studio
+   ```
+
+2. Comprueba que `postgres` está `healthy`:
+
+   ```sh
+   docker compose --profile db ps
+   ```
+
+3. Comprueba que el esquema está cargado:
+
+   ```sh
+   docker compose --profile db exec postgres psql -U atempo -d atempo -c '\dt'
+   ```
+
+   No necesitas `psql` en tu ordenador para esto.
+
+4. Abre Drizzle Studio en <https://local.drizzle.studio>. Esa página habla con el servidor del contenedor `drizzle-studio` en <http://localhost:4983>. La primera vez, antes de arrancarlo, ejecuta `docker compose run --rm setup` para instalar las dependencias de `postgres/`.
+
+Si quieres conectarte desde tu ordenador con un cliente propio, usa `localhost`, puerto `5433`, base `atempo`, usuario `atempo` y contraseña `atempo`. El puerto `5433` no choca con un PostgreSQL local en el `5432`.
+
+### Cambiar usuario o contraseña
+
+Las variables están en [`postgres/.env.example`](postgres/.env.example): `POSTGRES_USER`, `POSTGRES_PASSWORD` y `POSTGRES_DB`. Copia las que quieras cambiar al `.env` de la raíz, el mismo que usa `GITHUB_TOKEN`. Compose solo lee ese fichero.
+
+Usuario, contraseña y base de datos solo se aplican cuando Docker crea el volumen. Si ya tienes datos y cambias esas variables, borra el volumen antes (ver «Parar»).
+
+### Parar
+
+- `docker compose --profile db stop`: para los contenedores y conserva los datos.
+- `docker compose --profile db down`: quita los contenedores. Los datos siguen en el volumen.
+- Para borrar también los datos, tras `down` lanza `docker volume rm atempo_postgres-data`. La próxima vez Docker crea la base vacía y vuelve a cargar el esquema.
+
+Para instalar PostgreSQL sin Docker, mira [postgres/README.md](postgres/README.md).
+
+## SQLite operativo
+
+Instalación y arranque en el ordenador: [sqlite/README.md](sqlite/README.md). Visor: Datasette en <http://localhost:8001>. Tests: `sh test/run.sh` desde `sqlite/`.
+
+### Con Docker (orquestador)
+
+Necesitas Docker Desktop en marcha, como en [Instalación](#instalación).
+
+Desde la raíz del repositorio:
+
+1. Arranca Datasette. Su servicio `init-db` crea `sqlite/data/operational.sqlite` a partir de `sqlite/schema.sql` solo si el fichero no existe:
+
+   ```sh
+   docker compose --profile sqlite up -d datasette
+   ```
+
+2. Comprueba que la API responde. Devuelve JSON con las filas de `session`:
+
+   ```sh
+   curl http://localhost:8001/operational/session.json
+   ```
+
+3. Abre Datasette en <http://localhost:8001> para verlo en el navegador.
+
+Para parar, `docker compose --profile sqlite stop` conserva los datos. `docker compose --profile sqlite down` quita los contenedores, pero no borra el fichero `sqlite/data/operational.sqlite`: para empezar de cero, bórralo a mano. Docker y la versión sin Docker usan el mismo puerto `8001`: no los tengas a la vez.
+
+Para ver cómo instalar `sqlite3` y Datasette sin Docker, mira [sqlite/README.md](sqlite/README.md).
+
+## Blockend
+
+Instalación (una vez) y arranque (cada sesión) en el ordenador: [blockend/README.md](blockend/README.md). Anvil es la cadena (`:8545`). Otterscan es el visor (`:5100`). Tests: `pnpm test` desde `blockend/` (no necesita Anvil).
+
+### Con Docker (orquestador)
+
+Necesitas Docker Desktop en marcha, como en [Instalación](#instalación).
+
+Desde la raíz del repositorio:
+
+1. Arranca Anvil y Otterscan:
+
+   ```sh
+   docker compose --profile blockend up -d anvil otterscan
+   ```
+
+2. Comprueba que Anvil responde. Devuelve `0x7a69`, que es el chain id 31337:
+
+   ```sh
+   curl -s -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' http://localhost:8545
+   ```
+
+3. Abre Otterscan en <http://localhost:5100> para ver el log.
+
+Para desplegar el contrato de un curso, sigue [blockend/README.md](blockend/README.md). El deploy se lanza en local con pnpm, contra Anvil.
+
+Para parar, `docker compose --profile blockend stop` o `down`. En los dos casos se pierde el libro: Anvil guarda los datos en memoria. Al volver a arrancar hay que desplegar otra vez el contrato. La dirección puede cambiar, así que actualiza `course.contract_address` en PostgreSQL.
+
+## Justificantes con RustFS
+
+Instalación y arranque en el ordenador: [rustfs/README.md](rustfs/README.md). Visor: <http://localhost:9001/rustfs/console/>. Tests: `sh test/run.sh` desde `rustfs/`, con RustFS en `:9000`.
+
+### Con Docker (orquestador)
+
+Necesitas Docker Desktop en marcha, como en [Instalación](#instalación).
+
+Desde la raíz del repositorio:
+
+1. Arranca RustFS y el servicio que crea el bucket `justifications`:
+
+   ```sh
+   docker compose --profile rustfs up -d rustfs create-bucket
+   ```
+
+   `create-bucket` espera a que la API responda, crea el bucket si no existe y sale. Para ver su resultado: `docker compose --profile rustfs logs create-bucket`.
+
+2. Comprueba que la API responde:
+
+   ```sh
+   curl http://localhost:9000/health
+   ```
+
+3. Abre la consola en <http://localhost:9001/rustfs/console/> con `RUSTFS_ACCESS_KEY` y `RUSTFS_SECRET_KEY` de [rustfs/.env.example](rustfs/.env.example), o las que pongas en `.env`.
+
+Para cambiar las credenciales, copia `RUSTFS_ACCESS_KEY` y `RUSTFS_SECRET_KEY` de [rustfs/.env.example](rustfs/.env.example) a tu `.env` de la raíz. Son para desarrollo: cámbialas antes de exponer el puerto 9000 a una red.
+
+Para parar, `docker compose --profile rustfs stop` conserva los datos. Con `down` se quitan los contenedores, y los objetos siguen en el volumen `rustfs-data`. Para borrarlos, tras `down`, lanza `docker volume rm atempo_rustfs-data`.
+
+El modelo de los objetos está en [docs/RUSTFS.md](docs/RUSTFS.md). El README de la carpeta, en [rustfs/README.md](rustfs/README.md).
+
+## Pruebas de almacenes
+
+En el host (Git Bash en Windows). Postgres usa `atempo_schema_test`, no `atempo`. RustFS tiene que estar en `:9000`. Hardhat no necesita Anvil.
+
+```sh
+createdb atempo_schema_test && PGDATABASE=atempo_schema_test sh postgres/test/run.sh
+sh sqlite/test/run.sh
+sh rustfs/test/run.sh
+cd blockend && pnpm test
+```
+
+Compose, contra instancias efímeras. No usan `postgres-data`, `sqlite/data/operational.sqlite` ni `rustfs-data`:
+
+```sh
+docker compose run --rm postgres-test
+docker compose run --rm sqlite-test
+docker compose run --rm rustfs-test
+docker compose run --rm blockend pnpm test
+```
+
+`postgres-test`, `sqlite-test` y `rustfs-test` van en el perfil `test`. `blockend pnpm test` usa la red interna de Hardhat, no Anvil. Tras cambiar el `Dockerfile`, `docker compose run --build --rm setup` instala también `blockend/`.
 
 ## Escritorio
 
@@ -217,6 +395,11 @@ Reemplaza los valores por el login exacto del revisor solicitado y su ID numéri
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Las tres capas del escritorio y el entorno de instalación. |
 | [docs/STYLE.md](docs/STYLE.md) | Temas y enlace a la guía visual. |
 | [docs/guia](docs/guia/README.md) | Markdown generado desde Storybook. No se versiona. |
-| [docs/TREE.md](docs/TREE.md) | Carpetas de `desktop/`. |
+| [docs/TREE.md](docs/TREE.md) | Carpetas de `desktop/`, `api-router/`, las APIs de persistencia y los almacenes. |
+| [docs/POSTGRES.md](docs/POSTGRES.md) | Modelo del core PostgreSQL. |
+| [docs/SQLITE.md](docs/SQLITE.md) | Modelo del SQLite operativo. |
+| [docs/RUSTFS.md](docs/RUSTFS.md) | Modelo del bucket de justificantes. |
+| [docs/BLOCKEND.md](docs/BLOCKEND.md) | Modelo de Anvil, Hardhat y el contrato. |
+| [permanent-data.md](permanent-data.md) | Enlaces entre las cuatro bases. |
 | [AGENTS.md](AGENTS.md) | Cómo se trabaja una spec. |
 | [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Cómo contribuir: issues, ramas, commits y pull requests. |
