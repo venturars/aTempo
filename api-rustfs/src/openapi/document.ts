@@ -1,7 +1,7 @@
 export const openApiDocument = {
   openapi: '3.0.0',
   info: {
-    title: 'aTempo api-minio',
+    title: 'aTempo api-rustfs',
     description:
       'Persistencia de objetos en RustFS para la SDK (futura carpeta sdk/).',
     version: '1.0.0',

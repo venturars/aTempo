@@ -27,13 +27,13 @@ aTempo de escritorio es la aplicación del profesor. Sirve para registrar la asi
 
 La SDK de lógica de negocio vivirá en `sdk/` (carpeta pendiente), al mismo nivel que `desktop/` y `api-router/`. El API-router no implementa reglas de negocio; solo delegará en esa SDK.
 
-## 4. Stack de `api-minio/`
+## 4. Stack de `api-rustfs/`
 
 - **Express 5** expone REST hacia la SDK para persistencia de objetos en RustFS.
 - **Cliente npm `minio` (API S3)** habla con RustFS.
 - **swagger-ui-express** documenta la API y sirve Swagger UI en `/docs` para pruebas manuales.
 - **TypeScript** escribe el servicio.
-- **pnpm** es el gestor de paquetes de `api-minio/`. Las versiones van fijas, sin `^`.
+- **pnpm** es el gestor de paquetes de `api-rustfs/`. Las versiones van fijas, sin `^`.
 
 El API-router no accede a RustFS; la SDK consumirá este servicio cuando exista.
 
@@ -41,4 +41,4 @@ El API-router no accede a RustFS; la SDK consumirá este servicio cuando exista.
 
 - [STYLE.md](STYLE.md): los dos temas y el enlace a la guía visual.
 - [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, del API-router y de las APIs de persistencia.
-- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/` y `api-minio/`.
+- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/` y `api-rustfs/`.

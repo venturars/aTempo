@@ -1,4 +1,4 @@
-# api-minio
+# api-rustfs
 
 Servicio Express y TypeScript entre la **SDK (lógica de negocio)** y **RustFS** (almacén de objetos compatible con S3). La SDK (carpeta `sdk/`, pendiente) leerá y escribirá objetos a través de este servicio. El `api-router` no habla con RustFS.
 
@@ -19,7 +19,7 @@ En RustFS también existe `RUSTFS_ADDRESS` en el servidor; aquí se reparte en e
 
 ## Arranque
 
-Desde `api-minio/`:
+Desde `api-rustfs/`:
 
 ```sh
 pnpm install
@@ -36,7 +36,7 @@ Por defecto escucha en el puerto `3003`. Puedes usar `PORT`.
 
 El documento OpenAPI en JSON está en `/docs-json`.
 
-Otros comandos, desde `api-minio/`:
+Otros comandos, desde `api-rustfs/`:
 
 ```sh
 pnpm typecheck

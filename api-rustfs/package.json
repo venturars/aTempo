@@ -1,5 +1,5 @@
 {
-  "name": "api-minio",
+  "name": "api-rustfs",
   "version": "1.0.0",
   "description": "Servicio Express de persistencia de objetos en RustFS para la SDK",
   "private": true,

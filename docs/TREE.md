@@ -4,10 +4,10 @@
 sdk/                  # lógica de negocio; paquete aún no creado
 ```
 
-# Árbol de `api-minio/`
+# Árbol de `api-rustfs/`
 
 ```text
-api-minio/
+api-rustfs/
   package.json
   pnpm-lock.yaml
   .npmrc
