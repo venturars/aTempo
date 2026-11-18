@@ -10,7 +10,7 @@ pnpm dev
 
 Abre http://localhost:5191/. La cuenta de ejemplo es `ada.lopez@clase.test` / `clase-2026`.
 
-Para registrar la asistencia hace falta el QR de la app del profesor de #130 (rama `129-feat-teacher-qr-invitations`, Hoy → Abrir lista). El QR y el código de 6 cifras de debajo cambian cada 30 segundos. La regla está en `src/student/classCode.ts` y es la misma que usa la app del profesor. La clase de ejemplo es de lunes a viernes, de 09:00 a 21:00 en la hora del ordenador. Fuera de ese horario, el código no registra.
+Para registrar la asistencia hace falta el QR de la app del profesor de #130 (rama `129-feat-teacher-qr-invitations`, Hoy → Abrir lista). El QR y el código de 6 cifras de debajo cambian cada 30 segundos. La regla está en `src/student/classCode.ts` y es la misma que usa la app del profesor. La clase de ejemplo es de lunes a viernes a las 09:00. El código registra hasta las 21:00, en la hora del dispositivo del alumno. Desde las 21:00, y en sábado y domingo, no registra.
 
 - Con la cámara del móvil, el QR abre `/student/check-in?code=ATEMPO-CLASE-1109-<código>`. Si la sesión está abierta, apunta la entrada. Si no, pide entrar y la apunta con la hora del escaneo, si entra antes de 10 minutos.
 - En Registrar asistencia se puede escanear el QR desde la web, si el navegador lo permite, o escribir las 6 cifras.
