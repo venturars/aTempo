@@ -180,7 +180,7 @@ desktop/
           panelStore.ts
           riskHint.tsx
           roster.ts
-          sessionQr.tsx      # QR real y código de 4 cifras
+          sessionQr.tsx      # QR real y código de 6 cifras
           settingsStore.ts
           studentSite.ts     # dirección del sitio del alumno que abre el QR
         organization/
@@ -213,7 +213,7 @@ desktop/
     teacher-account.spec.ts # activar invitaciones y salir
     teacher-corrections.spec.ts # cambios con la lista cerrada, motivo, registro y volver
     panel.spec.ts
-    teacher-qr.spec.ts  # QR legible, código de 4 cifras, periodos del reloj, llegadas y dos temas a 390/1280 px
+    teacher-qr.spec.ts  # QR legible, código de 6 cifras, periodos del reloj, llegadas y dos temas a 390/1280 px
     organization-dashboard.spec.ts
     dashboard.spec.ts
     navigation.spec.ts  # rutas, flags de arranque y dashboard de cada perfil

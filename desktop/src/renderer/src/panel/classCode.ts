@@ -27,9 +27,9 @@ function hashText(text: string): number {
   return hash
 }
 
-// Código de 4 cifras para quien no puede escanear.
+// Código de 6 cifras para quien no puede escanear.
 export function backupCode(period: number): string {
-  return String(hashText(`${classCode}:${period}`) % 10000).padStart(4, '0')
+  return String(hashText(`${classCode}:${period}`) % 1000000).padStart(6, '0')
 }
 
 // Lo que registra el alumno: la clase y el código del periodo.

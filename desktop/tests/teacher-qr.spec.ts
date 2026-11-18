@@ -350,7 +350,7 @@ test('store rejects invalid and duplicate arrivals, guards only evidence, respec
   }
 })
 
-test('code follows the clock: 30 s periods, 4 digits and the class in the QR text', () => {
+test('code follows the clock: 30 s periods, 6 digits and the class in the QR text', () => {
   const start = time.getTime()
   expect(secondsLeft(start)).toBe(30)
   expect(secondsLeft(start + 1)).toBe(30)
@@ -359,7 +359,7 @@ test('code follows the clock: 30 s periods, 4 digits and the class in the QR tex
   expect(codePeriod(start + 30000)).toBe(codePeriod(start) + 1)
   const codes = new Set<string>()
   for (let period = codePeriod(start); period < codePeriod(start) + 20; period++) {
-    expect(backupCode(period)).toMatch(/^\d{4}$/)
+    expect(backupCode(period)).toMatch(/^\d{6}$/)
     expect(checkInCode(period)).toBe(`ATEMPO-CLASE-1109-${backupCode(period)}`)
     codes.add(backupCode(period))
   }
@@ -374,15 +374,18 @@ test('the code matches an independent FNV-1a of the shared text', () => {
   const start = codePeriod(time.getTime())
   expect(start).toBe(59812920)
   // Los dos valores fijos que el sitio del alumno puede comprobar igual.
-  expect(backupCode(59812920)).toBe('6470')
-  expect(backupCode(59812921)).toBe('4089')
-  expect(checkInCode(59812920)).toBe('ATEMPO-CLASE-1109-6470')
-  expect(checkInCode(59812921)).toBe('ATEMPO-CLASE-1109-4089')
-  expect(checkInUrl('http://localhost:5191', 59812920)).toBe(checkInLink('6470'))
-  expect(checkInUrl('http://localhost:5191', 59812921)).toBe(checkInLink('4089'))
+  expect(backupCode(59812920)).toBe('686470')
+  expect(backupCode(59812921)).toBe('464089')
+  expect(checkInCode(59812920)).toBe('ATEMPO-CLASE-1109-686470')
+  expect(checkInCode(59812921)).toBe('ATEMPO-CLASE-1109-464089')
+  expect(checkInUrl('http://localhost:5191', 59812920)).toBe(checkInLink('686470'))
+  expect(checkInUrl('http://localhost:5191', 59812921)).toBe(checkInLink('464089'))
   const codes: string[] = []
   for (let period = start; period < start + 20; period++) {
-    const expected = String(referenceFnv1a(`ATEMPO-CLASE-1109:${period}`) % 10000).padStart(4, '0')
+    const expected = String(referenceFnv1a(`ATEMPO-CLASE-1109:${period}`) % 1000000).padStart(
+      6,
+      '0'
+    )
     expect(backupCode(period), `periodo ${period}`).toBe(expected)
     expect(checkInCode(period), `periodo ${period}`).toBe(`ATEMPO-CLASE-1109-${expected}`)
     expect(checkInUrl('http://localhost:5191', period), `periodo ${period}`).toBe(
@@ -396,7 +399,7 @@ test('the code matches an independent FNV-1a of the shared text', () => {
 
 test('the QR link joins the site and the code without a double slash', () => {
   const period = 59812920
-  const link = 'http://192.168.1.20:5191/student/check-in?code=ATEMPO-CLASE-1109-6470'
+  const link = 'http://192.168.1.20:5191/student/check-in?code=ATEMPO-CLASE-1109-686470'
   for (const site of [
     'http://192.168.1.20:5191',
     'http://192.168.1.20:5191/',
@@ -404,18 +407,20 @@ test('the QR link joins the site and the code without a double slash', () => {
   ]) {
     expect(checkInUrl(site, period), site).toBe(link)
   }
-  expect(checkInUrl('http://localhost:5191/', period)).toBe(checkInLink('6470'))
+  expect(checkInUrl('http://localhost:5191/', period)).toBe(checkInLink('686470'))
   // Solo la barra que separa la dirección de la ruta: no hay «//» fuera de «http://».
   expect(checkInUrl('http://192.168.1.20:5191/', period).replace('http://', '')).not.toContain('//')
 })
 
-test('shows a scannable QR and the 4-digit code of the current period', async () => {
+test('shows a scannable QR and the 6-digit code of the current period', async () => {
   await withPanel(async (p) => {
     await open(p)
     expect(codePeriod(time.getTime())).toBe(59812920)
     // La cámara del móvil lee el enlace al sitio del alumno con el código del periodo.
-    expect(await scan(p)).toBe('http://localhost:5191/student/check-in?code=ATEMPO-CLASE-1109-6470')
-    const code = p.getByText('6470', { exact: true })
+    expect(await scan(p)).toBe(
+      'http://localhost:5191/student/check-in?code=ATEMPO-CLASE-1109-686470'
+    )
+    const code = p.getByText('686470', { exact: true })
     await expect(code).toBeVisible()
     const box = await qr(p).boundingBox()
     const codeBox = await code.boundingBox()
@@ -427,14 +432,16 @@ test('shows a scannable QR and the 4-digit code of the current period', async ()
     // A los 29 segundos el QR y el código siguen siendo los del mismo periodo.
     await p.clock.runFor(29000)
     await seconds(p, 1)
-    expect(await scan(p)).toBe(checkInLink('6470'))
+    expect(await scan(p)).toBe(checkInLink('686470'))
     await expect(code).toBeVisible()
     // En el límite cambian los dos a la vez y la cuenta atrás vuelve a 30.
     await p.clock.runFor(1000)
     await seconds(p, 30)
-    expect(await scan(p)).toBe('http://localhost:5191/student/check-in?code=ATEMPO-CLASE-1109-4089')
-    await expect(p.getByText('4089', { exact: true })).toBeVisible()
-    await expect(p.getByText('6470', { exact: true })).toHaveCount(0)
+    expect(await scan(p)).toBe(
+      'http://localhost:5191/student/check-in?code=ATEMPO-CLASE-1109-464089'
+    )
+    await expect(p.getByText('464089', { exact: true })).toBeVisible()
+    await expect(p.getByText('686470', { exact: true })).toHaveCount(0)
   })
 })
 
@@ -450,7 +457,7 @@ test('reads the QR in the dark and the light theme', async () => {
       )
       // Los dos colores son los tokens base-100 y base-content del tema, sin colores literales.
       expect(new Set([String(ink), String(paper)]), theme).toEqual(new Set(tokens.map(String)))
-      expect(await scanPixels(p), theme).toBe(checkInLink('6470'))
+      expect(await scanPixels(p), theme).toBe(checkInLink('686470'))
     }
   })
 })
