@@ -29,13 +29,14 @@ jobs:
       pull-requests: read
     steps:
       # Ejecuta solo la acción fijada del paquete; nunca descarga código de la PR.
-      - uses: venturars/delivery-workflow/.github/actions/discord-pr-notifications@1fe1b22af187e0afa1470f9d5df435f7a202435b
+      - uses: venturars/delivery-workflow/.github/actions/discord-pr-notifications@9d12e301ce3ae504cb5b441c21704d9c80025251
         with:
           github-token: ${{ github.token }}
           bot-token: ${{ secrets.DISCORD_BOT_TOKEN }}
           cache-key: ${{ secrets.DISCORD_CACHE_KEY }}
           guild-id: ${{ vars.DISCORD_GUILD_ID }}
           channel-id: ${{ vars.DISCORD_GIT_CHANNEL_ID }}
+          user-map: ${{ vars.DISCORD_USER_MAP }}
           expected-repository: venturars/aTempo
           base-branch: staging
           trusted-branch: main
