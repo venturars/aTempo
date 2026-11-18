@@ -1,6 +1,6 @@
 # Administración de organización — prototipo web
 
-Fecha: 2026-11-18. Estado: ampliación CRUD implementada, revisada, verificada y guardada en un commit local. Miguel ha pedido trabajar solo en local: no crear issues, PRs, pushes ni solicitudes de revisión.
+Fecha: 2026-11-18. Estado: ampliación CRUD implementada y guardada con evidencia local histórica. Miguel ha autorizado su publicación mediante la issue [#139](https://github.com/venturars/aTempo/issues/139), PR hacia `staging`, push y solicitudes de revisión a `venturars` y `Elladeyavorsky`. La entrega exige repetir las comprobaciones y registrar sus resultados actuales.
 
 ## Alcance local
 
@@ -60,7 +60,7 @@ La referencia visual es [PR #123 de Meghan](https://github.com/venturars/aTempo/
 2. Crear modelos y un store mock de personas, cursos y sesiones con validación y datos coherentes. No crear un segundo store de cuentas/login del alumno.
 3. Añadir el área `/admin` al router existente, reutilizar los controles visuales y construir Personas, Cursos, detalle, sesión/listado y Mis clases.
 4. Verificar acciones del store, el recorrido completo, errores, cancelación, salida, aislamiento de sesión y móvil/ambos temas. Comprobar que el recorrido del alumno sigue funcionando.
-5. Documentar cómo abrir esta copia y registrar los resultados de la verificación local. No crear ni publicar elementos en GitHub.
+5. Documentar cómo abrir esta copia, registrar verificación fresca y publicar la entrega mediante #139 y su PR hacia `staging`, con las dependencias y revisión indicadas abajo.
 
 ## Aceptación y pruebas
 
@@ -86,7 +86,7 @@ Usar el Playwright instalado en el repositorio para pruebas de lógica y navegad
 - [x] TASK-05 — concept-tester: comprobar diseño, documentación y coherencia con la spec. Revisión sin bloqueos; aclaración upstream de SDK corregida.
 - [x] TASK-06 — concept-developer: registrar instrucciones y evidencia de verificación.
 - [x] TASK-07 — create-commit: guardar el trabajo verificado en un commit local.
-Publicación en pausa por instrucción de Miguel: no crear issues ni PRs, ni hacer push. El texto preparado abajo permanece local.
+      La pausa de publicación de la fase local terminó con la autorización de Miguel del 2026-11-18. El seguimiento vigente está en la issue #139; estas casillas conservan la evidencia histórica de la base.
 
 ## Tasks de la ampliación CRUD
 
@@ -99,10 +99,10 @@ Publicación en pausa por instrucción de Miguel: no crear issues ni PRs, ni hac
 
 ## Base y publicación
 
-- Worktree: `atempo-admin`; rama local `local/admin-organisation-nov18`.
+- Worktree: `atempo-admin`; rama de publicación `139-feat-admin-crud`. La rama local anterior `local/admin-organisation-nov18` conserva el origen del prototipo.
 - Integración local inicial: `5ec718f717eb660b5073cc571b16fee51a3baa11`, con padres staging `cbc77cab26e885b3f03b0088ca6f9efb9c9e2cca` y PR #123 `4884154b397dd6b14595c57ec0cb8be46f8f8fbf`. No se integra PR #130.
-- #113 aporta el paquete web y #123 su diseño; ambas están pendientes de merge. Una futura PR admin debe explicar esta dependencia y distinguir los cambios heredados de los propios. No publicar una comparación amplia como si todo fuera nuevo admin.
-- No se han creado issue/PR, enviado revisiones ni publicado comentarios. La definición local evita notificaciones durante la construcción; al publicar, trasladar Spec/Plan/Tasks con `issue-spec` y enlazar una única issue funcional nueva.
+- #113 aporta el paquete web y #123 su diseño. El orden de integración es #113 → #123 → administración; el destino de la PR admin es `staging`. Su descripción debe distinguir los cambios heredados de los propios. La comparación de los dos commits admin es `5ec718f717eb660b5073cc571b16fee51a3baa11...bfaaaf8`; comparar el ancla con el HEAD de publicación incluye además la integración posterior de staging.
+- La issue funcional es [#139](https://github.com/venturars/aTempo/issues/139), con Spec/Plan/Tasks gestionados por `issue-spec`. La PR debe enlazarla y solicitar revisión a `venturars` y `Elladeyavorsky` tras completar las comprobaciones. La autorización de publicación no implica que el push, la PR o las solicitudes ya hayan terminado; sus resultados se registran en la issue y la PR.
 
 ## API pendiente y coordinación
 
@@ -123,6 +123,18 @@ Fuentes: transcripción «Clase AI Engineer», 2026-11-18, y `brief-api-v1.md` e
 
 ## Verificación y runbook local
 
+### Verificación fresca para #139
+
+Comprobaciones del 2026-11-18 sobre la integración `dcce98f20db239f66b91307fe639cd9369390cf4`, antes del commit final de documentación:
+
+- Desde `web/`, `pnpm build`: PASS, incluidos TypeScript y Vite.
+- Desde `desktop/`, `pnpm exec playwright test --config playwright.admin.config.ts --workers=1 --retries=0 --update-snapshots=none`: **65/65 PASS en 31,1 s** (46 del store y 19 de navegador), sin actualizar snapshots.
+- TypeScript estricto de pruebas/configuración y ESLint nativo de los tres archivos desktop: PASS. Prettier sobre los cambios propios, excluidos los archivos generados: PASS.
+- ESLint suplementario de web: PASS usando la configuración desktop, opciones explícitas de Prettier y `react-refresh/only-export-components` desactivada para las exportaciones de rutas TanStack y helpers. `web/` no tiene configuración ESLint propia; esta adaptación se distingue del lint nativo.
+- El servidor propio de pruebas en 5193 quedó cerrado. El servidor preexistente en 5191 se conservó.
+
+La revisión de concepto y los pasos de commit, push y revisión de PR se siguen en #139; estos resultados no afirman que esos pasos hayan terminado.
+
 ### Ampliación CRUD verificada
 
 Comprobaciones del 2026-11-18, en este orden:
@@ -132,7 +144,7 @@ Comprobaciones del 2026-11-18, en este orden:
 3. TypeScript estricto, ESLint focal y Prettier: PASS. El build completo de `web/`, incluido typecheck, pasó tras el ajuste del rol admin. La inspección visual comprobó edición móvil en claro y el diálogo real de borrado en oscuro.
 4. La revisión estática independiente no encontró bloqueos; la aclaración menor de la confirmación quedó aplicada y probada. El servidor de pruebas en 5193 quedó cerrado.
 
-El comando de batería completa sigue siendo `pnpm exec playwright test --config playwright.admin.config.ts --workers=1 --retries=0 --update-snapshots=none`, ejecutado desde `desktop/`. El trabajo y sus resultados permanecen locales; no se han creado issues/PRs ni realizado pushes o solicitudes de revisión.
+El comando de batería completa sigue siendo `pnpm exec playwright test --config playwright.admin.config.ts --workers=1 --retries=0 --update-snapshots=none`, ejecutado desde `desktop/`. Estos resultados corresponden a la fase local anterior a #139; la publicación requiere una ejecución completa nueva y su evidencia en la issue.
 
 ### Evidencia histórica de la base
 
@@ -151,9 +163,9 @@ Resultados de la base `8223947`, comprobados el 2026-11-18. Las 43 pruebas sigui
 - Corregir las responsabilidades en la documentación compartida al detectarlas: una frase antigua hacía consumir la SDK de dominio directamente desde frontend. `ARCHITECTURE.md` ahora diferencia SDK frontend → API-router → SDK de dominio; conservar esa distinción en nuevas tareas.
 - En capturas de modales nativos de daisyUI, esperar que el diálogo y `.modal-box` alcancen opacidad 1 y capturar con `animations: 'disabled'`. Tener foco y dimensiones correctas no prueba que haya terminado el fundido; una captura prematura puede salir vacía.
 
-## Propuesta archivada de PR — sin publicación autorizada
+## Referencia histórica de la PR inicial
 
-Este texto describe la base inicial y queda archivado como referencia. No es una tarea de publicación activa ni describe la ampliación CRUD. Miguel ha pedido mantener el trabajo en local.
+Este texto describe la base inicial. La descripción de la PR de #139 debe incorporar también edición/borrado y las comprobaciones actuales de la ampliación CRUD, además de las dependencias siguientes.
 
 **Título:** Add an organisation admin prototype using the shared web design.
 
@@ -171,7 +183,7 @@ Reutiliza el tema, los campos, tablas y navegación de Meghan. El único compone
 
 La copia local combina staging `cbc77cab26e885b3f03b0088ca6f9efb9c9e2cca` con #123 `4884154b397dd6b14595c57ec0cb8be46f8f8fbf`, que hereda #113. El paquete web, su rediseño de alumno y los cambios de Storybook son heredados; los cambios propios son admin, la extracción del control de tema, las rutas generadas, sus pruebas e instrucciones.
 
-Publicar hacia staging cuando #113 y #123 estén integradas. Si se publica antes, expresar la dependencia apilada y revisar la base/comparación para que no parezca que esta PR vuelve a entregar todo el sitio del alumno. No integra #130 ni crea APIs administrativas, email real o activación de cuentas. La issue funcional nueva se enlazará al publicar; #66 conserva su alcance visual.
+La PR se dirige a `staging` y expresa la dependencia apilada #113 → #123 → administración mientras las anteriores estén pendientes de integración. La descripción distingue el paquete web y rediseño heredados del trabajo admin. No integra #130 ni crea APIs administrativas, email real o activación de cuentas. Se enlaza #139; #66 conserva su alcance visual.
 
 ### Cómo probarlo
 
@@ -192,4 +204,4 @@ Abrir <http://localhost:5191/admin> y pulsar **Abrir demo de administración**. 
 5. Probar tema claro/oscuro, ancho móvil y cancelar un formulario. Un correo duplicado o una hora final anterior/igual al inicio muestran error sin guardar.
 6. Cerrar sesión vuelve a la entrada de demo. Recargar restaura el seed. La sesión del alumno se conserva al entrar/salir del admin.
 
-El recorrido detallado y los comandos de verificación están en [web/README.md](../web/README.md#probar-administración). La evidencia automatizada final está en el apartado anterior. No se ha creado ni publicado esta PR.
+El recorrido detallado y los comandos de verificación están en [web/README.md](../web/README.md#probar-administración). La evidencia histórica está en el apartado anterior; los resultados de la verificación fresca y el estado de publicación se registran en #139 y su PR.

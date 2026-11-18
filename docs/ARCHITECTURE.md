@@ -177,6 +177,7 @@ Escaneo e historial tienen un enlace «Volver» a `/student/dashboard`.
 Las suites Playwright lanzan el build real a través de `desktop/tests/helpers/electron.ts`. El arnés de tests comprueba la fuente y el build antes del arranque e instala guardas nativas antes de cargar el main. En macOS mantiene las ventanas ocultas, bloquea su activación y vigila el primer plano y el cierre de los procesos propios, con auditoría persistente. Aborta si no puede observar o mantener esas condiciones; no admite un arranque visible. El smoke obligatorio y los comandos están en [README.md](../README.md#escritorio).
 
 El arnés vive exclusivamente en `desktop/tests/`: el arranque normal y las capas de la aplicación conservan su comportamiento.
+
 ## Entorno de instalación
 
 Docker instala lo que el proyecto necesita con las mismas versiones para todo el equipo: Node 24.22.3, que es la versión mayor de Electron 44, pnpm 10.33.0 y APM 0.35.0. Está en `Dockerfile`, `docker-compose.yml` y `docker/setup.sh`.
@@ -194,12 +195,12 @@ Docker es el instalador, no el entorno de trabajo. Cursor y Codex se usan sobre 
 
 Se descartó trabajar dentro de un Dev Container:
 
-| | Docker como instalador | Dev Container |
-| --- | --- | --- |
-| App de escritorio de Codex | Funciona | No abre proyectos dentro de un contenedor |
-| App de escritorio de Cursor | Funciona | Con su extensión de Dev Containers, que falla a menudo |
-| Ventana de Electron | En el ordenador, o desde Docker con `desktop-gui` y X11 | Sin pantalla dentro del contenedor |
-| Lo que necesita cada ordenador | Docker, git, `gh`, Node y bash | Docker y git |
-| Windows | WSL o Git Bash para el flujo | Resuelto: el contenedor es Linux |
+|                                | Docker como instalador                                  | Dev Container                                          |
+| ------------------------------ | ------------------------------------------------------- | ------------------------------------------------------ |
+| App de escritorio de Codex     | Funciona                                                | No abre proyectos dentro de un contenedor              |
+| App de escritorio de Cursor    | Funciona                                                | Con su extensión de Dev Containers, que falla a menudo |
+| Ventana de Electron            | En el ordenador, o desde Docker con `desktop-gui` y X11 | Sin pantalla dentro del contenedor                     |
+| Lo que necesita cada ordenador | Docker, git, `gh`, Node y bash                          | Docker y git                                           |
+| Windows                        | WSL o Git Bash para el flujo                            | Resuelto: el contenedor es Linux                       |
 
 `.devcontainer/devcontainer.json` usa la misma imagen para quien pueda abrir un Dev Container. Es opcional.

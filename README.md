@@ -24,10 +24,10 @@ Comprueba que las versiones muestran `v24.x` y `10.33.0`.
 
 Desde un arranque nuevo, usa el formulario **Entrar** con una de estas cuentas públicas de ejemplo:
 
-| Perfil | Correo | Contraseña | Destino |
-| --- | --- | --- | --- |
+| Perfil   | Correo                 | Contraseña     | Destino                       |
+| -------- | ---------------------- | -------------- | ----------------------------- |
 | Profesor | `profesor@atempo.test` | `Profesor123!` | Hoy, en el panel del profesor |
-| Alumno | `ada.lopez@clase.test` | `clase-2026` | Dashboard de Ada López |
+| Alumno   | `ada.lopez@clase.test` | `clase-2026`   | Dashboard de Ada López        |
 
 Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alumnos y pasar lista.
 
@@ -43,17 +43,17 @@ El lector del alumno ofrece lecturas simuladas y no usa cámara. Estos flujos no
 
 ## Qué hay
 
-| Carpeta | Qué es |
-| --- | --- |
-| `desktop/` | Prototipo para profesor y alumno con Electron y React; las demos usan datos en memoria. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/sign-up` para el registro. |
-| `web/` | Portal del alumno y demo de administración en `/admin`, con el tema compartido de Storybook y datos simulados. |
-| `api-router/` | API REST con NestJS entre los frontends y la SDK de lógica de negocio (pendiente). |
-| `api-postgresql/` | API REST con NestJS entre la SDK y PostgreSQL. |
-| `api-rustfs/` | API REST con Express entre la SDK y RustFS (persistencia de objetos). |
-| `api-sqlite/` | Servicio Flask con Pydantic y SQLAlchemy Core entre la SDK prevista y SQLite. |
-| `docs/storybook/` | Fuente de verdad visual: Tailwind y daisyUI. Las pantallas usan las clases. No hay un paquete de componentes. |
-| `docs/guia/` | Markdown generado desde Storybook. No se versiona. Lo leen los agentes. |
-| `docs/` | Cómo se construye: constitución, arquitectura, estilo y árbol de carpetas. |
+| Carpeta           | Qué es                                                                                                                                                                                                              |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `desktop/`        | Prototipo para profesor y alumno con Electron y React; las demos usan datos en memoria. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/sign-up` para el registro. |
+| `web/`            | Portal del alumno y demo de administración en `/admin`, con el tema compartido de Storybook y datos simulados.                                                                                                      |
+| `api-router/`     | API REST con NestJS entre los frontends y la SDK de lógica de negocio (pendiente).                                                                                                                                  |
+| `api-postgresql/` | API REST con NestJS entre la SDK y PostgreSQL.                                                                                                                                                                      |
+| `api-rustfs/`     | API REST con Express entre la SDK y RustFS (persistencia de objetos).                                                                                                                                               |
+| `api-sqlite/`     | Servicio Flask con Pydantic y SQLAlchemy Core entre la SDK prevista y SQLite.                                                                                                                                       |
+| `docs/storybook/` | Fuente de verdad visual: Tailwind y daisyUI. Las pantallas usan las clases. No hay un paquete de componentes.                                                                                                       |
+| `docs/guia/`      | Markdown generado desde Storybook. No se versiona. Lo leen los agentes.                                                                                                                                             |
+| `docs/`           | Cómo se construye: constitución, arquitectura, estilo y árbol de carpetas.                                                                                                                                          |
 
 Cada servicio tiene sus dependencias propias y no hay workspace en la raíz. Los paquetes JavaScript usan pnpm 10.33.0 y versiones fijas. `api-sqlite/` usa Python y dependencias fijadas en `pyproject.toml`.
 
@@ -217,13 +217,13 @@ Reemplaza los valores por el login exacto del revisor solicitado y su ID numéri
 
 ## Documentación
 
-| Documento | Para qué |
-| --- | --- |
-| [principles.md](principles.md) | Visión, usuarios, pantallas y decisiones de producto. |
-| [docs/CONSTITUTION.md](docs/CONSTITUTION.md) | Lo que ya está decidido para construir. |
+| Documento                                    | Para qué                                                   |
+| -------------------------------------------- | ---------------------------------------------------------- |
+| [principles.md](principles.md)               | Visión, usuarios, pantallas y decisiones de producto.      |
+| [docs/CONSTITUTION.md](docs/CONSTITUTION.md) | Lo que ya está decidido para construir.                    |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Las tres capas del escritorio y el entorno de instalación. |
-| [docs/STYLE.md](docs/STYLE.md) | Temas y enlace a la guía visual. |
-| [docs/guia](docs/guia/README.md) | Markdown generado desde Storybook. No se versiona. |
-| [docs/TREE.md](docs/TREE.md) | Carpetas de `desktop/`. |
-| [AGENTS.md](AGENTS.md) | Cómo se trabaja una spec. |
-| [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Cómo contribuir: issues, ramas, commits y pull requests. |
+| [docs/STYLE.md](docs/STYLE.md)               | Temas y enlace a la guía visual.                           |
+| [docs/guia](docs/guia/README.md)             | Markdown generado desde Storybook. No se versiona.         |
+| [docs/TREE.md](docs/TREE.md)                 | Carpetas de `desktop/`.                                    |
+| [AGENTS.md](AGENTS.md)                       | Cómo se trabaja una spec.                                  |
+| [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Cómo contribuir: issues, ramas, commits y pull requests.   |
