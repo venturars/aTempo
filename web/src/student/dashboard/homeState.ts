@@ -13,7 +13,11 @@ export type HomeState =
   | { kind: 'upcoming'; noticeArrival: string | null }
 
 // El orden importa: una entrada registrada gana a un aviso, y un aviso de ausencia gana a la hora.
-export function homeStateFor(now: Date, history: ClassEntry[], notices: StudentNotice[]): HomeState {
+export function homeStateFor(
+  now: Date,
+  history: ClassEntry[],
+  notices: StudentNotice[]
+): HomeState {
   if (!todayClass.weekdays.includes(now.getDay())) return { kind: 'no-class' }
 
   const todayLabel = formatDay(now)

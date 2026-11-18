@@ -68,9 +68,28 @@ function Shadow({ scale, opacity }: { scale: number; opacity: number }): React.J
 function Sprout({ angle }: { angle: number }): React.JSX.Element {
   return (
     <g transform={`rotate(${angle} 88 42)`}>
-      <path className="mascot-stem" d="M88 42c0-6-1-10-3-14" strokeWidth="4" strokeLinecap="round" />
-      <ellipse className="mascot-leaf" cx="74" cy="24" rx="13" ry="8" transform="rotate(-25 74 24)" />
-      <ellipse className="mascot-leaf" cx="97" cy="20" rx="13" ry="8" transform="rotate(25 97 20)" />
+      <path
+        className="mascot-stem"
+        d="M88 42c0-6-1-10-3-14"
+        strokeWidth="4"
+        strokeLinecap="round"
+      />
+      <ellipse
+        className="mascot-leaf"
+        cx="74"
+        cy="24"
+        rx="13"
+        ry="8"
+        transform="rotate(-25 74 24)"
+      />
+      <ellipse
+        className="mascot-leaf"
+        cx="97"
+        cy="20"
+        rx="13"
+        ry="8"
+        transform="rotate(25 97 20)"
+      />
     </g>
   )
 }
@@ -120,13 +139,23 @@ function Drop({
 }
 
 // Estela que se desplaza hacia atrás y se desvanece.
-function Trail({ frame, speed, lines }: { frame: number; speed: number; lines: number[] }): React.JSX.Element {
+function Trail({
+  frame,
+  speed,
+  lines
+}: {
+  frame: number
+  speed: number
+  lines: number[]
+}): React.JSX.Element {
   return (
     <g className="mascot-trail" strokeWidth="3" strokeLinecap="round">
       {lines.map((y, index) => {
         const t = loop(frame * speed, 30, index * 9)
         const x = 30 - t * 30
-        return <path key={y} d={`M${x} ${y}h${18 - t * 8}`} opacity={0.45 * Math.sin(Math.PI * t)} />
+        return (
+          <path key={y} d={`M${x} ${y}h${18 - t * 8}`} opacity={0.45 * Math.sin(Math.PI * t)} />
+        )
       })}
     </g>
   )
@@ -214,14 +243,25 @@ function Running({
   )
 }
 
-function Eyes({ blink, children }: { blink: number; children: React.ReactNode }): React.JSX.Element {
+function Eyes({
+  blink,
+  children
+}: {
+  blink: number
+  children: React.ReactNode
+}): React.JSX.Element {
   return <g transform={`translate(0 75) scale(1 ${blink}) translate(0 -75)`}>{children}</g>
 }
 
 function HurriedFace({ blink }: { blink: number }): React.JSX.Element {
   return (
     <>
-      <path className="mascot-ink-line" d="M68 63l11-4M97 59l11 4" strokeWidth="2.5" strokeLinecap="round" />
+      <path
+        className="mascot-ink-line"
+        d="M68 63l11-4M97 59l11 4"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
       <Eyes blink={blink}>
         <circle className="mascot-eye" cx="77" cy="75" r="9" />
         <circle className="mascot-eye" cx="101" cy="75" r="9" />
@@ -241,7 +281,12 @@ function PanickedFace({ blink, frame }: { blink: number; frame: number }): React
   const shout = 1 + 0.12 * Math.sin(frame * 0.9)
   return (
     <>
-      <path className="mascot-ink-line" d="M66 64l13-7M97 57l13 7" strokeWidth="2.5" strokeLinecap="round" />
+      <path
+        className="mascot-ink-line"
+        d="M66 64l13-7M97 57l13 7"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
       <Eyes blink={blink}>
         <circle className="mascot-eye" cx="78" cy="75" r="10" />
         <circle className="mascot-eye" cx="102" cy="75" r="10" />
@@ -270,8 +315,22 @@ function Chill({ frame }: { frame: number }): React.JSX.Element {
       <g transform={`rotate(${sway} 88 130) translate(0 ${nod})`}>
         <ellipse className="mascot-body" cx="76" cy="124" rx="11" ry="7" />
         <ellipse className="mascot-body" cx="100" cy="124" rx="11" ry="7" />
-        <ellipse className="mascot-shade" cx="50" cy="100" rx="7" ry="10" transform={`rotate(${20 + sway} 50 100)`} />
-        <ellipse className="mascot-shade" cx="126" cy="100" rx="7" ry="10" transform={`rotate(${-20 + sway} 126 100)`} />
+        <ellipse
+          className="mascot-shade"
+          cx="50"
+          cy="100"
+          rx="7"
+          ry="10"
+          transform={`rotate(${20 + sway} 50 100)`}
+        />
+        <ellipse
+          className="mascot-shade"
+          cx="126"
+          cy="100"
+          rx="7"
+          ry="10"
+          transform={`rotate(${-20 + sway} 126 100)`}
+        />
         <Sprout angle={-8 + sway * 1.6} />
         <path className="mascot-body" d={bodyPath} />
         <Shine />
@@ -283,10 +342,20 @@ function Chill({ frame }: { frame: number }): React.JSX.Element {
           <rect x="93" y="67" width="22" height="14" rx="6" />
         </clipPath>
         <g clipPath="url(#tempito-lenses)">
-          <path className="mascot-glare" d={`M${glintX} 60l-10 30`} strokeWidth="5" opacity="0.55" />
+          <path
+            className="mascot-glare"
+            d={`M${glintX} 60l-10 30`}
+            strokeWidth="5"
+            opacity="0.55"
+          />
         </g>
         <Cheeks />
-        <path className="mascot-ink-line" d="M81 94q9 7 18 0" strokeWidth="3" strokeLinecap="round" />
+        <path
+          className="mascot-ink-line"
+          d="M81 94q9 7 18 0"
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
       </g>
       {[0, 30].map((delay, index) => {
         const t = loop(frame, 60, delay)
@@ -300,7 +369,13 @@ function Chill({ frame }: { frame: number }): React.JSX.Element {
             transform={`translate(${x} ${y}) rotate(${-10 + 20 * t}) scale(${index === 0 ? 1 : 0.8})`}
           >
             <ellipse cx="0" cy="0" rx="4.5" ry="3.5" transform="rotate(-20)" stroke="none" />
-            <path d="M4 -1V-18l8 3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            <path
+              d="M4 -1V-18l8 3"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
           </g>
         )
       })}
@@ -327,22 +402,55 @@ function Stressed({ frame }: { frame: number }): React.JSX.Element {
         <Sprout angle={10 + 6 * Math.sin(frame * 1.3)} />
         <path className="mascot-body" d={bodyPath} />
         <Shine />
-        <ellipse className="mascot-body" cx="54" cy="56" rx="7" ry="11" transform={`rotate(${-55 + armShake} 54 56)`} />
-        <ellipse className="mascot-body" cx="122" cy="56" rx="7" ry="11" transform={`rotate(${55 - armShake} 122 56)`} />
-        <path className="mascot-ink-line" d="M67 66l12-7M97 59l12 7" strokeWidth="2.5" strokeLinecap="round" />
+        <ellipse
+          className="mascot-body"
+          cx="54"
+          cy="56"
+          rx="7"
+          ry="11"
+          transform={`rotate(${-55 + armShake} 54 56)`}
+        />
+        <ellipse
+          className="mascot-body"
+          cx="122"
+          cy="56"
+          rx="7"
+          ry="11"
+          transform={`rotate(${55 - armShake} 122 56)`}
+        />
+        <path
+          className="mascot-ink-line"
+          d="M67 66l12-7M97 59l12 7"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
         <circle className="mascot-eye" cx="77" cy="76" r="10" />
         <circle className="mascot-eye" cx="101" cy="76" r="10" />
         <circle className="mascot-ink" cx="77" cy="76" r={pupil} />
         <circle className="mascot-ink" cx="101" cy="76" r={pupil} />
         <Cheeks />
-        <path className="mascot-ink-line" d={mouth} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          className="mascot-ink-line"
+          d={mouth}
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </g>
       {[
         { x: 43, y: 62, delay: 0 },
         { x: 134, y: 66, delay: 12 }
       ].map((drop) => {
         const t = loop(frame, 24, drop.delay)
-        return <Drop key={drop.delay} x={drop.x} y={drop.y + 18 * t * t} scale={0.85} opacity={Math.sin(Math.PI * t)} />
+        return (
+          <Drop
+            key={drop.delay}
+            x={drop.x}
+            y={drop.y + 18 * t * t}
+            scale={0.85}
+            opacity={Math.sin(Math.PI * t)}
+          />
+        )
       })}
     </>
   )
@@ -358,7 +466,11 @@ function jumpPose(t: number): { lift: number; scaleX: number; scaleY: number } {
   if (t < 0.8) {
     const k = (t - 0.2) / 0.6
     const stretch = Math.max(0, 1 - Math.abs(k - 0.15) * 4)
-    return { lift: Math.sin(k * Math.PI) * 20, scaleX: 1 - 0.05 * stretch, scaleY: 1 + 0.08 * stretch }
+    return {
+      lift: Math.sin(k * Math.PI) * 20,
+      scaleX: 1 - 0.05 * stretch,
+      scaleY: 1 + 0.08 * stretch
+    }
   }
   const k = Math.sin(((t - 0.8) / 0.2) * Math.PI)
   return { lift: 0, scaleX: 1 + 0.05 * k, scaleY: 1 - 0.08 * k }
@@ -391,15 +503,36 @@ function Happy({ frame }: { frame: number }): React.JSX.Element {
           />
         )
       })}
-      <g transform={`translate(0 ${-lift}) translate(88 130) scale(${scaleX} ${scaleY}) translate(-88 -130)`}>
+      <g
+        transform={`translate(0 ${-lift}) translate(88 130) scale(${scaleX} ${scaleY}) translate(-88 -130)`}
+      >
         <ellipse className="mascot-body" cx="76" cy="124" rx="11" ry="7" />
         <ellipse className="mascot-body" cx="100" cy="124" rx="11" ry="7" />
-        <ellipse className="mascot-body" cx="46" cy="70" rx="7" ry="11" transform={`rotate(${-35 + wave} 54 84)`} />
-        <ellipse className="mascot-body" cx="130" cy="70" rx="7" ry="11" transform={`rotate(${35 - wave} 122 84)`} />
+        <ellipse
+          className="mascot-body"
+          cx="46"
+          cy="70"
+          rx="7"
+          ry="11"
+          transform={`rotate(${-35 + wave} 54 84)`}
+        />
+        <ellipse
+          className="mascot-body"
+          cx="130"
+          cy="70"
+          rx="7"
+          ry="11"
+          transform={`rotate(${35 - wave} 122 84)`}
+        />
         <Sprout angle={-6 * Math.sin(t * TAU)} />
         <path className="mascot-body" d={bodyPath} />
         <Shine />
-        <path className="mascot-ink-line" d="M69 78q8-9 16 0M93 78q8-9 16 0" strokeWidth="3" strokeLinecap="round" />
+        <path
+          className="mascot-ink-line"
+          d="M69 78q8-9 16 0M93 78q8-9 16 0"
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
         <Cheeks />
         <path className="mascot-ink" d="M80 90h20q0 12-10 12t-10-12z" />
         <path className="mascot-tongue" d="M85 98q5-4 10 0q-2 4-5 4t-5-4z" />
