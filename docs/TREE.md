@@ -39,13 +39,20 @@ api-postgresql/
     app.module.ts
     postgres/
       postgres.module.ts
-      postgres.service.ts  # Pool de pg; SELECT 1 con DATABASE_URL
+      postgres.service.ts  # pg con DATABASE_URL; mock si no hay URL
+      postgres-mock.ts     # filas de course de prueba (#132)
     health/
       health.module.ts
       health.controller.ts
       health-response.dto.ts
+    course/
+      course.module.ts
+      course.controller.ts
+      course.service.ts
+      course-response.dto.ts
   test/
     health.e2e-spec.ts
+    course.e2e-spec.ts
     swagger.e2e-spec.ts
     jest-e2e.json
 ```
