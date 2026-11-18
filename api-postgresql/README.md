@@ -6,7 +6,22 @@ Hoy solo expone `GET /health`, que confirma que PostgreSQL responde. No hay esqu
 
 ## Arranque
 
-Hace falta un PostgreSQL que ya esté en marcha. Este paquete no lo levanta.
+### Docker Compose
+
+Después de `docker compose run --rm setup`, desde la raíz del repositorio ejecuta `docker compose up api-postgresql` para iniciar esta API y PostgreSQL. Compose espera a que la base supere su healthcheck. La API queda en <http://localhost:3001>; el puerto 5432 de PostgreSQL no se publica en el host. `postgres-data` conserva los datos al recrear el contenedor.
+
+La base usa el usuario `atempo` y requiere `ATEMPO_POSTGRES_PASSWORD` en el `.env` ignorado de la raíz. En Git Bash, genera una contraseña aleatoria hexadecimal de 64 caracteres y añádela con `printf 'ATEMPO_POSTGRES_PASSWORD=%s\n' "$(openssl rand -hex 32)" >> .env`; ese formato es seguro en la URL de `DATABASE_URL`. CI crea una contraseña efímera. Estas credenciales son solo para desarrollo local.
+
+Las pruebas y comprobaciones se ejecutan con las dependencias Linux del volumen Docker:
+
+```sh
+docker compose run --rm api-postgresql pnpm typecheck
+docker compose run --rm api-postgresql pnpm lint
+docker compose run --rm api-postgresql pnpm test
+docker compose run --rm api-postgresql pnpm build
+```
+
+### Arranque local
 
 Desde `api-postgresql/`:
 

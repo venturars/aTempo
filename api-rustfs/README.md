@@ -2,7 +2,15 @@
 
 Servicio Express y TypeScript entre la **SDK (lógica de negocio)** y **RustFS** (almacén de objetos compatible con S3). La SDK (carpeta `sdk/`, pendiente) leerá y escribirá objetos a través de este servicio. El `api-router` no habla con RustFS.
 
-Hoy solo expone `GET /health`, igual que `api-router/`: confirma que el servicio HTTP responde con `{ "status": "ok" }`. La configuración RustFS de abajo servirá cuando existan rutas de objetos. El cliente npm `minio` habla con RustFS por su API S3.
+Hoy solo expone `GET /health`, igual que `api-router/`: confirma que el servicio HTTP responde con `{ "status": "ok" }`. No hay rutas de objetos todavía. El cliente npm `minio` y `checkRustfsWithDefaultClient` permiten comprobar por separado la conexión S3 con RustFS; esa comprobación no cambia la respuesta de `/health`.
+
+## Docker Compose
+
+Después de `docker compose run --rm setup`, desde la raíz ejecuta `docker compose up api-rustfs` para iniciar la API y RustFS. La API queda en <http://localhost:3003>; los puertos S3 (9000) y consola (9001) permanecen internos a Compose. El volumen `rustfs-data` conserva los objetos al recrear el servicio.
+
+En Compose se usan las credenciales `devadmin` y `devsecret`, solo para desarrollo. `/health` conserva su contrato y verifica únicamente HTTP; la conectividad S3 se prueba aparte con `checkRustfsWithDefaultClient` en la validación Docker.
+
+Ejecuta `docker compose run --rm api-rustfs pnpm test`; cambia `test` por `typecheck`, `lint` o `build` para las otras comprobaciones.
 
 ## Variables de entorno
 

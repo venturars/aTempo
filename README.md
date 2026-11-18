@@ -60,7 +60,15 @@ Necesitas en tu ordenador:
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/), en marcha.
 - git, [GitHub CLI](https://cli.github.com) (`gh`), Node 20 o superior y bash, para el flujo de delivery-workflow. En Windows, con WSL o Git Bash.
-- Un `.env` en la raíz con la línea `GITHUB_TOKEN=tu_token`. Crea el token en <https://github.com/settings/tokens/new?scopes=repo>: un token clásico de tu cuenta con el permiso `repo`. `.env` ya está en `.gitignore`. Lo usa el flujo de delivery-workflow, no la instalación: `setup` funciona sin él.
+- Un `.env` en la raíz, ignorado por Git. Añade `GITHUB_TOKEN=tu_token` para delivery-workflow y `ATEMPO_POSTGRES_PASSWORD` con una contraseña aleatoria hexadecimal de 64 caracteres para PostgreSQL local. Crea el token en <https://github.com/settings/tokens/new?scopes=repo>: un token clásico de tu cuenta con el permiso `repo`. Las APIs montan solo su carpeta y no reciben el `.env`; el servicio `setup` y las herramientas de desarrollo conservan el montaje de raíz que necesitan. En CI se usa una contraseña efímera.
+
+En Git Bash, genera y añade la contraseña a `.env` antes de ejecutar Compose:
+
+```sh
+printf 'ATEMPO_POSTGRES_PASSWORD=%s\n' "$(openssl rand -hex 32)" >> .env
+```
+
+No compartas ni subas ese fichero.
 
 Una sola vez, al clonar:
 
@@ -71,9 +79,9 @@ docker compose run --rm setup
 
 La primera vez, `setup` construye la imagen de Docker: tarda unos minutos. Las siguientes, unos segundos.
 
-`setup` instala delivery-workflow para Cursor, Codex y Claude Code en la raíz del proyecto, y las dependencias de `desktop/`, `docs/storybook/` y `api-router/` dentro de Docker, en volúmenes. Los `node_modules` de Linux no llegan a tu carpeta.
+`setup` instala delivery-workflow para Cursor, Codex y Claude Code en la raíz del proyecto, y las dependencias Node de `desktop/`, `docs/storybook/`, `api-router/`, `api-postgresql/` y `api-rustfs/` dentro de Docker. También instala `api-sqlite/` en un entorno virtual Linux. Los paquetes Node, el entorno Python y los datos de las APIs viven en volúmenes Docker; no llegan como dependencias Linux a tu carpeta.
 
-Desde entonces, git lo lanza solo después de `git pull`, de cambiar de rama o de un rebase, si la rama nueva tiene otro `apm.yml`, `apm.lock.yaml`, `pnpm-lock.yaml` o `Dockerfile`. Si cambió el `Dockerfile`, reconstruye antes la imagen. Si Docker no está en marcha, git avisa y sigue: lanza `docker compose run --build --rm setup` cuando lo arranques.
+Desde entonces, git lo lanza solo después de `git pull`, de cambiar de rama o de un rebase, si la rama nueva tiene otro `apm.yml`, `apm.lock.yaml`, lockfile de pnpm, `api-sqlite/pyproject.toml`, script de setup o `Dockerfile`. Si cambió el `Dockerfile`, reconstruye antes la imagen. Si Docker no está en marcha, git avisa y sigue: lanza `docker compose run --build --rm setup` cuando lo arranques.
 
 Para cambiar de versión de delivery-workflow, cambia la etiqueta en `apm.yml` (por ejemplo, `#v0.1.2` por `#v0.1.3`), lanza `docker compose run --rm setup` y sube `apm.yml` y `apm.lock.yaml` en una pull request `chore`.
 
@@ -159,7 +167,7 @@ Ese comando es obligatorio: sin él, el markdown se queda desfasado. No se edita
 docker compose up api-router
 ```
 
-El servicio queda en <http://localhost:3000>. `GET /health` debe devolver `{ "status": "ok" }`. La documentación interactiva está en <http://localhost:3000/docs>. Para pararlo, `Ctrl+C` o `docker compose stop api-router`.
+El servicio queda en <http://localhost:3000>. `GET /health` debe devolver `{ "status": "ok" }`. La documentación interactiva está en <http://localhost:3000/docs>. Su contenedor monta solo `api-router/`, sus `node_modules` y la caché pnpm; el `.env` de la raíz no queda disponible dentro del servicio. Para pararlo, `Ctrl+C` o `docker compose stop api-router`.
 
 Las comprobaciones se lanzan en Docker:
 
@@ -173,13 +181,31 @@ Más detalle en [api-router/README.md](api-router/README.md).
 
 ## API-postgresql
 
-Más detalle en [api-postgresql/README.md](api-postgresql/README.md).
+Desde la raíz, inicia el API y su PostgreSQL privado de Compose:
+
+```sh
+docker compose up api-postgresql
+```
+
+La API queda en <http://localhost:3001>; PostgreSQL solo está disponible dentro de Compose. `GET /health` confirma la conexión y Swagger está en `/docs`. El volumen `postgres-data` conserva la base al recrear contenedores. Ejecuta cada comprobación por separado, por ejemplo `docker compose run --rm api-postgresql pnpm test`. Más detalle en [api-postgresql/README.md](api-postgresql/README.md).
 
 ## API-sqlite
 
 `api-sqlite/` es el servicio de persistencia local previsto para la SDK. La SDK todavía está pendiente y no hay integración entre estos servicios. Su base SQLite es distinta de la base local de Electron.
 
-Desde `api-sqlite/`, crea un entorno virtual, instala el paquete editable y arráncalo:
+Para usar el servicio en Docker, primero ejecuta `docker compose run --rm setup` y después:
+
+```sh
+docker compose up api-sqlite
+```
+
+La API queda en <http://localhost:3002>; `/docs` y `/docs-json` documentan el health. Su entorno virtual Linux y la base SQLite persisten en volúmenes separados. Para ejecutar sus pruebas en el contenedor:
+
+```sh
+docker compose run --rm api-sqlite /work/api-sqlite/.venv/bin/python -m unittest discover -s tests -v
+```
+
+También puedes ejecutarla localmente desde `api-sqlite/`, creando un entorno virtual, instalando el paquete editable y arrancándolo:
 
 ```powershell
 py -m venv .venv
@@ -193,6 +219,18 @@ En macOS/Linux usa `python3 -m venv .venv`, `source .venv/bin/activate` y despu�
 `GET /health` ejecuta `SELECT 1` y responde `{ "status": "ok" }` si SQLite está disponible. Swagger UI está en <http://localhost:3002/docs> y el documento JSON en <http://localhost:3002/docs-json>. No se anuncia cuerpo para el GET. Si se envía JSON, solo se acepta `{}`; campos extra producen `400` antes del acceso a SQLite.
 
 Más detalle en [api-sqlite/README.md](api-sqlite/README.md).
+
+## API-rustfs
+
+Desde la raíz, inicia Express y RustFS:
+
+```sh
+docker compose up api-rustfs
+```
+
+La API queda en <http://localhost:3003>; RustFS y sus puertos S3/consola solo son accesibles dentro de Compose. El volumen `rustfs-data` conserva los objetos. `/health` sigue comprobando solo que responde la API HTTP; la conexión S3 se verifica por separado en el workflow `.github/workflows/docker-apis.yml`. Swagger está en `/docs/`. Las pruebas se ejecutan en Docker con `docker compose run --rm api-rustfs pnpm test`; typecheck, lint y build usan el mismo patrón. Más detalle en [api-rustfs/README.md](api-rustfs/README.md).
+
+Las tres APIs de persistencia también pueden iniciarse juntas con `docker compose up api-postgresql api-sqlite api-rustfs`. El workflow `.github/workflows/docker-apis.yml` valida setup, pruebas, HTTP y persistencia en un runner Ubuntu al abrir o actualizar una pull request hacia `staging`, sin secretos y con permisos de solo lectura.
 
 ## Avisos opcionales de PR en Discord
 

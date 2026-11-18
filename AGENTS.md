@@ -4,7 +4,7 @@ Vamos a desarrollar una app para registrar la asistencia (aTempo) de los alumnos
 
 Antes de construir una pantalla, lanza `docker compose run --rm storybook pnpm guide` desde la raíz y lee [docs/guia](docs/guia/README.md).
 
-Las dependencias de `desktop/`, `docs/storybook/` y `api-router/` viven en Docker. Los comandos de pnpm de esas carpetas se lanzan con `docker compose run --rm desktop …`, `docker compose run --rm storybook …` o `docker compose run --rm api-router …`, como explica el [README](README.md#instalación). La ventana de Electron y `pnpm run test:visual` son la excepción: van en el ordenador. `docker compose up api-router` sirve el Nest en el puerto 3000. `docker compose up desktop-gui` abre la ventana desde Docker, pero es opcional y experimental.
+Las dependencias de `desktop/`, `docs/storybook/` y las APIs Node viven en volúmenes Docker; `api-sqlite/` usa un entorno virtual Linux en su propio volumen. Ejecuta pnpm con `docker compose run --rm desktop …`, `storybook …`, `api-router …`, `api-postgresql …` o `api-rustfs …`, como explica el [README](README.md#instalación). Ejecuta los tests Python con el entorno virtual de `api-sqlite` dentro del servicio Compose. La ventana de Electron y `pnpm run test:visual` van en el ordenador. `docker compose up api-router api-postgresql api-sqlite api-rustfs` sirve las APIs en los puertos 3000–3003 e inicia PostgreSQL y RustFS como dependencias. La SQLite, PostgreSQL y RustFS de desarrollo conservan sus datos en volúmenes Docker, separados de la base de Electron. `docker compose up desktop-gui` abre Electron desde Docker, pero es opcional y experimental.
 
 ## Guía visual
 
