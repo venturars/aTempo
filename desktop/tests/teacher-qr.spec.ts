@@ -1,8 +1,6 @@
 import { expect, test, type Page, type Locator } from '@playwright/test'
 import { launchHiddenElectron } from './helpers/electron'
-import { nextDemoArrival, usePanelStore } from '../src/renderer/src/panel/panelStore'
 import { rosterNames, todayEntry } from '../src/renderer/src/panel/roster'
-import { useSettingsStore } from '../src/renderer/src/panel/settingsStore'
 const time = new Date('2026-11-11T09:00:00Z')
 const qr = (p: Page): Locator => p.getByRole('img', { name: 'QR de ejemplo', exact: true })
 const row = (p: Page, name: string): Locator =>
@@ -48,33 +46,13 @@ async function open(p: Page): Promise<void> {
   await p.getByRole('button', { name: 'Abrir lista', exact: true }).click()
   await seconds(p, 30)
 }
-
-test('store re-derives lateness on a corrected time and never keeps a time for an absent student', () => {
-  usePanelStore.setState(usePanelStore.getInitialState(), true)
-  useSettingsStore.setState(useSettingsStore.getInitialState(), true)
-  const state = (): ReturnType<typeof usePanelStore.getState> => usePanelStore.getState()
-  try {
-    state().openSession()
-    state().simulateArrival(0)
-    expect(state().marks[0]).toBe('presente')
-    state().setTime(0, '09:33')
-    expect(state().marks[0]).toBe('retraso')
-    state().setTime(0, '09:05')
-    expect(state().marks[0]).toBe('presente')
-    state().setMark(1, 'presente')
-    state().setTime(1, '09:20')
-    state().setMark(1, 'ausente')
-    expect(state().times[1]).toBeUndefined()
-    state().setTime(2, '09:40')
-    expect(state().marks[2]).toBeUndefined()
-    state().closeSession()
-    expect(state().marks[2]).toBe('ausente')
-    expect(state().times[2]).toBeUndefined()
-  } finally {
-    usePanelStore.setState(usePanelStore.getInitialState(), true)
-    useSettingsStore.setState(useSettingsStore.getInitialState(), true)
-  }
-})
+// Cada corrección pide un motivo antes de guardarse.
+async function giveReason(p: Page): Promise<void> {
+  const dialog = p.getByRole('dialog', { name: 'Motivo del cambio' })
+  await dialog.getByLabel('Motivo', { exact: true }).fill('Corrección en clase')
+  await dialog.getByRole('button', { name: 'Guardar', exact: true }).click()
+  await expect(dialog).toHaveCount(0)
+}
 
 test('saves a time edit made after cancelling a previous edit with Escape', async () => {
   await withPanel(async (p) => {
@@ -84,34 +62,13 @@ test('saves a time edit made after cancelling a previous edit with Escape', asyn
     await diego.getByRole('button', { name: todayEntry[0], exact: true }).click()
     await diego.locator('input[type=time]').press('Escape')
     await diego.getByRole('button', { name: todayEntry[0], exact: true }).click()
-    await diego.locator('input[type=time]').fill('09:05')
+    // Una hora distinta de la de llegada, para que la edición guarde algo.
+    await diego.locator('input[type=time]').fill('09:07')
     await diego.locator('input[type=time]').press('Enter')
-    await expect(diego.getByRole('button', { name: '09:05', exact: true })).toBeVisible()
+    await giveReason(p)
+    await expect(diego.getByRole('button', { name: '09:07', exact: true })).toBeVisible()
     await expect(diego.locator('input[type=time]')).toHaveCount(0)
   })
-})
-
-test('store ignores a time for an absent student and re-derives lateness when a corrected time is cleared', () => {
-  usePanelStore.setState(usePanelStore.getInitialState(), true)
-  useSettingsStore.setState(useSettingsStore.getInitialState(), true)
-  const state = (): ReturnType<typeof usePanelStore.getState> => usePanelStore.getState()
-  try {
-    state().openSession()
-    state().setMark(1, 'ausente')
-    state().setTime(1, '09:10')
-    expect(state().times[1]).toBeUndefined()
-    state().simulateArrival(0)
-    state().setTime(0, '09:33')
-    expect(state().marks[0]).toBe('retraso')
-    state().setTime(0, '')
-    expect(state().times[0]).toBeUndefined()
-    expect(state().marks[0]).toBe('presente')
-    state().setTime(0, '24:00')
-    expect(state().times[0]).toBeUndefined()
-  } finally {
-    usePanelStore.setState(usePanelStore.getInitialState(), true)
-    useSettingsStore.setState(useSettingsStore.getInitialState(), true)
-  }
 })
 
 test('keeps a manual mark when a time is opened and left without changes', async () => {
@@ -120,27 +77,13 @@ test('keeps a manual mark when a time is opened and left without changes', async
     const diego = row(p, 'Diego Molero')
     await diego.getByRole('button', { name: 'Pendiente', exact: true }).click()
     await p.getByRole('menu').getByRole('button', { name: 'Tarde', exact: true }).click()
-    await diego.getByRole('button', { name: todayEntry[0], exact: true }).click()
+    await giveReason(p)
+    // Una marca puesta a mano no trae hora: el campo empieza vacío.
+    await diego.getByRole('button', { name: '—', exact: true }).click()
     await diego.locator('input[type=time]').press('Enter')
+    await expect(p.getByRole('dialog')).toHaveCount(0)
     await expect(diego.getByRole('button', { name: 'Tarde', exact: true })).toBeVisible()
   })
-})
-
-test('keeps a manual mark when clearing a time that was never corrected', () => {
-  usePanelStore.setState(usePanelStore.getInitialState(), true)
-  useSettingsStore.setState(useSettingsStore.getInitialState(), true)
-  const state = (): ReturnType<typeof usePanelStore.getState> => usePanelStore.getState()
-  try {
-    state().openSession()
-    state().setMark(0, 'retraso')
-    state().setTime(0, '')
-    expect(state().marks[0]).toBe('retraso')
-    state().setTime(0, todayEntry[0])
-    expect(state().marks[0]).toBe('retraso')
-  } finally {
-    usePanelStore.setState(usePanelStore.getInitialState(), true)
-    useSettingsStore.setState(useSettingsStore.getInitialState(), true)
-  }
 })
 
 test('chooses a mark with the keyboard and returns focus to the row button', async () => {
@@ -154,6 +97,13 @@ test('chooses a mark with the keyboard and returns focus to the row button', asy
     await expect(menu.getByRole('button', { name: 'Tarde', exact: true })).toBeFocused()
     await p.keyboard.press('Enter')
     await expect(p.getByRole('menu')).toHaveCount(0)
+    const reason = p.getByRole('dialog').getByLabel('Motivo', { exact: true })
+    await expect(reason).toBeFocused()
+    await p.keyboard.type('Corrección en clase')
+    await p.keyboard.press('Tab')
+    await p.keyboard.press('Tab')
+    await p.keyboard.press('Enter')
+    await expect(p.getByRole('dialog')).toHaveCount(0)
     await expect(diego.getByRole('button', { name: 'Tarde', exact: true })).toBeFocused()
   })
 })
@@ -164,6 +114,7 @@ test('does not offer a time editor for an absent student', async () => {
     const torres = row(p, 'Diego Torres')
     await torres.getByRole('button', { name: 'Pendiente', exact: true }).click()
     await p.getByRole('menu').getByRole('button', { name: 'Ausente', exact: true }).click()
+    await giveReason(p)
     await expect(torres.getByRole('button', { name: '—', exact: true })).toHaveCount(0)
     await expect(torres.getByText('—', { exact: true })).toBeVisible()
   })
@@ -191,67 +142,6 @@ test('keeps one mark menu open at a time and closes it on scroll', async () => {
     await p.mouse.wheel(0, 200)
     await expect(p.getByRole('menu')).toHaveCount(0)
   })
-})
-
-test('store rejects invalid and duplicate arrivals, guards only evidence, respects margin and resets new sessions', () => {
-  const initial = usePanelStore.getInitialState()
-  const preferences = useSettingsStore.getInitialState()
-  usePanelStore.setState(initial, true)
-  useSettingsStore.setState(preferences, true)
-  const state = (): ReturnType<typeof usePanelStore.getState> => usePanelStore.getState()
-  try {
-    state().simulateArrival(0)
-    expect(state().marks).toEqual({})
-    state().openSession()
-    for (const i of [-1, 0.5, rosterNames.length, 9, NaN]) state().simulateArrival(i)
-    expect(state().marks).toEqual({})
-    expect(nextDemoArrival({}, {})).toBe(0)
-    state().simulateArrival(0)
-    expect(state().marks[0]).toBe('presente')
-    expect(state().times[0]).toBe(todayEntry[0])
-    for (const mark of ['ausente', 'pendiente'] as const) {
-      state().setMark(0, mark)
-      expect(state().marks[0]).toBe('presente')
-    }
-    state().setMark(0, 'retraso')
-    state().setTime(0, '09:33')
-    state().simulateArrival(0)
-    expect(state().marks[0]).toBe('retraso')
-    expect(state().times[0]).toBe('09:33')
-    state().setMark(1, 'ausente')
-    state().simulateArrival(1)
-    state().setTime(2, '09:40')
-    state().simulateArrival(2)
-    expect(state().marks[1]).toBe('ausente')
-    expect(state().marks[2]).toBeUndefined()
-    expect(state().times[2]).toBe('09:40')
-    expect(nextDemoArrival(state().marks, state().times)).toBe(3)
-    state().simulateArrival(10)
-    expect(state().marks[10]).toBe('retraso')
-    useSettingsStore.getState().update({ lateMinutes: 14 })
-    state().simulateArrival(14)
-    expect(state().marks[14]).toBe('presente')
-    state().setSessionMark('Mar 10 nov', rosterNames[0], 'ausente')
-    expect(state().sessionMarks['Mar 10 nov'][rosterNames[0]]).toBe('ausente')
-    state().closeSession()
-    state().simulateArrival(3)
-    expect(state().times[3]).toBeUndefined()
-    expect(state().marks[0]).toBe('retraso')
-    state().reopenSession()
-    state().setMark(0, 'pendiente')
-    expect(state().marks[0]).toBe('retraso')
-    expect(state().demoArrivals[0]).toBe(true)
-    state().openSession()
-    expect(state().demoArrivals).toEqual({})
-    expect(state().times).toEqual({})
-    expect(state().marks).toEqual({})
-    expect(
-      nextDemoArrival(Object.fromEntries(rosterNames.map((_, i) => [i, 'ausente' as const])), {})
-    ).toBe(-1)
-  } finally {
-    usePanelStore.setState(initial, true)
-    useSettingsStore.setState(preferences, true)
-  }
 })
 
 test('rotates exactly at 29/30/60/90 without attendance from ticks', async () => {
@@ -374,6 +264,7 @@ test('simulates next eligible arrival, preserves manual marks and exhausts valid
     await diego.getByRole('button', { name: todayEntry[0], exact: true }).click()
     await diego.locator('input[type=time]').fill('09:33')
     await diego.locator('input[type=time]').press('Enter')
+    await giveReason(p)
     // La hora corregida pasa el margen: el estado cambia solo a Tarde.
     await diego.getByRole('button', { name: 'Tarde', exact: true }).click()
     await expect(
@@ -383,6 +274,7 @@ test('simulates next eligible arrival, preserves manual marks and exhausts valid
     const other = row(p, 'Diego Torres')
     await other.getByRole('button', { name: 'Pendiente', exact: true }).click()
     await p.getByRole('menu').getByRole('button', { name: 'Ausente', exact: true }).click()
+    await giveReason(p)
     await p.clock.fastForward(66000)
     await expect(diego.getByRole('button', { name: 'Tarde', exact: true })).toBeVisible()
     await expect(other.getByRole('button', { name: 'Ausente', exact: true })).toBeVisible()
@@ -404,6 +296,7 @@ test('cancel preserves period, close preserves arrival/manual marks, reopen star
     await p.getByRole('button', { name: 'Simular llegada', exact: true }).click()
     await row(p, 'Diego Torres').getByRole('button', { name: 'Pendiente', exact: true }).click()
     await p.getByRole('menu').getByRole('button', { name: 'Tarde', exact: true }).click()
+    await giveReason(p)
     await p.clock.runFor(29000)
     const before = await pattern(p)
     await p.getByRole('button', { name: 'Cerrar lista', exact: true }).click()

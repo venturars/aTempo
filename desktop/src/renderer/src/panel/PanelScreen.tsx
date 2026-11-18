@@ -1,6 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { nextDemoArrival, usePanelStore, type PanelTab } from './panelStore'
+import { clockTime } from '../api/isoTime'
+import {
+  todayArrival,
+  todayMark,
+  todayPhase,
+  usePanelStore,
+  type PanelTab,
+  type TodayStudent
+} from './panelStore'
 import { Avatar } from './avatar'
+import { CorrectionReasonDialog } from './CorrectionReasonDialog'
 import { JustificationAccess } from './JustificationAccess'
 import { MarkControl } from './markControl'
 import { SettingsView } from './SettingsView'
@@ -14,9 +23,6 @@ import {
   course,
   dashboardDate,
   dashboardHeading,
-  rollStatus,
-  rollTime,
-  rosterNames,
   sessionCounts,
   studentHistory,
   studentSummary,
@@ -132,6 +138,7 @@ export function PanelScreen(): React.JSX.Element {
         )}
       </main>
       <CloseDialog />
+      <CorrectionReasonDialog />
     </div>
   )
 }
@@ -233,45 +240,108 @@ function Breadcrumb({
 }
 
 function TodayView(): React.JSX.Element {
-  const openedAt = usePanelStore((state) => state.openedAt)
+  const todayLoad = usePanelStore((state) => state.todayLoad)
+  const todayError = usePanelStore((state) => state.todayError)
+  const loadToday = usePanelStore((state) => state.loadToday)
+
+  // La clase de hoy se pide una vez. Al volver a la pestaña, ya está cargada.
+  useEffect(() => {
+    if (todayLoad === 'loading') {
+      void loadToday()
+    }
+  }, [todayLoad, loadToday])
+
+  const alert =
+    todayError === null ? null : (
+      <div role="alert" className="alert alert-error alert-soft">
+        <span>{todayError}</span>
+      </div>
+    )
+
+  if (todayLoad === 'loading') {
+    return (
+      <section className="card bg-base-100 shadow-sm">
+        <div className="card-body items-center">
+          <span className="loading loading-spinner" aria-label="Cargando la clase de hoy" />
+        </div>
+      </section>
+    )
+  }
+  if (todayLoad === 'denied' || todayLoad === 'failed') {
+    return <>{alert}</>
+  }
+  if (todayLoad === 'empty') {
+    return (
+      <section className="card bg-base-100 shadow-sm">
+        <div className="card-body">
+          <p className="text-sm text-base-content/60">No tienes clases hoy.</p>
+        </div>
+      </section>
+    )
+  }
+  return (
+    <>
+      {alert}
+      <TodayClass />
+    </>
+  )
+}
+
+function TodayClass(): React.JSX.Element {
+  const session = usePanelStore((state) => state.session)
+  const students = usePanelStore((state) => state.students)
+  const records = usePanelStore((state) => state.records)
+  const checkInCode = usePanelStore((state) => state.checkInCode)
+  const busy = usePanelStore((state) => state.busy)
+  const canSimulateArrival = usePanelStore((state) => state.canSimulateArrival)
   const demoArrivals = usePanelStore((state) => state.demoArrivals)
   const simulateArrival = usePanelStore((state) => state.simulateArrival)
-  const phase = usePanelStore((state) => state.phase)
-  const marks = usePanelStore((state) => state.marks)
   const openSession = usePanelStore((state) => state.openSession)
   const askClose = usePanelStore((state) => state.askClose)
   const reopenSession = usePanelStore((state) => state.reopenSession)
+  const refreshCheckInCode = usePanelStore((state) => state.refreshCheckInCode)
   const openStudent = usePanelStore((state) => state.openStudent)
-  const setMark = usePanelStore((state) => state.setMark)
-  const setTime = usePanelStore((state) => state.setTime)
-  const times = usePanelStore((state) => state.times)
-  const nextArrival = nextDemoArrival(marks, times)
-  const statuses = rosterNames.map((_, index) => rollStatus(phase, marks, index))
-  const present = statuses.filter((status) => status === 'presente').length
-  const late = statuses.filter((status) => status === 'retraso').length
-  const absent = statuses.filter((status) => status === 'ausente').length
-  const roster = rosterNames
-    .map((name, index) => ({ name, index, mark: statuses[index] ?? 'none' }))
+  const requestMark = usePanelStore((state) => state.requestMark)
+  const requestTime = usePanelStore((state) => state.requestTime)
+  const phase = todayPhase({ session })
+  const roster = students
+    .map((student) => ({
+      ...student,
+      mark: todayMark({ session, records }, student.studentId),
+      time: todayArrival({ records }, student.studentId)
+    }))
     .sort((a, b) => compareByName(a.name, b.name))
+  const present = roster.filter((row) => row.mark === 'presente').length
+  const late = roster.filter((row) => row.mark === 'retraso').length
+  const absent = roster.filter((row) => row.mark === 'ausente').length
+  const courseName = session?.courseName ?? ''
+  const courseTime =
+    session === null ? '' : `${clockTime(session.startsAt)}–${clockTime(session.endsAt)}`
 
   return (
     <section className="card overflow-hidden bg-base-100 shadow-sm">
       {phase === 'abierta' ? (
         <div className="card-body flex-row flex-wrap items-center gap-6">
-          {openedAt !== null ? <SessionQr openedAt={openedAt} /> : null}
+          {checkInCode !== null ? (
+            <SessionQr
+              code={checkInCode.code}
+              expiresAt={checkInCode.expiresAt}
+              onExpire={refreshCheckInCode}
+            />
+          ) : null}
           <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <h2 className="text-lg font-medium">{course.name}</h2>
-            <p className="text-sm text-base-content/60">{course.time}</p>
+            <h2 className="text-lg font-medium">{courseName}</h2>
+            <p className="text-sm text-base-content/60">{courseTime}</p>
             <button
               type="button"
               className="btn mt-2 w-fit"
-              disabled={nextArrival === -1}
-              onClick={() => simulateArrival(nextArrival)}
+              disabled={busy || !canSimulateArrival}
+              onClick={() => void simulateArrival()}
             >
               Simular llegada
             </button>
           </div>
-          <button type="button" className="btn btn-primary" onClick={askClose}>
+          <button type="button" className="btn btn-primary" disabled={busy} onClick={askClose}>
             Cerrar lista
           </button>
         </div>
@@ -279,16 +349,26 @@ function TodayView(): React.JSX.Element {
         <div className="card-body gap-5">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-col gap-1">
-              <h2 className="text-lg font-medium">{course.name}</h2>
-              <p className="text-sm text-base-content/60">{course.time}</p>
+              <h2 className="text-lg font-medium">{courseName}</h2>
+              <p className="text-sm text-base-content/60">{courseTime}</p>
             </div>
             {phase === 'programada' ? (
-              <button type="button" className="btn btn-primary" onClick={openSession}>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={busy}
+                onClick={() => void openSession()}
+              >
                 Abrir lista
               </button>
             ) : null}
             {phase === 'cerrada' ? (
-              <button type="button" className="btn" onClick={reopenSession}>
+              <button
+                type="button"
+                className="btn"
+                disabled={busy}
+                onClick={() => void reopenSession()}
+              >
                 Volver a abrir
               </button>
             ) : null}
@@ -306,10 +386,9 @@ function TodayView(): React.JSX.Element {
         roster={roster}
         demoArrivals={demoArrivals}
         phase={phase}
-        times={times}
         openStudent={openStudent}
-        setMark={setMark}
-        setTime={setTime}
+        requestMark={requestMark}
+        requestTime={requestTime}
         embedded
       />
     </section>
@@ -320,24 +399,24 @@ function RosterTable({
   roster,
   demoArrivals = {},
   phase,
-  times,
   openStudent,
-  setMark,
-  setTime,
+  requestMark,
+  requestTime,
   compact = false,
   embedded = false
 }: {
-  demoArrivals?: Record<number, true>
-  roster: { name: string; index: number; mark: Attendance | 'none' }[]
+  demoArrivals?: Record<string, true>
+  roster: (TodayStudent & { mark: Attendance | 'none'; time: string })[]
   phase: Phase
-  times: Record<number, string>
   openStudent: (name: string) => void
-  setMark: (index: number, mark: Attendance) => void
-  setTime: (index: number, time: string) => void
+  requestMark: (studentId: string, mark: Attendance) => void
+  requestTime: (studentId: string, time: string) => void
   compact?: boolean
   embedded?: boolean
 }): React.JSX.Element {
   const started = phase !== 'programada'
+  // Con la lista abierta o cerrada, el profesor puede corregir marcas y horas.
+  const editable = phase === 'abierta' || phase === 'cerrada'
   return (
     <div
       className={
@@ -365,8 +444,8 @@ function RosterTable({
           </thead>
         ) : null}
         <tbody>
-          {roster.map(({ name, index, mark: status }) => (
-            <tr key={name}>
+          {roster.map(({ studentId, name, mark: status, time }) => (
+            <tr key={studentId}>
               <td>
                 <div className="flex w-full items-center gap-3">
                   <button
@@ -384,9 +463,9 @@ function RosterTable({
               {started ? (
                 <td>
                   <TimeField
-                    time={rollTime(status, index, times)}
-                    enabled={phase === 'abierta' && status !== 'ausente'}
-                    onCommit={(value) => setTime(index, value)}
+                    time={time}
+                    enabled={editable && (status === 'presente' || status === 'retraso')}
+                    onCommit={(value) => requestTime(studentId, value)}
                   />
                 </td>
               ) : null}
@@ -394,11 +473,11 @@ function RosterTable({
                 <td>
                   <MarkControl
                     status={status}
-                    arrivalAccepted={demoArrivals[index] === true}
-                    enabled={phase === 'abierta'}
+                    arrivalAccepted={demoArrivals[studentId] === true}
+                    enabled={editable}
                     person={name}
                     when={dashboardDate}
-                    onPick={(mark) => setMark(index, mark)}
+                    onPick={(mark) => requestMark(studentId, mark)}
                   />
                 </td>
               ) : null}
@@ -697,7 +776,7 @@ function CloseDialog(): React.JSX.Element | null {
           <button ref={backRef} type="button" className="btn" onClick={cancelClose}>
             Volver
           </button>
-          <button type="button" className="btn btn-error" onClick={closeSession}>
+          <button type="button" className="btn btn-error" onClick={() => void closeSession()}>
             Cerrar lista
           </button>
         </div>
