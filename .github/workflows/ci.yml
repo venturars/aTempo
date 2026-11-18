@@ -53,8 +53,8 @@ jobs:
           echo "packages=$packages" >> "$GITHUB_OUTPUT"
           echo "Paquetes: ${all[*]}. Se comprueban: $packages" >> "$GITHUB_STEP_SUMMARY"
 
+  # Sin «name»: GitHub lo llama «check (<paquete>)», y solo «check» si se salta
   check:
-    name: check (${{ matrix.package }})
     needs: plan
     if: needs.plan.outputs.packages != '[]'
     runs-on: ubuntu-latest
