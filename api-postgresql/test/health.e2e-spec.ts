@@ -14,7 +14,11 @@ describe('Health (e2e)', () => {
       imports: [AppModule],
     })
       .overrideProvider(PostgresService)
-      .useValue({ check })
+      .useValue({
+        check,
+        listPersons: async () => [],
+        usesMock: () => false,
+      })
       .compile()
 
     app = moduleFixture.createNestApplication()
@@ -23,11 +27,31 @@ describe('Health (e2e)', () => {
   }
 
   afterEach(async () => {
-    await app.close()
+    await app?.close()
   })
 
   it('GET /health returns ok when Postgres responds', async () => {
     await initApp(async () => undefined)
+
+    await request(app.getHttpServer())
+      .get('/health')
+      .expect(200)
+      .expect({ status: 'ok', postgres: 'ok' })
+  })
+
+  it('GET /health returns ok when postgres mock is active', async () => {
+    delete process.env.DATABASE_URL
+    if (process.env.POSTGRES_MOCK) {
+      delete process.env.POSTGRES_MOCK
+    }
+
+    const moduleFixture = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile()
+
+    app = moduleFixture.createNestApplication()
+    configureApp(app)
+    await app.init()
 
     await request(app.getHttpServer())
       .get('/health')

@@ -1,16 +1,23 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common'
 import { Pool } from 'pg'
+import type { PersonResponseDto } from '../person/person-response.dto'
+import { POSTGRES_MOCK_PERSONS } from './postgres-mock'
 
 @Injectable()
 export class PostgresService implements OnModuleDestroy {
   private readonly logger = new Logger(PostgresService.name)
   private pool: Pool | undefined
 
-  private poolFor(connectionString: string | undefined): Pool {
-    if (!connectionString) {
-      throw new Error('Falta DATABASE_URL')
+  usesMock(): boolean {
+    if (process.env.POSTGRES_MOCK === '1') {
+      return true
     }
 
+    const connectionString = process.env.DATABASE_URL
+    return connectionString === undefined || connectionString.trim() === ''
+  }
+
+  private poolFor(connectionString: string): Pool {
     if (!this.pool) {
       this.pool = new Pool({ connectionString, connectionTimeoutMillis: 3000 })
       this.pool.on('error', (error) => {
@@ -22,11 +29,57 @@ export class PostgresService implements OnModuleDestroy {
   }
 
   async check(): Promise<void> {
-    const pool = this.poolFor(process.env.DATABASE_URL)
+    if (this.usesMock()) {
+      return
+    }
+
+    const pool = this.poolFor(process.env.DATABASE_URL!)
     await pool.query('SELECT 1')
+  }
+
+  async listPersons(): Promise<PersonResponseDto[]> {
+    if (this.usesMock()) {
+      return POSTGRES_MOCK_PERSONS
+    }
+
+    const pool = this.poolFor(process.env.DATABASE_URL!)
+    const result = await pool.query<{
+      id: string
+      identification_document: string
+      email: string
+      first_name: string
+      last_name: string
+      birth_date: Date | string | null
+      phone: string | null
+    }>(
+      `SELECT id, identification_document, email, first_name, last_name, birth_date, phone
+       FROM person`,
+    )
+
+    return result.rows.map((row) => ({
+      id: row.id,
+      identification_document: row.identification_document,
+      email: row.email,
+      first_name: row.first_name,
+      last_name: row.last_name,
+      birth_date: formatBirthDate(row.birth_date),
+      phone: row.phone,
+    }))
   }
 
   async onModuleDestroy(): Promise<void> {
     await this.pool?.end()
   }
+}
+
+function formatBirthDate(value: Date | string | null): string | null {
+  if (value === null) {
+    return null
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10)
+  }
+
+  return value
 }

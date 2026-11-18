@@ -39,7 +39,8 @@ api-postgresql/
     app.module.ts
     postgres/
       postgres.module.ts
-      postgres.service.ts  # Pool de pg; SELECT 1 con DATABASE_URL
+      postgres.service.ts  # pg con DATABASE_URL; mock si no hay URL
+      postgres-mock.ts     # filas de person de prueba (#131)
     health/
       health.module.ts
       health.controller.ts
@@ -49,7 +50,6 @@ api-postgresql/
       person.controller.ts
       person.service.ts
       person-response.dto.ts
-      person-demo.ts       # datos de prueba fijos (#131)
   test/
     health.e2e-spec.ts
     person.e2e-spec.ts
