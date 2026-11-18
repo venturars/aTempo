@@ -1,6 +1,9 @@
+import { execFileSync } from 'node:child_process'
 import { expect, test } from '@playwright/test'
 import {
   useAdminStore,
+  previewRecurringSessions,
+  type RecurringSessionInput,
   type CreateCourseInput,
   type CreateSessionInput,
   type InvitePersonInput,
@@ -560,4 +563,310 @@ test('rejects deletion without writes when malformed foreign records reference a
   })
   expectRejectedWithoutWrite(() => useAdminStore.getState().deletePerson('person-student-ana'))
   expectRejectedWithoutWrite(() => useAdminStore.getState().deleteCourse('course-web'))
+})
+
+const weeklyInput: RecurringSessionInput = {
+  courseId: 'course-web',
+  startDate: '2026-11-02',
+  endDate: '2026-11-11',
+  weekdays: [1, 3],
+  startsAt: '09:00',
+  endsAt: '11:00',
+  room: ' Aula semanal '
+}
+const weeklyDates = ['2026-11-02', '2026-11-04', '2026-11-09', '2026-11-11']
+
+test('weekly preview is read-only and one atomic batch creates independent occurrences', () => {
+  const before = useAdminStore.getState()
+  let writes = 0
+  const unsubscribe = useAdminStore.subscribe(() => writes++)
+  try {
+    expect(valueOf(previewRecurringSessions(before, weeklyInput))).toEqual({
+      dates: weeklyDates,
+      newDates: weeklyDates,
+      candidateCount: 4,
+      skippedCount: 0
+    })
+    expect(useAdminStore.getState()).toBe(before)
+    expect(writes).toBe(0)
+    const result = valueOf(useAdminStore.getState().createRecurringSessions(weeklyInput))
+    expect(writes).toBe(1)
+    expect(result.sessions.map((session) => session.date)).toEqual(weeklyDates)
+    expect(result).toMatchObject({ candidateCount: 4, skippedCount: 0 })
+    expect(new Set(result.sessions.map((session) => session.id)).size).toBe(4)
+    for (const session of result.sessions)
+      expect(session).toMatchObject({
+        courseId: 'course-web',
+        organizationId: before.organization.id,
+        startsAt: '09:00',
+        endsAt: '11:00',
+        room: 'Aula semanal',
+        state: 'scheduled'
+      })
+    expect(useAdminStore.getState().people).toBe(before.people)
+    expect(useAdminStore.getState().courses).toBe(before.courses)
+    const [first, second, ...remaining] = result.sessions
+    valueOf(
+      useAdminStore.getState().updateSession(first.id, {
+        ...validSession,
+        date: first.date,
+        room: 'Cambio individual'
+      })
+    )
+    valueOf(useAdminStore.getState().deleteSession(second.id))
+    expect(useAdminStore.getState().sessions.find((entry) => entry.id === first.id)?.room).toBe(
+      'Cambio individual'
+    )
+    for (const session of remaining) expect(useAdminStore.getState().sessions).toContain(session)
+    expect(useAdminStore.getState().sessions).toContain(before.sessions[0])
+    const recreated = valueOf(useAdminStore.getState().createRecurringSessions(weeklyInput))
+    expect(recreated.sessions.map((session) => session.date)).toEqual([second.date])
+    expect(recreated.sessions[0].id).not.toBe(second.id)
+    expect(useAdminStore.getState().courses).toBe(before.courses)
+  } finally {
+    unsubscribe()
+  }
+})
+
+test('save revalidates current duplicates; room does not distinguish them and resubmission never writes', () => {
+  valueOf(previewRecurringSessions(useAdminStore.getState(), weeklyInput))
+  valueOf(
+    useAdminStore
+      .getState()
+      .createSession({ ...validSession, date: weeklyDates[0], room: 'Otra aula' })
+  )
+  // Other courses and overlapping, unequal times must remain eligible.
+  valueOf(
+    useAdminStore
+      .getState()
+      .createSession({ ...validSession, courseId: 'course-design', date: weeklyDates[1] })
+  )
+  valueOf(
+    useAdminStore
+      .getState()
+      .createSession({ ...validSession, date: weeklyDates[2], startsAt: '10:00', endsAt: '12:00' })
+  )
+  const preview = valueOf(previewRecurringSessions(useAdminStore.getState(), weeklyInput))
+  expect(preview).toMatchObject({
+    candidateCount: 4,
+    skippedCount: 1,
+    newDates: weeklyDates.slice(1)
+  })
+  const created = valueOf(useAdminStore.getState().createRecurringSessions(weeklyInput))
+  expect(created.sessions.map((session) => session.date)).toEqual(weeklyDates.slice(1))
+  expect(created).toMatchObject({ candidateCount: 4, skippedCount: 1 })
+  const before = useAdminStore.getState()
+  let writes = 0
+  const unsubscribe = useAdminStore.subscribe(() => writes++)
+  try {
+    expect(
+      valueOf(
+        useAdminStore.getState().createRecurringSessions({ ...weeklyInput, room: 'Tercera aula' })
+      )
+    ).toEqual({ sessions: [], candidateCount: 4, skippedCount: 4 })
+    expect(useAdminStore.getState()).toBe(before)
+    expect(writes).toBe(0)
+  } finally {
+    unsubscribe()
+  }
+})
+
+for (const [index, patch] of [
+  { startDate: '2026-02-29' },
+  { endDate: '2026-04-31' },
+  { startDate: '2026-2-01' },
+  { startDate: '0000-01-01' },
+  { startDate: '2026-11-12' },
+  { weekdays: [] },
+  { weekdays: [7] },
+  { weekdays: [-1] },
+  { weekdays: [1.5] },
+  { weekdays: [NaN] },
+  { weekdays: ['1'] },
+  { weekdays: [null] },
+  { weekdays: [true] },
+  { weekdays: [1, undefined] },
+  { weekdays: null },
+  { startDate: '2026-11-02', endDate: '2026-11-02', weekdays: [2] },
+  { startsAt: '24:00' },
+  { startsAt: '9:00' },
+  { endsAt: '09:60' },
+  { endsAt: '09:00' },
+  { endsAt: '08:59' },
+  { room: ' ' },
+  { courseId: 'missing' }
+].entries()) {
+  test(`invalid weekly batch ${index}: ${JSON.stringify(patch)} rejects preview and save without partial writes`, () => {
+    const input = { ...weeklyInput, ...patch } as RecurringSessionInput
+    expectRejectedWithoutWrite(() => previewRecurringSessions(useAdminStore.getState(), input))
+    expectRejectedWithoutWrite(() => useAdminStore.getState().createRecurringSessions(input))
+  })
+}
+
+for (const currentPersonId of [null, 'missing', 'person-student-ana', 'person-teacher']) {
+  test(`weekly save rechecks admin identity ${currentPersonId} after a valid preview`, () => {
+    valueOf(previewRecurringSessions(useAdminStore.getState(), weeklyInput))
+    useAdminStore.setState({ currentPersonId })
+    expectRejectedWithoutWrite(() => useAdminStore.getState().createRecurringSessions(weeklyInput))
+  })
+}
+
+for (const context of ['foreign course', 'foreign admin', 'inactive admin', 'deleted course']) {
+  test(`weekly preview and save reject ${context} without writing`, () => {
+    valueOf(previewRecurringSessions(useAdminStore.getState(), weeklyInput))
+    const state = useAdminStore.getState()
+    if (context === 'foreign course')
+      useAdminStore.setState({
+        courses: state.courses.map((course) =>
+          course.id === weeklyInput.courseId ? { ...course, organizationId: 'elsewhere' } : course
+        )
+      })
+    if (context === 'deleted course') valueOf(state.deleteCourse(weeklyInput.courseId))
+    if (context === 'foreign admin' || context === 'inactive admin')
+      useAdminStore.setState({
+        people: state.people.map((person) =>
+          person.id === 'person-admin'
+            ? {
+                ...person,
+                ...(context === 'foreign admin'
+                  ? { organizationId: 'elsewhere' }
+                  : { state: 'invited' as const })
+              }
+            : person
+        )
+      })
+    expectRejectedWithoutWrite(() =>
+      previewRecurringSessions(useAdminStore.getState(), weeklyInput)
+    )
+    expectRejectedWithoutWrite(() => useAdminStore.getState().createRecurringSessions(weeklyInput))
+  })
+}
+
+test('preview, invalid and duplicate-only batches do not reserve IDs', () => {
+  const expectedFirst = valueOf(useAdminStore.getState().createSession(validSession)).id
+  const expectedNext = valueOf(useAdminStore.getState().createSession(validSession)).id
+  useAdminStore.getState().resetDemo()
+  useAdminStore.getState().enterDemo()
+  valueOf(previewRecurringSessions(useAdminStore.getState(), weeklyInput))
+  expectRejectedWithoutWrite(() =>
+    useAdminStore.getState().createRecurringSessions({ ...weeklyInput, room: '' })
+  )
+  const first = valueOf(
+    useAdminStore.getState().createSession({ ...validSession, date: weeklyDates[0] })
+  )
+  expect(first.id).toBe(expectedFirst)
+  const onlyExisting = { ...weeklyInput, endDate: weeklyDates[0] }
+  expect(valueOf(useAdminStore.getState().createRecurringSessions(onlyExisting)).sessions).toEqual(
+    []
+  )
+  const next = valueOf(
+    useAdminStore.getState().createRecurringSessions({
+      ...weeklyInput,
+      startDate: weeklyDates[1],
+      endDate: weeklyDates[1]
+    })
+  )
+  expect(next.sessions[0].id).toBe(expectedNext)
+})
+
+const calendarCases = [
+  { startDate: '2026-11-02', endDate: '2026-11-02', weekdays: [1, 1], dates: ['2026-11-02'] },
+  {
+    startDate: '2028-02-28',
+    endDate: '2028-03-01',
+    weekdays: [0, 1, 2, 3, 4, 5, 6],
+    dates: ['2028-02-28', '2028-02-29', '2028-03-01']
+  },
+  {
+    startDate: '2026-02-28',
+    endDate: '2026-03-01',
+    weekdays: [0, 1, 2, 3, 4, 5, 6],
+    dates: ['2026-02-28', '2026-03-01']
+  },
+  {
+    startDate: '2026-12-31',
+    endDate: '2027-01-02',
+    weekdays: [0, 1, 2, 3, 4, 5, 6],
+    dates: ['2026-12-31', '2027-01-01', '2027-01-02']
+  },
+  {
+    startDate: '2026-03-07',
+    endDate: '2026-03-30',
+    weekdays: [0],
+    dates: ['2026-03-08', '2026-03-15', '2026-03-22', '2026-03-29']
+  },
+  {
+    startDate: '2026-10-24',
+    endDate: '2026-11-02',
+    weekdays: [0],
+    dates: ['2026-10-25', '2026-11-01']
+  }
+]
+
+for (const zone of ['UTC', 'Europe/Madrid', 'America/New_York', 'Pacific/Kiritimati']) {
+  test(`calendar dates remain inclusive across leap days, year boundaries and DST in ${zone}`, () => {
+    // Compile only this TS module inside an isolated Node process, so TZ is set before Date exists.
+    const script = `
+      const fs = require('node:fs');
+      const Module = require('node:module');
+      const ts = require(process.argv[1]);
+      const filename = process.argv[2];
+      const compiled = ts.transpileModule(fs.readFileSync(filename, 'utf8'), {
+        compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 }
+      }).outputText;
+      const mod = new Module(filename);
+      mod.filename = filename;
+      mod.paths = Module._nodeModulePaths(require('node:path').dirname(filename));
+      mod._compile(compiled, filename);
+      const { useAdminStore, previewRecurringSessions } = mod.exports;
+      useAdminStore.getState().enterDemo();
+      const input = JSON.parse(process.argv[3]);
+      const cases = JSON.parse(process.argv[4]);
+      console.log(JSON.stringify(cases.map(({ dates, ...patch }) => {
+        const result = previewRecurringSessions(useAdminStore.getState(), { ...input, ...patch });
+        if (!result.ok) throw new Error(result.error);
+        return result.value.dates;
+      })));
+    `
+    const result = execFileSync(
+      process.execPath,
+      [
+        '-e',
+        script,
+        require.resolve('typescript'),
+        require.resolve('../../web/src/admin/adminStore'),
+        JSON.stringify(weeklyInput),
+        JSON.stringify(calendarCases)
+      ],
+      { env: { ...process.env, TZ: zone }, timeout: 5000, encoding: 'utf8' }
+    )
+    expect(JSON.parse(result)).toEqual(calendarCases.map((entry) => entry.dates))
+  })
+}
+
+test('366 candidates are accepted; 367 and huge year ranges reject before deduplication', () => {
+  const allDays = {
+    ...weeklyInput,
+    startDate: '2028-01-01',
+    endDate: '2028-12-31',
+    weekdays: [0, 1, 2, 3, 4, 5, 6]
+  }
+  const preview = valueOf(previewRecurringSessions(useAdminStore.getState(), allDays))
+  expect(preview.candidateCount).toBe(366)
+  expect(preview.dates).toHaveLength(366)
+  expect(preview.dates[0]).toBe('2028-01-01')
+  expect(preview.dates[365]).toBe('2028-12-31')
+  const created = valueOf(useAdminStore.getState().createRecurringSessions(allDays))
+  expect(created.sessions).toHaveLength(366)
+  expect(new Set(created.sessions.map((session) => session.id)).size).toBe(366)
+  for (const range of [
+    { ...allDays, endDate: '2029-01-01' },
+    { ...allDays, startDate: '0001-01-01', endDate: '9999-12-31' },
+    { ...allDays, startDate: '0001-01-01', endDate: '9999-12-31', weekdays: [1] }
+  ]) {
+    const start = performance.now()
+    expectRejectedWithoutWrite(() => previewRecurringSessions(useAdminStore.getState(), range))
+    expectRejectedWithoutWrite(() => useAdminStore.getState().createRecurringSessions(range))
+    expect(performance.now() - start).toBeLessThan(1000)
+  }
 })

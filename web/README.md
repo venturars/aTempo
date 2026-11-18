@@ -22,6 +22,18 @@ Abre <http://localhost:5191/admin> y pulsa **Abrir demo de administración**. No
 4. Abre la sesión. Debe mostrar el profesor del curso y su alumnado, con la asistencia pendiente.
 5. Para probar **Mis clases**, crea un curso cuyo profesor sea Miguel Rodríguez, el administrador docente del seed. Ahí solo aparecen sus cursos y los detalles son de lectura.
 
+### Sesiones semanales
+
+La creación semanal está implementada en #139 / PR #140 y verificada con la batería completa de 111 pruebas. Para probarla:
+
+1. Desde un curso, abrir **Programar sesión**. En **Repetición**, elegir **Semanal**; **Una sesión** conserva la creación individual. Introducir **Fecha inicial** 2026-11-02 y **Fecha final (incluida)** 2026-11-11, marcar **Lunes** y **Miércoles** y completar horario y aula compartidos.
+2. Comprobar **Vista previa**: cuatro coincidencias, cuatro por crear y cero ya existentes en un curso sin esas sesiones. Muestra primera y última fecha; **Ver fechas** despliega 2, 4, 9 y 11 de noviembre. **Guardar sesiones** cierra el formulario y muestra el listado del curso con las cantidades creadas y omitidas.
+3. Repetir el lote, también cambiando el aula: las coincidencias por curso/fecha/inicio/fin se omiten. Si todas existen, el formulario permanece abierto con **Nada nuevo** y no guarda.
+4. Cancelar, seleccionar un rango sin coincidencias o días vacíos, invertir el rango o superar 366 ocurrencias candidatas: no debe escribirse ninguna sesión. Las fechas deben ser reales y el fin posterior al inicio del mismo día.
+5. Editar o eliminar una ocurrencia y comprobar que las demás permanecen. Conservar la creación de una sesión única y su edición. Probar teclado, móvil y ambos temas.
+
+Las fechas del rango son inclusivas y se calculan sin cambios por zona horaria o DST. Cada ocurrencia funciona como una sesión independiente; el límite de 366 se aplica antes de omitir duplicados. La batería Playwright siguiente pasó 111/111 en 40,5 s (85 pruebas del store y 26 de navegador; 46 nuevas y 65 anteriores). También pasó el build de `web/`. La evidencia y el alcance de las comprobaciones están en [admin-prototype.md](../docs/admin-prototype.md#verificación-fresca-de-recurrencia--139--pr-140). La revisión de concepto pasó sin discrepancias y las cuatro pruebas focales de capturas pasaron tras ajustar su posición inicial; se revisaron móvil claro y escritorio oscuro.
+
 ### Editar y eliminar
 
 - En **Personas**, cada fila ofrece **Editar** y **Eliminar**. Editar abre el mismo formulario con los datos actuales; **Guardar cambios** conserva el identificador y el estado de la cuenta. La cuenta admin permite editar nombre/correo, muestra sus roles actuales en solo lectura y no puede eliminarse a sí misma.
@@ -30,7 +42,7 @@ Abre <http://localhost:5191/admin> y pulsa **Abrir demo de administración**. No
 - Abre una sesión para **Editar sesión** o **Eliminar sesión**. Editar permite cambiar fecha, horario y aula, manteniendo su curso. Eliminar esa sesión conserva el curso y su alumnado.
 - **Cancelar** una edición o confirmación conserva los datos. Los listados de las sesiones programadas reflejan los cambios del curso. **Mis clases** sigue siendo de lectura.
 
-La ampliación CRUD está verificada en local: batería completa 65/65 y comprobación focal 3/3 tras el último ajuste del texto de confirmación. La secuencia y el alcance de estas comprobaciones están en [admin-prototype.md](../docs/admin-prototype.md#verificación-y-runbook-local).
+La evidencia histórica de la ampliación CRUD es: batería completa 65/65 y comprobación focal 3/3 tras el último ajuste del texto de confirmación. La secuencia y el alcance de estas comprobaciones están en [admin-prototype.md](../docs/admin-prototype.md#verificación-y-runbook-local).
 
 El tema claro/oscuro se cambia desde la cabecera. **Cerrar sesión** vuelve a la entrada de la demo; los datos continúan en memoria mientras no recargues. Recargar el navegador restaura los datos iniciales y exige abrir de nuevo la demo. Entrar o salir de administración no cambia las cuentas ni la sesión del alumno. Para parar Vite, usa **Ctrl+C** en su terminal.
 

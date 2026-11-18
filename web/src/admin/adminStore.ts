@@ -47,6 +47,23 @@ export type CreateSessionInput = {
   room: string
 }
 
+export type RecurringSessionInput = Omit<CreateSessionInput, 'date'> & {
+  startDate: string
+  endDate: string
+  weekdays: number[]
+}
+export type RecurringSessionPreview = {
+  dates: string[]
+  newDates: string[]
+  candidateCount: number
+  skippedCount: number
+}
+export type RecurringSessionResult = {
+  sessions: ClassSession[]
+  candidateCount: number
+  skippedCount: number
+}
+
 type AdminData = {
   organization: { id: string; name: string }
   people: Person[]
@@ -62,6 +79,7 @@ export type AdminStore = AdminData & {
   invitePerson: (input: InvitePersonInput) => MutationResult<Person>
   createCourse: (input: CreateCourseInput) => MutationResult<Course>
   createSession: (input: CreateSessionInput) => MutationResult<ClassSession>
+  createRecurringSessions: (input: RecurringSessionInput) => MutationResult<RecurringSessionResult>
   updatePerson: (id: string, input: InvitePersonInput) => MutationResult<Person>
   deletePerson: (id: string) => MutationResult<null>
   updateCourse: (id: string, input: CreateCourseInput) => MutationResult<Course>
@@ -267,6 +285,68 @@ function validateSession(
   }
 }
 
+// Pure preview: no state changes and no IDs reserved. The store calls it again on save.
+export function previewRecurringSessions(
+  state: AdminData,
+  input: RecurringSessionInput
+): MutationResult<RecurringSessionPreview> {
+  const error = adminError(state)
+  if (error) return { ok: false, error }
+  if (!isValidDate(input.startDate) || !isValidDate(input.endDate))
+    return { ok: false, error: 'Escribe fechas válidas en formato AAAA-MM-DD.' }
+  if (input.endDate < input.startDate)
+    return { ok: false, error: 'La fecha final debe ser igual o posterior a la inicial.' }
+  if (
+    !Array.isArray(input.weekdays) ||
+    input.weekdays.length === 0 ||
+    [...input.weekdays].some((day) => !Number.isInteger(day) || day < 0 || day > 6)
+  )
+    return { ok: false, error: 'Selecciona al menos un día de la semana válido.' }
+  const validSession = validateSession(state, { ...input, date: input.startDate })
+  if (!validSession.ok) return validSession
+
+  const dayMilliseconds = 24 * 60 * 60 * 1000
+  const start = new Date(`${input.startDate}T00:00:00Z`)
+  const end = new Date(`${input.endDate}T00:00:00Z`)
+  const rangeDays = (end.getTime() - start.getTime()) / dayMilliseconds
+  const offsets = [...new Set(input.weekdays)].map((day) => (day - start.getUTCDay() + 7) % 7)
+  const candidateCount = offsets.reduce(
+    (total, offset) => total + (offset > rangeDays ? 0 : Math.floor((rangeDays - offset) / 7) + 1),
+    0
+  )
+  if (candidateCount > 366)
+    return {
+      ok: false,
+      error: 'El lote supera el máximo de 366 sesiones. Reduce el rango o los días.'
+    }
+  if (candidateCount === 0)
+    return { ok: false, error: 'No hay fechas que coincidan con los días seleccionados.' }
+
+  const dates: string[] = []
+  for (const offset of offsets) {
+    for (let day = offset; day <= rangeDays; day += 7) {
+      dates.push(new Date(start.getTime() + day * dayMilliseconds).toISOString().slice(0, 10))
+    }
+  }
+  dates.sort()
+  const existingDates = new Set(
+    state.sessions
+      .filter(
+        (session) =>
+          session.organizationId === state.organization.id &&
+          session.courseId === input.courseId &&
+          session.startsAt === input.startsAt &&
+          session.endsAt === input.endsAt
+      )
+      .map((session) => session.date)
+  )
+  const newDates = dates.filter((date) => !existingDates.has(date))
+  return {
+    ok: true,
+    value: { dates, newDates, candidateCount, skippedCount: candidateCount - newDates.length }
+  }
+}
+
 export const useAdminStore = create<AdminStore>((set, get) => {
   const seed = createSeed()
   let counters = {
@@ -441,6 +521,27 @@ export const useAdminStore = create<AdminStore>((set, get) => {
       }
       set({ sessions: [...state.sessions, session] })
       return { ok: true, value: session }
+    },
+    createRecurringSessions: (input) => {
+      const state = get()
+      const preview = previewRecurringSessions(state, input)
+      if (!preview.ok) return preview
+      const { newDates, candidateCount, skippedCount } = preview.value
+      // Validate the complete batch before allocating IDs or writing anything.
+      const validated: CreateSessionInput[] = []
+      for (const date of newDates) {
+        const result = validateSession(state, { ...input, date })
+        if (!result.ok) return result
+        validated.push(result.value)
+      }
+      const sessions: ClassSession[] = validated.map((value) => ({
+        id: nextId('session', state.sessions),
+        organizationId: state.organization.id,
+        ...value,
+        state: 'scheduled'
+      }))
+      if (sessions.length > 0) set({ sessions: [...state.sessions, ...sessions] })
+      return { ok: true, value: { sessions, candidateCount, skippedCount } }
     },
     updateSession: (id, input) => {
       const state = get()

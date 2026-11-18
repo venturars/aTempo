@@ -531,3 +531,190 @@ for (const theme of ['atempo-oscuro', 'atempo-claro']) {
     await expect(page.getByRole('row').filter({ hasText: 'ana@neoland.example' })).toBeVisible()
   })
 }
+
+async function openWeeklyForm(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Programar sesión', exact: true }).click()
+  await page.getByRole('radio', { name: 'Semanal', exact: true }).check()
+  await expect(page.getByRole('alert')).toHaveCount(0)
+  await page.getByLabel('Fecha inicial', { exact: true }).fill('2026-11-02')
+  await page.getByLabel('Fecha final (incluida)', { exact: true }).fill('2026-11-11')
+  await page
+    .getByRole('group', { name: 'Días de la semana', exact: true })
+    .getByRole('checkbox', { name: 'Lunes', exact: true })
+    .check()
+  await page.getByRole('checkbox', { name: 'Miércoles', exact: true }).check()
+  await page.getByLabel('Hora de inicio', { exact: true }).fill('09:00')
+  await page.getByLabel('Hora de fin', { exact: true }).fill('11:00')
+  await page.getByLabel('Aula', { exact: true }).fill('Aula semanal')
+}
+
+async function openSeedCourse(page: Page): Promise<void> {
+  await enterAdmin(page)
+  await adminNav(page, 'Cursos')
+  await page.getByRole('link', { name: 'Desarrollo web', exact: true }).click()
+}
+
+test('weekly preview creates four independent sessions and returns to course for individual CRUD', async ({
+  page
+}) => {
+  await openSeedCourse(page)
+  await openWeeklyForm(page)
+  const preview = page.getByRole('region', { name: 'Vista previa', exact: true })
+  await expect(preview).toContainText('4 coincidencias · 4 por crear · 0 ya existentes')
+  await preview.getByText('Ver fechas', { exact: true }).click()
+  await expect(preview.getByRole('listitem')).toHaveText([
+    '2 de noviembre de 2026',
+    '4 de noviembre de 2026',
+    '9 de noviembre de 2026',
+    '11 de noviembre de 2026'
+  ])
+  await page.getByRole('button', { name: 'Guardar sesiones', exact: true }).click()
+  await expect(page).toHaveURL(/\/admin\/courses\/course-web$/)
+  await expect(page.getByRole('form', { name: 'Programar sesión' })).toHaveCount(0)
+  await expect(page.getByRole('status')).toHaveText(
+    '4 sesiones creadas de 4 coincidencias. 0 ya existentes omitidas.'
+  )
+  const table = page.getByRole('table', { name: 'Sesiones del curso' })
+  await expect(table.getByRole('row')).toHaveCount(6)
+  const links = await table
+    .getByRole('link')
+    .evaluateAll((elements) => elements.map((element) => element.getAttribute('href')))
+  expect(new Set(links).size).toBe(5)
+  await table.getByRole('link', { name: '2 de noviembre de 2026', exact: true }).click()
+  const occurrencePath = new URL(page.url()).pathname
+  await page.getByRole('button', { name: 'Editar sesión', exact: true }).click()
+  await expect(page.getByLabel('Fecha', { exact: true })).toHaveValue('2026-11-02')
+  await expect(page.getByRole('radio', { name: 'Semanal', exact: true })).toHaveCount(0)
+  await page.getByLabel('Aula', { exact: true }).fill('Solo esta ocurrencia')
+  await page.getByRole('button', { name: 'Guardar cambios', exact: true }).click()
+  expect(new URL(page.url()).pathname).toBe(occurrencePath)
+  await page.getByRole('link', { name: 'Volver al curso', exact: true }).click()
+  await expect(table.getByRole('row').filter({ hasText: 'Solo esta ocurrencia' })).toHaveCount(1)
+  await expect(table.getByRole('row').filter({ hasText: 'Aula semanal' })).toHaveCount(3)
+  await table.getByRole('link', { name: '4 de noviembre de 2026', exact: true }).click()
+  await page.getByRole('button', { name: 'Eliminar sesión', exact: true }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Eliminar', exact: true }).click()
+  await expect(page).toHaveURL(/\/admin\/courses\/course-web$/)
+  await expect(table.getByRole('row')).toHaveCount(5)
+  await expect(
+    table.getByRole('link', { name: '9 de noviembre de 2026', exact: true })
+  ).toBeVisible()
+  await expect(
+    table.getByRole('link', { name: '11 de noviembre de 2026', exact: true })
+  ).toBeVisible()
+})
+
+test('weekly UI omits exact duplicates in other rooms and repeated submission creates nothing', async ({
+  page
+}) => {
+  await openSeedCourse(page)
+  await page.getByRole('button', { name: 'Programar sesión', exact: true }).click()
+  await expect(page.getByRole('radio', { name: 'Una sesión', exact: true })).toBeChecked()
+  await page.getByLabel('Fecha', { exact: true }).fill('2026-11-02')
+  await page.getByLabel('Hora de fin', { exact: true }).fill('11:00')
+  await page.getByLabel('Aula', { exact: true }).fill('Aula original')
+  await page.getByRole('button', { name: 'Guardar sesión', exact: true }).click()
+  await expect(page).toHaveURL(/\/admin\/sessions\//)
+  await page.getByRole('link', { name: 'Volver al curso', exact: true }).click()
+  await openWeeklyForm(page)
+  await expect(page.getByRole('region', { name: 'Vista previa' })).toContainText(
+    '4 coincidencias · 3 por crear · 1 ya existentes'
+  )
+  await page.getByRole('button', { name: 'Guardar sesiones', exact: true }).click()
+  await expect(page.getByRole('status')).toContainText(
+    '3 sesiones creadas de 4 coincidencias. 1 ya existentes omitidas.'
+  )
+  const table = page.getByRole('table', { name: 'Sesiones del curso' })
+  await expect(table.getByRole('row')).toHaveCount(6)
+  await expect(table.getByRole('row').filter({ hasText: 'Aula original' })).toHaveCount(1)
+  const before = await table.innerText()
+  await openWeeklyForm(page)
+  await expect(page.getByRole('region', { name: 'Vista previa' })).toContainText(
+    '4 coincidencias · 0 por crear · 4 ya existentes'
+  )
+  for (let submission = 0; submission < 2; submission++) {
+    await page.getByRole('button', { name: 'Guardar sesiones', exact: true }).click()
+    await expect(page.getByRole('status')).toHaveText('Nada nuevo: las 4 sesiones ya existen.')
+    expect(await table.innerText()).toBe(before)
+  }
+})
+
+test('weekly form errors are correctable and cancel preserves existing sessions', async ({
+  page
+}) => {
+  await openSeedCourse(page)
+  const table = page.getByRole('table', { name: 'Sesiones del curso' })
+  const before = await table.innerText()
+  await page.getByRole('button', { name: 'Programar sesión', exact: true }).click()
+  await page.getByRole('radio', { name: 'Semanal', exact: true }).check()
+  await expect(page.getByRole('alert')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Guardar sesiones', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('fechas válidas')
+  await page.getByLabel('Fecha inicial', { exact: true }).fill('2026-11-02')
+  await page.getByLabel('Fecha final (incluida)', { exact: true }).fill('2026-11-11')
+  await page.getByRole('button', { name: 'Guardar sesiones', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('día de la semana')
+  await page.getByRole('checkbox', { name: 'Lunes', exact: true }).check()
+  await page.getByLabel('Aula', { exact: true }).fill('Temporal')
+  await page.getByLabel('Hora de fin', { exact: true }).fill('09:00')
+  await page.getByRole('button', { name: 'Guardar sesiones', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('posterior')
+  expect(await table.innerText()).toBe(before)
+  await page.getByLabel('Hora de fin', { exact: true }).fill('11:00')
+  await expect(page.getByRole('alert')).toHaveCount(0)
+  await expect(page.getByRole('region', { name: 'Vista previa' })).toContainText('2 por crear')
+  await page.getByRole('button', { name: 'Cancelar', exact: true }).click()
+  await expect(page.getByRole('form', { name: 'Programar sesión' })).toHaveCount(0)
+  expect(await table.innerText()).toBe(before)
+})
+
+for (const width of [390, 1280]) {
+  for (const theme of ['atempo-oscuro', 'atempo-claro']) {
+    test(`weekly form fits ${width}px in ${theme} with keyboard selection and cancellation`, async ({
+      page
+    }) => {
+      await page.setViewportSize({ width, height: 900 })
+      await page.addInitScript(
+        (name) => sessionStorage.setItem('atempo-student-theme', name),
+        theme
+      )
+      await openSeedCourse(page)
+      await openWeeklyForm(page)
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
+      const group = page.getByRole('group', { name: 'Días de la semana', exact: true })
+      await expect(group.getByRole('checkbox')).toHaveCount(7)
+      await group.getByRole('checkbox', { name: 'Lunes', exact: true }).focus()
+      await page.keyboard.press('Space')
+      await expect(group.getByRole('checkbox', { name: 'Lunes', exact: true })).not.toBeChecked()
+      await page.keyboard.press('Space')
+      await page.keyboard.press('Tab')
+      await expect(group.getByRole('checkbox', { name: 'Martes', exact: true })).toBeFocused()
+      await expect(page.getByRole('region', { name: 'Vista previa' })).toContainText(
+        '4 coincidencias'
+      )
+      await page.getByText('Ver fechas', { exact: true }).click()
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= document.documentElement.clientWidth
+        )
+      ).toBe(true)
+      await page.evaluate(async () => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+        await new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+        )
+      })
+      await page.screenshot({
+        path: `/private/tmp/atempo-recurrence-qa/weekly-${theme}-${width}.png`,
+        fullPage: true,
+        animations: 'disabled'
+      })
+      await page.getByRole('button', { name: 'Cancelar', exact: true }).focus()
+      await page.keyboard.press('Enter')
+      await expect(page.getByRole('form', { name: 'Programar sesión' })).toHaveCount(0)
+      await expect(
+        page.getByRole('table', { name: 'Sesiones del curso' }).getByRole('row')
+      ).toHaveCount(2)
+    })
+  }
+}

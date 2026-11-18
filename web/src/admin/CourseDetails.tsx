@@ -15,6 +15,7 @@ export function CourseDetails({
 }): React.JSX.Element {
   const { courses, sessions, people, currentPersonId, organization } = useAdminStore()
   const [creating, setCreating] = useState(false)
+  const [sessionNotice, setSessionNotice] = useState('')
   const [editing, setEditing] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const navigate = useNavigate()
@@ -50,7 +51,14 @@ export function CourseDetails({
       >
         {!readOnly && !creating && !editing ? (
           <div className="flex flex-wrap gap-2">
-            <button className="btn btn-primary" type="button" onClick={() => setCreating(true)}>
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={() => {
+                setSessionNotice('')
+                setCreating(true)
+              }}
+            >
               Programar sesión
             </button>
             <button className="btn" type="button" onClick={() => setEditing(true)}>
@@ -86,8 +94,18 @@ export function CourseDetails({
         />
       ) : null}
       {creating && !readOnly ? (
-        <SessionForm courseId={course.id} onCancel={() => setCreating(false)} />
+        <SessionForm
+          courseId={course.id}
+          onCancel={() => setCreating(false)}
+          onRecurringSaved={(result) => {
+            setCreating(false)
+            setSessionNotice(
+              `${result.sessions.length} sesiones creadas de ${result.candidateCount} coincidencias. ${result.skippedCount} ya existentes omitidas.`
+            )
+          }}
+        />
       ) : null}
+      {sessionNotice ? <p role="status">{sessionNotice}</p> : null}
       <section className="flex min-w-0 flex-col gap-4">
         <h2 className="text-lg font-semibold">Sesiones</h2>
         {courseSessions.length === 0 ? (

@@ -1,6 +1,6 @@
 # Administración de organización — prototipo web
 
-Fecha: 2026-11-18. Estado: ampliación CRUD implementada y guardada con evidencia local histórica. Miguel ha autorizado su publicación mediante la issue [#139](https://github.com/venturars/aTempo/issues/139), PR hacia `staging`, push y solicitudes de revisión a `venturars` y `Elladeyavorsky`. La entrega exige repetir las comprobaciones y registrar sus resultados actuales.
+Fecha: 2026-11-18. Estado: CRUD publicado en la [PR #140](https://github.com/venturars/aTempo/pull/140), vinculado a [#139](https://github.com/venturars/aTempo/issues/139). La ampliación de sesiones semanales está implementada y verificada con 111/111 pruebas frescas en esa misma entrega; la revisión de concepto pasó sin discrepancias. Destino `staging`; revisores `venturars` y `Elladeyavorsky`.
 
 ## Alcance local
 
@@ -42,6 +42,20 @@ El recorrido verificable es **invitar a una persona → crear un curso → asign
 
 El mock conserva sus métodos de creación y añade `updatePerson(id, InvitePersonInput)`, `updateCourse(id, CreateCourseInput)` y `updateSession(id, CreateSessionInput)`, con el resultado tipado existente de la entidad. `deletePerson(id)`, `deleteCourse(id)` y `deleteSession(id)` devuelven `MutationResult<null>`. El formulario de sesión conserva el curso del contexto; actualizar no permite trasladarla a otro curso. Estas firmas son internas al prototipo, no endpoints acordados.
 
+### Ampliación semanal implementada — #139 / PR #140
+
+La comparación histórica `5ec718f717eb660b5073cc571b16fee51a3baa11...bfaaaf8` cubre el CRUD inicial; la recurrencia se revisa desde `becdb531ae1697dba01e45a5901e20cdae8708d5` hasta su HEAD final.
+
+Desde el curso, **Programar sesión** ofrece **Repetición** con **Una sesión** o **Semanal**. Semanal pide **Fecha inicial**, **Fecha final (incluida)**, días de semana con checkboxes de lunes a domingo y hora inicial/final y aula compartidas. Ambas fechas son inclusivas. **Vista previa** muestra coincidencias, sesiones por crear y ya existentes, primera/última fecha y **Ver fechas** para desplegar todas las fechas, indicando las existentes. El máximo es 366 ocurrencias candidatas por lote, antes de descontar existentes.
+
+Las fechas se calculan como calendario con aritmética UTC, independientes de zona horaria y cambios DST, respetando años bisiestos. Rechazar fechas imposibles, rango invertido, días inválidos o vacíos, ningún día coincidente, más de 366 candidatas y horario/aula inválidos, con generación acotada para rangos grandes.
+
+El store revalida admin, organización, curso y todo el lote antes de guardar nuevas sesiones en una sola actualización. Un duplicado exacto tiene el mismo curso, fecha, inicio y fin; cambiar el aula no permite duplicarlo. Repetir el envío omite las existentes. Si todas existen, el formulario permanece abierto con **Nada nuevo** y no se escribe. No se añaden otras reglas de solapamientos.
+
+Cada ocurrencia es una `ClassSession` con ID estable y único. Editar o eliminar una solo afecta a ella; no hay entidad de serie ni edición/borrado masivo. Preview y cancelar no escriben. Al pulsar **Guardar sesiones** con nuevas ocurrencias, se cierra el formulario y se muestra el listado del curso con las cantidades creadas, candidatas y omitidas, sin abrir una sesión arbitraria. Los checkboxes de días tienen etiquetas y agrupación accesible; se reutilizan el formulario y diseño compartidos, sin nuevas rutas/dependencias/tema ni backend.
+
+La verificación fresca cubre selección semanal inclusiva, preview y cantidades, duplicados parciales/totales/aula distinta y reenvío, cancelación/atomicidad/guards, calendario DST/bisiesto en cuatro zonas, límite 366/367 y rangos grandes, creación única y edición/borrado individual. La batería completa y el build pasaron; la evidencia está en el runbook. Los resultados CRUD anteriores se conservan como historia.
+
 ### Diseño y reutilización
 
 La referencia visual es [PR #123 de Meghan](https://github.com/venturars/aTempo/pull/123), commit [`4884154b397dd6b14595c57ec0cb8be46f8f8fbf`](https://github.com/venturars/aTempo/tree/4884154b397dd6b14595c57ec0cb8be46f8f8fbf). Se reutilizan `docs/storybook/src/system.css`, fuentes, clases daisyUI, `field`, `nav-link`, tablas, espaciado de la cabecera y el control de tema de su `StudentLayout`. El control se extrae a `web/src/shared/ThemeToggle.tsx` y se conserva su comportamiento en alumno. No se copian estilos en un tema admin ni se añade Tempito a administración. No se añaden ajustes de letter-spacing en los componentes nuevos.
@@ -73,6 +87,7 @@ La referencia visual es [PR #123 de Meghan](https://github.com/venturars/aTempo/
 - **Regresión:** login y dashboard del alumno, tema y cierre de sesión conservan el comportamiento de PR #123. Build/typecheck de `web/` y pruebas focales pasan sin modificar snapshots existentes.
 - **CRUD completo:** crear, consultar y editar una persona, un curso y una sesión; conservar sus IDs, mostrar los valores guardados y comprobar que cancelar la edición conserva los anteriores.
 - **Relaciones al eliminar:** cancelar cada borrado no escribe; borrar alumno limpia sus matrículas; profesor asignado y autoeliminación admin se rechazan; borrar curso elimina sus sesiones y conserva personas; borrar sesión conserva el curso. Los enlaces a elementos borrados no enseñan otro elemento creado después.
+- **Recurrencia semanal:** dos días por semana y rango inclusivo producen las fechas previstas, con resumen de nuevas/omitidas; crear vuelve al listado con cantidad. Repetir omite existentes, también con aula distinta; cancelar o rechazar no escribe. Una ocurrencia se edita/elimina sin alterar sus hermanas. Comprobar 366/367, fechas imposibles, DST/bisiestos, días vacíos/ajenos/sin coincidencias y guards. Verificado en la batería fresca de 111 pruebas.
 - **Cambios rechazados:** correo duplicado, cambio de rol incompatible, profesor/alumnado no elegibles, fecha/horas inválidas, IDs extranjeros/desconocidos o sesión admin cerrada no cambian el estado.
 
 Usar el Playwright instalado en el repositorio para pruebas de lógica y navegador; no añadir otro framework. Las pruebas y servidores deben cerrarse al terminar. No se declara aceptación hasta registrar sus comandos y resultados.
@@ -122,6 +137,16 @@ Fuentes: transcripción «Clase AI Engineer», 2026-11-18, y `brief-api-v1.md` e
 - Las llegadas reales llevan hora del servidor. Las correcciones posteriores deben guardar quién, cuándo y motivo; el almacenamiento temporal/permanente no cambia esa responsabilidad ni se reproduce en estas pantallas.
 
 ## Verificación y runbook local
+
+### Verificación fresca de recurrencia — #139 / PR #140
+
+Resultados del 2026-11-18 sobre la implementación semanal, antes del commit final:
+
+- Desde `desktop/`, `pnpm exec playwright test --config playwright.admin.config.ts --workers=1 --retries=0 --update-snapshots=none`: **111/111 PASS en 40,5 s** (85 del store y 26 de navegador; 46 nuevas y 65 anteriores), sin actualizar snapshots. Incluye calendario UTC/DST/bisiestos en cuatro zonas mediante subprocesos, límite 366/367 y generación acotada, duplicados/reenvío, atomicidad/guards y regresiones CRUD/alumno.
+- Desde `web/`, `pnpm build`: PASS, incluidos TypeScript y Vite. TypeScript estricto nativo de pruebas/configuración y ESLint nativo de pruebas: PASS.
+- ESLint suplementario de los tres archivos web modificados: PASS con la configuración desktop, opciones explícitas de Prettier y `react-refresh/only-export-components` desactivada. `web/` no tiene configuración ESLint propia.
+- Formato de pruebas y `git diff --check`: PASS. El intento de TypeScript/ESLint en Docker quedó bloqueado por `tsc`/`eslint` ausentes en el volumen desktop vacío; se validaron con las dependencias nativas existentes, sin instalar paquetes.
+- El servidor propio de pruebas en 5193 quedó cerrado; el servidor preexistente en 5191 se conservó. La revisión de concepto pasó sin discrepancias. Tras añadir desplazamiento al inicio solo a la preparación de capturas, las cuatro pruebas focales pasaron 4/4 en 7,5 s; la batería 111/111 precede a ese ajuste de pruebas y no hubo cambios de producción posteriores. La inspección visual confirmó controles semanales y preview claros en móvil claro de 390 px y escritorio oscuro de 1280 px, con la cabecera correctamente situada. Commit y publicación de la ampliación se siguen en #139.
 
 ### Verificación fresca para #139
 
