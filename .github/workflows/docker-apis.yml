@@ -16,6 +16,15 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Prepare isolated PostgreSQL password
+        run: |
+          password="$(openssl rand -hex 24)"
+          echo "::add-mask::$password"
+          printf 'ATEMPO_POSTGRES_PASSWORD=%s\n' "$password" >> "$GITHUB_ENV"
+
+      - name: Match container user to checkout ownership
+        run: sudo chown -R 1000:1000 "$GITHUB_WORKSPACE"
+
       - name: Install from empty volumes
         run: |
           docker compose down --volumes --remove-orphans
@@ -24,6 +33,16 @@ jobs:
 
       - name: Repeat install with existing volumes
         run: docker compose run --rm setup
+
+      - name: Verify Linux dependencies stay in Docker volumes
+        run: |
+          for path in desktop/node_modules docs/storybook/node_modules api-router/node_modules \
+            api-postgresql/node_modules api-rustfs/node_modules api-sqlite/.venv; do
+            if [[ -d "$path" ]]; then
+              contents="$(find "$path" -mindepth 1 -print -quit)"
+              [[ -z "$contents" ]] || { echo "Host dependency found under $path" >&2; exit 1; }
+            fi
+          done
 
       - name: Check Node APIs
         run: |
@@ -109,3 +128,7 @@ jobs:
       - name: Stop services
         if: always()
         run: docker compose down --remove-orphans
+
+      - name: Restore runner checkout ownership
+        if: always()
+        run: sudo chown -R "$(id -u):$(id -g)" "$GITHUB_WORKSPACE"
