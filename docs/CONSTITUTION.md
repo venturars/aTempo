@@ -40,5 +40,5 @@ La SDK de lógica de negocio vivirá en `sdk/` (carpeta pendiente), al mismo niv
 ## 5. Dónde seguir
 
 - [STYLE.md](STYLE.md): los dos temas y el enlace a la guía visual.
-- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio y del API-router.
-- [TREE.md](TREE.md): árboles de `desktop/` y `api-router/`.
+- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio y flujo de `api-router/`, la SDK prevista y `api-sqlite/`.
+- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/` y `api-sqlite/`, y ubicación prevista de `sdk/`.
