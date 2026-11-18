@@ -1,5 +1,8 @@
-import { Link } from '@tanstack/react-router'
+import { useState } from 'react'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { useAdminStore } from './adminStore'
+import { SessionForm } from './SessionForm'
+import { DeleteConfirmation } from './DeleteConfirmation'
 import { PageHeading, PersonState, formatDate } from './adminUi'
 
 export function SessionDetails({
@@ -11,7 +14,11 @@ export function SessionDetails({
   courseId?: string
   readOnly?: boolean
 }): React.JSX.Element {
-  const { sessions, courses, people, currentPersonId, organization } = useAdminStore()
+  const { sessions, courses, people, currentPersonId, organization, deleteSession } =
+    useAdminStore()
+  const [editing, setEditing] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const navigate = useNavigate()
   const session = sessions.find(
     (item) => item.id === sessionId && item.organizationId === organization.id
   )
@@ -64,7 +71,42 @@ export function SessionDetails({
       <PageHeading
         title={course.name}
         description={`${formatDate(session.date)} · ${session.startsAt}–${session.endsAt}`}
-      />
+      >
+        {!readOnly && !editing ? (
+          <div className="flex flex-wrap gap-2">
+            <button className="btn" type="button" onClick={() => setEditing(true)}>
+              Editar sesión
+            </button>
+            <button
+              className="btn btn-ghost text-error"
+              type="button"
+              onClick={() => setDeleting(true)}
+            >
+              Eliminar sesión
+            </button>
+          </div>
+        ) : null}
+      </PageHeading>
+      {editing && !readOnly ? (
+        <SessionForm
+          key={session.id}
+          courseId={course.id}
+          session={session}
+          onCancel={() => setEditing(false)}
+          onSaved={() => setEditing(false)}
+        />
+      ) : null}
+      {deleting && !readOnly ? (
+        <DeleteConfirmation
+          title="Eliminar sesión"
+          description={`Se eliminará la sesión de «${course.name}» del ${formatDate(session.date)}, ${session.startsAt}–${session.endsAt}. El curso y sus alumnos se conservarán.`}
+          onConfirm={() => deleteSession(session.id)}
+          onCancel={() => setDeleting(false)}
+          onDeleted={() => {
+            void navigate({ to: '/admin/courses/$courseId', params: { courseId: course.id } })
+          }}
+        />
+      ) : null}
       <dl className="flex flex-wrap gap-x-12 gap-y-5">
         <div>
           <dt className="text-sm text-base-content/60">Profesor</dt>

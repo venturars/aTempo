@@ -1,7 +1,10 @@
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useAdminStore } from './adminStore'
-import { FormError, PageHeading, PersonState, formatDate } from './adminUi'
+import { CourseForm } from './CourseForm'
+import { SessionForm } from './SessionForm'
+import { DeleteConfirmation } from './DeleteConfirmation'
+import { PageHeading, PersonState, formatDate } from './adminUi'
 
 export function CourseDetails({
   courseId,
@@ -12,6 +15,10 @@ export function CourseDetails({
 }): React.JSX.Element {
   const { courses, sessions, people, currentPersonId, organization } = useAdminStore()
   const [creating, setCreating] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const navigate = useNavigate()
+  const deleteCourse = useAdminStore((state) => state.deleteCourse)
   const course = courses.find(
     (item) => item.id === courseId && item.organizationId === organization.id
   )
@@ -41,12 +48,43 @@ export function CourseDetails({
         title={course.name}
         description={`Profesor: ${teacher?.name ?? 'Sin asignar'}${teacher?.state === 'invited' ? ' · Invitación pendiente' : ''}`}
       >
-        {!readOnly && !creating ? (
-          <button className="btn btn-primary" type="button" onClick={() => setCreating(true)}>
-            Programar sesión
-          </button>
+        {!readOnly && !creating && !editing ? (
+          <div className="flex flex-wrap gap-2">
+            <button className="btn btn-primary" type="button" onClick={() => setCreating(true)}>
+              Programar sesión
+            </button>
+            <button className="btn" type="button" onClick={() => setEditing(true)}>
+              Editar curso
+            </button>
+            <button
+              className="btn btn-ghost text-error"
+              type="button"
+              onClick={() => setDeleting(true)}
+            >
+              Eliminar curso
+            </button>
+          </div>
         ) : null}
       </PageHeading>
+      {editing && !readOnly ? (
+        <CourseForm
+          key={course.id}
+          course={course}
+          onCancel={() => setEditing(false)}
+          onSaved={() => setEditing(false)}
+        />
+      ) : null}
+      {deleting && !readOnly ? (
+        <DeleteConfirmation
+          title="Eliminar curso"
+          description={`Se eliminará «${course.name}» y sus ${courseSessions.length} sesiones programadas. Las personas seguirán en la organización.`}
+          onConfirm={() => deleteCourse(course.id)}
+          onCancel={() => setDeleting(false)}
+          onDeleted={() => {
+            void navigate({ to: '/admin/courses' })
+          }}
+        />
+      ) : null}
       {creating && !readOnly ? (
         <SessionForm courseId={course.id} onCancel={() => setCreating(false)} />
       ) : null}
@@ -133,96 +171,5 @@ function UnavailableCourse({ readOnly }: { readOnly: boolean }): React.JSX.Eleme
         {readOnly ? 'Volver a mis clases' : 'Volver a cursos'}
       </Link>
     </>
-  )
-}
-
-function SessionForm({
-  courseId,
-  onCancel
-}: {
-  courseId: string
-  onCancel: () => void
-}): React.JSX.Element {
-  const createSession = useAdminStore((state) => state.createSession)
-  const navigate = useNavigate()
-  const [date, setDate] = useState('')
-  const [startsAt, setStartsAt] = useState('09:00')
-  const [endsAt, setEndsAt] = useState('10:00')
-  const [room, setRoom] = useState('')
-  const [error, setError] = useState('')
-
-  function onSubmit(event: FormEvent<HTMLFormElement>): void {
-    event.preventDefault()
-    const result = createSession({ courseId, date, startsAt, endsAt, room })
-    if (!result.ok) {
-      setError(result.error)
-      return
-    }
-    void navigate({
-      to: '/admin/sessions/$sessionId',
-      params: { sessionId: result.value.id }
-    })
-  }
-
-  return (
-    <form
-      noValidate
-      className="flex max-w-lg flex-col gap-5"
-      onSubmit={onSubmit}
-      aria-label="Programar sesión"
-    >
-      <h2 className="text-lg font-semibold">Nueva sesión</h2>
-      <div className="field">
-        <label htmlFor="session-date">Fecha</label>
-        <input
-          autoFocus
-          id="session-date"
-          className="input w-full"
-          type="date"
-          value={date}
-          onChange={(event) => setDate(event.target.value)}
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="field">
-          <label htmlFor="session-start">Hora de inicio</label>
-          <input
-            id="session-start"
-            className="input w-full"
-            type="time"
-            value={startsAt}
-            onChange={(event) => setStartsAt(event.target.value)}
-          />
-        </div>
-        <div className="field">
-          <label htmlFor="session-end">Hora de fin</label>
-          <input
-            id="session-end"
-            className="input w-full"
-            type="time"
-            value={endsAt}
-            onChange={(event) => setEndsAt(event.target.value)}
-          />
-        </div>
-      </div>
-      <div className="field">
-        <label htmlFor="session-room">Aula</label>
-        <input
-          id="session-room"
-          className="input w-full"
-          value={room}
-          onChange={(event) => setRoom(event.target.value)}
-        />
-      </div>
-      <FormError message={error} />
-      <div className="flex flex-wrap gap-3">
-        <button className="btn btn-primary" type="submit">
-          Guardar sesión
-        </button>
-        <button className="btn btn-ghost" type="button" onClick={onCancel}>
-          Cancelar
-        </button>
-      </div>
-    </form>
   )
 }

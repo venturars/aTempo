@@ -1,17 +1,22 @@
-import { useState, type FormEvent } from 'react'
-import { useAdminStore } from './adminStore'
-import { FormError, PageHeading, PersonState, personRole } from './adminUi'
+import { useState } from 'react'
+import { useAdminStore, type Person } from './adminStore'
+import { PersonForm } from './PersonForm'
+import { DeleteConfirmation } from './DeleteConfirmation'
+import { PageHeading, PersonState, personRole } from './adminUi'
 
 export function PeopleScreen(): React.JSX.Element {
   const people = useAdminStore((state) => state.people)
   const organization = useAdminStore((state) => state.organization)
   const [creating, setCreating] = useState(false)
   const [notice, setNotice] = useState('')
+  const [editing, setEditing] = useState<Person | null>(null)
+  const [deleting, setDeleting] = useState<Person | null>(null)
+  const { courses, currentPersonId, deletePerson } = useAdminStore()
 
   return (
     <>
       <PageHeading title="Personas" description="El equipo y los alumnos de tu organización.">
-        {!creating ? (
+        {!creating && !editing ? (
           <button
             className="btn btn-primary"
             type="button"
@@ -25,11 +30,39 @@ export function PeopleScreen(): React.JSX.Element {
         ) : null}
       </PageHeading>
       {creating ? (
-        <InvitationForm
+        <PersonForm
           onCancel={() => setCreating(false)}
-          onCreated={(name) => {
+          onSaved={(name) => {
             setCreating(false)
             setNotice(`Invitación preparada para ${name}. Queda pendiente de activación.`)
+          }}
+        />
+      ) : null}
+      {editing ? (
+        <PersonForm
+          key={editing.id}
+          person={editing}
+          onCancel={() => setEditing(null)}
+          onSaved={(name) => {
+            setEditing(null)
+            setNotice(`Datos de ${name} actualizados.`)
+          }}
+        />
+      ) : null}
+      {deleting ? (
+        <DeleteConfirmation
+          title="Eliminar persona"
+          description={
+            deleting.roles.includes('student')
+              ? `Se eliminará a ${deleting.name} y su matrícula en ${courses.filter((course) => course.organizationId === organization.id && course.studentIds.includes(deleting.id)).length} cursos. Las sesiones y los demás alumnos se conservarán.`
+              : `Se eliminará a ${deleting.name}. Si tiene cursos asignados, tendrás que reasignarlos antes.`
+          }
+          onConfirm={() => deletePerson(deleting.id)}
+          onCancel={() => setDeleting(null)}
+          onDeleted={() => {
+            if (editing?.id === deleting.id) setEditing(null)
+            setDeleting(null)
+            setNotice('Persona eliminada.')
           }}
         />
       ) : null}
@@ -47,6 +80,9 @@ export function PeopleScreen(): React.JSX.Element {
               <th>Correo</th>
               <th>Rol</th>
               <th>Estado</th>
+              <th>
+                <span className="sr-only">Acciones</span>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -60,89 +96,41 @@ export function PeopleScreen(): React.JSX.Element {
                   <td>
                     <PersonState person={person} />
                   </td>
+                  <td>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        aria-label={`Editar ${person.name}`}
+                        onClick={() => {
+                          setCreating(false)
+                          setEditing(person)
+                          setNotice('')
+                        }}
+                      >
+                        Editar
+                      </button>
+                      {person.id !== currentPersonId ? (
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm text-error"
+                          aria-label={`Eliminar ${person.name}`}
+                          onClick={() => setDeleting(person)}
+                        >
+                          Eliminar
+                        </button>
+                      ) : (
+                        <span className="self-center text-xs text-base-content/60">
+                          No puedes eliminar tu propia cuenta.
+                        </span>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
           </tbody>
         </table>
       </div>
     </>
-  )
-}
-
-function InvitationForm({
-  onCancel,
-  onCreated
-}: {
-  onCancel: () => void
-  onCreated: (name: string) => void
-}): React.JSX.Element {
-  const invitePerson = useAdminStore((state) => state.invitePerson)
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [role, setRole] = useState<'teacher' | 'student'>('student')
-  const [error, setError] = useState('')
-
-  function onSubmit(event: FormEvent<HTMLFormElement>): void {
-    event.preventDefault()
-    const result = invitePerson({ name, email, role })
-    if (!result.ok) {
-      setError(result.error)
-      return
-    }
-    onCreated(result.value.name)
-  }
-
-  return (
-    <form
-      noValidate
-      onSubmit={onSubmit}
-      className="flex max-w-lg flex-col gap-5"
-      aria-label="Invitar persona"
-    >
-      <h2 className="text-lg font-semibold">Nueva invitación</h2>
-      <div className="field">
-        <label htmlFor="invite-name">Nombre completo</label>
-        <input
-          autoFocus
-          id="invite-name"
-          className="input w-full"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          autoComplete="name"
-        />
-      </div>
-      <div className="field">
-        <label htmlFor="invite-email">Correo</label>
-        <input
-          id="invite-email"
-          className="input w-full"
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          autoComplete="email"
-        />
-      </div>
-      <div className="field">
-        <label htmlFor="invite-role">Rol</label>
-        <select
-          id="invite-role"
-          className="select w-full"
-          value={role}
-          onChange={(event) => setRole(event.target.value as 'teacher' | 'student')}
-        >
-          <option value="student">Alumno</option>
-          <option value="teacher">Profesor</option>
-        </select>
-      </div>
-      <FormError message={error} />
-      <div className="flex flex-wrap gap-3">
-        <button className="btn btn-primary" type="submit">
-          Preparar invitación
-        </button>
-        <button className="btn btn-ghost" type="button" onClick={onCancel}>
-          Cancelar
-        </button>
-      </div>
-    </form>
   )
 }

@@ -22,6 +22,16 @@ Abre <http://localhost:5191/admin> y pulsa **Abrir demo de administración**. No
 4. Abre la sesión. Debe mostrar el profesor del curso y su alumnado, con la asistencia pendiente.
 5. Para probar **Mis clases**, crea un curso cuyo profesor sea Miguel Rodríguez, el administrador docente del seed. Ahí solo aparecen sus cursos y los detalles son de lectura.
 
+### Editar y eliminar
+
+- En **Personas**, cada fila ofrece **Editar** y **Eliminar**. Editar abre el mismo formulario con los datos actuales; **Guardar cambios** conserva el identificador y el estado de la cuenta. La cuenta admin permite editar nombre/correo, muestra sus roles actuales en solo lectura y no puede eliminarse a sí misma.
+- Para eliminar un profesor asignado, edita antes sus cursos y selecciona otro profesor. Eliminar un alumno lo retira también de los cursos donde estaba matriculado. Cambiar un rol se rechaza mientras deje asignaciones incompatibles.
+- Abre un curso para **Editar curso** o **Eliminar curso**. Editar permite cambiar nombre, profesor y alumnado. Eliminar pide confirmación e indica cuántas sesiones programadas se borrarán con el curso; las personas permanecen.
+- Abre una sesión para **Editar sesión** o **Eliminar sesión**. Editar permite cambiar fecha, horario y aula, manteniendo su curso. Eliminar esa sesión conserva el curso y su alumnado.
+- **Cancelar** una edición o confirmación conserva los datos. Los listados de las sesiones programadas reflejan los cambios del curso. **Mis clases** sigue siendo de lectura.
+
+La ampliación CRUD está verificada en local: batería completa 65/65 y comprobación focal 3/3 tras el último ajuste del texto de confirmación. La secuencia y el alcance de estas comprobaciones están en [admin-prototype.md](../docs/admin-prototype.md#verificación-y-runbook-local).
+
 El tema claro/oscuro se cambia desde la cabecera. **Cerrar sesión** vuelve a la entrada de la demo; los datos continúan en memoria mientras no recargues. Recargar el navegador restaura los datos iniciales y exige abrir de nuevo la demo. Entrar o salir de administración no cambia las cuentas ni la sesión del alumno. Para parar Vite, usa **Ctrl+C** en su terminal.
 
 La demo es local y no está conectada al registro de organizaciones, la activación de invitaciones de #130 ni las APIs de persistencia. El alcance y las dependencias están en [admin-prototype.md](../docs/admin-prototype.md).

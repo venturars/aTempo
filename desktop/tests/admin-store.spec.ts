@@ -232,3 +232,332 @@ test('logout preserves data; reset restores fresh seed and closes the demo', () 
   expect(useAdminStore.getState().sessions).toHaveLength(2)
   expect(useAdminStore.getState().people).not.toBe(people)
 })
+
+test('edits people in place, normalizes email and preserves invitation and admin roles', () => {
+  const invited = valueOf(
+    useAdminStore.getState().invitePerson({
+      name: 'Nueva',
+      email: 'nueva@clase.test',
+      role: 'student'
+    })
+  )
+  const edited = valueOf(
+    useAdminStore.getState().updatePerson(invited.id, {
+      name: '  Nombre corregido  ',
+      email: ' NUEVA@CLASE.TEST ',
+      role: 'teacher'
+    })
+  )
+  expect(edited).toEqual({ ...invited, name: 'Nombre corregido', roles: ['teacher'] })
+  expect(useAdminStore.getState().people).toHaveLength(5)
+  const admin = valueOf(
+    useAdminStore.getState().updatePerson('person-admin', {
+      name: 'Miguel Docente',
+      email: 'MIGUEL@NEOLAND.EXAMPLE',
+      role: 'teacher'
+    })
+  )
+  expect(admin.roles).toEqual(['admin', 'teacher'])
+  expect(admin.state).toBe('active')
+  const unchangedRoles = valueOf(
+    useAdminStore.getState().updatePerson('person-admin', {
+      name: 'Miguel',
+      email: 'miguel@neoland.example',
+      role: 'student'
+    })
+  )
+  expect(unchangedRoles.roles).toEqual(['admin', 'teacher'])
+  expectRejectedWithoutWrite(() => useAdminStore.getState().deletePerson('person-admin'))
+})
+
+test('a legitimate admin-only person can edit their details without gaining another role', () => {
+  const course = useAdminStore.getState().courses.find((item) => item.id === 'course-web')!
+  valueOf(
+    useAdminStore.getState().updateCourse(course.id, {
+      name: course.name,
+      teacherId: 'person-teacher',
+      studentIds: course.studentIds
+    })
+  )
+  useAdminStore.setState({
+    people: useAdminStore
+      .getState()
+      .people.map((person) =>
+        person.id === 'person-admin' ? { ...person, roles: ['admin'] } : person
+      )
+  })
+  const edited = valueOf(
+    useAdminStore.getState().updatePerson('person-admin', {
+      name: '  Administración  ',
+      email: ' ADMIN@NEOLAND.EXAMPLE ',
+      role: 'student'
+    })
+  )
+  expect(edited).toMatchObject({
+    id: 'person-admin',
+    name: 'Administración',
+    email: 'admin@neoland.example',
+    roles: ['admin'],
+    state: 'active'
+  })
+  expect(useAdminStore.getState().currentPersonId).toBe('person-admin')
+  valueOf(useAdminStore.getState().createCourse(validCourse))
+})
+
+test('rejects duplicate emails and role changes that would break existing assignments', () => {
+  expectRejectedWithoutWrite(() =>
+    useAdminStore.getState().updatePerson('person-student-ana', {
+      name: 'Ana',
+      email: ' LUIS@NEOLAND.EXAMPLE ',
+      role: 'student'
+    })
+  )
+  expectRejectedWithoutWrite(() =>
+    useAdminStore.getState().updatePerson('person-student-ana', {
+      name: 'Ana',
+      email: 'ana@neoland.example',
+      role: 'teacher'
+    })
+  )
+  expectRejectedWithoutWrite(() =>
+    useAdminStore.getState().updatePerson('person-teacher', {
+      name: 'Lucía',
+      email: 'lucia@neoland.example',
+      role: 'student'
+    })
+  )
+  expectRejectedWithoutWrite(() =>
+    useAdminStore.getState().updatePerson('person-student-ana', {
+      name: '',
+      email: 'ana@neoland.example',
+      role: 'student'
+    })
+  )
+  expectRejectedWithoutWrite(() =>
+    useAdminStore.getState().updatePerson('person-student-ana', {
+      name: 'Ana',
+      email: 'invalid',
+      role: 'student'
+    })
+  )
+})
+
+test('deleting a student removes all own enrolments atomically and leaves sessions intact', () => {
+  const before = useAdminStore.getState()
+  const foreignCourse = {
+    ...before.courses[0],
+    id: 'foreign',
+    organizationId: 'elsewhere',
+    studentIds: ['foreign-student']
+  }
+  useAdminStore.setState({ courses: [...before.courses, foreignCourse] })
+  let writes = 0
+  const unsubscribe = useAdminStore.subscribe(() => writes++)
+  try {
+    valueOf(useAdminStore.getState().deletePerson('person-student-ana'))
+    expect(writes).toBe(1)
+    const after = useAdminStore.getState()
+    expect(after.people.some((person) => person.id === 'person-student-ana')).toBe(false)
+    expect(
+      after.courses
+        .filter((course) => course.organizationId === after.organization.id)
+        .every((course) => !course.studentIds.includes('person-student-ana'))
+    ).toBe(true)
+    expect(after.courses.find((course) => course.id === foreignCourse.id)).toBe(foreignCourse)
+    expect(after.sessions).toBe(before.sessions)
+  } finally {
+    unsubscribe()
+  }
+})
+
+test('an assigned teacher can only be deleted after reassignment', () => {
+  expectRejectedWithoutWrite(() => useAdminStore.getState().deletePerson('person-teacher'))
+  const course = useAdminStore.getState().courses.find((item) => item.id === 'course-design')!
+  valueOf(
+    useAdminStore.getState().updateCourse(course.id, {
+      name: course.name,
+      teacherId: 'person-admin',
+      studentIds: course.studentIds
+    })
+  )
+  valueOf(useAdminStore.getState().deletePerson('person-teacher'))
+  expect(useAdminStore.getState().people.some((person) => person.id === 'person-teacher')).toBe(
+    false
+  )
+  expect(useAdminStore.getState().courses.find((item) => item.id === course.id)?.teacherId).toBe(
+    'person-admin'
+  )
+})
+
+test('course edits preserve IDs and sessions while changing the teacher and roster', () => {
+  const before = useAdminStore.getState()
+  const edited = valueOf(
+    useAdminStore.getState().updateCourse('course-web', {
+      name: '  Curso actualizado ',
+      teacherId: 'person-teacher',
+      studentIds: ['person-student-luis']
+    })
+  )
+  expect(edited).toEqual({
+    ...before.courses[0],
+    name: 'Curso actualizado',
+    teacherId: 'person-teacher',
+    studentIds: ['person-student-luis']
+  })
+  expect(useAdminStore.getState().sessions).toBe(before.sessions)
+  for (const input of [
+    { ...validCourse, name: '' },
+    { ...validCourse, teacherId: 'person-student-ana' },
+    { ...validCourse, studentIds: ['person-teacher'] },
+    { ...validCourse, studentIds: ['person-student-ana', 'person-student-ana'] }
+  ])
+    expectRejectedWithoutWrite(() => useAdminStore.getState().updateCourse('course-web', input))
+})
+
+test('deleting a course atomically removes only its own sessions and no people', () => {
+  const before = useAdminStore.getState()
+  const foreignSession = {
+    ...before.sessions[0],
+    id: 'foreign-session',
+    organizationId: 'elsewhere',
+    courseId: 'foreign-course'
+  }
+  useAdminStore.setState({ sessions: [...before.sessions, foreignSession] })
+  let writes = 0
+  const unsubscribe = useAdminStore.subscribe(() => writes++)
+  try {
+    valueOf(useAdminStore.getState().deleteCourse('course-web'))
+    expect(writes).toBe(1)
+    const after = useAdminStore.getState()
+    expect(after.courses.map((course) => course.id)).toEqual(['course-design'])
+    expect(after.sessions.map((session) => session.id)).toEqual([
+      'session-design',
+      'foreign-session'
+    ])
+    expect(after.people).toBe(before.people)
+  } finally {
+    unsubscribe()
+  }
+})
+
+test('session edits keep their course and deleting one leaves courses and other sessions intact', () => {
+  const before = useAdminStore.getState()
+  const edited = valueOf(
+    useAdminStore.getState().updateSession('session-web', {
+      ...validSession,
+      date: '2026-12-01',
+      startsAt: '12:00',
+      endsAt: '13:30',
+      room: ' Aula 8 '
+    })
+  )
+  expect(edited).toEqual({
+    ...before.sessions[0],
+    date: '2026-12-01',
+    startsAt: '12:00',
+    endsAt: '13:30',
+    room: 'Aula 8'
+  })
+  for (const patch of [
+    { courseId: 'course-design' },
+    { date: '2026-02-29' },
+    { startsAt: '24:00' },
+    { endsAt: '09:00' },
+    { room: '' }
+  ]) {
+    expectRejectedWithoutWrite(() =>
+      useAdminStore.getState().updateSession('session-web', {
+        ...validSession,
+        ...patch
+      })
+    )
+  }
+  valueOf(useAdminStore.getState().deleteSession('session-web'))
+  expect(useAdminStore.getState().sessions.map((session) => session.id)).toEqual(['session-design'])
+  expect(useAdminStore.getState().courses).toBe(before.courses)
+  expect(useAdminStore.getState().people).toBe(before.people)
+})
+
+test('new IDs never reuse deleted people, courses or sessions in the same run', () => {
+  const personInput: InvitePersonInput = {
+    name: 'Temporal',
+    email: 'temp@clase.test',
+    role: 'student'
+  }
+  const person = valueOf(useAdminStore.getState().invitePerson(personInput))
+  valueOf(useAdminStore.getState().deletePerson(person.id))
+  expect(valueOf(useAdminStore.getState().invitePerson(personInput)).id).not.toBe(person.id)
+  const course = valueOf(useAdminStore.getState().createCourse(validCourse))
+  valueOf(useAdminStore.getState().deleteCourse(course.id))
+  expect(valueOf(useAdminStore.getState().createCourse(validCourse)).id).not.toBe(course.id)
+  const session = valueOf(useAdminStore.getState().createSession(validSession))
+  valueOf(useAdminStore.getState().deleteSession(session.id))
+  expect(valueOf(useAdminStore.getState().createSession(validSession)).id).not.toBe(session.id)
+})
+
+for (const currentPersonId of [null, 'missing', 'person-student-ana', 'person-teacher']) {
+  test(`guards all update and delete actions for ${currentPersonId}`, () => {
+    useAdminStore.setState({ currentPersonId })
+    expectRejectedWithoutWrite(() =>
+      useAdminStore.getState().updatePerson('person-student-ana', {
+        name: 'Ana',
+        email: 'ana@neoland.example',
+        role: 'student'
+      })
+    )
+    expectRejectedWithoutWrite(() => useAdminStore.getState().deletePerson('person-student-ana'))
+    expectRejectedWithoutWrite(() =>
+      useAdminStore.getState().updateCourse('course-web', validCourse)
+    )
+    expectRejectedWithoutWrite(() => useAdminStore.getState().deleteCourse('course-web'))
+    expectRejectedWithoutWrite(() =>
+      useAdminStore.getState().updateSession('session-web', validSession)
+    )
+    expectRejectedWithoutWrite(() => useAdminStore.getState().deleteSession('session-web'))
+  })
+}
+
+test('unknown and foreign entity IDs cannot be updated or deleted', () => {
+  const state = useAdminStore.getState()
+  useAdminStore.setState({
+    people: [...state.people, { ...state.people[2], id: 'foreign', organizationId: 'elsewhere' }],
+    courses: [
+      ...state.courses,
+      { ...state.courses[0], id: 'foreign', organizationId: 'elsewhere' }
+    ],
+    sessions: [
+      ...state.sessions,
+      { ...state.sessions[0], id: 'foreign', organizationId: 'elsewhere' }
+    ]
+  })
+  for (const id of ['missing', 'foreign']) {
+    expectRejectedWithoutWrite(() =>
+      useAdminStore.getState().updatePerson(id, {
+        name: 'Persona',
+        email: 'persona@clase.test',
+        role: 'student'
+      })
+    )
+    expectRejectedWithoutWrite(() => useAdminStore.getState().deletePerson(id))
+    expectRejectedWithoutWrite(() => useAdminStore.getState().updateCourse(id, validCourse))
+    expectRejectedWithoutWrite(() => useAdminStore.getState().deleteCourse(id))
+    expectRejectedWithoutWrite(() => useAdminStore.getState().updateSession(id, validSession))
+    expectRejectedWithoutWrite(() => useAdminStore.getState().deleteSession(id))
+  }
+})
+
+test('rejects deletion without writes when malformed foreign records reference an owned entity', () => {
+  const state = useAdminStore.getState()
+  useAdminStore.setState({
+    courses: [
+      ...state.courses,
+      { ...state.courses[0], id: 'foreign-course', organizationId: 'elsewhere' }
+    ],
+    sessions: [
+      ...state.sessions,
+      { ...state.sessions[0], id: 'foreign-session', organizationId: 'elsewhere' }
+    ]
+  })
+  expectRejectedWithoutWrite(() => useAdminStore.getState().deletePerson('person-student-ana'))
+  expectRejectedWithoutWrite(() => useAdminStore.getState().deleteCourse('course-web'))
+})

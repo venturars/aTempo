@@ -7,13 +7,17 @@ web/
   README.md              # entrada y recorrido admin; acceso del alumno
   src/
     admin/
-      adminStore.ts      # demo de organización, personas, cursos y sesiones
+      adminStore.ts      # CRUD mock de organización, personas, cursos y sesiones
       AdminLayout.tsx    # entrada demo, navegación, tema y salida
       AdminHome.tsx
       PeopleScreen.tsx
       CoursesScreen.tsx
       CourseDetails.tsx  # detalle reutilizado para gestión y Mis clases
       SessionDetails.tsx # listado pendiente del curso
+      PersonForm.tsx     # creación y edición de personas
+      CourseForm.tsx     # creación y edición de cursos
+      SessionForm.tsx    # creación y edición de sesiones
+      DeleteConfirmation.tsx # confirmación compartida de borrado
       adminUi.tsx
     shared/
       ThemeToggle.tsx    # control existente compartido con StudentLayout

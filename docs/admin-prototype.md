@@ -1,8 +1,8 @@
 # Administración de organización — prototipo web
 
-Fecha: 2026-11-18. Estado: implementación, revisión y verificación local completas; commit y publicación separados.
+Fecha: 2026-11-18. Estado: ampliación CRUD implementada, revisada, verificada y guardada en un commit local. Miguel ha pedido trabajar solo en local: no crear issues, PRs, pushes ni solicitudes de revisión.
 
-## Issue preparada
+## Alcance local
 
 **Tipo:** feat. **Título:** Manage organisation people, courses and sessions in the admin prototype.
 
@@ -14,7 +14,7 @@ Esta tarea amplía la administración funcional. #66 sigue siendo la alineación
 
 ### Resultado
 
-El recorrido verificable es **invitar a una persona → crear un curso → asignar profesor y alumnos → programar una sesión → consultar su listado**. Todo funciona con datos de ejemplo en el paquete `web/`, bajo `/admin`, sin crear otra aplicación ni otro tema.
+El recorrido verificable es **invitar a una persona → crear un curso → asignar profesor y alumnos → programar una sesión → consultar y editar los datos → eliminarlos sin dejar referencias rotas**. Personas, cursos y sesiones deben permitir crear, consultar, editar y eliminar. Todo funciona con datos de ejemplo en el paquete `web/`, bajo `/admin`, sin crear otra aplicación ni otro tema.
 
 ### Comportamiento
 
@@ -27,6 +27,20 @@ El recorrido verificable es **invitar a una persona → crear un curso → asign
 - **Listado de sesión:** deriva las personas matriculadas del curso, muestra el profesor asignado y las entradas como pendientes, sin inventar llegadas, ausencias o registros históricos.
 - **Mis clases:** el administrador/profesor puede cambiar a una vista de lectura de sus propios cursos y sesiones y volver a administración. Reutiliza el detalle/listado anterior y no reproduce el panel de asistencia de Electron. Un curso de otro profesor no aparece en esa vista.
 - Cambiar tema usa el comportamiento y los tokens existentes. Salir cierra solo la sesión demo de administrador y vuelve a su entrada. Recargar restaura el seed y exige abrir de nuevo la demo; no se alteran las cuentas/sesión del alumno.
+
+### Ampliación CRUD local
+
+- **Editar personas:** reutilizar el formulario de invitación con nombre, correo y rol actuales. Mantener el ID y el estado activo/pendiente. El correo sigue siendo único dentro de la organización, excluyendo a la persona editada. Las cuentas admin permiten editar nombre/correo y conservan exactamente sus roles: el campo de solo lectura muestra Administrador o Administrador y profesor según corresponda. No se añade promoción de administradores. Cambiar profesor/alumno se rechaza si deja asignaciones incompatibles: primero hay que reasignar sus cursos o retirar sus matrículas.
+- **Eliminar personas:** pedir confirmación con el nombre y el efecto. Eliminar un alumno lo retira de todos los cursos de la organización en la misma operación. Un profesor asignado no se elimina hasta reasignar sus cursos. La cuenta administradora actual no puede eliminarse a sí misma. Cancelar la confirmación no cambia nada.
+- **Editar cursos:** reutilizar el formulario de creación con nombre, profesor y alumnado actuales. Conservar el ID y sus sesiones. El cambio de alumnado/profesor se refleja en los listados de sus sesiones programadas; esta demo no contiene sesiones cerradas ni histórico de asistencia.
+- **Eliminar cursos:** la confirmación identifica el curso y cuántas sesiones programadas se eliminarán con él. Al confirmar, borrar curso y esas sesiones de forma atómica. No eliminar personas. Volver a la lista de cursos; un enlace antiguo muestra el estado de elemento no disponible.
+- **Editar sesiones:** reutilizar el formulario de programación con fecha, inicio, fin y aula actuales. Conservar ID y curso; aplicar las mismas validaciones de fecha/horas/aula que al crear. No se añade traslado entre cursos.
+- **Eliminar sesiones:** confirmar nombre del curso y fecha; borrar solo esa sesión y volver a su curso. Sus personas y el curso permanecen.
+- Todas las acciones de actualización y borrado validan identidad admin, organización, IDs y relaciones en el store. IDs desconocidos o de otra organización, datos inválidos y acciones sin sesión se rechazan sin escrituras parciales. Los IDs nuevos no reutilizan los de elementos borrados durante el mismo arranque.
+- Los formularios de edición están precargados; cancelar no guarda. Las confirmaciones tienen acciones explícitas para cancelar y eliminar. `Mis clases` continúa siendo de lectura y no presenta acciones CRUD.
+- Se mantiene la entrada de demo y el alcance de autenticación existente. Este incremento no añade registro/login real, activación, conexión al panel Electron, email, backend ni otra SDK.
+
+El mock conserva sus métodos de creación y añade `updatePerson(id, InvitePersonInput)`, `updateCourse(id, CreateCourseInput)` y `updateSession(id, CreateSessionInput)`, con el resultado tipado existente de la entidad. `deletePerson(id)`, `deleteCourse(id)` y `deleteSession(id)` devuelven `MutationResult<null>`. El formulario de sesión conserva el curso del contexto; actualizar no permite trasladarla a otro curso. Estas firmas son internas al prototipo, no endpoints acordados.
 
 ### Diseño y reutilización
 
@@ -46,7 +60,7 @@ La referencia visual es [PR #123 de Meghan](https://github.com/venturars/aTempo/
 2. Crear modelos y un store mock de personas, cursos y sesiones con validación y datos coherentes. No crear un segundo store de cuentas/login del alumno.
 3. Añadir el área `/admin` al router existente, reutilizar los controles visuales y construir Personas, Cursos, detalle, sesión/listado y Mis clases.
 4. Verificar acciones del store, el recorrido completo, errores, cancelación, salida, aislamiento de sesión y móvil/ambos temas. Comprobar que el recorrido del alumno sigue funcionando.
-5. Documentar cómo abrir esta copia y los resultados. Preparar issue/PR con dependencias claras; publicación separada del trabajo local.
+5. Documentar cómo abrir esta copia y registrar los resultados de la verificación local. No crear ni publicar elementos en GitHub.
 
 ## Aceptación y pruebas
 
@@ -57,10 +71,13 @@ La referencia visual es [PR #123 de Meghan](https://github.com/venturars/aTempo/
 - **Aislamiento:** abrir/cerrar la demo admin no inicia, cierra ni modifica la sesión/cuentas del alumno.
 - **Diseño:** 390 px y escritorio, temas claro/oscuro, formularios con etiquetas, navegación con teclado y sin desbordamiento horizontal de página; las tablas pueden desplazarse dentro de su contenedor.
 - **Regresión:** login y dashboard del alumno, tema y cierre de sesión conservan el comportamiento de PR #123. Build/typecheck de `web/` y pruebas focales pasan sin modificar snapshots existentes.
+- **CRUD completo:** crear, consultar y editar una persona, un curso y una sesión; conservar sus IDs, mostrar los valores guardados y comprobar que cancelar la edición conserva los anteriores.
+- **Relaciones al eliminar:** cancelar cada borrado no escribe; borrar alumno limpia sus matrículas; profesor asignado y autoeliminación admin se rechazan; borrar curso elimina sus sesiones y conserva personas; borrar sesión conserva el curso. Los enlaces a elementos borrados no enseñan otro elemento creado después.
+- **Cambios rechazados:** correo duplicado, cambio de rol incompatible, profesor/alumnado no elegibles, fecha/horas inválidas, IDs extranjeros/desconocidos o sesión admin cerrada no cambian el estado.
 
 Usar el Playwright instalado en el repositorio para pruebas de lógica y navegador; no añadir otro framework. Las pruebas y servidores deben cerrarse al terminar. No se declara aceptación hasta registrar sus comandos y resultados.
 
-## Tasks
+## Tasks de la base local `8223947`
 
 - [x] TASK-01 — concept-developer: delimitar el alcance y fijar referencias/dependencias. Preparación confirmó guía generada (79 páginas) y `guide:check` correctos; instalación web con lockfile congelado correcta.
 - [x] TASK-02 — code-developer: modelos/store mock con validación y seed.
@@ -69,7 +86,16 @@ Usar el Playwright instalado en el repositorio para pruebas de lógica y navegad
 - [x] TASK-05 — concept-tester: comprobar diseño, documentación y coherencia con la spec. Revisión sin bloqueos; aclaración upstream de SDK corregida.
 - [x] TASK-06 — concept-developer: registrar instrucciones y evidencia de verificación.
 - [x] TASK-07 — create-commit: guardar el trabajo verificado en un commit local.
-- [ ] Publicación — create-pr: crear la issue/PR y publicar cuando corresponda; el cuerpo de PR está preparado abajo, sin publicar.
+Publicación en pausa por instrucción de Miguel: no crear issues ni PRs, ni hacer push. El texto preparado abajo permanece local.
+
+## Tasks de la ampliación CRUD
+
+- [x] CRUD-01 — concept-developer: definir edición, borrado, relaciones y aceptación local.
+- [x] CRUD-02 — code-developer: añadir acciones de actualización/borrado validadas e IDs no reutilizados.
+- [x] CRUD-03 — code-developer: reutilizar formularios para editar y añadir confirmaciones de borrado en Personas, Cursos y Sesiones.
+- [x] CRUD-04 — code-tester: verificar CRUD completo, cancelaciones, relaciones, errores sin escrituras y regresiones existentes.
+- [x] CRUD-05 — concept-tester: contrastar implementación y documentación, incluido el alcance local. Revisión estática independiente sin bloqueos; aclarado el curso en la confirmación de borrado de sesión.
+- [x] CRUD-06 — concept-developer: actualizar instrucciones y registrar evidencia de la ampliación.
 
 ## Base y publicación
 
@@ -97,7 +123,20 @@ Fuentes: transcripción «Clase AI Engineer», 2026-11-18, y `brief-api-v1.md` e
 
 ## Verificación y runbook local
 
-Resultados comprobados el 2026-11-18:
+### Ampliación CRUD verificada
+
+Comprobaciones del 2026-11-18, en este orden:
+
+1. Tras corregir la edición de la cuenta admin y su etiqueta de rol, la batería completa pasó **65/65 en 29,1 s**: 46 pruebas del modelo y 19 de navegador. Incluye edición/borrado de personas, cursos y sesiones, sus relaciones, confirmación/cancelación, guards, aislamiento de alumno y regresiones previas.
+2. Después se añadió el nombre del curso a la confirmación de borrado de sesión. Tras ese último cambio de texto pasaron **3/3 pruebas focales en 6,2 s**, con nuevas capturas de los diálogos. No se repitieron las 65 pruebas después de ese cambio de texto.
+3. TypeScript estricto, ESLint focal y Prettier: PASS. El build completo de `web/`, incluido typecheck, pasó tras el ajuste del rol admin. La inspección visual comprobó edición móvil en claro y el diálogo real de borrado en oscuro.
+4. La revisión estática independiente no encontró bloqueos; la aclaración menor de la confirmación quedó aplicada y probada. El servidor de pruebas en 5193 quedó cerrado.
+
+El comando de batería completa sigue siendo `pnpm exec playwright test --config playwright.admin.config.ts --workers=1 --retries=0 --update-snapshots=none`, ejecutado desde `desktop/`. El trabajo y sus resultados permanecen locales; no se han creado issues/PRs ni realizado pushes o solicitudes de revisión.
+
+### Evidencia histórica de la base
+
+Resultados de la base `8223947`, comprobados el 2026-11-18. Las 43 pruebas siguientes son evidencia histórica del recorrido inicial; la ampliación CRUD se verifica con los resultados nuevos del apartado anterior.
 
 - Instalación web con `pnpm install --frozen-lockfile`: PASS.
 - Guía de Storybook: 79 páginas generadas y `guide:check`: PASS.
@@ -110,8 +149,11 @@ Resultados comprobados el 2026-11-18:
 - Las rutas nuevas se generan al arrancar Vite o construir con su plugin de TanStack. No editar `web/src/routeTree.gen.ts` a mano. Si TypeScript aún no reconoce una ruta recién creada, generar primero con Vite y repetir el typecheck.
 - Un resultado de build o test solo se registra al terminar su proceso. Los procesos de verificación deben quedar cerrados antes de entregar.
 - Corregir las responsabilidades en la documentación compartida al detectarlas: una frase antigua hacía consumir la SDK de dominio directamente desde frontend. `ARCHITECTURE.md` ahora diferencia SDK frontend → API-router → SDK de dominio; conservar esa distinción en nuevas tareas.
+- En capturas de modales nativos de daisyUI, esperar que el diálogo y `.modal-box` alcancen opacidad 1 y capturar con `animations: 'disabled'`. Tener foco y dimensiones correctas no prueba que haya terminado el fundido; una captura prematura puede salir vacía.
 
-## Cuerpo de PR preparado
+## Propuesta archivada de PR — sin publicación autorizada
+
+Este texto describe la base inicial y queda archivado como referencia. No es una tarea de publicación activa ni describe la ampliación CRUD. Miguel ha pedido mantener el trabajo en local.
 
 **Título:** Add an organisation admin prototype using the shared web design.
 

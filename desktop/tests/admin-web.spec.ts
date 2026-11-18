@@ -145,11 +145,13 @@ test('dual-role admin sees only assigned classes in the reused read-only view', 
   await expect(page.getByRole('button', { name: 'Crear curso', exact: true })).toHaveCount(0)
   await page.getByRole('link', { name: 'Desarrollo web', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Programar sesión', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /Editar|Eliminar/ })).toHaveCount(0)
   await page.getByRole('table', { name: 'Sesiones del curso' }).getByRole('link').click()
   await expect(
     page.getByRole('heading', { name: 'Listado de alumnos · 2', exact: true })
   ).toBeVisible()
   await expect(page.getByRole('button', { name: /Guardar|Programar/ })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /Editar|Eliminar/ })).toHaveCount(0)
   await adminNav(page, 'Mis clases')
   await page.getByRole('link', { name: 'Volver a administración', exact: true }).click()
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Hola, Miguel')
@@ -291,3 +293,241 @@ test('preserves student login, shared theme switch and logout', async ({ page })
   await expect(page).toHaveURL(/\/$/)
   await expect(page.getByRole('button', { name: 'Entrar', exact: true })).toBeVisible()
 })
+
+test('edits a person with prefilled fields, cancels changes and confirms deletion', async ({
+  page
+}) => {
+  await enterAdmin(page)
+  await invite(page, 'Persona temporal', 'persona@clase.test', 'student')
+  await page.getByRole('button', { name: 'Editar Persona temporal', exact: true }).click()
+  await expect(page.getByLabel('Nombre completo', { exact: true })).toHaveValue('Persona temporal')
+  await expect(page.getByLabel('Correo', { exact: true })).toHaveValue('persona@clase.test')
+  await expect(page.getByLabel('Rol', { exact: true })).toHaveValue('student')
+  await page.getByLabel('Nombre completo', { exact: true }).fill('Sin guardar')
+  await page.getByRole('button', { name: 'Cancelar', exact: true }).click()
+  await expect(page.getByRole('row').filter({ hasText: 'persona@clase.test' })).toContainText(
+    'Persona temporal'
+  )
+  await page.getByRole('button', { name: 'Editar Persona temporal', exact: true }).click()
+  await page.getByLabel('Nombre completo', { exact: true }).fill('Persona editada')
+  await page.getByLabel('Correo', { exact: true }).fill(' ANA@NEOLAND.EXAMPLE ')
+  await page.getByRole('button', { name: 'Guardar cambios', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('Ya existe')
+  await page.getByLabel('Correo', { exact: true }).fill('editada@clase.test')
+  await page.getByRole('button', { name: 'Guardar cambios', exact: true }).click()
+  await expect(page.getByRole('row').filter({ hasText: 'editada@clase.test' })).toContainText(
+    'Persona editada'
+  )
+  await page.getByRole('button', { name: 'Eliminar Persona editada', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'Eliminar persona', exact: true })
+  await expect(dialog).toContainText('Persona editada')
+  await expect(dialog.getByRole('button', { name: 'Cancelar', exact: true })).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(dialog).toHaveCount(0)
+  await expect(page.getByRole('row').filter({ hasText: 'editada@clase.test' })).toBeVisible()
+  await page.getByRole('button', { name: 'Eliminar Persona editada', exact: true }).click()
+  await dialog.getByRole('button', { name: 'Eliminar', exact: true }).click()
+  await expect(dialog).toHaveCount(0)
+  await expect(page.getByRole('row').filter({ hasText: 'editada@clase.test' })).toHaveCount(0)
+})
+
+test('admin details can be edited while their actual roles remain read-only', async ({ page }) => {
+  await enterAdmin(page)
+  await adminNav(page, 'Personas')
+  await page.getByRole('button', { name: 'Editar Miguel Rodríguez', exact: true }).click()
+  await expect(page.getByLabel('Rol', { exact: true })).toHaveValue('Administrador y profesor')
+  await expect(page.getByLabel('Rol', { exact: true })).toHaveAttribute('readonly', '')
+  await page.getByLabel('Nombre completo', { exact: true }).fill('Miguel Docente')
+  await page.getByRole('button', { name: 'Guardar cambios', exact: true }).click()
+  await expect(page.getByRole('row').filter({ hasText: 'miguel@neoland.example' })).toContainText(
+    'Administrador y profesor'
+  )
+  await expect(
+    page.getByRole('button', { name: 'Eliminar Miguel Docente', exact: true })
+  ).toHaveCount(0)
+  await adminNav(page, 'Mis clases')
+  await expect(page.getByRole('link', { name: 'Desarrollo web', exact: true })).toBeVisible()
+})
+
+test('student deletion cleans enrolments and an assigned teacher requires course reassignment', async ({
+  page
+}) => {
+  await enterAdmin(page)
+  await adminNav(page, 'Personas')
+  await expect(
+    page.getByRole('button', { name: 'Eliminar Miguel Rodríguez', exact: true })
+  ).toHaveCount(0)
+  await page.getByRole('button', { name: 'Eliminar Ana López', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'Eliminar persona', exact: true })
+  await expect(dialog).toContainText('2 cursos')
+  await dialog.getByRole('button', { name: 'Cancelar', exact: true }).click()
+  await expect(page.getByRole('row').filter({ hasText: 'ana@neoland.example' })).toBeVisible()
+  await page.getByRole('button', { name: 'Eliminar Ana López', exact: true }).click()
+  await dialog.getByRole('button', { name: 'Eliminar', exact: true }).click()
+  await adminNav(page, 'Cursos')
+  await page.getByRole('link', { name: 'Desarrollo web', exact: true }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Alumnos matriculados · 1', exact: true })
+  ).toBeVisible()
+  await page.getByRole('table', { name: 'Sesiones del curso' }).getByRole('link').click()
+  await expect(page.getByRole('row').filter({ hasText: 'Ana López' })).toHaveCount(0)
+  await adminNav(page, 'Personas')
+  await page.getByRole('button', { name: 'Eliminar Lucía García', exact: true }).click()
+  await dialog.getByRole('button', { name: 'Eliminar', exact: true }).click()
+  await expect(dialog.getByRole('alert')).toContainText('Reasigna')
+  await dialog.getByRole('button', { name: 'Cancelar', exact: true }).click()
+  await adminNav(page, 'Cursos')
+  await page.getByRole('link', { name: 'Diseño UX/UI', exact: true }).click()
+  await page.getByRole('button', { name: 'Editar curso', exact: true }).click()
+  await expect(page.getByLabel('Nombre del curso', { exact: true })).toHaveValue('Diseño UX/UI')
+  await page.getByLabel('Profesor', { exact: true }).selectOption('person-admin')
+  await page.getByRole('button', { name: 'Guardar cambios', exact: true }).click()
+  await adminNav(page, 'Personas')
+  await page.getByRole('button', { name: 'Eliminar Lucía García', exact: true }).click()
+  await dialog.getByRole('button', { name: 'Eliminar', exact: true }).click()
+  await expect(page.getByRole('row').filter({ hasText: 'lucia@neoland.example' })).toHaveCount(0)
+})
+
+test('course edits update its session roster and course deletion removes its sessions', async ({
+  page
+}) => {
+  await enterAdmin(page)
+  await adminNav(page, 'Cursos')
+  await page.getByRole('link', { name: 'Desarrollo web', exact: true }).click()
+  const originalCoursePath = new URL(page.url()).pathname
+  await page.getByRole('button', { name: 'Editar curso', exact: true }).click()
+  await expect(page.getByLabel('Profesor', { exact: true })).toHaveValue('person-admin')
+  await expect(page.getByRole('checkbox', { name: 'Ana López', exact: true })).toBeChecked()
+  await page.getByLabel('Nombre del curso', { exact: true }).fill('Cambio cancelado')
+  await page.getByRole('button', { name: 'Cancelar', exact: true }).click()
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Desarrollo web')
+  await page.getByRole('button', { name: 'Editar curso', exact: true }).click()
+  await page.getByLabel('Nombre del curso', { exact: true }).fill('Curso editado')
+  await page.getByLabel('Profesor', { exact: true }).selectOption('person-teacher')
+  await page.getByRole('checkbox', { name: 'Ana López', exact: true }).uncheck()
+  await page.getByRole('button', { name: 'Guardar cambios', exact: true }).click()
+  await expect(page).toHaveURL(new RegExp(`${originalCoursePath}$`))
+  await page.getByRole('table', { name: 'Sesiones del curso' }).getByRole('link').click()
+  const originalSessionPath = new URL(page.url()).pathname
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Curso editado')
+  await expect(page.locator('dd').filter({ hasText: 'Lucía García' })).toBeVisible()
+  await expect(page.getByRole('row').filter({ hasText: 'Ana López' })).toHaveCount(0)
+  await expect(page.getByRole('row').filter({ hasText: 'Luis Martín' })).toBeVisible()
+  await page.getByRole('link', { name: 'Volver al curso', exact: true }).click()
+  await page.getByRole('button', { name: 'Eliminar curso', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'Eliminar curso', exact: true })
+  await expect(dialog).toContainText('1 sesiones programadas')
+  await dialog.getByRole('button', { name: 'Cancelar', exact: true }).click()
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Curso editado')
+  await page.getByRole('button', { name: 'Eliminar curso', exact: true }).click()
+  await dialog.getByRole('button', { name: 'Eliminar', exact: true }).click()
+  await expect(page).toHaveURL(/\/admin\/courses\/?$/)
+  await expect(page.getByRole('link', { name: 'Curso editado', exact: true })).toHaveCount(0)
+  await page.getByRole('link', { name: 'Diseño UX/UI', exact: true }).click()
+  await expect(
+    page.getByRole('table', { name: 'Sesiones del curso' }).getByRole('row')
+  ).toHaveCount(2)
+  await adminNav(page, 'Cursos')
+  await page.getByRole('button', { name: 'Crear curso', exact: true }).click()
+  await page.getByLabel('Nombre del curso', { exact: true }).fill('Después del borrado')
+  await page.getByLabel('Profesor', { exact: true }).selectOption('person-admin')
+  await page.getByRole('button', { name: 'Guardar curso', exact: true }).click()
+  expect(new URL(page.url()).pathname).not.toBe(originalCoursePath)
+  await page.evaluate((path) => window.history.pushState({}, '', path), originalCoursePath)
+  await page.goBack()
+  await page.goForward()
+  await expect(
+    page.getByRole('heading', { name: 'Curso no disponible', exact: true })
+  ).toBeVisible()
+  await page.evaluate((path) => window.history.pushState({}, '', path), originalSessionPath)
+  await page.goBack()
+  await page.goForward()
+  await expect(
+    page.getByRole('heading', { name: 'Sesión no disponible', exact: true })
+  ).toBeVisible()
+})
+
+test('session editing is prefilled and validated; deleting it preserves its course', async ({
+  page
+}) => {
+  await enterAdmin(page)
+  await adminNav(page, 'Cursos')
+  await page.getByRole('link', { name: 'Desarrollo web', exact: true }).click()
+  await page.getByRole('table', { name: 'Sesiones del curso' }).getByRole('link').click()
+  const originalPath = new URL(page.url()).pathname
+  await page.getByRole('button', { name: 'Editar sesión', exact: true }).click()
+  await expect(page.getByLabel('Fecha', { exact: true })).toHaveValue('2026-11-19')
+  await expect(page.getByLabel('Aula', { exact: true })).toHaveValue('Aula 1')
+  await page.getByLabel('Aula', { exact: true }).fill('Sin guardar')
+  await page.getByRole('button', { name: 'Cancelar', exact: true }).click()
+  await expect(page.getByText('Aula 1', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Editar sesión', exact: true }).click()
+  await page.getByLabel('Fecha', { exact: true }).fill('2026-12-01')
+  await page.getByLabel('Hora de inicio', { exact: true }).fill('12:00')
+  await page.getByLabel('Hora de fin', { exact: true }).fill('11:00')
+  await page.getByRole('button', { name: 'Guardar cambios', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('posterior')
+  await page.getByLabel('Hora de fin', { exact: true }).fill('13:30')
+  await page.getByLabel('Aula', { exact: true }).fill('Aula editada')
+  await page.getByRole('button', { name: 'Guardar cambios', exact: true }).click()
+  await expect(page).toHaveURL(new RegExp(`${originalPath}$`))
+  await expect(page.getByText('Aula editada', { exact: true })).toBeVisible()
+  await expect(
+    page.getByText('1 de diciembre de 2026 · 12:00–13:30', { exact: true })
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Eliminar sesión', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'Eliminar sesión', exact: true })
+  await expect(dialog).toContainText('Desarrollo web')
+  await expect(dialog).toContainText('1 de diciembre de 2026')
+  await dialog.getByRole('button', { name: 'Cancelar', exact: true }).click()
+  await page.getByRole('button', { name: 'Eliminar sesión', exact: true }).click()
+  await dialog.getByRole('button', { name: 'Eliminar', exact: true }).click()
+  await expect(page).toHaveURL(/\/admin\/courses\/course-web$/)
+  await expect(
+    page.getByText('Todavía no hay sesiones programadas.', { exact: true })
+  ).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Desarrollo web')
+})
+
+for (const theme of ['atempo-oscuro', 'atempo-claro']) {
+  test(`editing and deletion dialogs fit mobile with keyboard cancellation in ${theme}`, async ({
+    page
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.addInitScript((name) => sessionStorage.setItem('atempo-student-theme', name), theme)
+    await enterAdmin(page)
+    await adminNav(page, 'Personas')
+    await page.getByRole('button', { name: 'Editar Ana López', exact: true }).click()
+    await expect(page.getByLabel('Nombre completo', { exact: true })).toBeFocused()
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= document.documentElement.clientWidth
+      )
+    ).toBe(true)
+    await page.screenshot({
+      path: test.info().outputPath(`admin-edit-person-${theme}-390.png`),
+      fullPage: true
+    })
+    await page.getByRole('button', { name: 'Cancelar', exact: true }).click()
+    await page.getByRole('button', { name: 'Eliminar Ana López', exact: true }).click()
+    const dialog = page.getByRole('dialog', { name: 'Eliminar persona', exact: true })
+    await expect(dialog).toBeVisible()
+    await expect(dialog).toHaveCSS('opacity', '1')
+    await expect(dialog.locator('.modal-box')).toHaveCSS('opacity', '1')
+    const box = await dialog.locator('.modal-box').boundingBox()
+    expect(box).not.toBeNull()
+    expect(box!.x).toBeGreaterThanOrEqual(0)
+    expect(box!.x + box!.width).toBeLessThanOrEqual(390)
+    await expect(dialog.getByRole('button', { name: 'Cancelar', exact: true })).toBeFocused()
+    await page.screenshot({
+      path: test.info().outputPath(`admin-delete-person-${theme}-390.png`),
+      fullPage: true,
+      animations: 'disabled'
+    })
+    await page.keyboard.press('Tab')
+    await expect(dialog.getByRole('button', { name: 'Eliminar', exact: true })).toBeFocused()
+    await page.keyboard.press('Escape')
+    await expect(dialog).toHaveCount(0)
+    await expect(page.getByRole('row').filter({ hasText: 'ana@neoland.example' })).toBeVisible()
+  })
+}
