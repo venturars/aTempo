@@ -26,7 +26,7 @@ Al parar Anvil se pierde el libro.
 
 ## Configuración
 
-Anvil JSON-RPC en `localhost:8545`, chain id 31337. Foundry `v1.2.3` en el PC. Otterscan (`v2.8.0`) es una SPA en `localhost:5100`: el navegador llama a Anvil. `experimental` / OTS2 va en `false`. Hardhat compila `contracts/CourseAttendance.sol` y despliega contra Anvil. La dirección impresa es `course.contract_address`. `hardhat node` no implementa `ots`.
+Anvil JSON-RPC en `localhost:8545`, chain id 31337. Foundry `v1.2.3` en el PC. Otterscan (`v2.8.0`) es una SPA en `localhost:5100`: el navegador llama a Anvil. `experimental` / OTS2 va en `false`. Hardhat compila `contracts/CourseAttendance.sol` y despliega contra Anvil. El deploy lee `COURSE_ID` y `ACCESS_TOKEN` de `blockend/.env` (plantilla: [blockend/.env.example](../blockend/.env.example)). La dirección impresa es `course.contract_address`. El deploy publica la ABI en `blockend/abi/CourseAttendance.json` y el `metadata.json` que Otterscan pide en `blockend/sourcify/contracts/full_match/31337/<dirección>/`. Compose sirve esa carpeta en el propio Otterscan (`/sourcify`). Sin Docker, `pnpm run serve-abi` la sirve en `:5555`. `hardhat node` no implementa `ots`.
 
 ## Enlaces
 

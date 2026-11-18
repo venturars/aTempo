@@ -32,11 +32,18 @@ rustfs/
   test/run.sh
 blockend/
   README.md
+  .env.example
   package.json
   hardhat.config.cjs
   contracts/CourseAttendance.sol
+  abi/CourseAttendance.json
+  sourcify/
+  scripts/load-env.cjs
+  scripts/publish-abi.cjs
+  scripts/serve-abi.cjs
   scripts/deploy.cjs
   test/CourseAttendance.cjs
+  test/publish-abi.cjs
 docs/POSTGRES.md
 docs/SQLITE.md
 docs/RUSTFS.md

@@ -199,7 +199,7 @@ Desde la raíz del repositorio:
 
 3. Abre Otterscan en <http://localhost:5100> para ver el log.
 
-Para desplegar el contrato de un curso, sigue [blockend/README.md](blockend/README.md). El deploy se lanza en local con pnpm, contra Anvil.
+Para desplegar el contrato de un curso, sigue [blockend/README.md](blockend/README.md). El deploy se lanza en local con pnpm, contra Anvil. Publica la ABI en `blockend/abi/CourseAttendance.json` y el metadata que Otterscan lee en `blockend/sourcify/`. Recarga la dirección del contrato en Otterscan: la pestaña Contract muestra las funciones.
 
 Para parar, `docker compose --profile blockend stop` o `down`. En los dos casos se pierde el libro: Anvil guarda los datos en memoria. Al volver a arrancar hay que desplegar otra vez el contrato. La dirección puede cambiar, así que actualiza `course.contract_address` en PostgreSQL.
 

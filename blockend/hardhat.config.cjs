@@ -1,3 +1,4 @@
+require("./scripts/load-env.cjs");
 require("@nomicfoundation/hardhat-toolbox");
 
 /** @type import('hardhat/config').HardhatUserConfig */

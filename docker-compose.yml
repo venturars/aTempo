@@ -166,9 +166,11 @@ services:
     profiles: [blockend]
     image: otterscan/otterscan:v2.8.0
     environment:
-      ERIGON_URL: http://localhost:8545
+      OTTERSCAN_CONFIG: '{"erigonURL":"http://localhost:8545","experimental":false,"sourcify":{"sources":{"aTempo":{"url":"http://localhost:5100/sourcify","backendFormat":"RepositoryV1"}}}}'
     ports:
       - "5100:80"
+    volumes:
+      - ./blockend/sourcify:/usr/share/nginx/html/sourcify:ro
     depends_on:
       - anvil
 

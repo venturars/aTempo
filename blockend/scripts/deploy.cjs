@@ -1,11 +1,11 @@
+const { courseId, accessToken } = require("./load-env.cjs");
+const { publishAbi } = require("./publish-abi.cjs");
 const hre = require("hardhat");
 
 async function main() {
-  const courseId = process.env.COURSE_ID;
-  const accessToken = process.env.ACCESS_TOKEN;
   if (!courseId || !accessToken) {
     throw new Error(
-      "pasa el UUID del curso y el token: ACCESS_TOKEN=<secreto> COURSE_ID=<uuid> pnpm run deploy"
+      "falta COURSE_ID o ACCESS_TOKEN: copia .env.example a .env o pásalos en el entorno"
     );
   }
 
@@ -13,7 +13,9 @@ async function main() {
   const factory = await hre.ethers.getContractFactory("CourseAttendance");
   const contract = await factory.deploy(courseId, tokenHash);
   await contract.waitForDeployment();
-  process.stdout.write(`${await contract.getAddress()}\n`);
+  const address = await contract.getAddress();
+  await publishAbi(hre, address);
+  process.stdout.write(`${address}\n`);
 }
 
 main().catch((error) => {

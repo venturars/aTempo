@@ -80,17 +80,23 @@ anvil --host 127.0.0.1 --port 8545 --chain-id 31337
 2. Otterscan, otra terminal, en el clone. Git Bash:
 
 ```sh
-VITE_CONFIG_JSON='{"erigonURL":"http://127.0.0.1:8545","experimental":false}' npx vite --port 5100
+VITE_CONFIG_JSON='{"erigonURL":"http://127.0.0.1:8545","experimental":false,"sourcify":{"sources":{"aTempo":{"url":"http://127.0.0.1:5555","backendFormat":"RepositoryV1"}}}}' npx vite --port 5100
 ```
 
 PowerShell:
 
 ```powershell
-$env:VITE_CONFIG_JSON = '{"erigonURL":"http://127.0.0.1:8545","experimental":false}'
+$env:VITE_CONFIG_JSON = '{"erigonURL":"http://127.0.0.1:8545","experimental":false,"sourcify":{"sources":{"aTempo":{"url":"http://127.0.0.1:5555","backendFormat":"RepositoryV1"}}}}'
 npx vite --port 5100
 ```
 
-3. Abre <http://localhost:5100>. Chain id `31337` y el bloque 0 confirman que el visor habla con Anvil.
+3. En otra terminal, desde esta carpeta, sirve la ABI que publica el deploy:
+
+```sh
+pnpm run serve-abi
+```
+
+4. Abre <http://localhost:5100>. Chain id `31337` y el bloque 0 confirman que el visor habla con Anvil.
 
 No se vuelve a hacer `curl | bash` ni `npm ci` salvo que borres `~/.foundry`, el clone o cambies de versión.
 
@@ -105,18 +111,11 @@ pnpm install
 pnpm test
 ```
 
-Git Bash:
+Copia [`.env.example`](.env.example) a `.env` y pon el UUID del curso y el token. El script de deploy lee ese fichero. Si `COURSE_ID` o `ACCESS_TOKEN` ya están en el entorno, ganan ellas.
 
 ```sh
-ACCESS_TOKEN=<secreto> COURSE_ID=11111111-1111-1111-1111-111111111111 pnpm run deploy
-```
-
-PowerShell:
-
-```powershell
-$env:ACCESS_TOKEN = "<secreto>"
-$env:COURSE_ID = "11111111-1111-1111-1111-111111111111"
+cp .env.example .env
 pnpm run deploy
 ```
 
-Quien despliega inventa el token. El script guarda `keccak256` de ese texto en el constructor e imprime solo la dirección. Esa dirección es `course.contract_address` en PostgreSQL. Recarga Otterscan: aparece la transacción.
+Quien despliega inventa el token. El script guarda `keccak256` de ese texto en el constructor e imprime solo la dirección. Esa dirección es `course.contract_address` en PostgreSQL. El deploy también publica la ABI: `abi/CourseAttendance.json` para leerla, y `sourcify/contracts/full_match/31337/<dirección>/metadata.json` para Otterscan. Recarga Otterscan, abre la dirección del contrato y la pestaña Contract: aparecen las funciones. Con Docker, Otterscan sirve esa carpeta en `http://localhost:5100/sourcify`. En local, `pnpm run serve-abi` la sirve en `http://127.0.0.1:5555`.

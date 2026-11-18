@@ -5,7 +5,8 @@
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
-    "deploy": "hardhat run scripts/deploy.cjs --network anvil"
+    "deploy": "hardhat run scripts/deploy.cjs --network anvil",
+    "serve-abi": "node scripts/serve-abi.cjs"
   },
   "dependencies": {
     "@openzeppelin/contracts": "5.4.0"
