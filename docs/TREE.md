@@ -39,13 +39,19 @@ api-postgresql/
     app.module.ts
     postgres/
       postgres.module.ts
-      postgres.service.ts  # Pool de pg; SELECT 1 con DATABASE_URL
+      postgres.service.ts  # Pool de pg; SELECT 1 y listado de person
     health/
       health.module.ts
       health.controller.ts
       health-response.dto.ts
+    person/
+      person.module.ts
+      person.controller.ts
+      person.service.ts
+      person-response.dto.ts
   test/
     health.e2e-spec.ts
+    person.e2e-spec.ts
     swagger.e2e-spec.ts
     jest-e2e.json
 ```

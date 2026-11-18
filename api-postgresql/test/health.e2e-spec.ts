@@ -14,7 +14,10 @@ describe('Health (e2e)', () => {
       imports: [AppModule],
     })
       .overrideProvider(PostgresService)
-      .useValue({ check })
+      .useValue({
+        check,
+        listPersons: async () => [],
+      })
       .compile()
 
     app = moduleFixture.createNestApplication()

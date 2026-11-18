@@ -2,7 +2,7 @@
 
 Servicio de persistencia con NestJS y TypeScript. La SDK de lógica de negocio hablará con este servicio para leer y escribir en PostgreSQL. El API-router no habla con la base.
 
-Hoy solo expone `GET /health`, que confirma que PostgreSQL responde. No hay esquema de dominio. El escritorio no llama a este servicio.
+Hoy expone `GET /health`, que confirma que PostgreSQL responde, y `GET /person`, que lista todas las filas de la tabla `person` del esquema core (#32). El escritorio no llama a este servicio.
 
 ## Arranque
 
@@ -35,6 +35,8 @@ Por defecto escucha en el puerto `3001`. Puedes cambiarlo con `PORT`.
 2. En la sección **health**, abre `GET /health` → **Try it out** → **Execute**.
 3. Si la base responde, la respuesta es `200` con cuerpo `{ "status": "ok", "postgres": "ok" }`.
 4. Si falta `DATABASE_URL` o PostgreSQL no responde, la respuesta es `503` con cuerpo `{ "status": "error", "postgres": "error" }`.
+5. En la sección **person**, abre `GET /person` → **Try it out** → **Execute**.
+6. Con un PostgreSQL que tenga la tabla `person` del esquema de #32, la respuesta es **200** con un array JSON (o `[]` si está vacía). Si falta `DATABASE_URL` o la base no responde, la respuesta es **503**.
 
 El documento OpenAPI en JSON está en `/docs-json`.
 
