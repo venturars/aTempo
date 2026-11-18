@@ -18,6 +18,24 @@ const legendMarks: AttendanceMark[] = ['presente', 'retraso', 'ausencia']
 const unknownLinkText = 'Este enlace de invitación no es válido.'
 const usedLinkText = 'Esta invitación ya está activada. Entra con tu contraseña.'
 
+// El aviso del login normal cuando se llega con un enlace de invitación que no sirve.
+function linkNotice(
+  code: string | undefined,
+  invitation: Invitation | undefined,
+  pending: Invitation | null
+): string {
+  if (code === undefined) {
+    return ''
+  }
+  if (invitation === undefined) {
+    return unknownLinkText
+  }
+  if (pending === null) {
+    return usedLinkText
+  }
+  return ''
+}
+
 export function LoginScreen(): React.JSX.Element {
   // El enlace del correo de invitación abre este mismo login con ?invitation=<código>.
   // Con una invitación pendiente, la tarjeta pide la contraseña y el panel explica qué es aTempo
@@ -25,14 +43,7 @@ export function LoginScreen(): React.JSX.Element {
   const { invitation: code } = useSearch({ strict: false })
   const invitation = code === undefined ? undefined : findInvitation(code)
   const pending = invitation !== undefined && !isInvitationUsed(invitation) ? invitation : null
-  const notice =
-    code === undefined
-      ? ''
-      : invitation === undefined
-        ? unknownLinkText
-        : pending === null
-          ? usedLinkText
-          : ''
+  const notice = linkNotice(code, invitation, pending)
 
   if (pending !== null) {
     return (

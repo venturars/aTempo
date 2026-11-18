@@ -7,7 +7,9 @@ export type CorrectionDraft = {
   person: string
   when: string
   to: Attendance
-  save: (reason: string) => void
+  // Guarda el cambio. Devuelve false si no se ha guardado; el diálogo sigue abierto con failText.
+  save: (reason: string) => boolean
+  failText: string
 }
 
 export function CorrectionDialog({
@@ -45,7 +47,10 @@ function CorrectionForm({
       setError('Escribe el motivo del cambio.')
       return
     }
-    draft.save(reason)
+    if (!draft.save(reason)) {
+      setError(draft.failText)
+      return
+    }
     dialog.current?.close()
   }
 

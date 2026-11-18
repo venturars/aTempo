@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { markBadge, markLabel } from './marks'
 import type { MarkChange } from './panelStore'
@@ -13,7 +13,6 @@ const markButton: Record<Attendance, string> = {
 
 export function MarkControl({
   status,
-  enabled,
   person = '',
   when = '',
   excuse = 'no',
@@ -22,7 +21,6 @@ export function MarkControl({
   onPick
 }: {
   status: Attendance | 'none'
-  enabled: boolean
   person?: string
   when?: string
   arrivalAccepted?: boolean
@@ -35,6 +33,8 @@ export function MarkControl({
   const menuRef = useRef<HTMLUListElement>(null)
   const [menu, setMenu] = useState<{ top: number; left: number } | null>(null)
   const isOpen = menu !== null
+  // El texto de los cambios para lectores de pantalla describe el botón del estado.
+  const noteId = useId()
   // Al elegir o pulsar Escape, el foco vuelve al botón de la fila, no al principio de la página.
   const returnFocus = useRef(false)
 
@@ -91,24 +91,6 @@ export function MarkControl({
     return <span className="opacity-50">—</span>
   }
 
-  const noted = (pill: React.ReactNode): React.ReactNode =>
-    status === 'ausente' || changes.length > 0 ? (
-      <MarkNote
-        name={person}
-        when={when}
-        excuse={status === 'ausente' ? excuse : null}
-        changes={changes}
-      >
-        {pill}
-      </MarkNote>
-    ) : (
-      pill
-    )
-
-  if (!enabled) {
-    return <>{noted(<span className={markBadge[status]}>{markLabel[status]}</span>)}</>
-  }
-
   function toggle(event: React.MouseEvent<HTMLButtonElement>): void {
     event.stopPropagation()
     if (menu !== null) {
@@ -124,13 +106,22 @@ export function MarkControl({
 
   return (
     <div onClick={(event) => event.stopPropagation()}>
-      {noted(
+      {/* Siempre el mismo envoltorio: así el botón no se vuelve a crear con el primer cambio
+          y el foco sigue en él. La nota solo sale si tiene algo que enseñar. */}
+      <MarkNote
+        noteId={noteId}
+        name={person}
+        when={when}
+        excuse={status === 'ausente' ? excuse : null}
+        changes={changes}
+      >
         <button
           ref={buttonRef}
           type="button"
           className={`${markButton[status]} gap-1`}
           aria-haspopup="menu"
           aria-expanded={menu !== null}
+          aria-describedby={changes.length > 0 ? noteId : undefined}
           onClick={toggle}
         >
           {markLabel[status]}
@@ -144,7 +135,7 @@ export function MarkControl({
             />
           </svg>
         </button>
-      )}
+      </MarkNote>
       {menu !== null
         ? createPortal(
             <ul
@@ -195,12 +186,14 @@ function changeText(change: MarkChange): string {
 // La nota que sale al pasar por encima del estado (o al llevarle el foco): los cambios hechos
 // con la lista cerrada, del más reciente al más antiguo, y el justificante si es una ausencia.
 function MarkNote({
+  noteId,
   name,
   when,
   excuse,
   changes,
   children
 }: {
+  noteId: string
   name: string
   when: string
   excuse: JustKey | null
@@ -227,6 +220,10 @@ function MarkNote({
 
   function show(): void {
     cancelHide()
+    // Un estado sin ausencia ni cambios no tiene nota.
+    if (excuse === null && newestFirst.length === 0) {
+      return
+    }
     const rect = anchorRef.current?.getBoundingClientRect()
     if (rect === undefined) {
       return
@@ -261,7 +258,7 @@ function MarkNote({
     >
       {children}
       {newestFirst.length > 0 ? (
-        <span className="sr-only">
+        <span id={noteId} className="sr-only">
           {newestFirst
             .map((change) => `${changeText(change)}. ${change.reason} ${change.by}.`)
             .join(' ')}

@@ -12,6 +12,8 @@ const teacherInvite = { email: 'lucia.martin@atempo.test', code: '731905', name:
 const studentInvite = { email: 'bruno.sanz@clase.test', code: '264018', name: 'Bruno Sanz' }
 const unknownLink = 'Este enlace de invitación no es válido.'
 const usedLink = 'Esta invitación ya está activada. Entra con tu contraseña.'
+// Contraseña de prueba que elige la persona invitada. No es una credencial real.
+const chosenPassword = 'Clave2026!'
 
 function activate(code: string, password: string): boolean {
   useActivateStore.getState().setPassword(password)
@@ -39,7 +41,7 @@ test.describe('invitation logic', () => {
 
   test('does nothing with an unknown code', () => {
     expect(findInvitation('000000')).toBeUndefined()
-    expect(activate('000000', 'Clave2026!')).toBe(false)
+    expect(activate('000000', chosenPassword)).toBe(false)
     expect(useTeacherAccountsStore.getState().accounts).toHaveLength(1)
     expect(useSessionStore.getState().profile).toBeNull()
   })
@@ -49,7 +51,7 @@ test.describe('invitation logic', () => {
     expect(invitation?.email).toBe(teacherInvite.email)
     if (invitation === undefined) return
     expect(isInvitationUsed(invitation)).toBe(false)
-    expect(activate(teacherInvite.code, 'Clave2026!')).toBe(true)
+    expect(activate(teacherInvite.code, chosenPassword)).toBe(true)
     expect(useSessionStore.getState()).toMatchObject({
       profile: 'teacher',
       email: teacherInvite.email,
@@ -63,7 +65,7 @@ test.describe('invitation logic', () => {
     expect(useSessionStore.getState().profile).toBeNull()
 
     useLoginStore.getState().setEmail(teacherInvite.email)
-    useLoginStore.getState().setPassword('Clave2026!')
+    useLoginStore.getState().setPassword(chosenPassword)
     expect(useLoginStore.getState().submit()).toBe(true)
     expect(useSessionStore.getState()).toMatchObject({
       profile: 'teacher',
@@ -151,10 +153,10 @@ test('the invitation link opens the login to choose a password, then logs out an
         { exact: true }
       )
     ).toBeVisible()
-    const password = window.getByLabel('Contraseña', { exact: true })
+    const passwordField = window.getByLabel('Contraseña', { exact: true })
     const hint = window.getByText('Al menos 8 caracteres.', { exact: true })
     await expect(hint).toBeVisible()
-    await expect(password).toHaveAttribute('aria-describedby', 'password-hint')
+    await expect(passwordField).toHaveAttribute('aria-describedby', 'password-hint')
     await expect(window.getByLabel('Correo', { exact: true })).toHaveCount(0)
 
     // El panel explica aTempo con una semana de ejemplo, sin datos de la persona.
@@ -164,7 +166,7 @@ test('the invitation link opens the login to choose a password, then logs out an
     ).toBeVisible()
     await expect(window.getByText('Los alumnos se registran con el QR.')).toBeVisible()
     await expect(window.getByRole('heading', { level: 3, name: 'Semana de ejemplo' })).toBeVisible()
-    await expect(window.getByText('94 % presentes', { exact: true })).toBeVisible()
+    await expect(window.getByText('87 % presentes', { exact: true })).toBeVisible()
     await expect(
       window.getByRole('listitem', { name: /^(lunes|martes|miércoles|jueves|viernes)$/ })
     ).toHaveCount(5)
@@ -177,8 +179,8 @@ test('the invitation link opens the login to choose a password, then logs out an
     await window.getByRole('button', { name: 'Entrar', exact: true }).click()
     await expect(window.getByText('La contraseña es obligatoria.', { exact: true })).toBeVisible()
     await expect(hint).toHaveCount(0)
-    await expect(password).toHaveAttribute('aria-describedby', 'password-error')
-    await password.fill('corta')
+    await expect(passwordField).toHaveAttribute('aria-describedby', 'password-error')
+    await passwordField.fill('corta')
     await window.getByRole('button', { name: 'Entrar', exact: true }).click()
     await expect(
       window.getByText('La contraseña tiene que tener al menos 8 caracteres.', { exact: true })
@@ -186,7 +188,7 @@ test('the invitation link opens the login to choose a password, then logs out an
     await expect(hint).toHaveCount(0)
     await expect(window).not.toHaveURL(/#\/teacher\/panel$/)
 
-    await password.fill('Clave2026!')
+    await passwordField.fill(chosenPassword)
     await window.getByRole('button', { name: 'Entrar', exact: true }).click()
     await expect(window).toHaveURL(/#\/teacher\/panel$/)
     await expect(accountName(window)).toContainText(teacherInvite.name)
@@ -195,7 +197,7 @@ test('the invitation link opens the login to choose a password, then logs out an
     await expectNormalLogin(window)
     await expect(window.getByRole('status')).toHaveCount(0)
 
-    await enter(window, teacherInvite.email, 'Clave2026!')
+    await enter(window, teacherInvite.email, chosenPassword)
     await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
     await logOutFromPanel(window, teacherInvite.name)
     await expectNormalLogin(window)
@@ -207,7 +209,7 @@ test('the invitation link opens the login to choose a password, then logs out an
     await expect(window.getByRole('status')).toHaveText(usedLink)
     await expectNormalLogin(window)
     await expect(window.getByRole('heading', { name: 'Hola, Lucía' })).toHaveCount(0)
-    await enter(window, teacherInvite.email, 'Clave2026!')
+    await enter(window, teacherInvite.email, chosenPassword)
     await expect(window).toHaveURL(/#\/teacher\/panel$/)
     await expect(accountName(window)).toContainText(teacherInvite.name)
   } finally {
@@ -323,8 +325,8 @@ test('fills the invitation field with base-200 over the card in both themes', as
   const app = await launchHiddenElectron([`--invitation=${teacherInvite.code}`])
   try {
     const window = await app.firstWindow()
-    const password = window.getByLabel('Contraseña', { exact: true })
-    await expect(password).toBeVisible()
+    const passwordField = window.getByLabel('Contraseña', { exact: true })
+    await expect(passwordField).toBeVisible()
     for (const theme of ['atempo-oscuro', 'atempo-claro']) {
       await window.evaluate(
         (value) => document.documentElement.setAttribute('data-theme', value),
@@ -332,7 +334,7 @@ test('fills the invitation field with base-200 over the card in both themes', as
       )
       await expect
         .poll(async () => {
-          const [field, card, base200, base100] = await fieldColors(password)
+          const [field, card, base200, base100] = await fieldColors(passwordField)
           return field === base200 && card === base100 && field !== card
         }, theme)
         .toBe(true)

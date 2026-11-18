@@ -2,8 +2,8 @@ import { create } from 'zustand'
 import {
   classSessions,
   course,
-  dashboardDate,
   rollTime,
+  todaySessionId,
   todayEntry,
   rosterNames,
   type Attendance,
@@ -41,7 +41,8 @@ export type PanelTab = 0 | 1 | 2 | 3
 // Un cambio de estado con la lista ya cerrada. Se guarda quién, cuándo y por qué
 // (principles.md, sección 11: las correcciones conservan su historial de auditoría).
 export type MarkChange = {
-  session: string
+  // Id de la sesión, como «Mar 10 nov». El título que se enseña sale de sessionTitle().
+  sessionId: string
   student: string
   from: Attendance
   to: Attendance
@@ -230,7 +231,7 @@ export const usePanelStore = create<PanelState>((set, get) => ({
       changes: [
         ...state.changes,
         {
-          session: dashboardDate,
+          sessionId: todaySessionId,
           student: rosterNames[index] ?? '',
           from,
           to: mark,
@@ -259,7 +260,7 @@ export const usePanelStore = create<PanelState>((set, get) => ({
       changes: [
         ...state.changes,
         {
-          session: `${sessionId} 2026`,
+          sessionId,
           student: name,
           from,
           to: mark,

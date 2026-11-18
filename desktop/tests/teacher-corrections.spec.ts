@@ -5,6 +5,8 @@ import { useSettingsStore } from '../src/renderer/src/panel/settingsStore'
 import { launchHiddenElectron } from './helpers/electron'
 
 const teacher = 'Ventura Rodriguez'
+// Contraseña de prueba que elige la persona invitada. No es una credencial real.
+const chosenPassword = 'Clave2026!'
 // Invitación pública de la demo, escrita aquí a propósito y no importada.
 const invitedTeacher = { code: '731905', name: 'Lucía Martín' }
 // El reloj de la ventana se para aquí: da la fecha y la hora de cada cambio.
@@ -37,7 +39,7 @@ test.describe('correction logic', () => {
     expect(state().marks[index]).toBe('retraso')
     expect(state().changes).toHaveLength(1)
     expect(state().changes[0]).toMatchObject({
-      session: 'Mié 11 nov 2026',
+      sessionId: 'Mié 11 nov',
       student: 'Diego Torres',
       from: 'ausente',
       to: 'retraso',
@@ -318,7 +320,7 @@ test('signs a correction with the name of the teacher who is logged in', async (
     const p = await app.firstWindow()
     await p.setViewportSize({ width: 1280, height: 900 })
     await expect(p.getByRole('heading', { level: 1, name: 'Hola, Lucía' })).toBeVisible()
-    await p.getByLabel('Contraseña', { exact: true }).fill('Clave2026!')
+    await p.getByLabel('Contraseña', { exact: true }).fill(chosenPassword)
     await p.getByRole('button', { name: 'Entrar', exact: true }).click()
     await expect(p.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
 
@@ -329,6 +331,56 @@ test('signs a correction with the name of the teacher who is logged in', async (
     await expect(note).toContainText('De Ausente a Tarde')
     await expect(note).toContainText(`${invitedTeacher.name} · `)
     await expect(note).not.toContainText(teacher)
+  } finally {
+    await app.close()
+  }
+})
+
+test('keeps focus on the status after the first correction of a row and describes it', async () => {
+  await withPanel(async (p) => {
+    await p
+      .getByRole('navigation', { name: 'Secciones' })
+      .getByRole('button', { name: 'Sesiones', exact: true })
+      .click()
+    await p.getByRole('button', { name: /Mar 10 nov/ }).click()
+    // Diego Molero llegó tarde: es una fila sin ausencia y sin cambios hasta ahora.
+    await correct(p, 'Diego Molero', 'Tarde', 'Presente', 'El lector marcó tarde por error.')
+    const status = row(p, 'Diego Molero').getByRole('button', { name: 'Presente', exact: true })
+    await expect(status).toBeFocused()
+    await expect(status).toHaveAccessibleDescription(
+      `De Tarde a Presente. El lector marcó tarde por error. ${teacher}.`
+    )
+  })
+})
+
+test('does not save a correction without a teacher session', async () => {
+  const app = await launchHiddenElectron()
+  try {
+    const p = await app.firstWindow()
+    await p.setViewportSize({ width: 1280, height: 900 })
+    await expect(p.getByRole('button', { name: 'Entrar', exact: true })).toBeVisible()
+    // La ruta del panel se puede abrir sin entrar; los cambios no se firman sin sesión.
+    await p.evaluate(() => {
+      location.hash = '#/teacher/panel'
+    })
+    await expect(p.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
+    await p
+      .getByRole('navigation', { name: 'Secciones' })
+      .getByRole('button', { name: 'Sesiones', exact: true })
+      .click()
+    await p.getByRole('button', { name: /Mar 10 nov/ }).click()
+    const torres = row(p, 'Diego Torres')
+    await torres.getByRole('button', { name: 'Ausente', exact: true }).click()
+    await p.getByRole('menu').getByRole('button', { name: 'Presente', exact: true }).click()
+    const dialog = p.getByRole('dialog', { name: 'Cambiar a Presente' })
+    await dialog.getByLabel('Motivo').fill('Sin sesión no se firma.')
+    await dialog.getByRole('button', { name: 'Guardar', exact: true }).click()
+    await expect(
+      dialog.getByText('Entra con tu cuenta de profesor para guardar el cambio.')
+    ).toBeVisible()
+    await dialog.getByRole('button', { name: 'Cancelar', exact: true }).click()
+    await expect(dialog).toHaveCount(0)
+    await expect(torres.getByRole('button', { name: 'Ausente', exact: true })).toBeVisible()
   } finally {
     await app.close()
   }

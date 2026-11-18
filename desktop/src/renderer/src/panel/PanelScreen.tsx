@@ -24,8 +24,10 @@ import {
   rollTime,
   rosterNames,
   sessionCounts,
+  sessionTitle,
   studentHistory,
   studentSummary,
+  todaySessionId,
   type Attendance,
   type ClassSession,
   type Phase,
@@ -39,10 +41,18 @@ const tabs: { id: PanelTab; label: string }[] = [
   { id: 3, label: 'Ajustes' }
 ]
 
-// Nombre del profesor de la sesión. Firma las correcciones.
+// Nombre de la barra lateral. Si se abre la ruta del panel sin entrar, el de la cuenta de ejemplo.
 function useTeacherName(): string {
   return useSessionStore((state) => state.name) ?? teacherDemoAccount.name
 }
+
+// Quién firma una corrección: solo un profesor con la sesión abierta. Sin sesión no se guarda.
+function useSigner(): string | null {
+  return useSessionStore((state) => (state.profile === 'teacher' ? state.name : null))
+}
+
+const noSignerText = 'Entra con tu cuenta de profesor para guardar el cambio.'
+const notSavedText = 'No se ha podido guardar el cambio.'
 
 export function PanelScreen(): React.JSX.Element {
   const tab = usePanelStore((state) => state.tab)
@@ -138,7 +148,7 @@ export function PanelScreen(): React.JSX.Element {
 
 function pageTitle(tab: PanelTab, selected: ClassSession | null): string {
   if (tab === 1 && selected !== null) {
-    return `${selected.id} 2026`
+    return sessionTitle(selected.id)
   }
   if (tab === 0) {
     return dashboardHeading()
@@ -154,7 +164,7 @@ function backLabel(
 ): string | null {
   if (studentName !== null) {
     if (tab === 1 && selected !== null) {
-      return `${selected.id} 2026`
+      return sessionTitle(selected.id)
     }
     return pageTitle(tab, null)
   }
@@ -178,7 +188,7 @@ function TodayView(): React.JSX.Element {
   const setTime = usePanelStore((state) => state.setTime)
   const times = usePanelStore((state) => state.times)
   const changes = usePanelStore((state) => state.changes)
-  const teacherName = useTeacherName()
+  const signer = useSigner()
   const [draft, setDraft] = useState<CorrectionDraft | null>(null)
   const nextArrival = nextDemoArrival(marks, times)
   const statuses = rosterNames.map((_, index) => rollStatus(phase, marks, index))
@@ -203,7 +213,8 @@ function TodayView(): React.JSX.Element {
       person: rosterNames[index] ?? '',
       when: dashboardDate,
       to: mark,
-      save: (reason) => correctTodayMark(index, mark, reason, teacherName)
+      save: (reason) => signer !== null && correctTodayMark(index, mark, reason, signer),
+      failText: signer === null ? noSignerText : notSavedText
     })
   }
 
@@ -259,7 +270,7 @@ function TodayView(): React.JSX.Element {
         demoArrivals={demoArrivals}
         phase={phase}
         times={times}
-        changes={changes.filter((change) => change.session === dashboardDate)}
+        changes={changes.filter((change) => change.sessionId === todaySessionId)}
         openStudent={openStudent}
         onPick={pick}
         setTime={setTime}
@@ -351,7 +362,6 @@ function RosterTable({
                   <MarkControl
                     status={status}
                     arrivalAccepted={demoArrivals[index] === true}
-                    enabled
                     person={name}
                     when={dashboardDate}
                     changes={changes.filter((change) => change.student === name)}
@@ -373,7 +383,7 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
   const sessionMarks = usePanelStore((state) => state.sessionMarks)
   const correctSessionMark = usePanelStore((state) => state.correctSessionMark)
   const changes = usePanelStore((state) => state.changes)
-  const teacherName = useTeacherName()
+  const signer = useSigner()
   const [draft, setDraft] = useState<CorrectionDraft | null>(null)
 
   if (selected === null) {
@@ -412,7 +422,7 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
                       disabled={!linked}
                       onClick={() => openClass(session.id)}
                     >
-                      <SessionDate label={`${session.id} 2026`} strong />
+                      <SessionDate label={sessionTitle(session.id)} strong />
                     </button>
                   </td>
                   <td className="tabular-nums text-base-content/50">{attendance}</td>
@@ -441,7 +451,7 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
   )
   const counts = sessionCounts(rows)
   const sessionId = selected.id
-  const when = `${sessionId} 2026`
+  const when = sessionTitle(sessionId)
 
   // Una sesión pasada está cerrada: cambiar un estado pide un motivo.
   function pick(name: string, mark: Attendance): void {
@@ -452,7 +462,9 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
       person: name,
       when,
       to: mark,
-      save: (reason) => correctSessionMark(sessionId, name, mark, reason, teacherName)
+      save: (reason) =>
+        signer !== null && correctSessionMark(sessionId, name, mark, reason, signer),
+      failText: signer === null ? noSignerText : notSavedText
     })
   }
 
@@ -472,7 +484,7 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
       <AttendanceTable
         rows={rows}
         when={when}
-        changes={changes.filter((change) => change.session === when)}
+        changes={changes.filter((change) => change.sessionId === sessionId)}
         onOpen={openStudent}
         onMark={pick}
       />
@@ -616,7 +628,6 @@ function AttendanceTable({
               <td>
                 <MarkControl
                   status={row.mark}
-                  enabled
                   person={row.name}
                   when={when}
                   excuse={row.just}
