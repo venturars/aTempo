@@ -47,8 +47,18 @@ Este servicio no implementa reglas de negocio. El API-router no habla con Postgr
 
 El API-router no accede a RustFS; la SDK consumirá este servicio cuando exista.
 
-## 6. Dónde seguir
+## 6. Stack de `api-sqlite/`
+
+- **Flask** expone el servicio local de persistencia.
+- **Pydantic** valida los modelos de entrada y salida.
+- **SQLAlchemy Core** gestiona conexiones y consultas SQLite sin esquema de dominio.
+- **Flasgger** sirve Swagger UI y OpenAPI para comprobar el servicio.
+- **Python** ejecuta el paquete, que tiene sus dependencias fijadas en `api-sqlite/pyproject.toml`.
+
+`api-sqlite/` está detrás de la SDK: el `api-router` delega en la SDK y esta accede a las APIs de persistencia. La SQLite de este servicio es independiente de `desktop/atempo.sqlite`.
+
+## 7. Dónde seguir
 
 - [STYLE.md](STYLE.md): los dos temas y el enlace a la guía visual.
-- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, del API-router y de las APIs de persistencia.
-- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/`, `api-postgresql/` y `api-rustfs/`.
+- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio y flujo de `api-router/` y las APIs de persistencia; se prevén la SDK y más APIs.
+- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/`, `api-postgresql/`, `api-rustfs/` y `api-sqlite/`; se prevén `sdk/` y más carpetas de APIs.

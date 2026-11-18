@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "atempo-api-sqlite"
+version = "0.1.0"
+description = "Local SQLite persistence service for aTempo"
+requires-python = ">=3.11"
+dependencies = [
+    "Flask==3.1.2",
+    "Flasgger==0.9.7.1",
+    "pydantic==2.12.4",
+    "SQLAlchemy==2.0.44",
+]
+
+[tool.setuptools.packages.find]
+include = ["api_sqlite*"]

@@ -4,6 +4,23 @@
 sdk/                  # lógica de negocio; paquete aún no creado
 ```
 
+# Árbol de `api-sqlite/`
+
+```text
+api-sqlite/
+  pyproject.toml
+  README.md
+  api_sqlite/
+    __init__.py
+    __main__.py
+    app.py
+    config.py
+    database.py
+    health.py
+  tests/
+    test_health.py
+```
+
 # Árbol de `api-postgresql/`
 
 ```text

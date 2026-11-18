@@ -2,20 +2,22 @@
 
 ## API-router, SDK y persistencia
 
-Carpeta del router: `api-router/`. Persistencia relacional: `api-postgresql/`. Objetos en almacén S3-compatible: `api-rustfs/`.
+Carpeta del router: `api-router/`. Persistencia relacional: `api-postgresql/` y `api-sqlite/`. Objetos en almacén S3-compatible: `api-rustfs/`.
 
-Los frontends (Electron en `desktop/` y el futuro portal web) hablarán REST con el API-router, un servicio NestJS. El API-router transforma HTTP y delegará en la **SDK (lógica de negocio)**. Esa SDK vivirá en `sdk/`, al mismo nivel que `desktop/` y `api-router/`; la carpeta aún no existe. La SDK hablará con `api-postgresql/` para leer y escribir en PostgreSQL y con `api-rustfs/` para objetos en RustFS. El API-router no habla con la base ni con RustFS. Redis, Postgres y el resto de microservicios del backend quedan fuera del escritorio.
+Los frontends (Electron en `desktop/` y el futuro portal web) hablarán REST con el API-router, un servicio NestJS. El API-router transforma HTTP y delegará en la **SDK (lógica de negocio)**. Esa SDK vivirá en `sdk/`, al mismo nivel que `desktop/` y `api-router/`; la carpeta aún no existe. La SDK hablará con `api-postgresql/` para leer y escribir en PostgreSQL, con `api-sqlite/` para SQLite local y con `api-rustfs/` para objetos en RustFS. Este flujo está previsto: la SDK todavía no existe y los servicios aún no están conectados entre sí. El API-router no habla con la base ni con RustFS. Redis, Postgres y el resto de microservicios del backend quedan fuera del escritorio.
 
-Hoy `api-router/` solo expone `GET /health`. `api-postgresql/` solo expone `GET /health`, que confirma que PostgreSQL responde. `api-rustfs/` solo expone `GET /health`, que confirma que el servicio HTTP responde (igual que `api-router/`). El login y el registro del renderer no llaman a ninguna de estas APIs. PostgreSQL, `api-postgresql/`, RustFS y `api-rustfs/` no están en Docker Compose.
+Hoy `api-router/` solo expone `GET /health`. `api-postgresql/` solo expone `GET /health`, que confirma que PostgreSQL responde. `api-rustfs/` solo expone `GET /health`, que confirma que el servicio HTTP responde (igual que `api-router/`). `api-sqlite/` solo expone `GET /health`, que ejecuta `SELECT 1` para comprobar SQLite. El login y el registro del renderer no llaman a ninguna de estas APIs. PostgreSQL, `api-postgresql/`, RustFS, `api-rustfs/` y `api-sqlite/` no están en Docker Compose.
 
-La documentación interactiva (OpenAPI y Swagger UI) de cada servicio vive en **`/docs`** con el servicio en marcha; sirve para probar endpoints a mano, no implementa lógica de negocio. `api-postgresql/` escucha en el puerto **3001** y `api-rustfs/` en el **3003** (`PORT` en cada uno).
+La documentación interactiva (OpenAPI y Swagger UI) de cada servicio vive en **`/docs`** con el servicio en marcha; sirve para probar endpoints a mano, no implementa lógica de negocio. `api-postgresql/` escucha en el puerto **3001**, `api-sqlite/` en el **3002** y `api-rustfs/` en el **3003** (`PORT` en cada uno).
 
 ```mermaid
 flowchart LR
   electron[FrontendElectron]
   web[FrontendWeb]
   router[APIRouterNest]
-  sdk[sdk_logicaDeNegocio]
+  sdk[sdk_logicaDeNegocio_pendiente]
+  sqliteApi[api_sqlite_Flask]
+  serviceSqlite[(SQLite_del_servicio)]
   apiPg[apiPostgresql]
   postgres[(PostgreSQL)]
   objectApi[api_rustfs_Express]
@@ -23,13 +25,21 @@ flowchart LR
   electron --> router
   web --> router
   router --> sdk
+  sdk --> sqliteApi
+  sqliteApi --> serviceSqlite
   sdk --> apiPg
   sdk --> objectApi
   apiPg --> postgres
   objectApi --> rustfs
 ```
 
-`sdk/` es un paquete hermano de `desktop/`, `api-router/`, `api-postgresql/` y `api-rustfs/`. El API-router y los frontends la consumirán cuando exista. `api-postgresql/` ya está y espera a esa SDK. `api-rustfs/` también: la SDK lo usará para objetos en RustFS.
+`sdk/` es un paquete hermano de `desktop/`, `api-router/`, `api-postgresql/`, `api-rustfs/` y `api-sqlite/`. El API-router y los frontends la consumirán cuando exista. `api-postgresql/` ya está y espera a esa SDK. `api-rustfs/` también: la SDK lo usará para objetos en RustFS.
+
+## api-sqlite
+
+Carpeta: `api-sqlite/`.
+
+Servicio Flask con modelos Pydantic y consultas mediante SQLAlchemy Core. La SDK delegará aquí la persistencia local. Hoy solo expone `GET /health`, que ejecuta `SELECT 1`; responde `200` si SQLite funciona y `503` si falla la conexión. Un cuerpo JSON inválido se rechaza antes de consultar la base. Swagger UI está en `/docs` y OpenAPI en `/docs-json`. Escucha en el puerto **3002** (`PORT`). `SQLITE_DATABASE_URL` configura la base, por defecto `sqlite:///./api-sqlite.sqlite`, independiente de la base de Electron. No está en Docker Compose.
 
 ## api-rustfs
 
