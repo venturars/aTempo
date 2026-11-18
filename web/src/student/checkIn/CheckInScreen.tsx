@@ -49,7 +49,12 @@ export function CheckInScreen({ code }: { code: string }): React.JSX.Element | n
       <p className="max-w-xs text-base text-base-content/60">
         Cambia cada 30 segundos. Escanéalo otra vez o escribe el código que hay debajo.
       </p>
-      <Link className="btn btn-primary btn-lg mt-5 w-full max-w-xs" to="/student/scan" replace>
+      <Link
+        className="btn btn-primary btn-lg mt-5 w-full max-w-xs"
+        to="/student/scan"
+        search={{ escribir: true }}
+        replace
+      >
         Escribir el código
       </Link>
     </main>
