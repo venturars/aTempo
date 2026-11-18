@@ -1,6 +1,6 @@
 # RustFS
 
-Uso, configuración y modelo del almacén de justificantes. Cómo se arranca en el ordenador está en [rustfs/README.md](../rustfs/README.md). Compose orquesta el mismo RustFS.
+Uso, configuración y modelo del almacén de justificantes. Instalación local y arranque: [rustfs/README.md](../rustfs/README.md). Compose orquesta el mismo RustFS: [raíz](../README.md#justificantes-con-rustfs).
 
 Esta base no se abre desde `desktop/` ni desde `api-router/`. La consola de RustFS consulta.
 
@@ -19,7 +19,7 @@ La cadena no guarda el hash del archivo. La integridad del objeto es la del ETag
 
 ## Configuración
 
-El bucket `justifications` se crea con `rustfs/create-bucket.sh` contra `http://127.0.0.1:9000`. Compose llama al mismo script. La API S3 escucha en el puerto 9000; la consola, en el 9001, en la ruta `/rustfs/console/`. Las credenciales son `RUSTFS_ACCESS_KEY` y `RUSTFS_SECRET_KEY`. El binario es RustFS `1.0.3`.
+La API S3 escucha en el puerto 9000; la consola, en el 9001 (en Docker suele ser `/rustfs/console/`; en local, `http://127.0.0.1:9001`). El bucket `justifications` se crea con `rustfs/create-bucket.sh` o `pnpm create-bucket`; Compose llama al script. Las credenciales son `RUSTFS_ACCESS_KEY` y `RUSTFS_SECRET_KEY`.
 
 Al subir un objeto, hay que poner `content-type`. Sin él, la consola no sabe si el UUID es un PDF, una imagen u otro tipo.
 

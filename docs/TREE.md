@@ -23,6 +23,12 @@ rustfs/
   .env.example
   .gitignore
   create-bucket.sh
+  package.json
+  pnpm-lock.yaml
+  scripts/run-start.mjs
+  scripts/start.sh
+  scripts/start.ps1
+  scripts/create-bucket.mjs
   test/run.sh
 blockend/
   README.md
