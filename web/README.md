@@ -12,13 +12,14 @@ Abre http://localhost:5191/. La cuenta de ejemplo es `ada.lopez@clase.test` / `c
 
 Para registrar la asistencia hace falta el QR de la app del profesor (Hoy → Abrir lista). El QR y el código de 6 cifras de debajo cambian cada 30 segundos. La regla está en `src/student/classCode.ts` y es la misma que usa la app del profesor.
 
-- Con la cámara del móvil, el QR abre `/student/check-in?code=ATEMPO-CLASE-1109-<código>`. Si la sesión está abierta, apunta la entrada. Si no, pide entrar y la apunta con la hora del escaneo.
+- Con la cámara del móvil, el QR abre `/student/check-in?code=ATEMPO-CLASE-1109-<código>`. Si la sesión está abierta, apunta la entrada. Si no, pide entrar y la apunta con la hora del escaneo, si entra antes de 10 minutos.
 - En Registrar asistencia se puede escanear el QR desde la web, si el navegador lo permite, o escribir las 6 cifras.
 - Se aceptan el código anterior, el actual y el siguiente, por si el reloj del móvil va unos segundos por detrás.
 
 Para probarlo con el móvil, el móvil y el ordenador tienen que estar en la misma wifi. Arranca la web con `pnpm dev --host` y usa la dirección de red que enseña Vite (por ejemplo `http://192.168.1.20:5191`) como sitio del alumno en la app del profesor.
 
-Para volver a probar el recorrido en desarrollo, abre http://localhost:5191/?reiniciar. Borra las entradas y los avisos de esa pestaña, entra con la cuenta de ejemplo y abre el inicio del alumno.
+Para volver a probar el recorrido en desarrollo, abre http://localhost:5191/?reiniciar. Borra las entradas, las cuentas nuevas, los avisos y el escaneo pendiente de esa pestaña, entra con la cuenta de ejemplo y abre el inicio del alumno.
 
 También solo en desarrollo, el inicio acepta otra hora y otro día para ver cada estado de Tempito: `?hora=08:50`, `?hora=08:59:45` (con segundos) o `?dia=sab&hora=10:00` (otro día de esta semana).
+
 `pnpm build` comprueba los tipos y genera `dist/`.
