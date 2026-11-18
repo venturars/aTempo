@@ -12,7 +12,8 @@ export type HomeState =
   | { kind: 'class-over' }
   | { kind: 'upcoming'; noticeArrival: string | null }
 
-// El orden importa: una entrada registrada gana a un aviso, y un aviso de ausencia gana a la hora.
+// El orden importa: una entrada registrada gana a todo. Con la clase terminada ya no cuenta el aviso.
+// Antes del final, un aviso de ausencia gana a la hora.
 export function homeStateFor(
   now: Date,
   history: ClassEntry[],
@@ -24,11 +25,11 @@ export function homeStateFor(
   const entry = history.find((item) => item.label === todayLabel)
   if (entry?.arrival) return { kind: 'registered', arrival: entry.arrival }
 
+  if (secondsUntil(now, todayClass.end) <= 0) return { kind: 'class-over' }
+
   // Los avisos llegan del más reciente al más antiguo: vale el último que mandó.
   const notice = notices.find((item) => item.day === todayLabel)
   if (notice?.kind === 'ausencia') return { kind: 'absent-notice' }
-
-  if (secondsUntil(now, todayClass.end) <= 0) return { kind: 'class-over' }
 
   return { kind: 'upcoming', noticeArrival: notice?.kind === 'retraso' ? notice.arrival : null }
 }
