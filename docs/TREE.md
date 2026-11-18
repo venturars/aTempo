@@ -4,6 +4,23 @@
 sdk/                  # lógica de negocio; paquete aún no creado
 ```
 
+# Árbol de `api-sqlite/`
+
+```text
+api-sqlite/
+  pyproject.toml
+  README.md
+  api_sqlite/
+    __init__.py
+    __main__.py
+    app.py
+    config.py
+    database.py
+    health.py
+  tests/
+    test_health.py
+```
+
 # Árbol de `api-postgresql/`
 
 ```text
@@ -27,6 +44,35 @@ api-postgresql/
       health.module.ts
       health.controller.ts
       health-response.dto.ts
+  test/
+    health.e2e-spec.ts
+    swagger.e2e-spec.ts
+    jest-e2e.json
+```
+
+# Árbol de `api-rustfs/`
+
+```text
+api-rustfs/
+  package.json
+  pnpm-lock.yaml
+  .npmrc
+  tsconfig.json
+  tsconfig.build.json
+  eslint.config.mjs
+  README.md
+  src/
+    main.ts
+    create-app.ts
+    configure-app.ts
+    health/
+      health-router.ts
+      health-response.ts
+    rustfs/
+      rustfs-config.ts
+      check-rustfs.ts
+    openapi/
+      document.ts
   test/
     health.e2e-spec.ts
     swagger.e2e-spec.ts
