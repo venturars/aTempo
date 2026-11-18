@@ -33,7 +33,7 @@ flowchart LR
   objectApi --> rustfs
 ```
 
-`sdk/` es un paquete hermano de `desktop/`, `api-router/`, `api-postgresql/`, `api-rustfs/` y `api-sqlite/`. El API-router y los frontends la consumirán cuando exista. `api-postgresql/` ya está y espera a esa SDK. `api-rustfs/` también: la SDK lo usará para objetos en RustFS.
+`sdk/` es el paquete de dominio previsto, hermano de `desktop/`, `api-router/`, `api-postgresql/`, `api-rustfs/` y `api-sqlite/`. Lo consumirá el API-router. Los frontends usarán una SDK frontend distinta para llamar al router público; no consumirán directamente la SDK de dominio ni las APIs de persistencia. `api-postgresql/` ya está y espera a esa SDK de dominio. `api-rustfs/` también: la SDK lo usará para objetos en RustFS.
 
 ## api-sqlite
 
@@ -46,6 +46,16 @@ Servicio Flask con modelos Pydantic y consultas mediante SQLAlchemy Core. La SDK
 Carpeta: `api-rustfs/`.
 
 Servicio Express y TypeScript. La SDK delegará en él la lectura y escritura de objetos en RustFS. Hoy solo expone `GET /health`, que confirma que el servicio HTTP responde (igual que `api-router/`). Swagger UI en **`/docs`** y OpenAPI en **`/docs-json`**, igual que en `api-router/`. Por defecto escucha en el puerto **3003** (`PORT`). No está en Docker Compose en este paso.
+
+## Web y administración
+
+El paquete `web/` contiene el portal del alumno y el prototipo de administración bajo `/admin`. Comparten Vite, React, el router de TanStack y el tema de `docs/storybook/src/system.css`. El control de tema existente se comparte mediante `web/src/shared/ThemeToggle.tsx`; no hay un tema ni otro paquete de componentes para admin.
+
+`web/src/admin/adminStore.ts` guarda en memoria personas, cursos, matrículas, sesiones y la sesión de demo. Sus acciones validan entradas, pertenencia a la organización y rol admin antes de escribir. Las invitaciones preparan personas pendientes y no envían correo ni activan cuentas. Cada sesión muestra el alumnado de su curso como pendiente. `Mis clases` reutiliza los detalles en modo lectura y filtra los cursos del administrador que también es profesor; no sustituye al panel de asistencia de Electron.
+
+La entrada explícita de demo no usa contraseñas y no es autenticación de producción. Recargar vuelve al seed; salir cierra la sesión admin conservando los datos de ese arranque. La sesión/cuentas del alumno siguen en sus stores actuales y no se cambian al entrar o salir de admin.
+
+Este store es un mock del prototipo, no una segunda SDK. El trabajo local de #90 se conserva por separado para una futura SDK frontend que consuma el API-router; la SDK de dominio mantiene las reglas de negocio y acceso a persistencia. Los endpoints administrativos aún no están acordados en el brief v1. Alcance, referencias y comprobaciones en [admin-prototype.md](admin-prototype.md); pasos para abrirlo en [web/README.md](../web/README.md#probar-administración).
 
 ## aTempo de escritorio
 
