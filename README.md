@@ -1,19 +1,56 @@
 # aTempo
 
-aTempo registra la asistencia de los alumnos de una clase. Este repositorio tiene la aplicación de escritorio del profesor y la guía visual compartida.
+aTempo registra la asistencia de los alumnos de una clase. Este repositorio tiene el prototipo de escritorio para profesor y alumno y la guía visual compartida.
 
 La visión, los perfiles y las decisiones de producto están en [principles.md](principles.md).
+
+## Probar las demos de profesor y alumno
+
+Para abrir Electron en tu ordenador necesitas Node 24 y pnpm 10.33.0. Desde la raíz de la copia que vas a revisar, instala las dependencias nativas y arranca la aplicación:
+
+```sh
+cd desktop
+node --version
+pnpm --version
+pnpm install --frozen-lockfile
+pnpm dev
+```
+
+Comprueba que las versiones muestran `v24.x` y `10.33.0`.
+
+Desde un arranque nuevo, usa el formulario **Entrar** con una de estas cuentas públicas de ejemplo:
+
+| Perfil | Correo | Contraseña | Destino |
+| --- | --- | --- | --- |
+| Profesor | `profesor@atempo.test` | `Profesor123!` | Hoy, en el panel del profesor |
+| Alumno | `ada.lopez@clase.test` | `clase-2026` | Dashboard de Ada López |
+
+Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alumnos y pasar lista.
+
+Para probar al alumno desde el login, sal completamente de la aplicación: en macOS usa **Cmd+Q**; cerrar solo la ventana no termina el proceso. Detén también `pnpm dev` con **Ctrl+C** en su terminal y vuelve a ejecutar `pnpm dev` desde `desktop/`.
+
+Como alumno, pulsa **Registrar asistencia**, **Escanear** y **Llegar a las 08:58**. Debe aparecer el estado **Presente** con la hora **08:58**. Pulsa **Volver** y **Resumen de asistencia** para comprobar la nueva entrada en el historial.
+
+El correo admite mayúsculas y espacios laterales; la contraseña debe coincidir exactamente. Una contraseña incorrecta o un correo desconocido muestran un error y conservan el login. El registro crea alumnos y reserva el correo del profesor.
+
+Las cuentas, la sesión y la asistencia de ejemplo viven en memoria del renderer. Recargarlo o reiniciar completamente la aplicación vacía la sesión, restablece los datos de ejemplo y elimina los alumnos registrados durante ese arranque. Repite la salida completa y el arranque para probar otra cuenta desde cero.
+
+El lector del alumno ofrece lecturas simuladas y no usa cámara. Estos flujos no se conectan al backend ni a un servicio de autenticación.
 
 ## Qué hay
 
 | Carpeta | Qué es |
 | --- | --- |
-| `desktop/` | Aplicación del profesor. Electron, React y SQLite. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/sign-up` para el registro. |
+| `desktop/` | Prototipo para profesor y alumno con Electron y React; las demos usan datos en memoria. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/sign-up` para el registro. |
+| `api-router/` | API REST con NestJS entre los frontends y la SDK de lógica de negocio (pendiente). |
+| `api-postgresql/` | API REST con NestJS entre la SDK y PostgreSQL. |
+| `api-rustfs/` | API REST con Express entre la SDK y RustFS (persistencia de objetos). |
+| `api-sqlite/` | Servicio Flask con Pydantic y SQLAlchemy Core entre la SDK prevista y SQLite. |
 | `docs/storybook/` | Fuente de verdad visual: Tailwind y daisyUI. Las pantallas usan las clases. No hay un paquete de componentes. |
 | `docs/guia/` | Markdown generado desde Storybook. No se versiona. Lo leen los agentes. |
 | `docs/` | Cómo se construye: constitución, arquitectura, estilo y árbol de carpetas. |
 
-Cada carpeta con código tiene su propio `package.json`. No hay workspace en la raíz. El gestor es pnpm 10.33.0 y las versiones van fijas.
+Cada servicio tiene sus dependencias propias y no hay workspace en la raíz. Los paquetes JavaScript usan pnpm 10.33.0 y versiones fijas. `api-sqlite/` usa Python y dependencias fijadas en `pyproject.toml`.
 
 ## Instalación
 
@@ -34,7 +71,7 @@ docker compose run --rm setup
 
 La primera vez, `setup` construye la imagen de Docker: tarda unos minutos. Las siguientes, unos segundos.
 
-`setup` instala delivery-workflow para Cursor, Codex y Claude Code en la raíz del proyecto, y las dependencias de `desktop/` y `docs/storybook/` dentro de Docker, en volúmenes. Los `node_modules` de Linux no llegan a tu carpeta.
+`setup` instala delivery-workflow para Cursor, Codex y Claude Code en la raíz del proyecto, y las dependencias de `desktop/`, `docs/storybook/` y `api-router/` dentro de Docker, en volúmenes. Los `node_modules` de Linux no llegan a tu carpeta.
 
 Desde entonces, git lo lanza solo después de `git pull`, de cambiar de rama o de un rebase, si la rama nueva tiene otro `apm.yml`, `apm.lock.yaml`, `pnpm-lock.yaml` o `Dockerfile`. Si cambió el `Dockerfile`, reconstruye antes la imagen. Si Docker no está en marcha, git avisa y sigue: lanza `docker compose run --build --rm setup` cuando lo arranques.
 
@@ -116,11 +153,54 @@ docker compose run --rm storybook pnpm guide
 
 Ese comando es obligatorio: sin él, el markdown se queda desfasado. No se edita `docs/guia/` a mano.
 
+## API-router
+
+```sh
+docker compose up api-router
+```
+
+El servicio queda en <http://localhost:3000>. `GET /health` debe devolver `{ "status": "ok" }`. La documentación interactiva está en <http://localhost:3000/docs>. Para pararlo, `Ctrl+C` o `docker compose stop api-router`.
+
+Las comprobaciones se lanzan en Docker:
+
+```sh
+docker compose run --rm api-router pnpm typecheck
+docker compose run --rm api-router pnpm lint
+docker compose run --rm api-router pnpm test
+```
+
+Más detalle en [api-router/README.md](api-router/README.md).
+
+## API-postgresql
+
+Más detalle en [api-postgresql/README.md](api-postgresql/README.md).
+
+## API-sqlite
+
+`api-sqlite/` es el servicio de persistencia local previsto para la SDK. La SDK todavía está pendiente y no hay integración entre estos servicios. Su base SQLite es distinta de la base local de Electron.
+
+Desde `api-sqlite/`, crea un entorno virtual, instala el paquete editable y arráncalo:
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -e .
+python -m api_sqlite
+```
+
+En macOS/Linux usa `python3 -m venv .venv`, `source .venv/bin/activate` y después los mismos comandos `python -m pip` y `python -m api_sqlite`. El servicio escucha en `http://127.0.0.1:3002`; `PORT` cambia el puerto y `SQLITE_DATABASE_URL` cambia la URL SQLAlchemy de SQLite. Por defecto usa `sqlite:///./api-sqlite.sqlite`.
+
+`GET /health` ejecuta `SELECT 1` y responde `{ "status": "ok" }` si SQLite está disponible. Swagger UI está en <http://localhost:3002/docs> y el documento JSON en <http://localhost:3002/docs-json>. No se anuncia cuerpo para el GET. Si se envía JSON, solo se acepta `{}`; campos extra producen `400` antes del acceso a SQLite.
+
+Más detalle en [api-sqlite/README.md](api-sqlite/README.md).
+
 ## Avisos opcionales de PR en Discord
 
 El workflow `.github/workflows/discord-pr-notifications.yml` activa los avisos desde `main` para las PR dirigidas a `staging` y los comentarios de asociación. Usa la acción compartida fijada a un commit y no ejecuta código de la PR. APM no instala este workflow ni lo incorpora a los pasos de los agentes.
 
-Al solicitar al menos dos revisores, el bot publica el repositorio, un resumen y el enlace de la PR. Muestra los logins de GitHub aunque no encuentre sus cuentas de Discord, y menciona únicamente a quienes tengan una asociación verificada. Las asociaciones se guardan cifradas durante 48 horas en una caché propia de aTempo.
+Al solicitar al menos dos revisores, el bot publica una línea separadora, el repositorio, el título de la PR, los revisores y el enlace. No incluye el cuerpo de la PR. Muestra los logins de GitHub aunque no encuentre sus cuentas de Discord, y menciona únicamente a quienes tengan una asociación verificada.
+
+Un administrador puede configurar una vez la variable opcional `DISCORD_USER_MAP` en el entorno protegido `Discord-PR-Notifications`, con un JSON como `{"login-github":"ID_DE_DISCORD"}` y un ID numérico real en lugar del marcador. Esta asociación fija tiene prioridad, no caduca y se comprueba contra los miembros del servidor antes de mencionar. Para el resto se conserva la caché cifrada de 48 horas; la búsqueda automática acepta diferencias de mayúsculas en el nombre de usuario de Discord.
 
 Para confirmar una asociación que falte, el autor de la PR o un miembro autorizado del repositorio puede dejar este comentario en la PR:
 
@@ -141,3 +221,4 @@ Reemplaza los valores por el login exacto del revisor solicitado y su ID numéri
 | [docs/guia](docs/guia/README.md) | Markdown generado desde Storybook. No se versiona. |
 | [docs/TREE.md](docs/TREE.md) | Carpetas de `desktop/`. |
 | [AGENTS.md](AGENTS.md) | Cómo se trabaja una spec. |
+| [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Cómo contribuir: issues, ramas, commits y pull requests. |
