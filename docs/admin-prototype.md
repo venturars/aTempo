@@ -146,6 +146,12 @@ Comprobaciones del 2026-11-18, en este orden:
 
 El comando de batería completa sigue siendo `pnpm exec playwright test --config playwright.admin.config.ts --workers=1 --retries=0 --update-snapshots=none`, ejecutado desde `desktop/`. Estos resultados corresponden a la fase local anterior a #139; la publicación requiere una ejecución completa nueva y su evidencia en la issue.
 
+### Publicación y aviso de Discord
+
+La [PR #140](https://github.com/venturars/aTempo/pull/140) está lista para revisión, enlazada a #139 (Front-End Review), con revisiones solicitadas. En `80731f8`, GitGuardian y Socket pasaron y GitHub no indicó conflictos de merge.
+
+Los avisos de Discord de las ejecuciones `44295868056`, `44295869125` y `44295891855` fallaron después de que Discord aceptara el mensaje: el registro posterior de la notificación devolvió GitHub HTTP 403 y quedó incierto. Revisar `#git` antes de reintentar: una repetición puede duplicar mensajes ya aceptados. El origen es la acción compartida `venturars/delivery-workflow/.github/actions/discord-pr-notifications`, fijada a `9d12e301ce3ae504cb5b441c21704d9c80025251`. Los mantenedores deben investigar los permisos y la escritura de ese registro upstream; el 403 está confirmado, pero el permiso concreto que falta aún no está demostrado.
+
 ### Evidencia histórica de la base
 
 Resultados de la base `8223947`, comprobados el 2026-11-18. Las 43 pruebas siguientes son evidencia histórica del recorrido inicial; la ampliación CRUD se verifica con los resultados nuevos del apartado anterior.
