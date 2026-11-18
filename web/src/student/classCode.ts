@@ -2,10 +2,10 @@
 // La app del profesor usa la misma regla, y las dos tienen que dar el mismo código:
 //
 //   periodo = floor(Date.now() / 30000)
-//   código  = FNV-1a de «ATEMPO-CLASE-1109:<periodo>», módulo 10000, con 4 cifras
+//   código  = FNV-1a de «ATEMPO-CLASE-1109:<periodo>», módulo 1000000, con 6 cifras
 //   QR      = <sitio del alumno>/student/check-in?code=ATEMPO-CLASE-1109-<código>
 //
-// Debajo del QR se ven las 4 cifras, para quien prefiera escribirlas.
+// Debajo del QR se ven las 6 cifras, para quien prefiera escribirlas.
 // Sin servidor, el sitio acepta el código del periodo anterior, el del actual y el del siguiente.
 // El siguiente cubre un móvil que lleva el reloj unos segundos por detrás del ordenador del profesor.
 
@@ -26,11 +26,11 @@ function periodOf(now: Date): number {
 }
 
 export function codeForPeriod(classId: string, period: number): string {
-  return String(fnv1a(`${classId}:${period}`) % 10000).padStart(4, '0')
+  return String(fnv1a(`${classId}:${period}`) % 1000000).padStart(6, '0')
 }
 
-// Saca las 4 cifras de lo que llegue: el enlace del QR, el texto «ATEMPO-CLASE-1109-1234»
-// o las cifras escritas a mano. Si no hay 4 cifras de esta clase, devuelve null.
+// Saca las 6 cifras de lo que llegue: el enlace del QR, el texto «ATEMPO-CLASE-1109-123456»
+// o las cifras escritas a mano. Si no hay 6 cifras de esta clase, devuelve null.
 export function readClassCode(payload: string, classId: string): string | null {
   let value = payload.trim()
   if (/^https?:\/\//i.test(value)) {
@@ -42,7 +42,7 @@ export function readClassCode(payload: string, classId: string): string | null {
   }
   const prefix = `${classId}-`
   if (value.toUpperCase().startsWith(prefix)) value = value.slice(prefix.length)
-  return /^\d{4}$/.test(value) ? value : null
+  return /^\d{6}$/.test(value) ? value : null
 }
 
 export function isCodeValidNow(code: string, classId: string, now: Date): boolean {

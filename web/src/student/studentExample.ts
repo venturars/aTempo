@@ -19,7 +19,7 @@ export type TodayClass = {
   end: string
   // Días con clase, como Date.getDay(): 0 es domingo, 1 es lunes.
   weekdays: number[]
-  // Va dentro del QR del profesor. El código de 4 cifras sale de aquí (classCode.ts).
+  // Va dentro del QR del profesor. El código de 6 cifras sale de aquí (classCode.ts).
   id: string
 }
 

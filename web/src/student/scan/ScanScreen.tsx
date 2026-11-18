@@ -6,7 +6,7 @@ import { registerReading, type CheckInResult } from '../studentAccounts'
 
 // La pantalla tiene dos modos:
 //   scan → la cámara lee el QR. Es lo principal.
-//   code → el alumno escribe las 4 cifras que hay debajo del QR. Es el plan B.
+//   code → el alumno escribe las 6 cifras que hay debajo del QR. Es el plan B.
 // Se pasa a «code» con «Escribir el código», si la cámara no está disponible o si la lectura falla.
 // Desde «code» se vuelve a «scan» con «Escanear el QR».
 type Mode = 'scan' | 'code'
@@ -33,11 +33,20 @@ function cameraProblemFor(caught: unknown): string {
   return 'No se pudo abrir la cámara.'
 }
 
+// Primero se comprueba la sesión: sin ella, se va al login sin pedir la cámara.
 export function ScanScreen({
   startWithCode = false
 }: {
   startWithCode?: boolean
 }): React.JSX.Element {
+  return (
+    <RequireStudent>
+      <ScanView startWithCode={startWithCode} />
+    </RequireStudent>
+  )
+}
+
+function ScanView({ startWithCode }: { startWithCode: boolean }): React.JSX.Element {
   const navigate = useNavigate()
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -72,8 +81,15 @@ export function ScanScreen({
   async function watch(detector: BarcodeDetector): Promise<void> {
     if (!readingRef.current || videoRef.current === null) return
     if (videoRef.current.readyState >= 2) {
-      const codes = await detector.detect(videoRef.current)
-      const value = codes[0]?.rawValue
+      let value: string | undefined
+      try {
+        const codes = await detector.detect(videoRef.current)
+        value = codes[0]?.rawValue
+      } catch {
+        // Un fotograma que no se puede leer no para el escáner: se prueba con el siguiente.
+      }
+      // Mientras se leía, el alumno pudo cambiar a escribir el código o salir.
+      if (!readingRef.current) return
       if (value) {
         stopCamera()
         finish(registerReading(value))
@@ -131,102 +147,101 @@ export function ScanScreen({
   }
 
   return (
-    <RequireStudent>
-      <div className="flex min-h-screen flex-col">
-        <header className="flex h-16 items-center px-4 sm:px-8">
-          <Link className="btn btn-ghost btn-circle" to="/student/dashboard" aria-label="Cerrar">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              aria-hidden="true"
+    <div className="flex min-h-screen flex-col">
+      <header className="flex h-16 items-center px-4 sm:px-8">
+        <Link className="btn btn-ghost btn-circle" to="/student/dashboard" aria-label="Cerrar">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            aria-hidden="true"
+          >
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </Link>
+      </header>
+      <main
+        key={mode}
+        className={`page-enter flex flex-1 flex-col items-center justify-center gap-6 px-6 pb-16 text-center ${flowTopBelowHeader}`}
+      >
+        {mode === 'scan' ? (
+          <>
+            <h1 className="text-2xl font-semibold tracking-tight">Escanea el QR</h1>
+            <div className="panel-card relative aspect-square w-full max-w-xs overflow-hidden rounded-box sm:aspect-[4/3] sm:max-w-md">
+              <video ref={videoRef} className="h-full w-full object-cover" muted playsInline />
+              <ScanFrame />
+            </div>
+            <button
+              className="btn btn-ghost text-base font-medium text-primary"
+              type="button"
+              onClick={() => {
+                setFocusCode(true)
+                setMode('code')
+              }}
             >
-              <path d="M6 6l12 12M18 6L6 18" />
-            </svg>
-          </Link>
-        </header>
-        <main
-          key={mode}
-          className={`page-enter flex flex-1 flex-col items-center justify-center gap-6 px-6 pb-16 text-center ${flowTopBelowHeader}`}
-        >
-          {mode === 'scan' ? (
-            <>
-              <h1 className="text-2xl font-semibold tracking-tight">Escanea el QR</h1>
-              <div className="panel-card relative aspect-square w-full max-w-xs overflow-hidden rounded-box sm:aspect-[4/3] sm:max-w-md">
-                <video ref={videoRef} className="h-full w-full object-cover" muted playsInline />
-                <ScanFrame />
+              Escribir el código
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="flex flex-col gap-2">
+              <h1 className="text-2xl font-semibold tracking-tight">Escribe el código</h1>
+              <p className="max-w-xs text-base text-base-content/60">
+                Son las 6 cifras que hay debajo del QR.
+              </p>
+            </div>
+            {cameraProblem !== null ? <CameraProblem text={cameraProblem} /> : null}
+            <form className="field w-full max-w-xs text-left" noValidate onSubmit={onSubmitCode}>
+              <label className="sr-only" htmlFor="codigo-clase">
+                Código de la clase
+              </label>
+              <div className="field-row">
+                <input
+                  id="codigo-clase"
+                  className={`input w-full text-center text-lg tabular-nums tracking-[0.3em] ${codeError !== null ? 'input-error' : ''}`}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  autoComplete="off"
+                  autoFocus={focusCode}
+                  value={typedCode}
+                  aria-invalid={codeError !== null}
+                  onChange={(event) => {
+                    setTypedCode(event.target.value)
+                    setCodeError(null)
+                  }}
+                />
+                <button className="btn btn-primary" type="submit">
+                  Registrar
+                </button>
               </div>
+              {codeError !== null ? (
+                <p className="text-sm text-error" role="alert">
+                  {codeError}
+                </p>
+              ) : null}
+            </form>
+            {canScan ? (
               <button
                 className="btn btn-ghost text-base font-medium text-primary"
                 type="button"
                 onClick={() => {
-                  setFocusCode(true)
-                  setMode('code')
+                  setCodeError(null)
+                  setCameraProblem(null)
+                  setMode('scan')
                 }}
               >
-                Escribir el código
+                Escanear el QR
               </button>
-            </>
-          ) : (
-            <>
-              <div className="flex flex-col gap-2">
-                <h1 className="text-2xl font-semibold tracking-tight">Escribe el código</h1>
-                <p className="max-w-xs text-base text-base-content/60">
-                  Son las 4 cifras que hay debajo del QR.
-                </p>
-              </div>
-              {cameraProblem !== null ? <CameraProblem text={cameraProblem} /> : null}
-              <form className="field w-full max-w-xs text-left" noValidate onSubmit={onSubmitCode}>
-                <label className="sr-only" htmlFor="codigo-clase">
-                  Código de la clase
-                </label>
-                <div className="field-row">
-                  <input
-                    id="codigo-clase"
-                    className={`input w-full text-center text-lg tabular-nums tracking-[0.3em] ${codeError !== null ? 'input-error' : ''}`}
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="off"
-                    autoFocus={focusCode}
-                    value={typedCode}
-                    aria-invalid={codeError !== null}
-                    onChange={(event) => {
-                      setTypedCode(event.target.value)
-                      setCodeError(null)
-                    }}
-                  />
-                  <button className="btn btn-primary" type="submit">
-                    Registrar
-                  </button>
-                </div>
-                {codeError !== null ? (
-                  <p className="text-sm text-error" role="alert">
-                    {codeError}
-                  </p>
-                ) : null}
-              </form>
-              {canScan ? (
-                <button
-                  className="btn btn-ghost text-base font-medium text-primary"
-                  type="button"
-                  onClick={() => {
-                    setCodeError(null)
-                    setCameraProblem(null)
-                    setMode('scan')
-                  }}
-                >
-                  Escanear el QR
-                </button>
-              ) : null}
-            </>
-          )}
-        </main>
-      </div>
-    </RequireStudent>
+            ) : null}
+          </>
+        )}
+      </main>
+    </div>
   )
 }
 
