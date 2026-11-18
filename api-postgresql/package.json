@@ -1,0 +1,50 @@
+{
+  "name": "api-postgresql",
+  "version": "1.0.0",
+  "description": "API NestJS de persistencia entre la SDK y PostgreSQL",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "build": "nest build",
+    "dev": "nest start --watch",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "lint": "eslint \"{src,test}/**/*.ts\"",
+    "start": "nest start",
+    "start:prod": "node dist/main",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "jest --config ./test/jest-e2e.json"
+  },
+  "dependencies": {
+    "@nestjs/common": "11.2.10",
+    "@nestjs/core": "11.2.10",
+    "@nestjs/platform-express": "11.2.10",
+    "@nestjs/swagger": "11.2.6",
+    "class-transformer": "0.5.1",
+    "class-validator": "0.14.3",
+    "pg": "8.23.1",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@nestjs/cli": "11.0.16",
+    "@nestjs/schematics": "11.0.9",
+    "@nestjs/testing": "11.2.10",
+    "@types/express": "5.0.3",
+    "@types/jest": "30.0.0",
+    "@types/node": "24.19.2",
+    "@types/pg": "8.23.1",
+    "@types/supertest": "6.0.3",
+    "eslint": "9.39.5",
+    "eslint-config-prettier": "10.1.8",
+    "globals": "16.4.0",
+    "jest": "30.2.0",
+    "prettier": "3.9.10",
+    "source-map-support": "0.5.21",
+    "supertest": "7.1.4",
+    "ts-jest": "29.4.5",
+    "ts-node": "10.9.2",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.46.4"
+  }
+}

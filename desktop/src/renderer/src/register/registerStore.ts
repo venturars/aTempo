@@ -1,10 +1,19 @@
 import { create } from 'zustand'
+import { useSessionStore } from '../session/sessionStore'
+import { normalizeEmail, useStudentAccountsStore } from '../student/studentAccounts'
+import { teacherDemoAccount } from '../login/teacherDemoAccount'
 import { validateRegister } from './validateRegister'
 
-export type SubmittedRegister = {
-  name: string
-  email: string
-  password: string
+// El formulario vacío: al arrancar, al crear la cuenta y al salir de la pantalla.
+const emptyRegisterForm = {
+  name: '',
+  email: '',
+  password: '',
+  repeatPassword: '',
+  nameError: '',
+  emailError: '',
+  passwordError: '',
+  repeatPasswordError: ''
 }
 
 type RegisterState = {
@@ -16,35 +25,27 @@ type RegisterState = {
   emailError: string
   passwordError: string
   repeatPasswordError: string
-  submitted: SubmittedRegister | null
   setName: (name: string) => void
   setEmail: (email: string) => void
   setPassword: (password: string) => void
   setRepeatPassword: (repeatPassword: string) => void
-  submit: () => void
+  submit: () => boolean
+  reset: () => void
 }
 
 export const useRegisterStore = create<RegisterState>((set, get) => ({
-  name: '',
-  email: '',
-  password: '',
-  repeatPassword: '',
-  nameError: '',
-  emailError: '',
-  passwordError: '',
-  repeatPasswordError: '',
-  submitted: null,
+  ...emptyRegisterForm,
   setName: (name) => {
-    set({ name, submitted: null })
+    set({ name })
   },
   setEmail: (email) => {
-    set({ email, submitted: null })
+    set({ email })
   },
   setPassword: (password) => {
-    set({ password, submitted: null })
+    set({ password })
   },
   setRepeatPassword: (repeatPassword) => {
-    set({ repeatPassword, submitted: null })
+    set({ repeatPassword })
   },
   submit: () => {
     const { name, email, password, repeatPassword } = get()
@@ -60,22 +61,33 @@ export const useRegisterStore = create<RegisterState>((set, get) => ({
         nameError: errors.name,
         emailError: errors.email,
         passwordError: errors.password,
-        repeatPasswordError: errors.repeatPassword,
-        submitted: null
+        repeatPasswordError: errors.repeatPassword
       })
-      return
+      return false
     }
 
-    set({
-      nameError: '',
-      emailError: '',
-      passwordError: '',
-      repeatPasswordError: '',
-      submitted: {
-        name: name.trim(),
-        email: email.trim(),
-        password
-      }
-    })
+    const accounts = useStudentAccountsStore.getState()
+
+    if (
+      normalizeEmail(email) === teacherDemoAccount.email ||
+      accounts.findByEmail(email) !== undefined
+    ) {
+      set({
+        nameError: '',
+        emailError: 'Ya hay una cuenta con este correo.',
+        passwordError: '',
+        repeatPasswordError: ''
+      })
+      return false
+    }
+
+    const account = accounts.addAccount(name, email, password)
+    // El formulario se vacía al crear la cuenta. La cuenta (con su contraseña) sigue en el store de cuentas.
+    set(emptyRegisterForm)
+    useSessionStore.getState().startStudentSession(account.email)
+    return true
+  },
+  reset: () => {
+    set(emptyRegisterForm)
   }
 }))

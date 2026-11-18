@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react'
+import { FormEvent, useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { markClass, markLabel, type AttendanceMark } from '../login/trimesterExample'
 import { useRegisterStore } from './registerStore'
@@ -8,7 +8,7 @@ const legendMarks: AttendanceMark[] = ['presente', 'retraso', 'ausencia']
 
 export function RegisterScreen(): React.JSX.Element {
   return (
-    <main className="flex min-h-screen flex-col gap-8 p-8 md:flex-row">
+    <main className="flex min-h-screen flex-col gap-8 p-4 md:flex-row md:p-8">
       <WeekPanel />
       <RegisterForm />
     </main>
@@ -18,7 +18,7 @@ export function RegisterScreen(): React.JSX.Element {
 function WeekPanel(): React.JSX.Element {
   return (
     <section
-      className="flex flex-1 flex-col gap-8 rounded-box bg-base-300 p-8"
+      className="flex flex-1 flex-col gap-8 rounded-box bg-base-300 p-4 md:p-8"
       aria-labelledby="claim"
     >
       <div className="flex flex-col gap-2">
@@ -62,6 +62,9 @@ function WeekPanel(): React.JSX.Element {
 }
 
 function RegisterForm(): React.JSX.Element {
+  const reset = useRegisterStore((state) => state.reset)
+  // Al salir de la pantalla se vacía el formulario: no queda nada escrito para la próxima vez.
+  useEffect(() => reset, [reset])
   const name = useRegisterStore((state) => state.name)
   const email = useRegisterStore((state) => state.email)
   const password = useRegisterStore((state) => state.password)
@@ -70,7 +73,6 @@ function RegisterForm(): React.JSX.Element {
   const emailError = useRegisterStore((state) => state.emailError)
   const passwordError = useRegisterStore((state) => state.passwordError)
   const repeatPasswordError = useRegisterStore((state) => state.repeatPasswordError)
-  const submitted = useRegisterStore((state) => state.submitted)
   const setName = useRegisterStore((state) => state.setName)
   const setEmail = useRegisterStore((state) => state.setEmail)
   const setPassword = useRegisterStore((state) => state.setPassword)
@@ -81,7 +83,9 @@ function RegisterForm(): React.JSX.Element {
 
   function onSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault()
-    submit()
+    if (submit()) {
+      navigate({ to: '/student/dashboard' })
+    }
   }
 
   function goToLogin(): void {
@@ -93,7 +97,7 @@ function RegisterForm(): React.JSX.Element {
   }
 
   return (
-    <section className="flex w-full max-w-md flex-col gap-8 rounded-box bg-base-100 p-8">
+    <section className="flex w-full max-w-md flex-col gap-8 rounded-box bg-base-100 p-4 md:p-8">
       <form className="flex flex-col gap-5" noValidate onSubmit={onSubmit}>
         <div className="flex flex-col gap-2">
           <label className="text-base-content" htmlFor="name">
@@ -187,13 +191,6 @@ function RegisterForm(): React.JSX.Element {
         <button className="btn btn-primary" type="submit">
           Crear mi cuenta
         </button>
-        {submitted !== null ? (
-          <div className="alert alert-success" role="status">
-            <span>Nombre completo: {submitted.name}</span>
-            <span>Correo electrónico: {submitted.email}</span>
-            <span>Contraseña: {submitted.password}</span>
-          </div>
-        ) : null}
         <p>
           ¿Ya tienes una cuenta?{' '}
           <button className="btn btn-link" type="button" onClick={goToLogin}>

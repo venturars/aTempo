@@ -57,12 +57,10 @@ function OrganizationNavigation({ organization }: { organization: string }): Rea
         >
           a
         </span>
-        <p className="text-xl font-semibold tracking-tight">aTempo</p>
+        <p className="text-xl font-semibold">aTempo</p>
       </div>
       <div className="hidden border-b border-base-300 pb-5 lg:block">
-        <p className="text-xs font-medium uppercase tracking-widest text-base-content/60">
-          Tu organización
-        </p>
+        <p className="text-xs font-medium uppercase text-base-content/60">Tu organización</p>
         <p className="mt-2 text-sm font-medium">{organization}</p>
       </div>
       <nav aria-label="Administración de la organización">
@@ -131,9 +129,7 @@ function ReviewSummary({ model }: { model: OrganizationDashboard }): React.JSX.E
           <h2 id="review-summary" className="stat-title text-sm text-base-content/70">
             Estudiantes a revisar
           </h2>
-          <p className="stat-value my-2 text-6xl font-medium tracking-tight">
-            {model.reviewStudentCount}
-          </p>
+          <p className="stat-value my-2 text-6xl font-medium">{model.reviewStudentCount}</p>
           <p className="text-meta text-base-content/60">Cada estudiante cuenta una sola vez.</p>
         </div>
         <div className="border-t border-base-300 pt-5 md:border-t-0 md:border-l md:pt-0 md:pl-8">
@@ -214,10 +210,7 @@ function CourseOverview({ model }: { model: OrganizationDashboard }): React.JSX.
               <tbody>
                 {model.courses.map((course) => (
                   <tr key={course.id}>
-                    <th
-                      scope="row"
-                      className="min-w-36 py-4 font-normal normal-case tracking-normal"
-                    >
+                    <th scope="row" className="min-w-36 py-4 font-normal normal-case">
                       <span className="block text-sm font-medium">{course.name}</span>
                       <span className="mt-1 block text-meta text-base-content/60">
                         {course.teacher}
