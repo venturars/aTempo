@@ -21,6 +21,64 @@ api-sqlite/
     test_health.py
 ```
 
+# Árbol de `api-postgresql/`
+
+```text
+api-postgresql/
+  package.json
+  pnpm-lock.yaml
+  .npmrc
+  nest-cli.json
+  tsconfig.json
+  tsconfig.build.json
+  eslint.config.mjs
+  README.md
+  src/
+    main.ts              # puerto 3001, o PORT
+    configure-app.ts     # CORS, ValidationPipe, Swagger /docs
+    app.module.ts
+    postgres/
+      postgres.module.ts
+      postgres.service.ts  # Pool de pg; SELECT 1 con DATABASE_URL
+    health/
+      health.module.ts
+      health.controller.ts
+      health-response.dto.ts
+  test/
+    health.e2e-spec.ts
+    swagger.e2e-spec.ts
+    jest-e2e.json
+```
+
+# Árbol de `api-rustfs/`
+
+```text
+api-rustfs/
+  package.json
+  pnpm-lock.yaml
+  .npmrc
+  tsconfig.json
+  tsconfig.build.json
+  eslint.config.mjs
+  README.md
+  src/
+    main.ts
+    create-app.ts
+    configure-app.ts
+    health/
+      health-router.ts
+      health-response.ts
+    rustfs/
+      rustfs-config.ts
+      check-rustfs.ts
+    openapi/
+      document.ts
+  test/
+    health.e2e-spec.ts
+    swagger.e2e-spec.ts
+    jest-e2e.json
+```
+
 # Árbol de `api-router/`
 
 ```text
@@ -93,6 +151,7 @@ desktop/
         login/
           LoginScreen.tsx
           loginStore.ts
+          teacherDemoAccount.ts # cuenta pública de ejemplo del profesor
           validateLogin.ts
           trimesterExample.ts
         panel/
@@ -123,6 +182,7 @@ desktop/
           validateRegister.ts
           weekExample.ts
         student/
+          NoStudentSession.tsx # aviso cuando la sesión no es de un alumno con cuenta
           attendanceStatus.ts  # estado de asistencia y margen de tarde
           studentAccounts.ts   # cuentas de alumno en memoria y cuenta de la sesión
           studentExample.ts    # cuenta de ejemplo, clase de hoy y lecturas del QR
@@ -133,7 +193,7 @@ desktop/
           history/
             HistoryScreen.tsx  # clases de la cuenta con hora y estado
         session/
-          sessionStore.ts  # perfil y correo de la sesión, y ruta de su dashboard
+          sessionStore.ts  # perfil, correo en memoria y ruta de su dashboard
         underConstruction/
           UnderConstructionScreen.tsx  # pantalla provisional con título
   tests/
@@ -144,7 +204,9 @@ desktop/
       hidden-watchdog.cjs  # observador de primer plano y procesos propios
     hidden-electron.spec.ts # smoke del build real: entrada, navegación y captura
     login.spec.ts
+    teacher-login.spec.ts # acceso con la cuenta pública del profesor
     panel.spec.ts
+    teacher-qr.spec.ts  # temporizador, llegadas y dos temas a 390/1280 px
     organization-dashboard.spec.ts
     register.spec.ts
     dashboard.spec.ts
@@ -175,6 +237,10 @@ desktop/
       dashboard-normal-atempo-claro-390.png
       navigation-organization-dashboard.png
       navigation-teacher-panel.png
+      teacher-qr-oscuro-desktop.png
+      teacher-qr-claro-desktop.png
+      teacher-qr-oscuro-movil.png
+      teacher-qr-claro-movil.png
       student-register-390.png
       student-dashboard-390.png
       student-scan-390.png

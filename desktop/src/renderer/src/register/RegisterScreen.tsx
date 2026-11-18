@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react'
+import { FormEvent, useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { markClass, markLabel, type AttendanceMark } from '../login/trimesterExample'
 import { useRegisterStore } from './registerStore'
@@ -62,6 +62,9 @@ function WeekPanel(): React.JSX.Element {
 }
 
 function RegisterForm(): React.JSX.Element {
+  const reset = useRegisterStore((state) => state.reset)
+  // Al salir de la pantalla se vacía el formulario: no queda nada escrito para la próxima vez.
+  useEffect(() => reset, [reset])
   const name = useRegisterStore((state) => state.name)
   const email = useRegisterStore((state) => state.email)
   const password = useRegisterStore((state) => state.password)
