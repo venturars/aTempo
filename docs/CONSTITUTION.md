@@ -29,13 +29,13 @@ La SDK de lógica de negocio vivirá en `sdk/` (carpeta pendiente), al mismo niv
 
 ## 4. Stack de `api-minio/`
 
-- **Express 5** expone REST hacia la SDK para persistencia de objetos en MinIO.
-- **Cliente oficial `minio`** habla con el almacén S3-compatible.
+- **Express 5** expone REST hacia la SDK para persistencia de objetos en RustFS.
+- **Cliente npm `minio` (API S3)** habla con RustFS.
 - **swagger-ui-express** documenta la API y sirve Swagger UI en `/docs` para pruebas manuales.
 - **TypeScript** escribe el servicio.
 - **pnpm** es el gestor de paquetes de `api-minio/`. Las versiones van fijas, sin `^`.
 
-El API-router no accede a MinIO; la SDK consumirá este servicio cuando exista.
+El API-router no accede a RustFS; la SDK consumirá este servicio cuando exista.
 
 ## 5. Dónde seguir
 

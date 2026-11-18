@@ -22,9 +22,9 @@ api-minio/
     health/
       health-router.ts
       health-response.ts
-    minio/
-      minio-config.ts
-      check-minio.ts
+    rustfs/
+      rustfs-config.ts
+      check-rustfs.ts
     openapi/
       document.ts
   test/

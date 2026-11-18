@@ -16,22 +16,22 @@ flowchart LR
   web[FrontendWeb]
   router[APIRouterNest]
   sdk[sdk_logicaDeNegocio]
-  minioApi[api_minio_Express]
-  minio[(MinIO)]
+  objectApi[api_minio_Express]
+  rustfs[(RustFS)]
   electron --> router
   web --> router
   router --> sdk
-  sdk --> minioApi
-  minioApi --> minio
+  sdk --> objectApi
+  objectApi --> rustfs
 ```
 
-`sdk/` es un paquete hermano de `desktop/` y `api-router/`; el API-router y los frontends la consumirán cuando exista. `api-minio/` es otro paquete hermano: la SDK usará este servicio para objetos en MinIO; el API-router no llama a MinIO.
+`sdk/` es un paquete hermano de `desktop/` y `api-router/`; el API-router y los frontends la consumirán cuando exista. `api-minio/` es otro paquete hermano: la SDK usará este servicio para objetos en RustFS; el API-router no llama a RustFS.
 
 ## api-minio
 
 Carpeta: `api-minio/`.
 
-Servicio Express y TypeScript. La SDK delegará en él la lectura y escritura de objetos en MinIO. Hoy solo expone `GET /health`, que confirma que el servicio HTTP responde (igual que `api-router/`). Swagger UI en **`/docs`** y OpenAPI en **`/docs-json`**, igual que en `api-router/`. Por defecto escucha en el puerto **3003** (`PORT`). No está en Docker Compose en este paso.
+Servicio Express y TypeScript. La SDK delegará en él la lectura y escritura de objetos en RustFS. Hoy solo expone `GET /health`, que confirma que el servicio HTTP responde (igual que `api-router/`). Swagger UI en **`/docs`** y OpenAPI en **`/docs-json`**, igual que en `api-router/`. Por defecto escucha en el puerto **3003** (`PORT`). No está en Docker Compose en este paso.
 
 ## aTempo de escritorio
 

@@ -3,7 +3,7 @@ export const openApiDocument = {
   info: {
     title: 'aTempo api-minio',
     description:
-      'Persistencia de objetos en MinIO para la SDK (futura carpeta sdk/).',
+      'Persistencia de objetos en RustFS para la SDK (futura carpeta sdk/).',
     version: '1.0.0',
   },
   paths: {

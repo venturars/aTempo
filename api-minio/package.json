@@ -1,7 +1,7 @@
 {
   "name": "api-minio",
   "version": "1.0.0",
-  "description": "Servicio Express de persistencia de objetos en MinIO para la SDK",
+  "description": "Servicio Express de persistencia de objetos en RustFS para la SDK",
   "private": true,
   "packageManager": "pnpm@10.33.0",
   "scripts": {
