@@ -101,8 +101,10 @@ installation_inputs=(
   api-rustfs/pnpm-lock.yaml
   api-sqlite/pyproject.toml
   Dockerfile
+  .dockerignore
   docker-compose.yml
   docker/setup.sh
+  docker/entrypoint.sh
 )
 
 for input_path in "${installation_inputs[@]}"; do
