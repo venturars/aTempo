@@ -6,7 +6,7 @@ Carpeta de la SDK: `domain/`. HTTP de PostgreSQL: `api-postgresql/`. Persistenci
 
 El flujo de producto con PostgreSQL es Frontend → `api-postgresql` → `domain` → PostgreSQL. `api-postgresql` transforma HTTP. `domain` valida los tipos y las reglas del core y abre PostgreSQL. Nest no escribe SQL.
 
-`domain/` es un paquete librería, hermano de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. Cubre tipos, lecturas, escrituras y reglas de `organization`, `person`, `course`, `person_course`, `role` y `person_role`. `role` no se escribe. Si un objeto no cumple esos campos o reglas, lanza y no escribe en la base. El CHECK y el trigger de PostgreSQL se quedan.
+`domain/` es un paquete librería, hermano de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. Cubre tipos, lecturas, escrituras y reglas de `organization`, `person`, `course`, `person_course`, `role` y `person_role`. `role` no se escribe. Un delete de persona, curso u organización borra las filas hijas en una transacción. `start_at` y `end_at` salen en ISO UTC. Si un objeto no cumple esos campos o reglas, lanza y no escribe en la base. El CHECK y el trigger de PostgreSQL se quedan.
 
 Hoy `domain/` existe y se prueba con un driver sustituido. `api-postgresql/` aún no lo importa: abre `pg` en `PostgresService` y expone `GET /health` y `GET /course`. `api-router/` solo expone `GET /health`. `api-rustfs/` solo expone `GET /health`. `api-sqlite/` solo expone `GET /health` (`SELECT 1`). El login y el registro del renderer no llaman a estas APIs. PostgreSQL, `api-postgresql/`, RustFS, `api-rustfs/` y `api-sqlite/` no están en Docker Compose. `domain/` tampoco.
 

@@ -32,6 +32,39 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
   return getPool().query<T>(sql, params)
 }
 
+export async function withTransaction<T>(
+  fn: (query: QueryFn) => Promise<T>,
+): Promise<T> {
+  if (queryOverride) {
+    await queryOverride('BEGIN')
+    try {
+      const value = await fn(queryOverride)
+      await queryOverride('COMMIT')
+      return value
+    } catch (error) {
+      await queryOverride('ROLLBACK')
+      throw error
+    }
+  }
+
+  const client = await getPool().connect()
+  try {
+    await client.query('BEGIN')
+    const value = await fn((sql, params = []) => client.query(sql, params))
+    await client.query('COMMIT')
+    return value
+  } catch (error) {
+    try {
+      await client.query('ROLLBACK')
+    } catch {
+      // El error original importa más que un ROLLBACK que también falle.
+    }
+    throw error
+  } finally {
+    client.release()
+  }
+}
+
 export async function closePool(): Promise<void> {
   if (pool) {
     await pool.end()

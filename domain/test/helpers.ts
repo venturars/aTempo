@@ -93,3 +93,18 @@ export function resetDriver(): void {
   resetDb()
   delete process.env.DATABASE_URL
 }
+
+export function lookupById(
+  sql: string,
+): QueryResult<QueryResultRow> | null {
+  if (sql.includes('FROM organization') && sql.includes('WHERE id')) {
+    return rowsResult([validOrganization])
+  }
+  if (sql.includes('FROM person') && sql.includes('WHERE id = $1::uuid')) {
+    return rowsResult([validPerson])
+  }
+  if (sql.includes('FROM course') && sql.includes('WHERE id = $1::uuid')) {
+    return rowsResult([validCourse])
+  }
+  return null
+}

@@ -42,6 +42,19 @@ describe('assert*', () => {
     expect(() => assertPerson(validPerson)).not.toThrow()
   })
 
+  it('rejects an invalid birth_date', () => {
+    expect(() =>
+      assertPersonInput({
+        identification_document: validPerson.identification_document,
+        email: validPerson.email,
+        first_name: validPerson.first_name,
+        last_name: validPerson.last_name,
+        birth_date: '2026-02-30',
+        phone: validPerson.phone,
+      }),
+    ).toThrow('person.birth_date debe ser una fecha')
+  })
+
   it('rejects a person missing a field', () => {
     const incomplete = {
       id: validPerson.id,

@@ -5,6 +5,7 @@ export {
   type OrganizationInput,
 } from './types/organization'
 export {
+  assertBirthDate,
   assertPerson,
   assertPersonInput,
   normalizeEmail,

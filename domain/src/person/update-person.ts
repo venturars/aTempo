@@ -1,3 +1,4 @@
+import { PERSON_COLUMNS } from '../postgres/columns'
 import { query } from '../postgres/db'
 import { assertPerson, normalizeEmail, type Person } from '../types/person'
 import { assertEmailAvailable } from './assert-email-available'
@@ -13,13 +14,7 @@ SET
   phone = $7
 WHERE id = $1::uuid
 RETURNING
-  id::text AS id,
-  identification_document,
-  email,
-  first_name,
-  last_name,
-  birth_date::text AS birth_date,
-  phone`
+  ${PERSON_COLUMNS}`
 
 export async function updatePerson(input: unknown): Promise<Person | null> {
   assertPerson(input)

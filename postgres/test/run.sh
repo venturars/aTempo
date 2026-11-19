@@ -58,8 +58,14 @@ must_fail "duplicate tax_id" \
 must_fail "duplicate email" \
   "INSERT INTO person (identification_document, email, first_name, last_name) VALUES ('99999999Z', 'ana@example.com', 'Otra', 'Persona');"
 
+must_fail "duplicate email case" \
+  "INSERT INTO person (identification_document, email, first_name, last_name) VALUES ('99999999Z', 'ANA@example.com', 'Otra', 'Persona');"
+
 must_fail "duplicate contract_address" \
   "INSERT INTO course (organization_id, name, acronym, start_at, end_at, contract_address) VALUES ('11111111-1111-1111-1111-111111111111', 'Rust', 'RST', '2026-01-01 00:00:00+00', '2026-06-01 00:00:00+00', '0x1234567890abcdef1234567890abcdef12345678');"
+
+must_fail "duplicate contract_address case" \
+  "INSERT INTO course (organization_id, name, acronym, start_at, end_at, contract_address) VALUES ('11111111-1111-1111-1111-111111111111', 'Rust', 'RST', '2026-01-01 00:00:00+00', '2026-06-01 00:00:00+00', '0x1234567890ABCDEF1234567890ABCDEF12345678');"
 
 must_fail "duplicate organization acronym" \
   "INSERT INTO course (organization_id, name, acronym, start_at, end_at, contract_address) VALUES ('11111111-1111-1111-1111-111111111111', 'Solidity 2', 'SOL', '2026-01-01 00:00:00+00', '2026-06-01 00:00:00+00', '0xabcdef1234567890abcdef1234567890abcdef12');"

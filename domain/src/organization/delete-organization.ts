@@ -1,4 +1,4 @@
-import { query } from '../postgres/db'
+import { withTransaction } from '../postgres/db'
 import { assertUuid } from '../types/assert'
 
 const DELETE_ENROLLMENTS = `DELETE FROM person_course
@@ -9,8 +9,10 @@ const DELETE_ORGANIZATION = `DELETE FROM organization WHERE id = $1::uuid`
 export async function deleteOrganization(id: string): Promise<boolean> {
   assertUuid(id, 'organization.id')
 
-  await query(DELETE_ENROLLMENTS, [id])
-  await query(DELETE_COURSES, [id])
-  const result = await query(DELETE_ORGANIZATION, [id])
-  return (result.rowCount ?? 0) > 0
+  return withTransaction(async (query) => {
+    await query(DELETE_ENROLLMENTS, [id])
+    await query(DELETE_COURSES, [id])
+    const result = await query(DELETE_ORGANIZATION, [id])
+    return (result.rowCount ?? 0) > 0
+  })
 }

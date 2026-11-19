@@ -1,15 +1,10 @@
+import { PERSON_COLUMNS_FROM_PERSON } from '../postgres/columns'
 import { query } from '../postgres/db'
 import { assertPerson, type Person } from '../types/person'
 import { assertRoleName } from '../types/role'
 
 const SELECT = `SELECT
-  person.id::text AS id,
-  person.identification_document,
-  person.email,
-  person.first_name,
-  person.last_name,
-  person.birth_date::text AS birth_date,
-  person.phone
+  ${PERSON_COLUMNS_FROM_PERSON}
 FROM person
 INNER JOIN person_role ON person_role.person_id = person.id
 WHERE person_role.role = $1`

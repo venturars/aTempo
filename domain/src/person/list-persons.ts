@@ -1,14 +1,9 @@
+import { PERSON_COLUMNS } from '../postgres/columns'
 import { query } from '../postgres/db'
 import { assertPerson, type Person } from '../types/person'
 
 const SELECT = `SELECT
-  id::text AS id,
-  identification_document,
-  email,
-  first_name,
-  last_name,
-  birth_date::text AS birth_date,
-  phone
+  ${PERSON_COLUMNS}
 FROM person`
 
 export async function listPersons(): Promise<Person[]> {

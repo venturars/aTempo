@@ -11,6 +11,7 @@ postgres/
   tsconfig.json
   drizzle.config.ts
   init/01_schema.sql
+  init/02_unique_lower.sql
   test/run.sh
   test/valid.sql
 sqlite/
@@ -73,7 +74,8 @@ domain/
       role.ts
       person-role.ts
     postgres/
-      db/index.ts         # Pool con DATABASE_URL, timeout 3 s
+      columns.ts          # Proyección ISO UTC y YYYY-MM-DD
+      db/index.ts         # Pool con DATABASE_URL, timeout 3 s, withTransaction
       postgres/index.ts   # check(): SELECT 1
     organization/
       list-organizations.ts
@@ -82,6 +84,7 @@ domain/
       update-organization.ts
       delete-organization.ts
       assert-tax-id-available.ts
+      assert-organization-exists.ts
     person/
       list-persons.ts
       get-person-by-id.ts
@@ -92,6 +95,7 @@ domain/
       delete-person.ts
       assert-email-available.ts
       assert-identification-document-available.ts
+      assert-person-exists.ts
     course/
       list-courses.ts
       get-course-by-id.ts
@@ -102,6 +106,7 @@ domain/
       delete-course.ts
       assert-contract-address-available.ts
       assert-acronym-available.ts
+      assert-course-exists.ts
     role/
       list-roles.ts
       get-role-by-name.ts
@@ -110,11 +115,13 @@ domain/
       list-person-courses.ts
       add-person-course.ts
       remove-person-course.ts
+      assert-person-course-available.ts
     person-role/
       list-person-roles.ts
       add-person-role.ts
       remove-person-role.ts
       assert-student-exclusive.ts
+      assert-person-role-available.ts
   test/
     jest.json
     helpers.ts

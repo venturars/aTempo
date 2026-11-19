@@ -1,3 +1,5 @@
+import { assertOrganizationExists } from '../organization/assert-organization-exists'
+import { COURSE_COLUMNS } from '../postgres/columns'
 import { query } from '../postgres/db'
 import {
   assertCourse,
@@ -17,17 +19,12 @@ const INSERT = `INSERT INTO course (
   contract_address
 ) VALUES ($1::uuid, $2, $3, $4, $5, $6)
 RETURNING
-  id::text AS id,
-  organization_id::text AS organization_id,
-  name,
-  acronym,
-  start_at::text AS start_at,
-  end_at::text AS end_at,
-  contract_address`
+  ${COURSE_COLUMNS}`
 
 export async function createCourse(input: unknown): Promise<Course> {
   assertCourseInput(input)
   const contractAddress = normalizeContractAddress(input.contract_address)
+  await assertOrganizationExists(input.organization_id)
   await assertContractAddressAvailable(contractAddress)
   await assertAcronymAvailable(input.organization_id, input.acronym)
 

@@ -1,15 +1,10 @@
+import { PERSON_COLUMNS_FROM_PERSON } from '../postgres/columns'
 import { query } from '../postgres/db'
 import { assertUuid } from '../types/assert'
 import { assertPerson, type Person } from '../types/person'
 
 const SELECT = `SELECT
-  person.id::text AS id,
-  person.identification_document,
-  person.email,
-  person.first_name,
-  person.last_name,
-  person.birth_date::text AS birth_date,
-  person.phone
+  ${PERSON_COLUMNS_FROM_PERSON}
 FROM person
 INNER JOIN person_course ON person_course.person_id = person.id
 WHERE person_course.course_id = $1::uuid`

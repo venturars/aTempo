@@ -1,3 +1,5 @@
+import { assertOrganizationExists } from '../organization/assert-organization-exists'
+import { COURSE_COLUMNS } from '../postgres/columns'
 import { query } from '../postgres/db'
 import {
   assertCourse,
@@ -17,17 +19,12 @@ SET
   contract_address = $7
 WHERE id = $1::uuid
 RETURNING
-  id::text AS id,
-  organization_id::text AS organization_id,
-  name,
-  acronym,
-  start_at::text AS start_at,
-  end_at::text AS end_at,
-  contract_address`
+  ${COURSE_COLUMNS}`
 
 export async function updateCourse(input: unknown): Promise<Course | null> {
   assertCourse(input)
   const contractAddress = normalizeContractAddress(input.contract_address)
+  await assertOrganizationExists(input.organization_id)
   await assertContractAddressAvailable(contractAddress, input.id)
   await assertAcronymAvailable(input.organization_id, input.acronym, input.id)
 

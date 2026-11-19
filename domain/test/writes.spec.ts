@@ -15,6 +15,7 @@ import {
   commandResult,
   COURSE_ID,
   emptyResult,
+  lookupById,
   mockDriver,
   ORG_ID,
   PERSON_ID,
@@ -126,6 +127,10 @@ describe('escrituras', () => {
       if (sql.includes('INSERT INTO course')) {
         return rowsResult([validCourse])
       }
+      const existing = lookupById(sql)
+      if (existing) {
+        return existing
+      }
       return emptyResult()
     })
 
@@ -149,7 +154,13 @@ describe('escrituras', () => {
     )
     expect(calls.some((call) => call.sql.includes('UPDATE'))).toBe(true)
 
-    mockDriver(async () => emptyResult())
+    mockDriver(async (sql) => {
+      const existing = lookupById(sql)
+      if (existing) {
+        return existing
+      }
+      return emptyResult()
+    })
     await expect(updateOrganization(validOrganization)).resolves.toBeNull()
     await expect(updatePerson(validPerson)).resolves.toBeNull()
     await expect(updateCourse(validCourse)).resolves.toBeNull()
@@ -159,24 +170,62 @@ describe('escrituras', () => {
     const personCalls = mockDriver(async () => commandResult(1))
     await expect(deletePerson(PERSON_ID)).resolves.toBe(true)
     expect(personCalls.map((call) => call.sql)).toEqual([
+      'BEGIN',
       expect.stringContaining('DELETE FROM person_role'),
       expect.stringContaining('DELETE FROM person_course'),
-      expect.stringContaining('DELETE FROM person'),
+      expect.stringContaining('DELETE FROM person WHERE'),
+      'COMMIT',
     ])
 
     const courseCalls = mockDriver(async () => commandResult(1))
     await expect(deleteCourse(COURSE_ID)).resolves.toBe(true)
     expect(courseCalls.map((call) => call.sql)).toEqual([
+      'BEGIN',
       expect.stringContaining('DELETE FROM person_course'),
-      expect.stringContaining('DELETE FROM course'),
+      expect.stringContaining('DELETE FROM course WHERE'),
+      'COMMIT',
     ])
 
     const orgCalls = mockDriver(async () => commandResult(1))
     await expect(deleteOrganization(ORG_ID)).resolves.toBe(true)
     expect(orgCalls.map((call) => call.sql)).toEqual([
+      'BEGIN',
       expect.stringContaining('DELETE FROM person_course'),
-      expect.stringContaining('DELETE FROM course'),
+      expect.stringContaining('DELETE FROM course WHERE'),
       expect.stringContaining('DELETE FROM organization'),
+      'COMMIT',
+    ])
+  })
+
+  it('rolls back a delete when the last statement fails', async () => {
+    const personCalls = mockDriver(async (sql) => {
+      if (sql.includes('DELETE FROM person WHERE')) {
+        throw new Error('timeout')
+      }
+      return commandResult(1)
+    })
+    await expect(deletePerson(PERSON_ID)).rejects.toThrow('timeout')
+    expect(personCalls.map((call) => call.sql)).toEqual([
+      'BEGIN',
+      expect.stringContaining('DELETE FROM person_role'),
+      expect.stringContaining('DELETE FROM person_course'),
+      expect.stringContaining('DELETE FROM person WHERE'),
+      'ROLLBACK',
+    ])
+
+    const orgCalls = mockDriver(async (sql) => {
+      if (sql.includes('DELETE FROM organization')) {
+        throw new Error('timeout')
+      }
+      return commandResult(1)
+    })
+    await expect(deleteOrganization(ORG_ID)).rejects.toThrow('timeout')
+    expect(orgCalls.map((call) => call.sql)).toEqual([
+      'BEGIN',
+      expect.stringContaining('DELETE FROM person_course'),
+      expect.stringContaining('DELETE FROM course WHERE'),
+      expect.stringContaining('DELETE FROM organization'),
+      'ROLLBACK',
     ])
   })
 

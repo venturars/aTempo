@@ -1,3 +1,4 @@
+import { PERSON_COLUMNS } from '../postgres/columns'
 import { query } from '../postgres/db'
 import {
   assertPerson,
@@ -17,13 +18,7 @@ const INSERT = `INSERT INTO person (
   phone
 ) VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING
-  id::text AS id,
-  identification_document,
-  email,
-  first_name,
-  last_name,
-  birth_date::text AS birth_date,
-  phone`
+  ${PERSON_COLUMNS}`
 
 export async function createPerson(input: unknown): Promise<Person> {
   assertPersonInput(input)

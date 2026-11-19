@@ -52,6 +52,14 @@ describe('lecturas', () => {
     await expect(listPersons()).resolves.toEqual([validPerson])
   })
 
+  it('projects course timestamps as UTC ISO and birth_date as a calendar date', async () => {
+    const calls = mockDriver(async () => emptyResult())
+    await listCourses()
+    await listPersons()
+    expect(calls[0].sql).toContain('YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
+    expect(calls[1].sql).toContain("to_char(birth_date, 'YYYY-MM-DD')")
+  })
+
   it('does not query when role name is invented', async () => {
     const calls = mockDriver()
     await expect(getRoleByName('admin')).rejects.toThrow(
