@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as OrganizationDashboardRouteImport } from './routes/organization/dashboard'
+import { Route as OrganizationListRouteImport } from './routes/organization/list'
 import { Route as StudentDashboardRouteImport } from './routes/student/dashboard'
 import { Route as StudentHistoryRouteImport } from './routes/student/history'
 import { Route as StudentScanRouteImport } from './routes/student/scan'
@@ -30,6 +31,11 @@ const SignUpRoute = SignUpRouteImport.update({
 const OrganizationDashboardRoute = OrganizationDashboardRouteImport.update({
   id: '/organization/dashboard',
   path: '/organization/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrganizationListRoute = OrganizationListRouteImport.update({
+  id: '/organization/list',
+  path: '/organization/list',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StudentDashboardRoute = StudentDashboardRouteImport.update({
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/sign-up': typeof SignUpRoute
   '/organization/dashboard': typeof OrganizationDashboardRoute
+  '/organization/list': typeof OrganizationListRoute
   '/student/dashboard': typeof StudentDashboardRoute
   '/student/history': typeof StudentHistoryRoute
   '/student/scan': typeof StudentScanRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/sign-up': typeof SignUpRoute
   '/organization/dashboard': typeof OrganizationDashboardRoute
+  '/organization/list': typeof OrganizationListRoute
   '/student/dashboard': typeof StudentDashboardRoute
   '/student/history': typeof StudentHistoryRoute
   '/student/scan': typeof StudentScanRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/sign-up': typeof SignUpRoute
   '/organization/dashboard': typeof OrganizationDashboardRoute
+  '/organization/list': typeof OrganizationListRoute
   '/student/dashboard': typeof StudentDashboardRoute
   '/student/history': typeof StudentHistoryRoute
   '/student/scan': typeof StudentScanRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/sign-up'
     | '/organization/dashboard'
+    | '/organization/list'
     | '/student/dashboard'
     | '/student/history'
     | '/student/scan'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/sign-up'
     | '/organization/dashboard'
+    | '/organization/list'
     | '/student/dashboard'
     | '/student/history'
     | '/student/scan'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/sign-up'
     | '/organization/dashboard'
+    | '/organization/list'
     | '/student/dashboard'
     | '/student/history'
     | '/student/scan'
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SignUpRoute: typeof SignUpRoute
   OrganizationDashboardRoute: typeof OrganizationDashboardRoute
+  OrganizationListRoute: typeof OrganizationListRoute
   StudentDashboardRoute: typeof StudentDashboardRoute
   StudentHistoryRoute: typeof StudentHistoryRoute
   StudentScanRoute: typeof StudentScanRoute
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/organization/dashboard'
       fullPath: '/organization/dashboard'
       preLoaderRoute: typeof OrganizationDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/organization/list': {
+      id: '/organization/list'
+      path: '/organization/list'
+      fullPath: '/organization/list'
+      preLoaderRoute: typeof OrganizationListRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/student/dashboard': {
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SignUpRoute: SignUpRoute,
   OrganizationDashboardRoute: OrganizationDashboardRoute,
+  OrganizationListRoute: OrganizationListRoute,
   StudentDashboardRoute: StudentDashboardRoute,
   StudentHistoryRoute: StudentHistoryRoute,
   StudentScanRoute: StudentScanRoute,

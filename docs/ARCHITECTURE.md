@@ -87,12 +87,15 @@ Es Node, dentro de Electron. Abre la ventana y abre SQLite. `startupHash()` mira
 1. `--dashboard` → `/student/dashboard`.
 2. `--sign-up` → `/sign-up`.
 3. `--organization-dashboard` → `/organization/dashboard`.
+4. `--organization-list` → `/organization/list`.
 
 Sin ninguno de esos flags, carga el renderer sin hash y muestra el login. En desarrollo la ruta va detrás de `#` en `ELECTRON_RENDERER_URL`. En la app empaquetada va en la opción `hash` de `loadFile`. En los dos casos el renderer recibe `#/ruta`.
 
 Tras el arranque normal, el login valida la cuenta del profesor o del alumno y TanStack Router abre el dashboard de su perfil al pulsar «Entrar». `--organization-dashboard` abre el Resumen de la organización.
 
 Desde `desktop/`, `pnpm dev -- --organization-dashboard` abre directamente el Resumen de la organización sin credenciales.
+
+Desde `desktop/`, `pnpm dev:organization-list` abre directamente la lista de organizaciones sin credenciales. Es una pantalla de prueba con datos de ejemplo.
 
 La base usa la clase `DatabaseSync` de [`node:sqlite`](https://nodejs.org/api/sqlite.html). Electron 44 trae Node 24, y esa versión exporta `DatabaseSync`. El archivo es `atempo.sqlite`, en la carpeta de datos de Electron (`app.getPath('userData')`). Al arrancar se ejecuta `PRAGMA user_version = 1` para comprobar que el archivo abre. Los prototipos de login, registro, alumno, panel del profesor y Resumen de la organización no leen ni escriben esa base.
 
@@ -116,6 +119,7 @@ El enrutado es TanStack Router con hash history. `main.tsx` crea el router con `
 - `routes/student/scan.tsx` → `/student/scan`: el registro de asistencia del alumno (`ScanScreen`).
 - `routes/student/history.tsx` → `/student/history`: el historial del alumno (`HistoryScreen`).
 - `routes/organization/dashboard.tsx` → `/organization/dashboard`: el Resumen de la organización (`OrganizationDashboardScreen`).
+- `routes/organization/list.tsx` → `/organization/list`: la lista de organizaciones de prueba (`OrganizationListScreen`). Pinta `organizationListExample.ts`, con los campos de `GET /organization` (`id`, `name`, `tax_id`). No llama a la red.
 - `routes/teacher/panel.tsx` → `/teacher/panel`: el panel del profesor (`PanelScreen`).
 - `routes/__root.tsx`: la ruta raíz. Su `notFoundComponent` es el login, así que un hash que no es una ruta conocida también muestra el login.
 

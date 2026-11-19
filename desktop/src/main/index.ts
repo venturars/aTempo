@@ -17,6 +17,10 @@ function startupHash(): string | undefined {
     return '/organization/dashboard'
   }
 
+  if (process.argv.includes('--organization-list')) {
+    return '/organization/list'
+  }
+
   return undefined
 }
 
