@@ -5,6 +5,7 @@ api-sqlite/.venv/
 api-sqlite/__pycache__/
 api-sqlite/**/__pycache__/
 api-sqlite/*.egg-info/
+api-sqlite/build/
 
 # Compilación de Electron y Vite
 out/

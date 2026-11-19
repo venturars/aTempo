@@ -25,6 +25,7 @@ describe('Person (e2e)', () => {
         check: async () => undefined,
         listCourses: async () => [],
         listPersonRoles: async () => [],
+        listPersonCourses: async () => [],
         listPersons: postgres.listPersons ?? (async () => POSTGRES_MOCK_PERSONS),
         findPersonById: postgres.findPersonById ?? (async () => null),
         usesMock: () => true,
