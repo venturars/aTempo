@@ -5,6 +5,7 @@ import { BackButton } from '../navigation/BackButton'
 import { useSessionStore } from '../session/sessionStore'
 import { nextDemoArrival, usePanelStore, type MarkChange, type PanelTab } from './panelStore'
 import { AccountMenu } from './AccountMenu'
+import { ChangePasswordDialog } from './ChangePasswordDialog'
 import { Avatar } from './avatar'
 import { JustificationAccess } from './JustificationAccess'
 import { MarkControl } from './markControl'
@@ -64,12 +65,15 @@ export function PanelScreen(): React.JSX.Element {
   const title = pageTitle(tab, selected)
   const back = backLabel(tab, selected, studentName)
   const teacherName = useTeacherName()
+  const signedIn = useSessionStore((state) => state.profile === 'teacher')
+  const [changingPassword, setChangingPassword] = useState(false)
+  const [passwordChanged, setPasswordChanged] = useState(false)
   const navigate = useNavigate()
 
   function logOut(): void {
     useSessionStore.getState().endSession()
     setTab(0)
-    navigate({ to: '/' })
+    void navigate({ to: '/', replace: true })
   }
 
   return (
@@ -102,7 +106,18 @@ export function PanelScreen(): React.JSX.Element {
             ))}
           </ul>
         </nav>
-        <AccountMenu name={teacherName} onLogOut={logOut} />
+        <AccountMenu
+          name={teacherName}
+          onChangePassword={
+            signedIn
+              ? () => {
+                  setPasswordChanged(false)
+                  setChangingPassword(true)
+                }
+              : undefined
+          }
+          onLogOut={logOut}
+        />
       </aside>
       <main
         className={`mx-auto flex w-full min-w-0 justify-self-center flex-col gap-5 px-8 py-8 ${
@@ -129,6 +144,11 @@ export function PanelScreen(): React.JSX.Element {
             </div>
           )}
         </header>
+        {passwordChanged ? (
+          <p className="text-sm text-success" role="status">
+            Contraseña actualizada.
+          </p>
+        ) : null}
         {studentName !== null ? (
           <StudentFile name={studentName} />
         ) : tab === 0 ? (
@@ -141,6 +161,12 @@ export function PanelScreen(): React.JSX.Element {
           <SettingsView />
         )}
       </main>
+      {changingPassword && signedIn ? (
+        <ChangePasswordDialog
+          onClose={() => setChangingPassword(false)}
+          onSaved={() => setPasswordChanged(true)}
+        />
+      ) : null}
       <CloseDialog />
     </div>
   )

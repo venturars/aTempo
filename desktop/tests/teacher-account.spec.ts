@@ -103,10 +103,10 @@ function accountName(window: Page): Locator {
 }
 
 function logOutButton(window: Page): Locator {
-  return window.getByRole('button', { name: 'Salir', exact: true })
+  return window.getByRole('button', { name: 'Cerrar sesión', exact: true })
 }
 
-// «Salir» del panel: no se ve hasta pulsar el nombre de la barra lateral.
+// «Cerrar sesión» del panel: no se ve hasta pulsar el nombre de la barra lateral.
 async function logOutFromPanel(window: Page, name: string): Promise<void> {
   await expect(logOutButton(window)).toBeHidden()
   await expect(accountName(window)).toContainText(name)
@@ -316,6 +316,43 @@ test('the account menu opens from the name and closes on a second click, outside
     await expect(window).toHaveURL(/#\/$/)
     await expectNormalLogin(window)
     await expect(window.getByRole('status')).toHaveCount(0)
+  } finally {
+    await app.close()
+  }
+})
+
+test('teacher can change password, sign out and sign back in with the new password', async () => {
+  const app = await launchHiddenElectron()
+  try {
+    const window = await app.firstWindow()
+    await enter(window, 'profesor@atempo.test', 'Profesor123!')
+    await expect(window).toHaveURL(/#\/teacher\/panel$/)
+    await accountName(window).click()
+    await window.getByRole('button', { name: 'Cambiar contraseña' }).click()
+    const dialog = window.getByRole('dialog', { name: 'Cambiar contraseña' })
+    const current = dialog.getByLabel('Contraseña actual')
+    const next = dialog.locator('input[name="next"]')
+    const confirm = dialog.getByLabel('Repite la nueva contraseña')
+    const save = dialog.getByRole('button', { name: 'Guardar contraseña' })
+    await current.fill('Incorrecta123!')
+    await next.fill(chosenPassword)
+    await confirm.fill(chosenPassword)
+    await save.click()
+    await expect(dialog.getByRole('alert')).toHaveText('La contraseña actual no coincide.')
+    await current.fill('Profesor123!')
+    await confirm.fill('Distinta123!')
+    await save.click()
+    await expect(dialog.getByRole('alert')).toHaveText('Las contraseñas nuevas no coinciden.')
+    await confirm.fill(chosenPassword)
+    await save.click()
+    await expect(dialog).toBeHidden()
+    await expect(window.getByRole('status')).toHaveText('Contraseña actualizada.')
+    await logOutFromPanel(window, 'Ventura Rodriguez')
+    await expectNormalLogin(window)
+    await enter(window, 'profesor@atempo.test', 'Profesor123!')
+    await expect(window.getByText('El correo o la contraseña no coinciden.')).toBeVisible()
+    await enter(window, 'profesor@atempo.test', chosenPassword)
+    await expect(window).toHaveURL(/#\/teacher\/panel$/)
   } finally {
     await app.close()
   }

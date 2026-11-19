@@ -36,6 +36,8 @@ Una invitación se activa una vez; después se entra con el correo y la contrase
 
 Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alumnos y pasar lista. El QR y el código de 6 cifras de debajo cambian cada 30 segundos. El QR es un enlace al sitio del alumno, `http://localhost:5191/student/check-in?code=ATEMPO-CLASE-1109-<código>`. Ese sitio es `web/`, que está en otra rama (#122, #137 y PR #123). Desde el móvil, `localhost` es el propio móvil. Para escanear con el móvil en la misma wifi, arranca desde `desktop/` con la IP del ordenador:
 
+En el menú de tu nombre puedes **Cambiar contraseña** con la actual y confirmar la nueva. **Cerrar sesión** vuelve al login. La nueva contraseña vale para volver a entrar durante el mismo arranque de la demo.
+
 ```sh
 VITE_STUDENT_SITE_URL=http://<ip-del-ordenador>:5191 pnpm dev
 ```

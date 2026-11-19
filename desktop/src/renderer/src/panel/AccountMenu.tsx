@@ -5,37 +5,50 @@ import { Avatar } from './avatar'
 // se cierra al pulsar otra vez, al pulsar fuera o con Escape.
 export function AccountMenu({
   name,
+  onChangePassword,
   onLogOut
 }: {
   name: string
+  onChangePassword?: () => void
   onLogOut: () => void
 }): React.JSX.Element {
   const menu = useRef<HTMLDetailsElement>(null)
   useCloseOnOutsideOrEscape(menu)
 
-  function logOut(): void {
+  function select(action: () => void): void {
     menu.current?.removeAttribute('open')
-    onLogOut()
+    menu.current?.querySelector('summary')?.focus()
+    action()
   }
 
   return (
     <details
       ref={menu}
-      className="dropdown dropdown-top mt-auto block w-full border-t border-base-content/4"
+      className="dropdown dropdown-top group mt-auto block w-full border-t border-base-content/4"
     >
       <summary className="hover-grey block cursor-pointer px-5 py-4">
         <span className="flex items-center gap-3">
           <Avatar name={name} />
-          <span className="flex flex-col">
+          <span className="flex min-w-0 flex-1 flex-col">
             <span className="text-sm font-medium">{name}</span>
             <span className="text-meta text-base-content/60">Profesor</span>
+          </span>
+          <span aria-hidden="true" className="text-base-content/60 group-open:rotate-180">
+            ▾
           </span>
         </span>
       </summary>
       <ul className="dropdown-content menu rounded-box z-10 mb-1 ml-3 w-52 bg-base-100 p-2 shadow-sm">
+        {onChangePassword ? (
+          <li>
+            <button type="button" onClick={() => select(onChangePassword)}>
+              Cambiar contraseña
+            </button>
+          </li>
+        ) : null}
         <li>
-          <button type="button" onClick={logOut}>
-            Salir
+          <button type="button" onClick={() => select(onLogOut)}>
+            Cerrar sesión
           </button>
         </li>
       </ul>
