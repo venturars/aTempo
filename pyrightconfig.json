@@ -1,0 +1,10 @@
+{
+  "executionEnvironments": [
+    {
+      "root": "domain/python-domain",
+      "venvPath": "domain/python-domain",
+      "venv": ".venv",
+      "extraPaths": ["domain/python-domain"]
+    }
+  ]
+}

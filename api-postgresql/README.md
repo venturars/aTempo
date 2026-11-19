@@ -1,6 +1,6 @@
 # api-postgresql
 
-Servicio de persistencia con NestJS y TypeScript. La SDK de lógica de negocio hablará con este servicio para leer y escribir en PostgreSQL. El API-router no habla con la base.
+Servicio de persistencia con NestJS y TypeScript. El flujo de producto es Frontend → `api-postgresql` → `domain/node-domain` → PostgreSQL. Este servicio transforma HTTP. El API-router no habla con la base.
 
 Expone `GET /health`, los listados `GET /person`, `GET /course`, `GET /person-role` y `GET /person-course`, y `GET /person/:id`. Con `DATABASE_URL`, cada listado consulta su tabla del esquema core (#32) y `GET /person/:id` devuelve una fila por UUID. Sin `DATABASE_URL`, el servicio usa un **mock de PostgreSQL** (`src/postgres/postgres-mock.ts`) y responde **200** con datos de prueba fijos. `POSTGRES_MOCK=1` fuerza el mock aunque exista `DATABASE_URL`. El escritorio no llama a este servicio.
 

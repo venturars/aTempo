@@ -2,13 +2,13 @@
 
 ## API, SDK y persistencia
 
-Carpeta de la SDK: `domain/`. HTTP de PostgreSQL: `api-postgresql/`. Persistencia SQLite: `api-sqlite/`. Objetos S3-compatible: `api-rustfs/`. `api-router/` sigue en el repositorio.
+Carpeta de la SDK: `domain/`, con `node-domain/` (TypeScript) y `python-domain/` (Python). HTTP de PostgreSQL: `api-postgresql/`. Persistencia SQLite: `api-sqlite/`. Objetos S3-compatible: `api-rustfs/`. `api-router/` sigue en el repositorio.
 
-El flujo de producto con PostgreSQL es Frontend → `api-postgresql` → `domain` → PostgreSQL. `api-postgresql` transforma HTTP. `domain` valida los tipos y las reglas del core y abre PostgreSQL. Nest no escribe SQL.
+El flujo de producto con PostgreSQL es Frontend → `api-postgresql` → `domain/node-domain` → PostgreSQL. `api-postgresql` transforma HTTP. `domain/node-domain` valida los tipos y las reglas del core y abre PostgreSQL. Nest no escribe SQL.
 
-`domain/` es un paquete librería, hermano de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. Cubre tipos, lecturas, escrituras y reglas de `organization`, `person`, `course`, `person_course`, `role` y `person_role`. `role` no se escribe. Un delete de persona, curso u organización borra las filas hijas en una transacción. `start_at` y `end_at` entran con zona horaria y salen en ISO UTC. Si un objeto no cumple esos campos o reglas, lanza y no escribe en la base. El CHECK y el trigger de PostgreSQL se quedan.
+`domain/` es la carpeta de la SDK, hermana de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. `domain/node-domain/` cubre tipos, lecturas, escrituras y reglas de `organization`, `person`, `course`, `person_course`, `role` y `person_role`. `role` no se escribe. Un delete de persona, curso u organización borra las filas hijas en una transacción. `start_at` y `end_at` entran con zona horaria y salen en ISO UTC. Si un objeto no cumple esos campos o reglas, lanza y no escribe en la base. El CHECK y el trigger de PostgreSQL se quedan. `domain/python-domain/` es el paquete Python; `api-sqlite/` quedará detrás.
 
-Hoy `domain/` existe y se prueba con un driver sustituido. `api-postgresql/` aún no lo importa: abre `pg` en `PostgresService` y expone `GET /health` y `GET /course`. `api-router/` solo expone `GET /health`. `api-rustfs/` solo expone `GET /health`. `api-sqlite/` solo expone `GET /health` (`SELECT 1`). El login y el registro del renderer no llaman a estas APIs. PostgreSQL, `api-postgresql/`, RustFS, `api-rustfs/` y `api-sqlite/` no están en Docker Compose. `domain/` tampoco.
+Hoy `domain/node-domain/` existe y se prueba con un driver sustituido. `api-postgresql/` aún no lo importa: abre `pg` en `PostgresService` y expone `GET /health` y `GET /course`. `api-router/` solo expone `GET /health`. `api-rustfs/` solo expone `GET /health`. `api-sqlite/` solo expone `GET /health` (`SELECT 1`). El login y el registro del renderer no llaman a estas APIs. PostgreSQL, `api-postgresql/`, RustFS, `api-rustfs/` y `api-sqlite/` no están en Docker Compose. `domain/` tampoco.
 
 La documentación interactiva (OpenAPI y Swagger UI) de cada servicio HTTP vive en **`/docs`** con el servicio en marcha. `api-postgresql/` escucha en el puerto **3001**, `api-sqlite/` en el **3002** y `api-rustfs/` en el **3003** (`PORT` en cada uno).
 
@@ -17,7 +17,8 @@ flowchart LR
   electron[FrontendElectron]
   web[FrontendWeb]
   apiPg[apiPostgresql]
-  domainLib[domain]
+  nodeDomain[nodeDomain]
+  pythonDomain[pythonDomain]
   postgres[(PostgreSQL)]
   sqliteApi[api_sqlite_Flask]
   serviceSqlite[(SQLite_del_servicio)]
@@ -25,27 +26,27 @@ flowchart LR
   rustfs[(RustFS)]
   electron --> apiPg
   web --> apiPg
-  apiPg --> domainLib
-  domainLib --> postgres
-  domainLib -.-> sqliteApi
-  sqliteApi --> serviceSqlite
-  domainLib -.-> objectApi
+  apiPg --> nodeDomain
+  nodeDomain --> postgres
+  sqliteApi --> pythonDomain
+  pythonDomain --> serviceSqlite
+  nodeDomain -.-> objectApi
   objectApi --> rustfs
 ```
 
-`domain/` hablará con `api-sqlite/` y `api-rustfs/` cuando esas persistencias entren en el paquete. Redis y el resto de microservicios del backend quedan fuera del escritorio.
+El flujo de producto con SQLite es Frontend → `api-sqlite` → `domain/python-domain` → SQLite. `domain/node-domain/` hablará con `api-rustfs/` cuando esa persistencia entre en el paquete. Redis y el resto de microservicios del backend quedan fuera del escritorio.
 
 ## api-sqlite
 
 Carpeta: `api-sqlite/`.
 
-Servicio Flask con modelos Pydantic y consultas mediante SQLAlchemy Core. `domain/` delegará aquí la persistencia local. Hoy solo expone `GET /health`, que ejecuta `SELECT 1`; responde `200` si SQLite funciona y `503` si falla la conexión. Un cuerpo JSON inválido se rechaza antes de consultar la base. Swagger UI está en `/docs` y OpenAPI en `/docs-json`. Escucha en el puerto **3002** (`PORT`). `SQLITE_DATABASE_URL` configura la base, por defecto `sqlite:///./api-sqlite.sqlite`, independiente de la base de Electron. No está en Docker Compose.
+Servicio Flask con modelos Pydantic. El flujo de producto es Frontend → `api-sqlite` → `domain/python-domain` → SQLite. Este servicio aún no importa el paquete. Solo expone `GET /health`, que ejecuta `SELECT 1`; responde `200` si SQLite funciona y `503` si falla la conexión. Un cuerpo JSON inválido se rechaza antes de consultar la base. Swagger UI está en `/docs` y OpenAPI en `/docs-json`. Escucha en el puerto **3002** (`PORT`). `SQLITE_DATABASE_URL` configura la base, por defecto `sqlite:///./api-sqlite.sqlite`, independiente de la base de Electron. No está en Docker Compose.
 
 ## api-rustfs
 
 Carpeta: `api-rustfs/`.
 
-Servicio Express y TypeScript. `domain/` delegará en él la lectura y escritura de objetos en RustFS. Hoy solo expone `GET /health`, que confirma que el servicio HTTP responde (igual que `api-router/`). Swagger UI en **`/docs`** y OpenAPI en **`/docs-json`**, igual que en `api-router/`. Por defecto escucha en el puerto **3003** (`PORT`). No está en Docker Compose en este paso.
+Servicio Express y TypeScript. `domain/node-domain/` delegará en él la lectura y escritura de objetos en RustFS. Hoy solo expone `GET /health`, que confirma que el servicio HTTP responde (igual que `api-router/`). Swagger UI en **`/docs`** y OpenAPI en **`/docs-json`**, igual que en `api-router/`. Por defecto escucha en el puerto **3003** (`PORT`). No está en Docker Compose en este paso.
 
 ## Almacenes
 
@@ -55,7 +56,7 @@ Son almacenes y cadena, no una capa del escritorio ni del API-router. Cada una t
 
 El modelo y los enlaces están en `docs/POSTGRES.md`, `docs/SQLITE.md`, `docs/RUSTFS.md`, `docs/BLOCKEND.md` y `permanent-data.md`.
 
-Hoy `api-postgresql/` comprueba que PostgreSQL responde (`GET /health`) y lista `course` con su propio `Pool`. `domain/` trae el pool, las lecturas y las escrituras del core; este servicio aún no lo importa. `api-rustfs/` no abre RustFS en el health. El renderer y el API-router no abren estas bases.
+Hoy `api-postgresql/` comprueba que PostgreSQL responde (`GET /health`) y lista `course` con su propio `Pool`. `domain/node-domain/` trae el pool, las lecturas y las escrituras del core; este servicio aún no lo importa. `api-rustfs/` no abre RustFS en el health. El renderer y el API-router no abren estas bases.
 
 ## aTempo de escritorio
 
