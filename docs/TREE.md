@@ -81,6 +81,7 @@ domain/
       create-organization.ts
       update-organization.ts
       delete-organization.ts
+      assert-tax-id-available.ts
     person/
       list-persons.ts
       get-person-by-id.ts
@@ -89,6 +90,8 @@ domain/
       create-person.ts
       update-person.ts
       delete-person.ts
+      assert-email-available.ts
+      assert-identification-document-available.ts
     course/
       list-courses.ts
       get-course-by-id.ts
@@ -97,6 +100,8 @@ domain/
       create-course.ts
       update-course.ts
       delete-course.ts
+      assert-contract-address-available.ts
+      assert-acronym-available.ts
     role/
       list-roles.ts
       get-role-by-name.ts
@@ -109,6 +114,7 @@ domain/
       list-person-roles.ts
       add-person-role.ts
       remove-person-role.ts
+      assert-student-exclusive.ts
   test/
     jest.json
     helpers.ts
@@ -117,6 +123,7 @@ domain/
     reads.spec.ts
     filters.spec.ts
     writes.spec.ts
+    rules.spec.ts
 ```
 
 # Árbol de `api-sqlite/`

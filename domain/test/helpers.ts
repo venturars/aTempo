@@ -4,6 +4,7 @@ import { resetDb, substituteQuery, type QueryFn } from '../src/postgres/db'
 export const PERSON_ID = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
 export const ORG_ID = '11111111-1111-1111-1111-111111111111'
 export const COURSE_ID = '22222222-2222-2222-2222-222222222222'
+export const OTHER_ID = '33333333-3333-3333-3333-333333333333'
 
 export const validPerson = {
   id: PERSON_ID,

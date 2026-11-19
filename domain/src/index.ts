@@ -12,7 +12,9 @@ export {
 } from './types/person'
 export {
   assertCourse,
+  assertCourseDates,
   assertCourseInput,
+  assertContractAddress,
   type Course,
   type CourseInput,
 } from './types/course'

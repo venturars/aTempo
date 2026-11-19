@@ -4,9 +4,9 @@
 
 Carpeta de la SDK: `domain/`. HTTP de PostgreSQL: `api-postgresql/`. Persistencia SQLite: `api-sqlite/`. Objetos S3-compatible: `api-rustfs/`. `api-router/` sigue en el repositorio.
 
-El flujo de producto con PostgreSQL es Frontend → `api-postgresql` → `domain` → PostgreSQL. `api-postgresql` transforma HTTP. `domain` valida los tipos del core y abre PostgreSQL. Nest no escribe SQL.
+El flujo de producto con PostgreSQL es Frontend → `api-postgresql` → `domain` → PostgreSQL. `api-postgresql` transforma HTTP. `domain` valida los tipos y las reglas del core y abre PostgreSQL. Nest no escribe SQL.
 
-`domain/` es un paquete librería, hermano de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. Cubre tipos, lecturas y escrituras de `organization`, `person`, `course`, `person_course`, `role` y `person_role`. `role` no se escribe. Si un objeto no cumple esos campos, lanza y no llama a la base.
+`domain/` es un paquete librería, hermano de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. Cubre tipos, lecturas, escrituras y reglas de `organization`, `person`, `course`, `person_course`, `role` y `person_role`. `role` no se escribe. Si un objeto no cumple esos campos o reglas, lanza y no escribe en la base. El CHECK y el trigger de PostgreSQL se quedan.
 
 Hoy `domain/` existe y se prueba con un driver sustituido. `api-postgresql/` aún no lo importa: abre `pg` en `PostgresService` y expone `GET /health` y `GET /course`. `api-router/` solo expone `GET /health`. `api-rustfs/` solo expone `GET /health`. `api-sqlite/` solo expone `GET /health` (`SELECT 1`). El login y el registro del renderer no llaman a estas APIs. PostgreSQL, `api-postgresql/`, RustFS, `api-rustfs/` y `api-sqlite/` no están en Docker Compose. `domain/` tampoco.
 

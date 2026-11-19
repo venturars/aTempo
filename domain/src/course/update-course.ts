@@ -1,5 +1,7 @@
 import { query } from '../postgres/db'
 import { assertCourse, type Course } from '../types/course'
+import { assertAcronymAvailable } from './assert-acronym-available'
+import { assertContractAddressAvailable } from './assert-contract-address-available'
 
 const UPDATE = `UPDATE course
 SET
@@ -21,6 +23,8 @@ RETURNING
 
 export async function updateCourse(input: unknown): Promise<Course | null> {
   assertCourse(input)
+  await assertContractAddressAvailable(input.contract_address, input.id)
+  await assertAcronymAvailable(input.organization_id, input.acronym, input.id)
 
   const result = await query<Course>(UPDATE, [
     input.id,

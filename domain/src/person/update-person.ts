@@ -1,5 +1,7 @@
 import { query } from '../postgres/db'
 import { assertPerson, type Person } from '../types/person'
+import { assertEmailAvailable } from './assert-email-available'
+import { assertIdentificationDocumentAvailable } from './assert-identification-document-available'
 
 const UPDATE = `UPDATE person
 SET
@@ -21,6 +23,11 @@ RETURNING
 
 export async function updatePerson(input: unknown): Promise<Person | null> {
   assertPerson(input)
+  await assertIdentificationDocumentAvailable(
+    input.identification_document,
+    input.id,
+  )
+  await assertEmailAvailable(input.email, input.id)
 
   const result = await query<Person>(UPDATE, [
     input.id,

@@ -42,7 +42,7 @@ El lector del alumno ofrece lecturas simuladas y no usa cámara. Estos flujos no
 | Carpeta | Qué es |
 | --- | --- |
 | `desktop/` | Prototipo para profesor y alumno con Electron y React; las demos usan datos en memoria. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/sign-up` para el registro. |
-| `domain/` | SDK: paquete librería con tipos del core, lecturas y escrituras de PostgreSQL. No es un servicio HTTP. |
+| `domain/` | SDK: paquete librería con tipos del core, lecturas, escrituras y reglas de PostgreSQL. No es un servicio HTTP. |
 | `api-router/` | API REST con NestJS. |
 | `api-postgresql/` | API REST con NestJS. El flujo de producto es Frontend → `api-postgresql` → `domain` → PostgreSQL. |
 | `api-rustfs/` | API REST con Express entre `domain/` y RustFS (persistencia de objetos). |

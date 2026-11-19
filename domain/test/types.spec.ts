@@ -58,6 +58,19 @@ describe('assert*', () => {
     ).toThrow('course.contract_address debe ser un string no vacío')
   })
 
+  it('rejects a course with a bad contract address or dates', () => {
+    expect(() =>
+      assertCourse({ ...validCourse, contract_address: '0x123' }),
+    ).toThrow('course.contract_address debe ser 0x y 40 hex')
+    expect(() =>
+      assertCourse({
+        ...validCourse,
+        start_at: validCourse.end_at,
+        end_at: validCourse.start_at,
+      }),
+    ).toThrow('course.end_at debe ser posterior a course.start_at')
+  })
+
   it('rejects an invented role name', () => {
     expect(() => assertRole({ name: 'admin' })).toThrow(
       'role.name debe ser organization_admin, teacher o student',

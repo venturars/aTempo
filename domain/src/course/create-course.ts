@@ -1,5 +1,7 @@
 import { query } from '../postgres/db'
 import { assertCourse, assertCourseInput, type Course } from '../types/course'
+import { assertAcronymAvailable } from './assert-acronym-available'
+import { assertContractAddressAvailable } from './assert-contract-address-available'
 
 const INSERT = `INSERT INTO course (
   organization_id,
@@ -20,6 +22,8 @@ RETURNING
 
 export async function createCourse(input: unknown): Promise<Course> {
   assertCourseInput(input)
+  await assertContractAddressAvailable(input.contract_address)
+  await assertAcronymAvailable(input.organization_id, input.acronym)
 
   const result = await query<Course>(INSERT, [
     input.organization_id,

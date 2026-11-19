@@ -4,6 +4,7 @@ import {
   assertOrganizationInput,
   type Organization,
 } from '../types/organization'
+import { assertTaxIdAvailable } from './assert-tax-id-available'
 
 const INSERT = `INSERT INTO organization (name, tax_id)
 VALUES ($1, $2)
@@ -13,6 +14,7 @@ export async function createOrganization(
   input: unknown,
 ): Promise<Organization> {
   assertOrganizationInput(input)
+  await assertTaxIdAvailable(input.tax_id)
 
   const result = await query<Organization>(INSERT, [input.name, input.tax_id])
   const row = result.rows[0]

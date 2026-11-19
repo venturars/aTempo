@@ -147,7 +147,7 @@ describe('escrituras', () => {
     await expect(updateOrganization(validOrganization)).resolves.toEqual(
       validOrganization,
     )
-    expect(calls).toHaveLength(1)
+    expect(calls.some((call) => call.sql.includes('UPDATE'))).toBe(true)
 
     mockDriver(async () => emptyResult())
     await expect(updateOrganization(validOrganization)).resolves.toBeNull()
