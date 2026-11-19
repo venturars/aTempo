@@ -1,4 +1,6 @@
+import type { CourseResponseDto } from '../course/course-response.dto'
 import type { PersonResponseDto } from '../person/person-response.dto'
+import type { PersonRoleResponseDto } from '../person-role/person-role-response.dto'
 
 /** Sustituto local de PostgreSQL cuando no hay `DATABASE_URL` (forma #32 / issue #131). */
 export const POSTGRES_MOCK_PERSONS: PersonResponseDto[] = [
@@ -10,8 +12,8 @@ export const POSTGRES_MOCK_PERSONS: PersonResponseDto[] = [
     last_name: 'string',
     birth_date: '2026-11-18',
     phone: 'string',
-import type { CourseResponseDto } from '../course/course-response.dto'
-import type { PersonRoleResponseDto } from '../person-role/person-role-response.dto'
+  },
+]
 
 /** Sustituto local de PostgreSQL cuando no hay `DATABASE_URL` (forma #32). */
 export const POSTGRES_MOCK_COURSES: CourseResponseDto[] = [

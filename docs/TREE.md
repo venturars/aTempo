@@ -100,7 +100,7 @@ api-postgresql/
       health-response.dto.ts
     person/
       person.module.ts
-      person.controller.ts
+      person.controller.ts     # GET /person y GET /person/:id
       person.service.ts
       person-response.dto.ts
     course/
@@ -116,6 +116,7 @@ api-postgresql/
   test/
     health.e2e-spec.ts
     course.e2e-spec.ts
+    person.e2e-spec.ts
     person-role.e2e-spec.ts
     swagger.e2e-spec.ts
     jest-e2e.json
