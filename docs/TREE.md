@@ -141,19 +141,37 @@ api-postgresql/
     postgres/
       postgres.module.ts
       postgres.service.ts  # pg con DATABASE_URL; mock si no hay URL
-      postgres-mock.ts     # filas de course de prueba (#132)
+      postgres-mock.ts     # filas de prueba para los listados
     health/
       health.module.ts
       health.controller.ts
       health-response.dto.ts
+    person/
+      person.module.ts
+      person.controller.ts     # GET /person y GET /person/:id
+      person.service.ts
+      person-response.dto.ts
     course/
       course.module.ts
       course.controller.ts
       course.service.ts
       course-response.dto.ts
+    person-role/
+      person-role.module.ts
+      person-role.controller.ts
+      person-role.service.ts
+      person-role-response.dto.ts
+    person-course/
+      person-course.module.ts
+      person-course.controller.ts
+      person-course.service.ts
+      person-course-response.dto.ts
   test/
     health.e2e-spec.ts
     course.e2e-spec.ts
+    person.e2e-spec.ts
+    person-role.e2e-spec.ts
+    person-course.e2e-spec.ts
     swagger.e2e-spec.ts
     jest-e2e.json
 ```
