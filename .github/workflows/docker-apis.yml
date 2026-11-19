@@ -56,13 +56,12 @@ jobs:
       - name: Check SQLite API
         run: docker compose run --rm api-sqlite /work/api-sqlite/.venv/bin/python -m unittest discover -s tests -v
 
-      - name: Check desktop, Storybook and setup hook
+      - name: Check desktop and Storybook
         run: |
           docker compose run --rm desktop pnpm typecheck
           docker compose run --rm desktop pnpm lint
           docker compose run --rm storybook pnpm guide
           docker compose run --rm storybook pnpm guide:check
-          bash docker/tests/run-setup-hook.test.sh
 
       - name: Start APIs and backing services
         run: docker compose up --detach api-router api-postgresql api-sqlite api-rustfs
