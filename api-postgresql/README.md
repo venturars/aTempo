@@ -6,6 +6,37 @@ Hoy expone `GET /health` y `GET /person`, `GET /person-role`, `GET /course` que 
 
 ## Arranque
 
+### Docker Compose
+
+Después de `docker compose run --rm setup`, desde la raíz del repositorio ejecuta `docker compose up api-postgresql` para iniciar esta API y PostgreSQL. Compose espera a que la base supere su healthcheck. La API queda en <http://localhost:3001>; PostgreSQL se publica en `localhost:5433` y la API se conecta por `postgres:5432` dentro de Compose. El volumen compartido `postgres-data` conserva los datos al recrear contenedores. PostgreSQL usa la versión 17.12; no montes directamente en ella un volumen de PostgreSQL 16. Haz una copia de seguridad y una migración explícita antes de cambiar de versión.
+
+La base usa el usuario `atempo` y requiere `ATEMPO_POSTGRES_PASSWORD` en el `.env` ignorado de la raíz; `POSTGRES_PASSWORD` sirve como alternativa. En Git Bash, genera una contraseña aleatoria hexadecimal de 64 caracteres y añádela con `printf 'ATEMPO_POSTGRES_PASSWORD=%s\n' "$(openssl rand -hex 32)" >> .env`; ese formato es seguro en la URL de `DATABASE_URL`. CI crea una contraseña efímera. Estas credenciales son solo para desarrollo local.
+
+Al reutilizar un volumen PostgreSQL 17 creado antes de añadir el esquema operativo, comprueba primero las tablas de la base configurada:
+
+```powershell
+docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "\dt"'
+```
+
+`postgres/init/01_schema.sql` se ejecuta automáticamente solo al crear un volumen vacío; montarlo después no aplica el esquema. Si no hay tablas de aplicación ni datos que preservar, haz antes una copia de seguridad y aplica el esquema una sola vez, dentro de una transacción:
+
+```powershell
+Get-Content -Raw -Encoding UTF8 postgres/init/01_schema.sql | docker compose exec -T postgres sh -c 'psql --single-transaction -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+```
+
+Si ya hay tablas o datos, no vuelvas a aplicar el script ni borres el volumen: requiere una migración explícita.
+
+Las pruebas y comprobaciones se ejecutan con las dependencias Linux del volumen Docker:
+
+```sh
+docker compose run --rm api-postgresql pnpm typecheck
+docker compose run --rm api-postgresql pnpm lint
+docker compose run --rm api-postgresql pnpm test
+docker compose run --rm api-postgresql pnpm build
+```
+
+### Arranque local
+
 Desde `api-postgresql/`:
 
 ```sh

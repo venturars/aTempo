@@ -2,7 +2,7 @@
 #   docker compose run --rm setup               instala APM y las dependencias
 #   docker compose up storybook                 sirve Storybook en http://localhost:6006
 #   docker compose run --rm desktop pnpm lint   comprueba desktop/ con las versiones del equipo
-#   docker compose up api-router                Nest en http://localhost:3000 (Swagger en /docs)
+#   docker compose up api-router api-postgresql api-sqlite api-rustfs  APIs en http://localhost:3000–3003
 #   docker compose up desktop-gui               abre la ventana de Electron (opcional, ver el README)
 
 x-base: &base
@@ -20,6 +20,9 @@ services:
       - desktop-node-modules:/work/desktop/node_modules
       - storybook-node-modules:/work/docs/storybook/node_modules
       - api-router-node-modules:/work/api-router/node_modules
+      - api-postgresql-node-modules:/work/api-postgresql/node_modules
+      - api-rustfs-node-modules:/work/api-rustfs/node_modules
+      - api-sqlite-venv:/work/api-sqlite/.venv
       - blockend-node-modules:/work/blockend/node_modules
       - postgres-node-modules:/work/postgres/node_modules
       - pnpm-store:/pnpm-store
@@ -45,7 +48,7 @@ services:
       PORT: "3000"
       CHOKIDAR_USEPOLLING: "true"
     volumes:
-      - .:/work
+      - ./api-router:/work/api-router
       - api-router-node-modules:/work/api-router/node_modules
       - pnpm-store:/pnpm-store
 
@@ -86,14 +89,14 @@ services:
       - desktop-node-modules:/work/desktop/node_modules
       - pnpm-store:/pnpm-store
 
-  # PostgreSQL core. Va detrás del perfil db, para que un docker compose up sin nombre no lo arranque.
+  # PostgreSQL usa el volumen existente y carga el esquema operativo al inicializar una base nueva.
+  # PostgreSQL no tiene perfil para que las APIs puedan arrancarlo como dependencia.
   # docker compose --profile db up -d postgres drizzle-studio
   postgres:
-    profiles: [db]
-    image: postgres:16.16-alpine
+    image: postgres:17.12-trixie
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-atempo}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-atempo}
+      POSTGRES_PASSWORD: ${ATEMPO_POSTGRES_PASSWORD:-${POSTGRES_PASSWORD:?Define ATEMPO_POSTGRES_PASSWORD or POSTGRES_PASSWORD before starting Compose}}
       POSTGRES_DB: ${POSTGRES_DB:-atempo}
     ports:
       - "5433:5432"
@@ -101,10 +104,45 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - ./postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-atempo} -d ${POSTGRES_DB:-atempo}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
+      start_period: 10s
+
+  # API REST de persistencia PostgreSQL para la SDK.
+  api-postgresql:
+    <<: *base
+    working_dir: /work/api-postgresql
+    command: pnpm dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: "3001"
+      DATABASE_URL: postgres://${POSTGRES_USER:-atempo}:${ATEMPO_POSTGRES_PASSWORD:-${POSTGRES_PASSWORD:?Define ATEMPO_POSTGRES_PASSWORD or POSTGRES_PASSWORD before starting Compose}}@postgres:5432/${POSTGRES_DB:-atempo}
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./api-postgresql:/work/api-postgresql
+      - api-postgresql-node-modules:/work/api-postgresql/node_modules
+      - pnpm-store:/pnpm-store
+
+  # API SQLite conserva sus datos en un volumen separado de Electron y sqlite/data.
+  api-sqlite:
+    <<: *base
+    working_dir: /work/api-sqlite
+    command: /work/api-sqlite/.venv/bin/python -m flask --app api_sqlite.app:create_app run --host 0.0.0.0 --port 3002
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: "3002"
+      SQLITE_DATABASE_URL: sqlite:////var/lib/atempo/api-sqlite.sqlite
+    volumes:
+      - ./api-sqlite:/work/api-sqlite
+      - api-sqlite-venv:/work/api-sqlite/.venv
+      - api-sqlite-data:/var/lib/atempo
 
   # Drizzle Studio: visor de las tablas de postgres/. Va detrás del perfil db.
   # Se abre desde https://local.drizzle.studio y habla con http://localhost:4983.
@@ -118,7 +156,7 @@ services:
       - "127.0.0.1:4983:4983"
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-atempo}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-atempo}
+      POSTGRES_PASSWORD: ${ATEMPO_POSTGRES_PASSWORD:-${POSTGRES_PASSWORD:?Define ATEMPO_POSTGRES_PASSWORD or POSTGRES_PASSWORD before starting Compose}}
       POSTGRES_DB: ${POSTGRES_DB:-atempo}
       POSTGRES_HOST: postgres
       POSTGRES_PORT: "5432"
@@ -174,11 +212,10 @@ services:
     depends_on:
       - anvil
 
-  # Almacén de justificantes (bucket justifications). RustFS, compatible con S3. Va detrás del perfil rustfs.
+  # RustFS conserva los objetos de justificantes; la API lo usa y el perfil permite crear el bucket.
   # Consola: http://localhost:9001/rustfs/console/
   # docker compose --profile rustfs up -d rustfs create-bucket
   rustfs:
-    profiles: [rustfs]
     image: rustfs/rustfs:1.0.3
     command: ["/data"]
     environment:
@@ -187,13 +224,43 @@ services:
       RUSTFS_ADDRESS: ":9000"
       RUSTFS_CONSOLE_ADDRESS: ":9001"
       RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_OBS_LOGGER_LEVEL: error
     ports:
       - "9000:9000"
       - "9001:9001"
     volumes:
       - rustfs-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9000/health >/dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
 
-  # Espera a que la API S3 responda y crea el bucket si no existe. Usa la CLI de Amazon, que habla S3.
+  # La API conserva /health HTTP; el cliente S3 comprueba el almacén aparte.
+  api-rustfs:
+    <<: *base
+    working_dir: /work/api-rustfs
+    command: pnpm dev
+    depends_on:
+      rustfs:
+        condition: service_healthy
+    ports:
+      - "3003:3003"
+    environment:
+      PORT: "3003"
+      RUSTFS_ENDPOINT: rustfs
+      RUSTFS_PORT: "9000"
+      RUSTFS_USE_SSL: "false"
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-atempo}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-atempoatempo}
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./api-rustfs:/work/api-rustfs
+      - api-rustfs-node-modules:/work/api-rustfs/node_modules
+      - pnpm-store:/pnpm-store
+
+# Espera a que la API S3 responda y crea el bucket si no existe. Usa la CLI de Amazon.
   create-bucket:
     profiles: [rustfs]
     image: amazon/aws-cli:2.40.4
@@ -290,6 +357,10 @@ volumes:
   desktop-node-modules:
   storybook-node-modules:
   api-router-node-modules:
+  api-postgresql-node-modules:
+  api-rustfs-node-modules:
+  api-sqlite-venv:
+  api-sqlite-data:
   blockend-node-modules:
   postgres-node-modules:
   pnpm-store:
