@@ -17,6 +17,7 @@ describe('Health (e2e)', () => {
       .useValue({
         check,
         listCourses: async () => [],
+        listPersonRoles: async () => [],
         usesMock: () => false,
       })
       .compile()
