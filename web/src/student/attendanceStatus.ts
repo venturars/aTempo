@@ -1,15 +1,11 @@
+import { minutesOfDay } from './studentDate'
+
 export type AttendanceStatus = 'presente' | 'tarde' | 'ausente'
 
 export const statusLabel: Record<AttendanceStatus, string> = {
   presente: 'Presente',
   tarde: 'Tarde',
   ausente: 'Ausente'
-}
-
-const statusClass: Record<AttendanceStatus, string> = {
-  presente: 'status status-success',
-  tarde: 'status status-warning',
-  ausente: 'status status-error'
 }
 
 const statusBadge: Record<AttendanceStatus, string> = {
@@ -20,15 +16,6 @@ const statusBadge: Record<AttendanceStatus, string> = {
 
 export function statusBadgeClass(status: AttendanceStatus): string {
   return statusBadge[status]
-}
-
-export function statusMarkClass(status: AttendanceStatus): string {
-  return statusClass[status]
-}
-
-function minutesOfDay(time: string): number {
-  const [hours, minutes] = time.split(':').map(Number)
-  return hours * 60 + minutes
 }
 
 export function statusForArrival(

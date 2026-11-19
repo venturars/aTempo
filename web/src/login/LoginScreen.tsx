@@ -1,5 +1,6 @@
-import { FormEvent } from 'react'
+import { FormEvent, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
+import { destinationAfterSignIn, hasPendingCheckIn } from '../student/checkIn/pendingCheckIn'
 import { useLoginStore } from './loginStore'
 
 export function LoginScreen(): React.JSX.Element {
@@ -12,10 +13,12 @@ export function LoginScreen(): React.JSX.Element {
   const setPassword = useLoginStore((state) => state.setPassword)
   const submit = useLoginStore((state) => state.submit)
   const navigate = useNavigate()
+  // Viene del QR de clase sin la sesión abierta: al entrar se apunta la entrada.
+  const [fromClassQr] = useState(hasPendingCheckIn)
 
   function onSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault()
-    if (submit()) void navigate({ to: '/student/dashboard' })
+    if (submit()) void navigate({ to: destinationAfterSignIn() })
   }
 
   return (
@@ -23,7 +26,12 @@ export function LoginScreen(): React.JSX.Element {
       <section className="page-enter panel-card flex w-full max-w-md flex-col gap-7 rounded-box p-6 md:p-10">
         <div className="flex flex-col items-center gap-3 text-center">
           <p className="text-lg font-semibold tracking-tight">aTempo</p>
-          <h1 className="text-2xl font-semibold tracking-tight">Hola de nuevo</h1>
+          <div className="flex flex-col gap-1">
+            <h1 className="text-2xl font-semibold tracking-tight">Hola de nuevo</h1>
+            {fromClassQr ? (
+              <p className="text-sm text-base-content/60">Entra para registrar tu asistencia.</p>
+            ) : null}
+          </div>
         </div>
         <form className="flex flex-col gap-5" noValidate onSubmit={onSubmit}>
           <div className="field">

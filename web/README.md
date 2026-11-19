@@ -50,7 +50,7 @@ La demo es local y no está conectada al registro de organizaciones, la activaci
 
 ## Probar al alumno
 
-Con el mismo servidor en marcha, abre <http://localhost:5191/>. La cuenta pública de ejemplo es `ada.lopez@clase.test` / `clase-2026`.
+Con el mismo servidor en marcha, abre <http://localhost:5191/>. La cuenta pública de ejemplo es `ada.lopez@clase.test` / `clase-2026`. La sesión, las cuentas, las entradas y los avisos se guardan en `localStorage`, así que siguen al abrir el enlace del QR en una pestaña nueva.
 
 En Registrar asistencia, el QR de la clase de ejemplo es `ATEMPO-CLASE-1109` y el código de 6 cifras es `482913`.
 

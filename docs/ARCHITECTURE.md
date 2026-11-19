@@ -62,6 +62,7 @@ El CRUD usa `PersonForm`, `CourseForm` y `SessionForm` tanto al crear como al ed
 La entrada explícita de demo no usa contraseñas y no es autenticación de producción. Recargar vuelve al seed; salir cierra la sesión admin conservando los datos de ese arranque. La sesión/cuentas del alumno siguen en sus stores actuales y no se cambian al entrar o salir de admin.
 
 Este store es un mock del prototipo, no una segunda SDK. El trabajo local de #90 se conserva por separado para una futura SDK frontend que consuma el API-router; la SDK de dominio mantiene las reglas de negocio y acceso a persistencia. Los endpoints administrativos aún no están acordados en el brief v1. Alcance, referencias y comprobaciones en [admin-prototype.md](admin-prototype.md); pasos para abrirlo en [web/README.md](../web/README.md#probar-administración).
+
 ## Almacenes
 
 Carpetas: `postgres/`, `sqlite/`, `rustfs/`, `blockend/`.

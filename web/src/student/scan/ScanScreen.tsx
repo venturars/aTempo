@@ -2,22 +2,64 @@ import { FormEvent, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { RequireStudent } from '../../session/RequireStudent'
 import { flowTopBelowHeader } from '../flowLayout'
-import { registerReading } from '../studentAccounts'
+import { registerReading, type CheckInResult } from '../studentAccounts'
 
-function registeredTime(message: string): string | null {
-  const match = /^(?:Presente|Tarde) · (\d{2}:\d{2})$/.exec(message)
-  return match?.[1] ?? null
+// La pantalla tiene dos modos:
+//   scan → la cámara lee el QR. Es lo principal.
+//   code → el alumno escribe las 6 cifras que hay debajo del QR. Es el plan B.
+// Se pasa a «code» con «Escribir el código», si la cámara no está disponible o si la lectura falla.
+// Desde «code» se vuelve a «scan» con «Escanear el QR».
+type Mode = 'scan' | 'code'
+
+// Safari no sabe leer QR desde una página web, y sin https no hay cámara.
+function browserCanScan(): boolean {
+  return window.BarcodeDetector !== undefined && navigator.mediaDevices?.getUserMedia !== undefined
 }
 
-export function ScanScreen(): React.JSX.Element {
+// Si la cámara falla, se dice qué ha pasado y qué puede hacer el alumno. El campo del código sigue ahí.
+const browserCannotScan =
+  'Este navegador no puede leer el QR. Puedes escanearlo con la cámara del móvil.'
+
+function cameraProblemFor(caught: unknown): string {
+  const name = caught instanceof DOMException ? caught.name : ''
+  if (name === 'NotAllowedError' || name === 'SecurityError') {
+    return 'No hay permiso para usar la cámara. Puedes activarlo en los ajustes del navegador.'
+  }
+  if (name === 'NotFoundError' || name === 'OverconstrainedError') {
+    return 'No encontramos ninguna cámara en este dispositivo.'
+  }
+  if (name === 'NotReadableError')
+    return 'Otra app está usando la cámara. Ciérrala y prueba otra vez.'
+  return 'No se pudo abrir la cámara.'
+}
+
+// Primero se comprueba la sesión: sin ella, se va al login sin pedir la cámara.
+export function ScanScreen({
+  startWithCode = false
+}: {
+  startWithCode?: boolean
+}): React.JSX.Element {
+  return (
+    <RequireStudent>
+      <ScanView startWithCode={startWithCode} />
+    </RequireStudent>
+  )
+}
+
+function ScanView({ startWithCode }: { startWithCode: boolean }): React.JSX.Element {
   const navigate = useNavigate()
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const readingRef = useRef(false)
+  const [canScan] = useState(browserCanScan)
+  const [mode, setMode] = useState<Mode>(startWithCode || !canScan ? 'code' : 'scan')
   const [typedCode, setTypedCode] = useState('')
-  // La cámara puede fallar sin que sea culpa de nadie: es una nota, no un error.
-  const [cameraNote, setCameraNote] = useState<string | null>(null)
+  const [cameraProblem, setCameraProblem] = useState<string | null>(
+    canScan ? null : browserCannotScan
+  )
   const [codeError, setCodeError] = useState<string | null>(null)
+  // El campo se enfoca solo cuando el alumno lo pide, para no abrir el teclado sin querer.
+  const [focusCode, setFocusCode] = useState(startWithCode)
 
   function stopCamera(): void {
     readingRef.current = false
@@ -26,9 +68,10 @@ export function ScanScreen(): React.JSX.Element {
     if (videoRef.current) videoRef.current.srcObject = null
   }
 
-  function finish(message: string): void {
-    if (registeredTime(message) === null) {
-      setCodeError(message)
+  function finish(result: CheckInResult): void {
+    if (!result.registered) {
+      setCodeError(result.message)
+      setMode('code')
       return
     }
     stopCamera()
@@ -38,8 +81,15 @@ export function ScanScreen(): React.JSX.Element {
   async function watch(detector: BarcodeDetector): Promise<void> {
     if (!readingRef.current || videoRef.current === null) return
     if (videoRef.current.readyState >= 2) {
-      const codes = await detector.detect(videoRef.current)
-      const value = codes[0]?.rawValue
+      let value: string | undefined
+      try {
+        const codes = await detector.detect(videoRef.current)
+        value = codes[0]?.rawValue
+      } catch {
+        // Un fotograma que no se puede leer no para el escáner: se prueba con el siguiente.
+      }
+      // Mientras se leía, el alumno pudo cambiar a escribir el código o salir.
+      if (!readingRef.current) return
       if (value) {
         stopCamera()
         finish(registerReading(value))
@@ -49,38 +99,46 @@ export function ScanScreen(): React.JSX.Element {
     requestAnimationFrame(() => void watch(detector))
   }
 
-  async function startCamera(): Promise<void> {
-    if (window.BarcodeDetector === undefined || navigator.mediaDevices?.getUserMedia === undefined) {
-      setCameraNote('Este navegador no puede usar la cámara')
-      return
-    }
+  // `isCancelled` dice si el alumno ya salió del modo «scan» mientras la cámara arrancaba
+  // (en desarrollo, React también monta, desmonta y vuelve a montar al empezar).
+  // Entonces se apaga la cámara que acaba de llegar y no se enseña ninguna nota.
+  async function startCamera(isCancelled: () => boolean): Promise<void> {
+    if (window.BarcodeDetector === undefined) return
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment' }
       })
+      if (isCancelled()) {
+        stream.getTracks().forEach((track) => track.stop())
+        return
+      }
       streamRef.current = stream
       if (videoRef.current) {
         videoRef.current.srcObject = stream
         await videoRef.current.play()
       }
+      if (isCancelled()) return
       readingRef.current = true
       const detector = new window.BarcodeDetector({ formats: ['qr_code'] })
       void watch(detector)
     } catch (caught) {
+      if (isCancelled()) return
       stopCamera()
-      const name = caught instanceof DOMException ? caught.name : ''
-      if (name === 'NotAllowedError' || name === 'SecurityError') {
-        setCameraNote('Sin permiso para la cámara')
-        return
-      }
-      setCameraNote('No se pudo abrir la cámara')
+      setCameraProblem(cameraProblemFor(caught))
+      setMode('code')
     }
   }
 
+  // La cámara solo está encendida en el modo «scan».
   useEffect(() => {
-    void startCamera()
-    return stopCamera
-  }, [])
+    if (mode !== 'scan') return
+    let cancelled = false
+    void startCamera(() => cancelled)
+    return () => {
+      cancelled = true
+      stopCamera()
+    }
+  }, [mode])
 
   function onSubmitCode(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault()
@@ -89,97 +147,131 @@ export function ScanScreen(): React.JSX.Element {
   }
 
   return (
-    <RequireStudent>
-      <div className="flex min-h-screen flex-col">
-        <header className="flex h-16 items-center px-4 sm:px-8">
-          <Link className="btn btn-ghost btn-circle" to="/student/dashboard" aria-label="Cerrar">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              aria-hidden="true"
-            >
-              <path d="M6 6l12 12M18 6L6 18" />
-            </svg>
-          </Link>
-        </header>
-        <main
-          className={`page-enter flex flex-1 flex-col items-center justify-center gap-6 px-6 pb-16 text-center ${flowTopBelowHeader}`}
-        >
-          <h1 className="text-2xl font-semibold tracking-tight">Escanea el QR</h1>
-          <div className="panel-card relative aspect-square w-full max-w-xs overflow-hidden rounded-box sm:aspect-[4/3] sm:max-w-md">
-            <video ref={videoRef} className="h-full w-full object-cover" muted playsInline />
-            <ScanFrame dimmed={cameraNote !== null} />
-            {cameraNote !== null ? <CameraNote text={cameraNote} /> : null}
-          </div>
-          <form className="field w-full max-w-xs text-left" noValidate onSubmit={onSubmitCode}>
-            <label htmlFor="codigo-clase">Código de la clase</label>
-            <div className="field-row">
-              <input
-                id="codigo-clase"
-                className={codeError !== null ? 'input input-error w-full' : 'input w-full'}
-                type="text"
-                inputMode="text"
-                autoComplete="off"
-                value={typedCode}
-                aria-invalid={codeError !== null}
-                onChange={(event) => {
-                  setTypedCode(event.target.value)
-                  setCodeError(null)
-                }}
-              />
-              <button className="btn btn-primary" type="submit">
-                Registrar
-              </button>
+    <div className="flex min-h-screen flex-col">
+      <header className="flex h-16 items-center px-4 sm:px-8">
+        <Link className="btn btn-ghost btn-circle" to="/student/dashboard" aria-label="Cerrar">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            aria-hidden="true"
+          >
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </Link>
+      </header>
+      <main
+        key={mode}
+        className={`page-enter flex flex-1 flex-col items-center justify-center gap-6 px-6 pb-16 text-center ${flowTopBelowHeader}`}
+      >
+        {mode === 'scan' ? (
+          <>
+            <h1 className="text-2xl font-semibold tracking-tight">Escanea el QR</h1>
+            <div className="panel-card relative aspect-square w-full max-w-xs overflow-hidden rounded-box sm:aspect-[4/3] sm:max-w-md">
+              <video ref={videoRef} className="h-full w-full object-cover" muted playsInline />
+              <ScanFrame />
             </div>
-            {codeError !== null ? (
-              <p className="text-sm text-error" role="alert">
-                {codeError}
+            <button
+              className="btn btn-ghost text-base font-medium text-primary"
+              type="button"
+              onClick={() => {
+                setFocusCode(true)
+                setMode('code')
+              }}
+            >
+              Escribir el código
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="flex flex-col gap-2">
+              <h1 className="text-2xl font-semibold tracking-tight">Escribe el código</h1>
+              <p className="max-w-xs text-base text-base-content/60">
+                Son las 6 cifras que hay debajo del QR.
               </p>
+            </div>
+            {cameraProblem !== null ? <CameraProblem text={cameraProblem} /> : null}
+            <form className="field w-full max-w-xs text-left" noValidate onSubmit={onSubmitCode}>
+              <label className="sr-only" htmlFor="codigo-clase">
+                Código de la clase
+              </label>
+              <div className="field-row">
+                <input
+                  id="codigo-clase"
+                  className={`input w-full text-center text-lg tabular-nums tracking-[0.3em] ${codeError !== null ? 'input-error' : ''}`}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  autoComplete="off"
+                  autoFocus={focusCode}
+                  value={typedCode}
+                  aria-invalid={codeError !== null}
+                  onChange={(event) => {
+                    setTypedCode(event.target.value)
+                    setCodeError(null)
+                  }}
+                />
+                <button className="btn btn-primary" type="submit">
+                  Registrar
+                </button>
+              </div>
+              {codeError !== null ? (
+                <p className="text-sm text-error" role="alert">
+                  {codeError}
+                </p>
+              ) : null}
+            </form>
+            {canScan ? (
+              <button
+                className="btn btn-ghost text-base font-medium text-primary"
+                type="button"
+                onClick={() => {
+                  setCodeError(null)
+                  setCameraProblem(null)
+                  setMode('scan')
+                }}
+              >
+                Escanear el QR
+              </button>
             ) : null}
-          </form>
-        </main>
-      </div>
-    </RequireStudent>
-  )
-}
-
-// Sin cámara, la nota va dentro del visor y el marco se apaga.
-function CameraNote({ text }: { text: string }): React.JSX.Element {
-  return (
-    <div
-      className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-8 text-center"
-      role="status"
-    >
-      <span className="grid size-11 place-items-center rounded-full bg-base-200 text-base-content/60">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M3 8a2 2 0 0 1 2-2h2l2-2h6l2 2h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-          <circle cx="12" cy="13" r="3.5" />
-        </svg>
-      </span>
-      <p className="max-w-60 text-sm text-base-content/70">{text}</p>
+          </>
+        )}
+      </main>
     </div>
   )
 }
 
-function ScanFrame({ dimmed }: { dimmed: boolean }): React.JSX.Element {
+// Aviso de la cámara: dice qué ha pasado. Con estilo suave de aviso, no de error del alumno.
+function CameraProblem({ text }: { text: string }): React.JSX.Element {
+  return (
+    <div className="alert alert-soft alert-warning w-full max-w-xs text-left" role="alert">
+      <svg
+        className="size-5 shrink-0"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M3 3l18 18" />
+        <path d="M9.5 5H15l2 2h2a2 2 0 0 1 2 2v8.5M18.5 19H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2" />
+        <path d="M9.9 10.1a3.5 3.5 0 0 0 4.9 4.9" />
+      </svg>
+      <span className="text-sm">{text}</span>
+    </div>
+  )
+}
+
+function ScanFrame(): React.JSX.Element {
   return (
     <svg
-      className={`pointer-events-none absolute inset-0 m-auto h-56 w-56 text-primary ${dimmed ? 'opacity-15' : ''}`}
+      className="pointer-events-none absolute inset-0 m-auto h-56 w-56 text-primary"
       viewBox="0 0 264 264"
       fill="none"
       stroke="currentColor"

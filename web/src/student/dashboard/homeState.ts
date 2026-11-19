@@ -12,19 +12,24 @@ export type HomeState =
   | { kind: 'class-over' }
   | { kind: 'upcoming'; noticeArrival: string | null }
 
-// El orden importa: una entrada registrada gana a un aviso, y un aviso de ausencia gana a la hora.
-export function homeStateFor(now: Date, history: ClassEntry[], notices: StudentNotice[]): HomeState {
+// El orden importa: una entrada registrada gana a todo. Con la clase terminada ya no cuenta el aviso.
+// Antes del final, un aviso de ausencia gana a la hora.
+export function homeStateFor(
+  now: Date,
+  history: ClassEntry[],
+  notices: StudentNotice[]
+): HomeState {
   if (!todayClass.weekdays.includes(now.getDay())) return { kind: 'no-class' }
 
   const todayLabel = formatDay(now)
   const entry = history.find((item) => item.label === todayLabel)
   if (entry?.arrival) return { kind: 'registered', arrival: entry.arrival }
 
+  if (secondsUntil(now, todayClass.end) <= 0) return { kind: 'class-over' }
+
   // Los avisos llegan del más reciente al más antiguo: vale el último que mandó.
   const notice = notices.find((item) => item.day === todayLabel)
   if (notice?.kind === 'ausencia') return { kind: 'absent-notice' }
-
-  if (secondsUntil(now, todayClass.end) <= 0) return { kind: 'class-over' }
 
   return { kind: 'upcoming', noticeArrival: notice?.kind === 'retraso' ? notice.arrival : null }
 }
@@ -59,7 +64,8 @@ export function subtitleFor(state: HomeState): string {
   }
 }
 
-// Solo se puede registrar antes de que acabe una clase de hoy a la que va a ir.
+// Se puede registrar mientras la clase de hoy no ha terminado,
+// también si avisó de que no venía y al final viene.
 export function canRegister(state: HomeState): boolean {
-  return state.kind === 'upcoming'
+  return state.kind === 'upcoming' || state.kind === 'absent-notice'
 }

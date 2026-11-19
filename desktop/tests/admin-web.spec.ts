@@ -182,7 +182,7 @@ for (const width of [390, 1280]) {
     test(`admin forms and tables fit ${width}px in ${theme}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 })
       await page.addInitScript(
-        (name) => sessionStorage.setItem('atempo-student-theme', name),
+        (name) => localStorage.setItem('atempo-student-theme', name),
         theme
       )
       await enterAdmin(page)
@@ -249,17 +249,18 @@ test('validates and cancels invitations without adding people', async ({ page })
 test('admin entry and logout leave the student session and accounts alone', async ({ page }) => {
   await enterStudent(page)
   const before = await page.evaluate(() => ({
-    session: sessionStorage.getItem('atempo-student-session'),
-    accounts: sessionStorage.getItem('atempo-student-accounts')
+    session: localStorage.getItem('atempo-student-session'),
+    accounts: localStorage.getItem('atempo-student-accounts')
   }))
+  expect(before.session).toContain('ada.lopez@clase.test')
   await enterAdmin(page)
   await invite(page, 'Nueva alumna', 'nueva@clase.test', 'student')
   await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Abrir demo de administración' })).toBeVisible()
   expect(
     await page.evaluate(() => ({
-      session: sessionStorage.getItem('atempo-student-session'),
-      accounts: sessionStorage.getItem('atempo-student-accounts')
+      session: localStorage.getItem('atempo-student-session'),
+      accounts: localStorage.getItem('atempo-student-accounts')
     }))
   ).toEqual(before)
   await page.goto('/student/dashboard')
@@ -494,8 +495,9 @@ for (const theme of ['atempo-oscuro', 'atempo-claro']) {
     page
   }) => {
     await page.setViewportSize({ width: 390, height: 844 })
-    await page.addInitScript((name) => sessionStorage.setItem('atempo-student-theme', name), theme)
+    await page.addInitScript((name) => localStorage.setItem('atempo-student-theme', name), theme)
     await enterAdmin(page)
+    await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
     await adminNav(page, 'Personas')
     await page.getByRole('button', { name: 'Editar Ana López', exact: true }).click()
     await expect(page.getByLabel('Nombre completo', { exact: true })).toBeFocused()
@@ -675,7 +677,7 @@ for (const width of [390, 1280]) {
     }) => {
       await page.setViewportSize({ width, height: 900 })
       await page.addInitScript(
-        (name) => sessionStorage.setItem('atempo-student-theme', name),
+        (name) => localStorage.setItem('atempo-student-theme', name),
         theme
       )
       await openSeedCourse(page)

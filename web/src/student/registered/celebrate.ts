@@ -31,7 +31,13 @@ export function fireSideCannons(): () => void {
 
   function shootFromBothSides(): void {
     if (Date.now() > end) return
-    const shared = { particleCount: 2, spread: 55, startVelocity: 60, colors, disableForReducedMotion: true }
+    const shared = {
+      particleCount: 2,
+      spread: 55,
+      startVelocity: 60,
+      colors,
+      disableForReducedMotion: true
+    }
     void confetti({ ...shared, angle: 60, origin: { x: 0, y: 0.5 } })
     void confetti({ ...shared, angle: 120, origin: { x: 1, y: 0.5 } })
     frame = requestAnimationFrame(shootFromBothSides)

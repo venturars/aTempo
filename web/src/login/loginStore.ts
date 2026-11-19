@@ -30,20 +30,14 @@ export const useLoginStore = create<LoginState>((set, get) => ({
       return false
     }
 
+    // El mismo aviso para un correo sin cuenta y una contraseña equivocada:
+    // así no se puede averiguar qué correos tienen cuenta.
     const account = useStudentAccountsStore.getState().findByEmail(email)
-    if (account === undefined) {
+    if (account === undefined || account.password !== password) {
       set({
         emailError: '',
         passwordError: '',
-        loginError: 'No encontramos una cuenta con este correo. ¿Lo revisas?'
-      })
-      return false
-    }
-    if (account.password !== password) {
-      set({
-        emailError: '',
-        passwordError: 'Esa contraseña no es la de esta cuenta. Prueba otra vez.',
-        loginError: ''
+        loginError: 'El correo o la contraseña no son correctos. Revísalos y prueba otra vez.'
       })
       return false
     }

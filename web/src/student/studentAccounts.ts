@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { useSessionStore } from '../session/sessionStore'
+import { storageKeys } from '../storageKeys'
 import {
   exampleStudent,
   lateMinutes,
@@ -8,10 +9,11 @@ import {
   type ClassEntry,
   type StudentAccount
 } from './studentExample'
-import { clockTime, statusForArrival, statusLabel } from './attendanceStatus'
-import { formatDay } from './studentDate'
+import { clockTime, statusForArrival } from './attendanceStatus'
+import { isCodeValidNow, readClassCode } from './classCode'
+import { formatDay, minutesOfDay } from './studentDate'
 
-const accountsKey = 'atempo-student-accounts'
+const accountsKey = storageKeys.accounts
 
 type StudentAccountsState = {
   accounts: StudentAccount[]
@@ -25,8 +27,8 @@ function copyExample(): StudentAccount {
 }
 
 function readAccounts(): StudentAccount[] {
-  if (typeof sessionStorage === 'undefined') return [copyExample()]
-  const raw = sessionStorage.getItem(accountsKey)
+  if (typeof localStorage === 'undefined') return [copyExample()]
+  const raw = localStorage.getItem(accountsKey)
   if (raw === null) return [copyExample()]
   try {
     const parsed = JSON.parse(raw) as StudentAccount[]
@@ -38,7 +40,7 @@ function readAccounts(): StudentAccount[] {
 }
 
 function saveAccounts(accounts: StudentAccount[]): void {
-  sessionStorage.setItem(accountsKey, JSON.stringify(accounts))
+  localStorage.setItem(accountsKey, JSON.stringify(accounts))
 }
 
 export const useStudentAccountsStore = create<StudentAccountsState>((set, get) => ({
@@ -84,7 +86,17 @@ export function useCurrentStudent(): StudentAccount {
   )
 }
 
-const wrongCode = 'Ese código no es de esta clase. Revísalo y prueba otra vez.'
+// Lo que pasa al leer el QR o escribir el código: o queda apuntada la entrada, o hay un aviso.
+export type CheckInResult =
+  { registered: true; arrival: string } | { registered: false; message: string }
+
+// Por qué no vale un código: no es de esta clase, o sí lo es pero ya caducó.
+export type CodeProblem = 'wrong-class' | 'expired'
+
+const codeProblemMessage: Record<CodeProblem, string> = {
+  'wrong-class': 'Ese código no es de esta clase. Revísalo y prueba otra vez.',
+  expired: 'Ese código no vale ahora. Prueba con el que se ve en la pantalla de clase.'
+}
 
 function isClassDay(now: Date): boolean {
   return todayClass.weekdays.includes(now.getDay())
@@ -95,31 +107,44 @@ function minutesNow(now: Date): number {
 }
 
 function classIsOver(now: Date): boolean {
-  const [hours = 0, minutes = 0] = todayClass.end.split(':').map(Number)
-  return minutesNow(now) >= hours * 60 + minutes
+  return minutesNow(now) >= minutesOfDay(todayClass.end)
 }
 
-export function registerReading(payload: string, now = new Date()): string {
-  const value = payload.trim()
-  if (value === '' || /^https?:/i.test(value)) return wrongCode
-  if (value !== todayClass.code && value !== todayClass.pin) {
-    return wrongCode
-  }
-  if (!isClassDay(now)) return 'Hoy no tienes clase.'
-  if (classIsOver(now)) return 'La clase de hoy ya terminó.'
+// Comprueba lo leído del QR o lo escrito a mano. Devuelve el problema si no vale, o null si vale.
+export function classCodeProblem(payload: string, now: Date): CodeProblem | null {
+  const code = readClassCode(payload, todayClass.id)
+  if (code === null) return 'wrong-class'
+  if (!isCodeValidNow(code, todayClass.id, now)) return 'expired'
+  return null
+}
 
-  const email = useSessionStore.getState().email ?? exampleStudent.email
+// Apunta la entrada de hoy con la hora `at`. Quien ya entró hoy no se apunta dos veces.
+export function registerArrival(at: Date): CheckInResult {
+  if (!isClassDay(at)) return { registered: false, message: 'Hoy no tienes clase.' }
+  if (classIsOver(at)) return { registered: false, message: 'La clase de hoy ya terminó.' }
+
+  // Sin sesión no se apunta nada: la entrada siempre es de quien ha entrado.
+  const email = useSessionStore.getState().email
+  if (email === null) return { registered: false, message: 'Entra para registrar tu asistencia.' }
   const account = useStudentAccountsStore.getState().findByEmail(email)
-  const todayLabel = formatDay(now)
+  const todayLabel = formatDay(at)
   const previous = account?.history.find((entry) => entry.label === todayLabel)
-  if (previous) return `Ya estás dentro desde las ${previous.arrival ?? '—'}. ¡Disfruta la clase!`
+  if (previous) {
+    return {
+      registered: false,
+      message: `Ya estás dentro desde las ${previous.arrival ?? '—'}. ¡Disfruta la clase!`
+    }
+  }
 
-  const arrival = clockTime(now)
+  const arrival = clockTime(at)
   const status = statusForArrival(arrival, todayClass.start, lateMinutes)
-  useStudentAccountsStore.getState().recordEntry(email, {
-    label: todayLabel,
-    arrival,
-    status
-  })
-  return `${statusLabel[status]} · ${arrival}`
+  useStudentAccountsStore.getState().recordEntry(email, { label: todayLabel, arrival, status })
+  return { registered: true, arrival }
+}
+
+// El QR leído con la cámara o el código escrito en la pantalla de escanear.
+export function registerReading(payload: string, now = new Date()): CheckInResult {
+  const problem = classCodeProblem(payload, now)
+  if (problem !== null) return { registered: false, message: codeProblemMessage[problem] }
+  return registerArrival(now)
 }

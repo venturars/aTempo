@@ -14,6 +14,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminPeopleRouteImport } from './routes/admin/people'
+import { Route as StudentCheckInRouteImport } from './routes/student/check-in'
 import { Route as StudentDashboardRouteImport } from './routes/student/dashboard'
 import { Route as StudentHistoryRouteImport } from './routes/student/history'
 import { Route as StudentNoticeRouteImport } from './routes/student/notice'
@@ -51,6 +52,11 @@ const AdminPeopleRoute = AdminPeopleRouteImport.update({
   id: '/people',
   path: '/people',
   getParentRoute: () => AdminRoute,
+} as any)
+const StudentCheckInRoute = StudentCheckInRouteImport.update({
+  id: '/student/check-in',
+  path: '/student/check-in',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const StudentDashboardRoute = StudentDashboardRouteImport.update({
   id: '/student/dashboard',
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/sign-up': typeof SignUpRoute
   '/admin/people': typeof AdminPeopleRoute
+  '/student/check-in': typeof StudentCheckInRoute
   '/student/dashboard': typeof StudentDashboardRoute
   '/student/history': typeof StudentHistoryRoute
   '/student/notice': typeof StudentNoticeRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/sign-up': typeof SignUpRoute
   '/admin/people': typeof AdminPeopleRoute
+  '/student/check-in': typeof StudentCheckInRoute
   '/student/dashboard': typeof StudentDashboardRoute
   '/student/history': typeof StudentHistoryRoute
   '/student/notice': typeof StudentNoticeRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/sign-up': typeof SignUpRoute
   '/admin/people': typeof AdminPeopleRoute
+  '/student/check-in': typeof StudentCheckInRoute
   '/student/dashboard': typeof StudentDashboardRoute
   '/student/history': typeof StudentHistoryRoute
   '/student/notice': typeof StudentNoticeRoute
@@ -178,6 +187,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/sign-up'
     | '/admin/people'
+    | '/student/check-in'
     | '/student/dashboard'
     | '/student/history'
     | '/student/notice'
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/'
     | '/sign-up'
     | '/admin/people'
+    | '/student/check-in'
     | '/student/dashboard'
     | '/student/history'
     | '/student/notice'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/sign-up'
     | '/admin/people'
+    | '/student/check-in'
     | '/student/dashboard'
     | '/student/history'
     | '/student/notice'
@@ -233,6 +245,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   SignUpRoute: typeof SignUpRoute
+  StudentCheckInRoute: typeof StudentCheckInRoute
   StudentDashboardRoute: typeof StudentDashboardRoute
   StudentHistoryRoute: typeof StudentHistoryRoute
   StudentNoticeRoute: typeof StudentNoticeRoute
@@ -276,6 +289,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/people'
       preLoaderRoute: typeof AdminPeopleRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/student/check-in': {
+      id: '/student/check-in'
+      path: '/student/check-in'
+      fullPath: '/student/check-in'
+      preLoaderRoute: typeof StudentCheckInRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/student/dashboard': {
       id: '/student/dashboard'
@@ -406,6 +426,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   SignUpRoute: SignUpRoute,
+  StudentCheckInRoute: StudentCheckInRoute,
   StudentDashboardRoute: StudentDashboardRoute,
   StudentHistoryRoute: StudentHistoryRoute,
   StudentNoticeRoute: StudentNoticeRoute,
