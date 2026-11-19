@@ -1,8 +1,8 @@
 # aTempo
 
-aTempo registra la asistencia de los alumnos de una clase. Este repositorio tiene la aplicación de escritorio del profesor, el sitio web del alumno y la guía visual compartida.
+aTempo registra la asistencia de los alumnos de una clase. Este repositorio tiene la aplicación de escritorio del profesor y la guía visual compartida.
 
-La visión, los perfiles y las decisiones de producto están en [principles.md](principles.md).
+La visión, los perfiles y las decisiones de producto están en [principles.md](principles.md). El [sitio web del alumno](web/README.md) usa Vite, React y TanStack Router, y guarda los datos en `localStorage`.
 
 ## Qué hay
 
@@ -13,7 +13,6 @@ La visión, los perfiles y las decisiones de producto están en [principles.md](
 | `docs/storybook/` | Fuente de verdad visual: Tailwind y daisyUI. Las pantallas usan las clases. No hay un paquete de componentes. |
 | `docs/guia/` | Markdown generado desde Storybook. No se versiona. Lo leen los agentes. |
 | `docs/` | Cómo se construye: constitución, arquitectura, estilo y árbol de carpetas. |
-| `web/` | Sitio del alumno. Vite, React y TanStack Router. Guarda los datos en `localStorage`. Cómo arrancarlo está en [web/README.md](web/README.md). |
 
 Cada carpeta con código tiene su propio `package.json`. No hay workspace en la raíz. El gestor es pnpm 10.33.0 y las versiones van fijas.
 
