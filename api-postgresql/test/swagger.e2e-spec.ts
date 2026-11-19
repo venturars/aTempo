@@ -16,6 +16,7 @@ describe('Swagger (e2e)', () => {
       .overrideProvider(PostgresService)
       .useValue({
         check: async () => undefined,
+        listPersons: async () => [],
         listCourses: async () => [],
         listPersonRoles: async () => [],
         usesMock: () => true,
@@ -38,12 +39,13 @@ describe('Swagger (e2e)', () => {
       .expect('content-type', /html/)
   })
 
-  it('GET /docs-json exposes OpenAPI with /health, /course and /person-role', async () => {
+  it('GET /docs-json exposes OpenAPI with /health, /course, /person-role and /person', async () => {
     const response = await request(app.getHttpServer())
       .get('/docs-json')
       .expect(200)
 
     expect(response.body.paths).toHaveProperty('/health')
+    expect(response.body.paths).toHaveProperty('/person')
     expect(response.body.paths).toHaveProperty('/course')
     expect(response.body.paths).toHaveProperty('/person-role')
   })
