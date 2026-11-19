@@ -151,7 +151,11 @@ Con la lista abierta, el store pide el código a `getCheckInCode`. `SessionQr` d
 
 Con la lista abierta o cerrada, el profesor corrige la marca o la hora de entrada de un alumno. Cada corrección pide el motivo en `CorrectionReasonDialog`, un diálogo provisional, y se envía con `correctAttendance`. Elegir la marca que ya tiene no abre el diálogo. Corregir la hora vuelve a calcular Presente o Tarde con la misma regla. Solo un alumno Presente o Tarde tiene hora; una marca puesta a mano llega sin hora.
 
-Si una petición falla, la pestaña enseña un aviso y la marca no cambia. Ante un `409`, vuelve a leer la clase. `--api-fixture` elige la fixture del mock: `success`, `empty`, `denied`, `network`, `conflict` o `expired-code`.
+Los errores siguen la sección «Errores» del contrato. `ApiError` lleva `statusCode`, `error`, `code`, `message` y, en validación, `details`. Un error de conexión tiene `statusCode` 0. `withRequestRules`, en `client.ts`, envuelve cualquier transporte: corta una petición sin respuesta a los 10 segundos (`NETWORK_TIMEOUT`), acepta una señal para cancelarla (`REQUEST_CANCELLED`) y repite una vez una lectura que falla por la conexión. Una escritura nunca se repite.
+
+Si una petición falla, la pestaña enseña el mensaje que corresponde a su `code` y la marca no cambia; una cancelación no enseña nada. Tras un `409`, un `404` o un error de conexión, vuelve a leer la clase para enseñar cómo está de verdad. Un `401` vacía la pestaña y vuelve al login. Si falla la primera lectura, la pestaña ofrece «Reintentar».
+
+`--api-fixture` elige la fixture del mock: `success`, `empty`, `denied`, `unauthenticated`, `network`, `timeout`, `server-error`, `conflict` o `expired-code`.
 
 El menú de estado se puede usar con teclado: al abrirlo, el foco pasa a la primera opción; Tab recorre las opciones; al elegir una o pulsar Escape, el foco vuelve al botón de la fila. Se cierra si el foco o un clic van a otro control, al desplazar y al cambiar el tamaño de la ventana. La rotación no registra asistencia y el botón se deshabilita cuando no quedan candidatos.
 
