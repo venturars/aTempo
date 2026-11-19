@@ -25,18 +25,31 @@ Desde un arranque nuevo, usa el formulario **Entrar** con una de estas cuentas p
 | Profesor | `profesor@atempo.test` | `Profesor123!` | Hoy, en el panel del profesor |
 | Alumno | `ada.lopez@clase.test` | `clase-2026` | Dashboard de Ada López |
 
-No hay registro abierto: la organización invita a profesores y alumnos. La invitación llega por correo con un enlace. El enlace abre el login con un panel que explica aTempo con una semana de ejemplo y una tarjeta que saluda a la persona por su nombre de pila, dice con qué correo va a entrar y pide una contraseña de 8 caracteres o más en **Contraseña**. Al pulsar **Entrar** se crea la cuenta y se abre su dashboard. Para simular el enlace, arranca desde `desktop/` con su flag:
+### Probar la invitación de profesor
 
-| Perfil | Arranque | Destino |
-| --- | --- | --- |
-| Profesora | `pnpm dev -- --invitation=731905` | Hoy, como Lucía Martín (`lucia.martin@atempo.test`) |
-| Alumno | `pnpm dev -- --invitation=264018` | Dashboard de Bruno Sanz (`bruno.sanz@clase.test`) |
+Con las dependencias de `desktop/` instaladas, detén el arranque normal y abre la demo con este comando desde `desktop/`.
 
-Una invitación se activa una vez; después se entra con el correo y la contraseña elegida. Un enlace ya usado o desconocido abre el login con **Correo** y **Contraseña** y un aviso encima.
+```sh
+pnpm dev -- --invitation=731905
+```
+
+1. En **Hola, Lucía**, escribe una contraseña de al menos 8 caracteres y pulsa **Entrar**. Se activa `lucia.martin@atempo.test` y se abre **Hoy**.
+2. Pulsa tu nombre al pie de la barra lateral y selecciona **Cerrar sesión**. Vuelve a entrar con el correo de Lucía y la contraseña que elegiste.
+3. Si vuelves a abrir la misma invitación durante ese arranque, aparece el login con un aviso de que la cuenta ya está activada.
+
+El comando simula el enlace de invitación. El envío de correo y la apertura de Electron desde un enlace real están pendientes. Usa `--invitation=264018` para probar a Bruno Sanz como alumno o `--invitation=000000` para ver el aviso de enlace no válido.
+
+### Cambiar la contraseña del profesor
+
+1. En el panel de profesor, pulsa tu nombre y elige **Cambiar contraseña**.
+2. Escribe la contraseña actual y una nueva de al menos 8 caracteres. Repite la nueva y pulsa **Guardar contraseña**.
+3. Usa **Cerrar sesión** para comprobar que la contraseña anterior se rechaza y que la nueva abre el panel.
+
+Las invitaciones activadas y los cambios de contraseña duran hasta que recargas el renderer o reinicias Electron.
+
+### Probar el QR y las correcciones
 
 Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alumnos y pasar lista. El QR y el código de 6 cifras de debajo cambian cada 30 segundos. El QR es un enlace al sitio del alumno, `http://localhost:5191/student/check-in?code=ATEMPO-CLASE-1109-<código>`. Ese sitio es `web/`, que está en otra rama (#122, #137 y PR #123). Desde el móvil, `localhost` es el propio móvil. Para escanear con el móvil en la misma wifi, arranca desde `desktop/` con la IP del ordenador:
-
-En el menú de tu nombre puedes **Cambiar contraseña** con la actual y confirmar la nueva. **Cerrar sesión** vuelve al login. La nueva contraseña vale para volver a entrar durante el mismo arranque de la demo.
 
 ```sh
 VITE_STUDENT_SITE_URL=http://<ip-del-ordenador>:5191 pnpm dev
@@ -44,7 +57,7 @@ VITE_STUDENT_SITE_URL=http://<ip-del-ordenador>:5191 pnpm dev
 
 Con la lista cerrada, cambiar un estado pide un motivo. Al pasar el ratón por encima del estado se ve quién lo cambió, cuándo y por qué.
 
-Para cambiar de cuenta en el panel, pulsa tu nombre abajo en la barra lateral y elige **Salir**. En el inicio del alumno, pulsa **Salir**.
+En el escritorio del alumno, pulsa **Salir** en su inicio.
 
 Como alumno, pulsa **Registrar asistencia**, **Escanear** y **Llegar a las 08:58**. Debe aparecer el estado **Presente** con la hora **08:58**. Pulsa **Volver** y **Resumen de asistencia** para comprobar la nueva entrada en el historial.
 
