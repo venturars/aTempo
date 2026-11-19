@@ -279,7 +279,7 @@ pnpm install
 pnpm dev
 ```
 
-`pnpm typecheck` comprueba los tipos. `pnpm run test:visual` construye la app y ejecuta las pruebas de Playwright con Electron oculto en macOS. Antes de la suite se comprueba el arnés con el [smoke de escritorio](desktop/README.md#visual-test).
+`pnpm typecheck` comprueba los tipos. `pnpm run test:visual` construye la app y ejecuta las pruebas de Playwright con Electron oculto en macOS. Se lanza en tu ordenador, no en Docker. Antes de la suite se comprueba el arnés con el [smoke de escritorio](desktop/README.md#visual-test).
 
 Las pruebas Electron usan `tests/helpers/electron.ts` para ejecutar el main, preload y renderer construidos con las ventanas nativas ocultas. El arnés funciona en macOS y aborta en otras plataformas. Instala guardas antes de cargar el main, comprueba visibilidad y foco nativos y vigila el PID en primer plano desde antes del arranque hasta el cierre. Conserva las auditorías en el directorio temporal `atempo-hidden-*` indicado en la salida. El arranque normal con `pnpm dev` no cambia.
 
@@ -298,7 +298,7 @@ Tras pasar el smoke, construir Storybook desde `docs/storybook` con `pnpm build-
 pnpm run test:visual --workers=1 --retries=0 --global-timeout=300000 --update-snapshots=none
 ```
 
-La suite del sistema visual sirve y cierra su propia vista previa local de Storybook.
+La suite del sistema visual sirve `docs/storybook/storybook-static` en `http://127.0.0.1:6006` y lo cierra al terminar, aunque falle. Necesita las dependencias de `docs/storybook/` instaladas en tu ordenador (`pnpm install` en esa carpeta), no solo en Docker, y el puerto 6006 libre: si tienes Storybook en Docker, páralo antes con `docker compose stop storybook`.
 
 ### Ventana de Electron desde Docker (experimental)
 
