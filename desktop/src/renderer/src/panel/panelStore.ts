@@ -2,9 +2,11 @@ import { create } from 'zustand'
 import { getApiClient, getDemoControls } from '../api/client'
 import {
   ApiError,
+  isConnectionError,
   type AttendanceCorrection,
   type AttendanceRecord,
   type CheckInCode,
+  type ErrorCode,
   type Session
 } from '../api/contract'
 import { clockTime, dayOf, isoAt } from '../api/isoTime'
@@ -18,8 +20,9 @@ function validArrival(time: string): boolean {
 
 export type PanelTab = 0 | 1 | 2 | 3
 
-// Qué enseña la pestaña Hoy: cargando, la clase, sin clases, sin acceso o un fallo al leer.
-export type TodayLoad = 'loading' | 'ready' | 'empty' | 'denied' | 'failed'
+// Qué enseña la pestaña Hoy: cargando, la clase, sin clases, sin acceso, un fallo al leer
+// o la sesión caducada, que vuelve al login.
+export type TodayLoad = 'loading' | 'ready' | 'empty' | 'denied' | 'failed' | 'signedOut'
 
 export type TodayStudent = {
   studentId: string
@@ -57,6 +60,7 @@ type PanelState = {
   setStatsScroll: (scroll: number) => void
   setTab: (tab: PanelTab) => void
   loadToday: () => Promise<void>
+  resetToday: () => void
   openSession: () => Promise<void>
   askClose: () => void
   cancelClose: () => void
@@ -97,19 +101,42 @@ export function todayArrival(state: Pick<PanelState, 'records'>, studentId: stri
   return checkedInAt === null || checkedInAt === undefined ? '—' : clockTime(checkedInAt)
 }
 
+// El mensaje de cada `code` del contrato. Lo que no está aquí usa el mensaje genérico.
+const errorMessages: Partial<Record<ErrorCode, string>> = {
+  NETWORK_ERROR: 'No se ha podido conectar con el servidor. Inténtalo de nuevo.',
+  NETWORK_TIMEOUT: 'El servidor tarda demasiado en responder. Inténtalo de nuevo.',
+  FORBIDDEN: 'No tienes acceso a esta clase.',
+  SESSION_NOT_FOUND: 'Esta clase ya no existe.',
+  COURSE_NOT_FOUND: 'Este curso ya no existe.',
+  STUDENT_NOT_ENROLLED: 'Este alumno ya no está en la clase.',
+  SESSION_NOT_SCHEDULED: 'La lista ya se abrió desde otro sitio. Ya ves cómo está ahora.',
+  SESSION_NOT_TODAY: 'Esta lista solo se puede abrir el día de la clase.',
+  SESSION_NOT_OPEN: 'La lista ya no está abierta. Ya ves cómo está ahora.',
+  SESSION_NOT_EDITABLE: 'Esta lista no se puede corregir ahora.',
+  VALIDATION_FAILED: 'El cambio no es válido. Revisa la marca, la hora y el motivo.',
+  TOO_MANY_REQUESTS: 'Demasiados intentos. Espera un momento y vuelve a probar.'
+}
+
+const genericMessage = 'No se ha podido completar. Inténtalo de nuevo.'
+
 function errorMessage(error: unknown): string {
   if (error instanceof ApiError) {
-    if (error.statusCode === 0) {
-      return 'No se ha podido conectar con el servidor. Inténtalo de nuevo.'
-    }
-    if (error.statusCode === 403) {
-      return 'No tienes acceso a esta clase.'
-    }
-    if (error.statusCode === 409) {
-      return 'La clase ha cambiado desde otro sitio. Ya ves cómo está ahora.'
-    }
+    return errorMessages[error.code] ?? genericMessage
   }
-  return 'No se ha podido guardar el cambio. Inténtalo de nuevo.'
+  return genericMessage
+}
+
+function hasCode(error: unknown, code: ErrorCode): boolean {
+  return error instanceof ApiError && error.code === code
+}
+
+// Tras estos errores, la pantalla vuelve a leer la clase para enseñar cómo está de verdad:
+// un 409 o un 404 porque cambió en otro sitio, y uno de conexión porque no se sabe si se aplicó.
+function needsReread(error: unknown): boolean {
+  return (
+    (error instanceof ApiError && (error.statusCode === 409 || error.statusCode === 404)) ||
+    (isConnectionError(error) && !hasCode(error, 'REQUEST_CANCELLED'))
+  )
 }
 
 function recordsById(records: AttendanceRecord[]): Record<string, AttendanceRecord> {
@@ -165,10 +192,18 @@ export const usePanelStore = create<PanelState>((set, get) => {
     await showSession(session)
   }
 
-  // Enseña el error. Si la clase cambió desde otro sitio (409), la vuelve a leer.
+  // Enseña el error de una escritura y, si hace falta, vuelve a leer la clase.
+  // Una cancelación no enseña nada. Una sesión caducada vuelve al login.
   async function showFailure(error: unknown, sessionId: string): Promise<void> {
+    if (hasCode(error, 'REQUEST_CANCELLED')) {
+      return
+    }
+    if (hasCode(error, 'UNAUTHENTICATED')) {
+      set({ todayLoad: 'signedOut' })
+      return
+    }
     set({ todayError: errorMessage(error) })
-    if (error instanceof ApiError && error.statusCode === 409) {
+    if (needsReread(error)) {
       try {
         await reloadSession(sessionId)
       } catch {
@@ -188,8 +223,17 @@ export const usePanelStore = create<PanelState>((set, get) => {
       }
       await showSession(session)
     } catch (error) {
-      const denied = error instanceof ApiError && error.statusCode === 403
-      set({ todayLoad: denied ? 'denied' : 'failed', todayError: errorMessage(error) })
+      if (hasCode(error, 'REQUEST_CANCELLED')) {
+        return
+      }
+      if (hasCode(error, 'UNAUTHENTICATED')) {
+        set({ todayLoad: 'signedOut' })
+        return
+      }
+      set({
+        todayLoad: hasCode(error, 'FORBIDDEN') ? 'denied' : 'failed',
+        todayError: errorMessage(error)
+      })
     }
   }
 
@@ -223,6 +267,20 @@ export const usePanelStore = create<PanelState>((set, get) => {
         todayRequest = null
       })
       return todayRequest
+    },
+    // Deja la pestaña Hoy como al arrancar. Se usa al volver al login.
+    resetToday: () => {
+      set({
+        todayLoad: 'loading',
+        session: null,
+        students: [],
+        records: {},
+        checkInCode: null,
+        todayError: null,
+        canSimulateArrival: false,
+        demoArrivals: {},
+        pendingCorrection: null
+      })
     },
     openSession: async () => {
       const session = get().session
@@ -288,7 +346,12 @@ export const usePanelStore = create<PanelState>((set, get) => {
         const code = await getApiClient().getCheckInCode(session.id)
         set({ checkInCode: code })
       } catch (error) {
-        set({ todayError: errorMessage(error) })
+        // Sin volver a leer: leer la clase abierta pide otra vez el código.
+        if (hasCode(error, 'UNAUTHENTICATED')) {
+          set({ todayLoad: 'signedOut' })
+        } else if (!hasCode(error, 'REQUEST_CANCELLED')) {
+          set({ todayError: errorMessage(error) })
+        }
       }
     },
     simulateArrival: async () => {

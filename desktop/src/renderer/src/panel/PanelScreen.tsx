@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { clockTime } from '../api/isoTime'
 import {
   todayArrival,
@@ -243,6 +244,8 @@ function TodayView(): React.JSX.Element {
   const todayLoad = usePanelStore((state) => state.todayLoad)
   const todayError = usePanelStore((state) => state.todayError)
   const loadToday = usePanelStore((state) => state.loadToday)
+  const resetToday = usePanelStore((state) => state.resetToday)
+  const navigate = useNavigate()
 
   // La clase de hoy se pide una vez. Al volver a la pestaña, ya está cargada.
   useEffect(() => {
@@ -251,6 +254,14 @@ function TodayView(): React.JSX.Element {
     }
   }, [todayLoad, loadToday])
 
+  // Con la sesión caducada (401), se vuelve al login.
+  useEffect(() => {
+    if (todayLoad === 'signedOut') {
+      resetToday()
+      void navigate({ to: '/' })
+    }
+  }, [todayLoad, resetToday, navigate])
+
   const alert =
     todayError === null ? null : (
       <div role="alert" className="alert alert-error alert-soft">
@@ -258,7 +269,7 @@ function TodayView(): React.JSX.Element {
       </div>
     )
 
-  if (todayLoad === 'loading') {
+  if (todayLoad === 'loading' || todayLoad === 'signedOut') {
     return (
       <section className="card bg-base-100 shadow-sm">
         <div className="card-body items-center">
@@ -267,8 +278,18 @@ function TodayView(): React.JSX.Element {
       </section>
     )
   }
-  if (todayLoad === 'denied' || todayLoad === 'failed') {
+  if (todayLoad === 'denied') {
     return <>{alert}</>
+  }
+  if (todayLoad === 'failed') {
+    return (
+      <>
+        {alert}
+        <button type="button" className="btn w-fit" onClick={() => void loadToday()}>
+          Reintentar
+        </button>
+      </>
+    )
   }
   if (todayLoad === 'empty') {
     return (

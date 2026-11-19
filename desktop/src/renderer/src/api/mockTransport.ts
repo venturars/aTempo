@@ -6,6 +6,8 @@ import {
   type AttendanceRecord,
   type CheckInCode,
   type CourseStudent,
+  type FieldError,
+  type ServerErrorCode,
   type Session
 } from './contract'
 import {
@@ -49,24 +51,56 @@ type MockState = {
   codesServed: number
 }
 
-function notFound(what: string): ApiError {
-  return new ApiError(404, 'Not Found', `${what} no existe.`)
+// Los errores que responde el mock, con el estado y el `code` del contrato.
+
+function notFound(code: ServerErrorCode, message: string): ApiError {
+  return new ApiError(404, 'Not Found', code, message)
 }
 
-function conflict(message: string): ApiError {
-  return new ApiError(409, 'Conflict', message)
+function conflict(code: ServerErrorCode, message: string): ApiError {
+  return new ApiError(409, 'Conflict', code, message)
 }
 
-function badRequest(message: string): ApiError {
-  return new ApiError(400, 'Bad Request', message)
+function invalid(details: FieldError[]): ApiError {
+  return new ApiError(400, 'Bad Request', 'VALIDATION_FAILED', 'La petición no es válida.', details)
 }
 
 function forbidden(): ApiError {
-  return new ApiError(403, 'Forbidden', 'No tienes acceso a este recurso.')
+  return new ApiError(403, 'Forbidden', 'FORBIDDEN', 'No tienes acceso a este recurso.')
+}
+
+function unauthenticated(): ApiError {
+  return new ApiError(
+    401,
+    'Unauthorized',
+    'UNAUTHENTICATED',
+    'La sesión no es válida o ha caducado.'
+  )
 }
 
 function noResponse(): ApiError {
-  return new ApiError(0, 'Network Error', 'No hay respuesta del servidor.')
+  return new ApiError(0, 'Network Error', 'NETWORK_ERROR', 'No hay respuesta del servidor.')
+}
+
+function serverError(): ApiError {
+  return new ApiError(500, 'Internal Server Error', 'INTERNAL_ERROR', 'Error inesperado.')
+}
+
+const correctedStatuses = ['present', 'late', 'absent']
+
+// Las comprobaciones del body de PUT /sessions/:sessionId/attendances/:studentId.
+function correctionErrors(correction: AttendanceCorrection): FieldError[] {
+  const errors: FieldError[] = []
+  if (!correctedStatuses.includes(correction.status)) {
+    errors.push({ field: 'status', message: 'La marca tiene que ser present, late o absent.' })
+  }
+  if (typeof correction.reason !== 'string' || correction.reason.trim() === '') {
+    errors.push({ field: 'reason', message: 'El motivo es obligatorio.' })
+  }
+  if (correction.status === 'absent' && correction.checkedInAt !== undefined) {
+    errors.push({ field: 'checkedInAt', message: 'Un alumno ausente no tiene hora de entrada.' })
+  }
+  return errors
 }
 
 function pendingRecord(student: CourseStudent): AttendanceRecord {
@@ -91,25 +125,35 @@ export function createMockTransport(fixture: FixtureName): MockTransport {
     codesServed: 0
   }
 
-  // Con la fixture denied, nada pasa del control de acceso.
+  // Con denied o unauthenticated, nada pasa del control de acceso.
   function checkAccess(): void {
     if (fixture === 'denied') {
       throw forbidden()
     }
+    if (fixture === 'unauthenticated') {
+      throw unauthenticated()
+    }
   }
 
-  // Con la fixture network, las escrituras no llegan al servidor.
-  function checkWrite(): void {
+  // Con network, timeout o server-error, las escrituras fallan cada una a su manera.
+  async function checkWrite(): Promise<void> {
     checkAccess()
     if (fixture === 'network') {
       throw noResponse()
+    }
+    if (fixture === 'server-error') {
+      throw serverError()
+    }
+    if (fixture === 'timeout') {
+      // Nunca responde: el cliente corta a los 10 segundos.
+      await new Promise<never>(() => {})
     }
   }
 
   function findSession(sessionId: string): Session {
     const session = state.sessions.find((item) => item.id === sessionId)
     if (session === undefined) {
-      throw notFound('La sesión')
+      throw notFound('SESSION_NOT_FOUND', 'La sesión no existe.')
     }
     return session
   }
@@ -117,7 +161,7 @@ export function createMockTransport(fixture: FixtureName): MockTransport {
   function findStudent(studentId: string): CourseStudent {
     const student = state.students.find((item) => item.studentId === studentId)
     if (student === undefined) {
-      throw notFound('El alumno')
+      throw notFound('STUDENT_NOT_ENROLLED', 'El alumno no está matriculado.')
     }
     return student
   }
@@ -175,12 +219,17 @@ export function createMockTransport(fixture: FixtureName): MockTransport {
     checkAccess()
     const session = findSession(sessionId)
     if (session.state !== 'open') {
-      throw badRequest('El código no es válido o ha caducado.')
+      throw new ApiError(
+        400,
+        'Bad Request',
+        'CHECK_IN_CODE_INVALID',
+        'El código no corresponde a ninguna sesión abierta.'
+      )
     }
     findStudent(studentId)
     const record = recordsOf(sessionId)[studentId]
     if (record === undefined) {
-      throw new ApiError(403, 'Forbidden', 'El alumno no está matriculado.')
+      throw notFound('STUDENT_NOT_ENROLLED', 'El alumno no está matriculado.')
     }
     if (record.status !== 'pending') {
       return { ...record }
@@ -197,6 +246,9 @@ export function createMockTransport(fixture: FixtureName): MockTransport {
   const client: ApiClient = {
     listSessions: async (date) => {
       checkAccess()
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        throw invalid([{ field: 'date', message: 'La fecha tiene que ser AAAA-MM-DD.' }])
+      }
       return state.sessions
         .filter((session) => dayOf(session.startsAt) === date)
         .map((session) => ({ ...session }))
@@ -214,28 +266,27 @@ export function createMockTransport(fixture: FixtureName): MockTransport {
     },
 
     openSession: async (sessionId) => {
-      checkWrite()
+      await checkWrite()
       const session = findSession(sessionId)
       if (fixture === 'conflict' && session.state === 'scheduled') {
         // Otra persona la abrió antes: el servidor ya la tiene abierta.
         startSession(session)
-        throw conflict('La sesión ya está abierta.')
       }
       if (session.state !== 'scheduled') {
-        throw conflict('La sesión no está programada.')
+        throw conflict('SESSION_NOT_SCHEDULED', 'La sesión no está programada.')
       }
       if (dayOf(session.startsAt) !== sampleToday) {
-        throw conflict('La sesión solo se puede abrir el día de la clase.')
+        throw conflict('SESSION_NOT_TODAY', 'La sesión solo se puede abrir el día de la clase.')
       }
       startSession(session)
       return { ...session }
     },
 
     closeSession: async (sessionId) => {
-      checkWrite()
+      await checkWrite()
       const session = findSession(sessionId)
       if (session.state !== 'open') {
-        throw conflict('La sesión no está abierta.')
+        throw conflict('SESSION_NOT_OPEN', 'La sesión no está abierta.')
       }
       const closedAt = new Date().toISOString()
       for (const record of Object.values(recordsOf(sessionId))) {
@@ -253,7 +304,7 @@ export function createMockTransport(fixture: FixtureName): MockTransport {
       checkAccess()
       const session = findSession(sessionId)
       if (session.state !== 'open') {
-        throw conflict('La sesión no está abierta.')
+        throw conflict('SESSION_NOT_OPEN', 'La sesión no está abierta.')
       }
       state.codesServed += 1
       const code = currentCode(sessionId)
@@ -263,22 +314,21 @@ export function createMockTransport(fixture: FixtureName): MockTransport {
       return code
     },
 
-    correctAttendance: async (sessionId, studentId, correction: AttendanceCorrection) => {
-      checkWrite()
-      const session = findSession(sessionId)
-      if (session.state !== 'open' && session.state !== 'closed') {
-        throw conflict('La sesión no está abierta ni cerrada.')
+    correctAttendance: async (sessionId, studentId, correction) => {
+      await checkWrite()
+      // Como el ValidationPipe de NestJS: el body se comprueba antes que nada.
+      const errors = correctionErrors(correction)
+      if (errors.length > 0) {
+        throw invalid(errors)
       }
+      const session = findSession(sessionId)
       findStudent(studentId)
+      if (session.state !== 'open' && session.state !== 'closed') {
+        throw conflict('SESSION_NOT_EDITABLE', 'La sesión no está abierta ni cerrada.')
+      }
       const record = recordsOf(sessionId)[studentId]
       if (record === undefined) {
-        throw notFound('El alumno')
-      }
-      if (correction.reason.trim() === '') {
-        throw badRequest('El motivo es obligatorio.')
-      }
-      if (correction.status === 'absent' && correction.checkedInAt !== undefined) {
-        throw badRequest('Un alumno ausente no tiene hora de entrada.')
+        throw notFound('STUDENT_NOT_ENROLLED', 'El alumno no está matriculado.')
       }
       record.status = correction.status
       if (correction.status === 'absent') {
@@ -295,7 +345,7 @@ export function createMockTransport(fixture: FixtureName): MockTransport {
     listCourseStudents: async (courseId) => {
       checkAccess()
       if (!state.sessions.some((session) => session.courseId === courseId)) {
-        throw notFound('El curso')
+        throw notFound('COURSE_NOT_FOUND', 'El curso no existe.')
       }
       return state.students.map((student) => ({ ...student }))
     }
@@ -316,10 +366,10 @@ export function createMockTransport(fixture: FixtureName): MockTransport {
     arrive,
 
     reopenSession: async (sessionId) => {
-      checkWrite()
+      await checkWrite()
       const session = findSession(sessionId)
       if (session.state !== 'closed') {
-        throw conflict('La sesión no está cerrada.')
+        throw conflict('SESSION_NOT_OPEN', 'La sesión no está cerrada.')
       }
       session.state = 'open'
       state.openedAt[sessionId] = Date.now()

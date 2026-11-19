@@ -5,15 +5,21 @@ import { isoAt } from './isoTime'
 // Cada fixture prepara el mock para un caso. Se elige al arrancar con --api-fixture=<nombre>.
 // - success: la clase de hoy, programada, con quince alumnos.
 // - empty: el profesor no tiene clases hoy.
-// - denied: todas las peticiones responden 403.
+// - denied: todas las peticiones responden 403 FORBIDDEN.
+// - unauthenticated: todas las peticiones responden 401 UNAUTHENTICATED, como con el token caducado.
 // - network: las lecturas funcionan y las escrituras fallan sin respuesta del servidor.
+// - timeout: las lecturas funcionan y las escrituras nunca responden.
+// - server-error: las lecturas funcionan y las escrituras responden 500 INTERNAL_ERROR.
 // - conflict: al abrir, la sesión ya estaba abierta desde otro sitio y responde 409.
 // - expired-code: el primer código del QR llega ya caducado.
 export const fixtureNames = [
   'success',
   'empty',
   'denied',
+  'unauthenticated',
   'network',
+  'timeout',
+  'server-error',
   'conflict',
   'expired-code'
 ] as const
