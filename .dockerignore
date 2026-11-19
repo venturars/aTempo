@@ -1,2 +1,6 @@
-# La imagen no copia nada del repositorio: el proyecto llega montado.
+# La imagen no copia el repositorio: el proyecto llega montado.
+# Solo entra el entrypoint, que tiene que vivir dentro de la imagen.
 *
+!docker/
+docker/*
+!docker/entrypoint.sh
