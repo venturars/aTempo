@@ -17,9 +17,14 @@ type PersonRow = {
   email: string
   first_name: string
   last_name: string
-  birth_date: Date | string | null
+  birth_date: string | null
   phone: string | null
 }
+
+// birth_date se formatea en SQL: pg lo convierte en medianoche local y
+// toISOString() lo pasaría a UTC, restando un día en zonas al este de UTC.
+const PERSON_COLUMNS = `id, identification_document, email, first_name, last_name,
+  to_char(birth_date, 'YYYY-MM-DD') AS birth_date, phone`
 
 @Injectable()
 export class PostgresService implements OnModuleDestroy {
@@ -50,12 +55,9 @@ export class PostgresService implements OnModuleDestroy {
   async listPersons(): Promise<PersonResponseDto[]> {
     if (this.usesMock()) return POSTGRES_MOCK_PERSONS
     const result = await this.poolFor(process.env.DATABASE_URL!).query<PersonRow>(
-      'SELECT id, identification_document, email, first_name, last_name, birth_date, phone FROM person',
+      `SELECT ${PERSON_COLUMNS} FROM person`,
     )
-    return result.rows.map((row) => ({
-      ...row,
-      birth_date: formatBirthDate(row.birth_date),
-    }))
+    return result.rows
   }
 
   async findPersonById(id: string): Promise<PersonResponseDto | null> {
@@ -63,13 +65,10 @@ export class PostgresService implements OnModuleDestroy {
       return POSTGRES_MOCK_PERSONS.find((person) => person.id === id) ?? null
     }
     const result = await this.poolFor(process.env.DATABASE_URL!).query<PersonRow>(
-      'SELECT id, identification_document, email, first_name, last_name, birth_date, phone FROM person WHERE id = $1',
+      `SELECT ${PERSON_COLUMNS} FROM person WHERE id = $1`,
       [id],
     )
-    const row = result.rows[0]
-    return row === undefined
-      ? null
-      : { ...row, birth_date: formatBirthDate(row.birth_date) }
+    return result.rows[0] ?? null
   }
 
   async listCourses(): Promise<CourseResponseDto[]> {
@@ -114,11 +113,6 @@ export class PostgresService implements OnModuleDestroy {
   async onModuleDestroy(): Promise<void> {
     await this.pool?.end()
   }
-}
-
-function formatBirthDate(value: Date | string | null): string | null {
-  if (value === null) return null
-  return value instanceof Date ? value.toISOString().slice(0, 10) : value
 }
 
 function formatTimestamp(value: Date | string): string {
