@@ -24,6 +24,10 @@ python -m pip install -e .
 
 Las dependencias de Flask, Pydantic, SQLAlchemy Core y Flasgger están fijadas en `pyproject.toml`.
 
+## Docker Compose
+
+Desde la raíz, ejecuta `docker compose run --rm setup` para instalar el paquete en un entorno virtual Linux y luego `docker compose up api-sqlite`. El servicio queda en <http://localhost:3002>; dentro del contenedor escucha en `0.0.0.0`. El entorno virtual persiste en `api-sqlite-venv` y la base en `api-sqlite-data`. Esta base es independiente de la SQLite de Electron. Para ejecutar las pruebas dentro del contenedor: `docker compose run --rm api-sqlite /work/api-sqlite/.venv/bin/python -m unittest discover -s tests -v`.
+
 ## Arranque y configuración
 
 Con el entorno activado:

@@ -22,6 +22,7 @@ describe('Course (e2e)', () => {
         check: postgres.check ?? (async () => undefined),
         listCourses:
           postgres.listCourses ?? (async () => POSTGRES_MOCK_COURSES),
+        listPersonRoles: async () => [],
         usesMock: () => true,
       })
       .compile()
