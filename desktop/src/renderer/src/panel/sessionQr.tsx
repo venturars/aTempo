@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 function qrModules(size: number, seed: number): boolean[][] {
   const grid = Array.from({ length: size }, () => Array<boolean>(size).fill(false))
@@ -34,8 +34,22 @@ function inFinder(x: number, y: number, size: number): boolean {
   return corner(0, 0) || corner(size - 7, 0) || corner(0, size - 7)
 }
 
-export function SessionQr({ openedAt }: { openedAt: number }): React.JSX.Element {
+const renewRetryDelay = 5000
+
+export function SessionQr({
+  code,
+  expiresAt,
+  onExpire
+}: {
+  code: string | null
+  expiresAt: string | null
+  onExpire: () => Promise<boolean>
+}): React.JSX.Element {
   const [now, setNow] = useState(() => Date.now())
+  const renewing = useRef(false)
+  const lastRenewal = useRef(0)
+  const expiry = expiresAt === null ? 0 : Date.parse(expiresAt)
+
   useEffect(() => {
     const refresh = (): void => setNow(Date.now())
     const interval = window.setInterval(refresh, 1000)
@@ -46,13 +60,26 @@ export function SessionQr({ openedAt }: { openedAt: number }): React.JSX.Element
       document.removeEventListener('visibilitychange', refresh)
       window.removeEventListener('focus', refresh)
     }
-  }, [openedAt])
+  }, [expiresAt])
 
-  const elapsed = Math.max(0, now - openedAt)
-  const period = Math.floor(elapsed / 30000)
-  const seconds = Math.ceil((30000 - (elapsed % 30000)) / 1000)
+  const expired = code === null || now >= expiry
+  useEffect(() => {
+    if (!expired || renewing.current || now - lastRenewal.current < renewRetryDelay) {
+      return
+    }
+    renewing.current = true
+    lastRenewal.current = now
+    void onExpire().then((requested) => {
+      renewing.current = false
+      if (!requested) {
+        lastRenewal.current = 0
+      }
+    })
+  }, [expired, now, onExpire])
+
+  const seconds = Math.min(30, Math.max(1, Math.ceil((expiry - now) / 1000)))
   const size = 21
-  const cells = useMemo(() => qrModules(size, openedAt + period), [openedAt, period])
+  const cells = useMemo(() => (code === null ? [] : qrModules(size, Number(code))), [code])
   return (
     <div className="flex shrink-0 flex-col items-center gap-2">
       <p className="text-sm font-medium">QR de ejemplo</p>
@@ -77,9 +104,16 @@ export function SessionQr({ openedAt }: { openedAt: number }): React.JSX.Element
           )
         )}
       </svg>
-      <p className="text-sm">
-        Cambia en {seconds} {seconds === 1 ? 'segundo' : 'segundos'}
-      </p>
+      {code === null ? (
+        <p className="text-sm">Pidiendo el código…</p>
+      ) : (
+        <>
+          <p className="text-sm font-medium tabular-nums">Código {code}</p>
+          <p className="text-sm">
+            Cambia en {seconds} {seconds === 1 ? 'segundo' : 'segundos'}
+          </p>
+        </>
+      )}
     </div>
   )
 }

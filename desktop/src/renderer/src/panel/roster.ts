@@ -326,29 +326,3 @@ export function studentSummary(
     abs
   }
 }
-
-export function rollStatus(
-  phase: Phase,
-  marks: Record<number, Attendance>,
-  index: number
-): Attendance | 'none' {
-  if (phase === 'programada') {
-    return 'none'
-  }
-  return marks[index] ?? 'pendiente'
-}
-
-export function rollTime(
-  status: Attendance | 'none',
-  index: number,
-  times: Record<number, string> = {}
-): string {
-  const saved = times[index]
-  if (saved !== undefined) {
-    return saved
-  }
-  if (status === 'presente' || status === 'retraso') {
-    return todayEntry[index] ?? '—'
-  }
-  return '—'
-}

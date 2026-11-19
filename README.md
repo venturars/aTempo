@@ -25,7 +25,9 @@ Desde un arranque nuevo, usa el formulario **Entrar** con una de estas cuentas p
 | Profesor | `profesor@atempo.test` | `Profesor123!` | Hoy, en el panel del profesor |
 | Alumno | `ada.lopez@clase.test` | `clase-2026` | Dashboard de Ada López |
 
-Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alumnos y pasar lista.
+Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alumnos y pasar lista. Cada cambio de marca o de hora pide un motivo.
+
+La pestaña Hoy usa un cliente de la API con datos simulados. Para ver otro caso, arranca desde `desktop/` con `pnpm exec electron-vite dev -- --api-fixture=<nombre>`: `empty` (sin clases hoy), `denied` (sin acceso), `unauthenticated` (sesión caducada: vuelve al login), `network` (las escrituras no llegan), `timeout` (las escrituras no responden en 10 segundos), `server-error` (las escrituras responden 500), `conflict` (la clase se abrió desde otro sitio) `expired-code` (el primer código del QR llega caducado) o `code-unavailable` (las dos primeras peticiones del código fallan).
 
 Para probar al alumno desde el login, sal completamente de la aplicación: en macOS usa **Cmd+Q**; cerrar solo la ventana no termina el proceso. Detén también `pnpm dev` con **Ctrl+C** en su terminal y vuelve a ejecutar `pnpm dev` desde `desktop/`.
 
