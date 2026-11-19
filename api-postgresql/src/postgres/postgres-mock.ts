@@ -2,6 +2,7 @@ import type { CourseResponseDto } from '../course/course-response.dto'
 import type { PersonResponseDto } from '../person/person-response.dto'
 import type { PersonCourseResponseDto } from '../person-course/person-course-response.dto'
 import type { PersonRoleResponseDto } from '../person-role/person-role-response.dto'
+import type { OrganizationResponseDto } from '../organization/organization-response.dto'
 
 /** Datos de prueba cuando no hay conexión PostgreSQL configurada. */
 export const POSTGRES_MOCK_PERSONS: PersonResponseDto[] = [
@@ -25,6 +26,15 @@ export const POSTGRES_MOCK_COURSES: CourseResponseDto[] = [
     start_at: '2026-09-01T08:00:00.000Z',
     end_at: '2027-06-30T17:00:00.000Z',
     contract_address: '0x5fbdb2315678afecb367f032d93f642f64180aa3',
+  },
+]
+
+// Organización de ejemplo para probar GET /organization sin PostgreSQL.
+export const POSTGRES_MOCK_ORGANIZATIONS: OrganizationResponseDto[] = [
+  {
+    id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+    name: 'Academia Horizonte',
+    tax_id: 'B12345678',
   },
 ]
 

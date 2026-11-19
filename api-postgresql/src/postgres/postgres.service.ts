@@ -1,11 +1,13 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common'
 import { Pool } from 'pg'
 import type { CourseResponseDto } from '../course/course-response.dto'
+import type { OrganizationResponseDto } from '../organization/organization-response.dto'
 import type { PersonCourseResponseDto } from '../person-course/person-course-response.dto'
 import type { PersonResponseDto } from '../person/person-response.dto'
 import type { PersonRoleResponseDto } from '../person-role/person-role-response.dto'
 import {
   POSTGRES_MOCK_COURSES,
+  POSTGRES_MOCK_ORGANIZATIONS,
   POSTGRES_MOCK_PERSON_COURSES,
   POSTGRES_MOCK_PERSONS,
   POSTGRES_MOCK_PERSON_ROLES,
@@ -89,6 +91,16 @@ export class PostgresService implements OnModuleDestroy {
       start_at: formatTimestamp(row.start_at),
       end_at: formatTimestamp(row.end_at),
     }))
+  }
+
+  async listOrganizations(): Promise<OrganizationResponseDto[]> {
+    if (this.usesMock()) return POSTGRES_MOCK_ORGANIZATIONS
+    const result = await this.poolFor(
+      process.env.DATABASE_URL!,
+    ).query<OrganizationResponseDto>(
+      'SELECT id, name, tax_id FROM organization',
+    )
+    return result.rows
   }
 
   async listPersonRoles(): Promise<PersonRoleResponseDto[]> {

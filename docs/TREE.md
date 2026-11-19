@@ -118,12 +118,18 @@ api-postgresql/
       person-course.controller.ts
       person-course.service.ts
       person-course-response.dto.ts
+    organization/
+      organization.module.ts
+      organization.controller.ts
+      organization.service.ts
+      organization-response.dto.ts
   test/
     health.e2e-spec.ts
     course.e2e-spec.ts
     person.e2e-spec.ts
     person-role.e2e-spec.ts
     person-course.e2e-spec.ts
+    organization.e2e-spec.ts
     swagger.e2e-spec.ts
     jest-e2e.json
 ```
