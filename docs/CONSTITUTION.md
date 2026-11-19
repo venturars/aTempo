@@ -60,5 +60,5 @@ El API-router no accede a RustFS; la SDK consumirá este servicio cuando exista.
 ## 7. Dónde seguir
 
 - [STYLE.md](STYLE.md): los dos temas y el enlace a la guía visual.
-- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio y flujo de `api-router/` y las APIs de persistencia; se prevén la SDK y más APIs.
-- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/`, `api-postgresql/`, `api-rustfs/` y `api-sqlite/`; se prevén `sdk/` y más carpetas de APIs.
+- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, flujo de `api-router/` y las APIs de persistencia, y los almacenes; se prevén la SDK y más APIs.
+- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/`, `api-postgresql/`, `api-rustfs/`, `api-sqlite/` y los almacenes; se prevén `sdk/` y más carpetas de APIs.

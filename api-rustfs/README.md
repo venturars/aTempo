@@ -6,9 +6,9 @@ Hoy solo expone `GET /health`, igual que `api-router/`: confirma que el servicio
 
 ## Docker Compose
 
-Después de `docker compose run --rm setup`, desde la raíz ejecuta `docker compose up api-rustfs` para iniciar la API y RustFS. La API queda en <http://localhost:3003>; los puertos S3 (9000) y consola (9001) permanecen internos a Compose. El volumen `rustfs-data` conserva los objetos al recrear el servicio.
+Después de `docker compose run --rm setup`, desde la raíz ejecuta `docker compose up api-rustfs` para iniciar la API y RustFS. La API queda en <http://localhost:3003>; RustFS publica S3 en `localhost:9000` y la consola en `localhost:9001`. Dentro de Compose, la API se conecta a `rustfs:9000`. El volumen compartido `rustfs-data` conserva los objetos al recrear servicios.
 
-En Compose se usan las credenciales `devadmin` y `devsecret`, solo para desarrollo. `/health` conserva su contrato y verifica únicamente HTTP; la conectividad S3 se prueba aparte con `checkRustfsWithDefaultClient` en la validación Docker.
+Compose usa `RUSTFS_ACCESS_KEY` y `RUSTFS_SECRET_KEY`, compartidas por la API y RustFS. Si no se definen, el entorno de desarrollo usa `atempo` y `atempoatempo`; cámbialas en `.env` antes de exponer los puertos a una red. `/health` conserva su contrato y verifica únicamente HTTP; la conectividad S3 se prueba aparte con `checkRustfsWithDefaultClient` en la validación Docker.
 
 Ejecuta `docker compose run --rm api-rustfs pnpm test`; cambia `test` por `typecheck`, `lint` o `build` para las otras comprobaciones.
 

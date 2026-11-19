@@ -46,11 +46,23 @@ El lector del alumno ofrece lecturas simuladas y no usa cámara. Estos flujos no
 | `api-postgresql/` | API REST con NestJS entre la SDK y PostgreSQL. |
 | `api-rustfs/` | API REST con Express entre la SDK y RustFS (persistencia de objetos). |
 | `api-sqlite/` | Servicio Flask con Pydantic y SQLAlchemy Core entre la SDK prevista y SQLite. |
+| `postgres/` | Core PostgreSQL y Drizzle Studio para ver sus tablas. No se abre desde el escritorio ni desde el API-router. |
+| `sqlite/` | SQLite operativo de fichaje y Datasette. Distinto del `atempo.sqlite` del escritorio. |
+| `rustfs/` | Justificantes (bucket `justifications`) y consola de RustFS. |
+| `blockend/` | Anvil, Hardhat, contrato por curso y Otterscan. |
 | `docs/storybook/` | Fuente de verdad visual: Tailwind y daisyUI. Las pantallas usan las clases. No hay un paquete de componentes. |
 | `docs/guia/` | Markdown generado desde Storybook. No se versiona. Lo leen los agentes. |
-| `docs/` | Cómo se construye: constitución, arquitectura, estilo y árbol de carpetas. |
+| `docs/` | Cómo se construye: constitución, arquitectura, estilo, árbol y modelo de cada almacén. |
+| `permanent-data.md` | Enlaces entre las cuatro bases. No es un quinto almacén. |
 
-Cada servicio tiene sus dependencias propias y no hay workspace en la raíz. Los paquetes JavaScript usan pnpm 10.33.0 y versiones fijas. `api-sqlite/` usa Python y dependencias fijadas en `pyproject.toml`.
+Cada servicio tiene sus dependencias propias y no hay workspace en la raíz. Los paquetes JavaScript usan pnpm 10.33.0 y versiones fijas. `api-sqlite/` usa Python y dependencias fijadas en `pyproject.toml`. `postgres/`, `sqlite/`, `blockend/` y `rustfs/` se instalan y arrancan en el ordenador. Compose de la raíz orquesta los mismos procesos, cada uno con su perfil (`db`, `sqlite`, `blockend` y `rustfs`); no es requisito. Ninguno entra en el compose de instalación. El modelo de cada una está en `docs/` (nombres en MAYÚSCULAS) y el arranque nativo en su `README.md`.
+
+| Almacén | Visor | URL |
+| --- | --- | --- |
+| PostgreSQL | Drizzle Studio | <https://local.drizzle.studio> |
+| SQLite operativo | Datasette | <http://localhost:8001> |
+| RustFS | Consola | <http://localhost:9001/rustfs/console/> |
+| Anvil | Otterscan | <http://localhost:5100> |
 
 ## Instalación
 
@@ -79,13 +91,176 @@ docker compose run --rm setup
 
 La primera vez, `setup` construye la imagen de Docker: tarda unos minutos. Las siguientes, unos segundos.
 
-`setup` instala delivery-workflow para Cursor, Codex y Claude Code en la raíz del proyecto, y las dependencias Node de `desktop/`, `docs/storybook/`, `api-router/`, `api-postgresql/` y `api-rustfs/` dentro de Docker. También instala `api-sqlite/` en un entorno virtual Linux. Los paquetes Node, el entorno Python y los datos de las APIs viven en volúmenes Docker; no llegan como dependencias Linux a tu carpeta.
+`setup` instala delivery-workflow para Cursor, Codex y Claude Code en la raíz del proyecto, las dependencias Node de `desktop/`, `docs/storybook/`, `api-router/`, `api-postgresql/`, `api-rustfs/`, `blockend/` y `postgres/` en volúmenes Docker, y `api-sqlite/` en un entorno virtual Linux. Los paquetes Node, el entorno Python y los datos de las APIs viven en volúmenes; las dependencias Linux no llegan a tu carpeta.
 
-Desde entonces, git lo lanza solo después de `git pull`, de cambiar de rama o de un rebase, si la rama nueva tiene otro `apm.yml`, `apm.lock.yaml`, lockfile de pnpm, `api-sqlite/pyproject.toml`, script de setup o `Dockerfile`. Si cambió el `Dockerfile`, reconstruye antes la imagen. Si Docker no está en marcha, git avisa y sigue: lanza `docker compose run --build --rm setup` cuando lo arranques.
+Desde entonces, git lanza `setup` después de `git pull`, de cambiar de rama o de un rebase si cambió `apm.yml`, `apm.lock.yaml`, un lockfile de pnpm, `api-sqlite/pyproject.toml`, el script de setup o el `Dockerfile`. Si cambió el `Dockerfile`, reconstruye la imagen antes de instalar:
 
+```sh
+docker compose build
+```
+
+`docker compose run` usa la imagen existente si ya está creada. También puedes reconstruir y ejecutar `setup` en un paso con `docker compose run --build --rm setup`. Si Docker no está en marcha, git avisa y sigue; ejecuta ese comando cuando lo arranques.
 Para cambiar de versión de delivery-workflow, cambia la etiqueta en `apm.yml` (por ejemplo, `#v0.1.2` por `#v0.1.3`), lanza `docker compose run --rm setup` y sube `apm.yml` y `apm.lock.yaml` en una pull request `chore`.
 
 Si tu herramienta abre Dev Containers, como VS Code, puedes abrir el proyecto con `.devcontainer/devcontainer.json`: usa la misma imagen. Es opcional.
+
+## Postgres
+
+Instalación y arranque en el ordenador: [postgres/README.md](postgres/README.md). Visor: Drizzle Studio en <https://local.drizzle.studio>. Tests: `createdb atempo_schema_test` y `PGDATABASE=atempo_schema_test sh test/run.sh` desde `postgres/`.
+
+### Con Docker (orquestador)
+
+Necesitas Docker Desktop en marcha, como en [Instalación](#instalación).
+
+Desde la raíz del repositorio:
+
+1. Arranca PostgreSQL y Drizzle Studio:
+
+   ```sh
+   docker compose --profile db up -d postgres drizzle-studio
+   ```
+
+2. Comprueba que `postgres` está `healthy`:
+
+   ```sh
+   docker compose --profile db ps
+   ```
+
+3. Comprueba que el esquema está cargado:
+
+   ```sh
+   docker compose --profile db exec postgres psql -U atempo -d atempo -c '\dt'
+   ```
+
+   No necesitas `psql` en tu ordenador para esto.
+
+4. Abre Drizzle Studio en <https://local.drizzle.studio>. Esa página habla con el servidor del contenedor `drizzle-studio` en <http://localhost:4983>. La primera vez, antes de arrancarlo, ejecuta `docker compose run --rm setup` para instalar las dependencias de `postgres/`.
+
+Si quieres conectarte desde tu ordenador con un cliente propio, usa `localhost:5433` y las credenciales configuradas en `.env`. PostgreSQL 17 comparte `postgres-data` con la API. Si tienes datos de PostgreSQL 16 en el volumen anterior, no lo montes directamente en PostgreSQL 17: haz una copia de seguridad y una migración explícita antes de cambiar de versión.
+
+### Cambiar usuario o contraseña
+
+Configura `ATEMPO_POSTGRES_PASSWORD` en el `.env` ignorado de la raíz; se acepta `POSTGRES_PASSWORD` como alternativa. El usuario y la base son `atempo` por defecto. Compose lee las credenciales para inicializar PostgreSQL y configurar la API.
+
+PostgreSQL aplica el usuario, la contraseña y la base al crear el volumen por primera vez. Cambiar esas variables no modifica un volumen existente; no borres el volumen para actualizar credenciales sin una copia de seguridad.
+
+### Parar
+
+- `docker compose --profile db stop`: para los contenedores y conserva los datos.
+- `docker compose --profile db down`: quita los contenedores. Los datos siguen en el volumen.
+- Para borrar también los datos, tras `down` lanza `docker volume rm atempo_postgres-data`. La próxima vez Docker crea la base vacía y vuelve a cargar el esquema.
+
+Para instalar PostgreSQL sin Docker, mira [postgres/README.md](postgres/README.md).
+
+## SQLite operativo
+
+Instalación y arranque en el ordenador: [sqlite/README.md](sqlite/README.md). Visor: Datasette en <http://localhost:8001>. Tests: `sh test/run.sh` desde `sqlite/`.
+
+### Con Docker (orquestador)
+
+Necesitas Docker Desktop en marcha, como en [Instalación](#instalación).
+
+Desde la raíz del repositorio:
+
+1. Arranca Datasette. Su servicio `init-db` crea `sqlite/data/operational.sqlite` a partir de `sqlite/schema.sql` solo si el fichero no existe:
+
+   ```sh
+   docker compose --profile sqlite up -d datasette
+   ```
+
+2. Comprueba que la API responde. Devuelve JSON con las filas de `session`:
+
+   ```sh
+   curl http://localhost:8001/operational/session.json
+   ```
+
+3. Abre Datasette en <http://localhost:8001> para verlo en el navegador.
+
+Para parar, `docker compose --profile sqlite stop` conserva los datos. `docker compose --profile sqlite down` quita los contenedores, pero no borra el fichero `sqlite/data/operational.sqlite`: para empezar de cero, bórralo a mano. Docker y la versión sin Docker usan el mismo puerto `8001`: no los tengas a la vez.
+
+Para ver cómo instalar `sqlite3` y Datasette sin Docker, mira [sqlite/README.md](sqlite/README.md).
+
+## Blockend
+
+Instalación (una vez) y arranque (cada sesión) en el ordenador: [blockend/README.md](blockend/README.md). Anvil es la cadena (`:8545`). Otterscan es el visor (`:5100`). Tests: `pnpm test` desde `blockend/` (no necesita Anvil).
+
+### Con Docker (orquestador)
+
+Necesitas Docker Desktop en marcha, como en [Instalación](#instalación).
+
+Desde la raíz del repositorio:
+
+1. Arranca Anvil y Otterscan:
+
+   ```sh
+   docker compose --profile blockend up -d anvil otterscan
+   ```
+
+2. Comprueba que Anvil responde. Devuelve `0x7a69`, que es el chain id 31337:
+
+   ```sh
+   curl -s -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' http://localhost:8545
+   ```
+
+3. Abre Otterscan en <http://localhost:5100> para ver el log.
+
+Para desplegar el contrato de un curso, sigue [blockend/README.md](blockend/README.md). El deploy se lanza en local con pnpm, contra Anvil. Publica la ABI en `blockend/abi/CourseAttendance.json` y el metadata que Otterscan lee en `blockend/sourcify/`. Recarga la dirección del contrato en Otterscan: la pestaña Contract muestra las funciones.
+
+Para parar, `docker compose --profile blockend stop` o `down`. En los dos casos se pierde el libro: Anvil guarda los datos en memoria. Al volver a arrancar hay que desplegar otra vez el contrato. La dirección puede cambiar, así que actualiza `course.contract_address` en PostgreSQL.
+
+## Justificantes con RustFS
+
+Instalación y arranque en el ordenador: [rustfs/README.md](rustfs/README.md). Visor: <http://localhost:9001/rustfs/console/>. Tests: `sh test/run.sh` desde `rustfs/`, con RustFS en `:9000`.
+
+### Con Docker (orquestador)
+
+Necesitas Docker Desktop en marcha, como en [Instalación](#instalación).
+
+Desde la raíz del repositorio:
+
+1. Arranca RustFS y el servicio que crea el bucket `justifications`:
+
+   ```sh
+   docker compose --profile rustfs up -d rustfs create-bucket
+   ```
+
+   `create-bucket` espera a que la API responda, crea el bucket si no existe y sale. Para ver su resultado: `docker compose --profile rustfs logs create-bucket`.
+
+2. Comprueba que la API responde:
+
+   ```sh
+   curl http://localhost:9000/health
+   ```
+
+3. Abre la consola en <http://localhost:9001/rustfs/console/> con `RUSTFS_ACCESS_KEY` y `RUSTFS_SECRET_KEY` de [rustfs/.env.example](rustfs/.env.example), o las que pongas en `.env`.
+
+Para cambiar las credenciales, copia `RUSTFS_ACCESS_KEY` y `RUSTFS_SECRET_KEY` de [rustfs/.env.example](rustfs/.env.example) a tu `.env` de la raíz. Son para desarrollo: cámbialas antes de exponer el puerto 9000 a una red.
+
+Para parar, `docker compose --profile rustfs stop` conserva los datos. Con `down` se quitan los contenedores, y los objetos siguen en el volumen `rustfs-data`. Para borrarlos, tras `down`, lanza `docker volume rm atempo_rustfs-data`.
+
+El modelo de los objetos está en [docs/RUSTFS.md](docs/RUSTFS.md). El README de la carpeta, en [rustfs/README.md](rustfs/README.md).
+
+## Pruebas de almacenes
+
+En el host (Git Bash en Windows). Postgres usa `atempo_schema_test`, no `atempo`. RustFS tiene que estar en `:9000`. Hardhat no necesita Anvil.
+
+```sh
+createdb atempo_schema_test && PGDATABASE=atempo_schema_test sh postgres/test/run.sh
+sh sqlite/test/run.sh
+sh rustfs/test/run.sh
+cd blockend && pnpm test
+```
+
+Compose, contra instancias efímeras. No usan `postgres-data`, `sqlite/data/operational.sqlite` ni `rustfs-data`:
+
+```sh
+docker compose run --rm postgres-test
+docker compose run --rm sqlite-test
+docker compose run --rm rustfs-test
+docker compose run --rm blockend pnpm test
+```
+
+`postgres-test`, `sqlite-test` y `rustfs-test` van en el perfil `test`. `blockend pnpm test` usa la red interna de Hardhat, no Anvil. Tras cambiar el `Dockerfile`, `docker compose run --build --rm setup` instala también `blockend/`.
 
 ## Escritorio
 
@@ -181,13 +356,13 @@ Más detalle en [api-router/README.md](api-router/README.md).
 
 ## API-postgresql
 
-Desde la raíz, inicia el API y su PostgreSQL privado de Compose:
+Desde la raíz, inicia la API y el servicio PostgreSQL compartido:
 
 ```sh
 docker compose up api-postgresql
 ```
 
-La API queda en <http://localhost:3001>; PostgreSQL solo está disponible dentro de Compose. `GET /health` confirma la conexión y Swagger está en `/docs`. El volumen `postgres-data` conserva la base al recrear contenedores. Ejecuta cada comprobación por separado, por ejemplo `docker compose run --rm api-postgresql pnpm test`. Más detalle en [api-postgresql/README.md](api-postgresql/README.md).
+La API queda en <http://localhost:3001> y PostgreSQL en <http://localhost:5433> desde el ordenador; dentro de Compose, la API se conecta a `postgres:5432`. `GET /health` confirma la conexión y Swagger está en `/docs`. El volumen compartido `postgres-data` conserva la base operativa y la de la API. Ejecuta cada comprobación por separado, por ejemplo `docker compose run --rm api-postgresql pnpm test`. Más detalle en [api-postgresql/README.md](api-postgresql/README.md).
 
 ## API-sqlite
 
@@ -228,15 +403,17 @@ Desde la raíz, inicia Express y RustFS:
 docker compose up api-rustfs
 ```
 
-La API queda en <http://localhost:3003>; RustFS y sus puertos S3/consola solo son accesibles dentro de Compose. El volumen `rustfs-data` conserva los objetos. `/health` sigue comprobando solo que responde la API HTTP; la conexión S3 se verifica por separado en el workflow `.github/workflows/docker-apis.yml`. Swagger está en `/docs/`. Las pruebas se ejecutan en Docker con `docker compose run --rm api-rustfs pnpm test`; typecheck, lint y build usan el mismo patrón. Más detalle en [api-rustfs/README.md](api-rustfs/README.md).
+La API queda en <http://localhost:3003>; RustFS está disponible en los puertos S3 `9000` y consola `9001` desde el ordenador, y la API se conecta a `rustfs:9000` dentro de Compose. El volumen compartido `rustfs-data` conserva los objetos. `/health` sigue comprobando solo que responde la API HTTP; la conexión S3 se verifica por separado en el workflow `.github/workflows/docker-apis.yml`. Swagger está en `/docs/`. Las pruebas se ejecutan en Docker con `docker compose run --rm api-rustfs pnpm test`; typecheck, lint y build usan el mismo patrón. Más detalle en [api-rustfs/README.md](api-rustfs/README.md).
 
-Las tres APIs de persistencia también pueden iniciarse juntas con `docker compose up api-postgresql api-sqlite api-rustfs`. El workflow `.github/workflows/docker-apis.yml` valida setup, pruebas, HTTP y persistencia en un runner Ubuntu al abrir o actualizar una pull request hacia `staging`, sin secretos y con permisos de solo lectura.
+Las cuatro APIs pueden iniciarse juntas con `docker compose up api-router api-postgresql api-sqlite api-rustfs`; Compose inicia PostgreSQL y RustFS como dependencias. El workflow `.github/workflows/docker-apis.yml` valida setup, pruebas, HTTP y persistencia en un runner Ubuntu al abrir o actualizar una pull request hacia `staging`, sin secretos y con permisos de solo lectura.
 
 ## Avisos opcionales de PR en Discord
 
 El workflow `.github/workflows/discord-pr-notifications.yml` activa los avisos desde `main` para las PR dirigidas a `staging` y los comentarios de asociación. Usa la acción compartida fijada a un commit y no ejecuta código de la PR. APM no instala este workflow ni lo incorpora a los pasos de los agentes.
 
-Al solicitar al menos dos revisores, el bot publica el repositorio, un resumen y el enlace de la PR. Muestra los logins de GitHub aunque no encuentre sus cuentas de Discord, y menciona únicamente a quienes tengan una asociación verificada. Las asociaciones se guardan cifradas durante 48 horas en una caché propia de aTempo.
+Al solicitar al menos dos revisores, el bot publica una línea separadora, el repositorio, el título de la PR, los revisores y el enlace. No incluye el cuerpo de la PR. Muestra los logins de GitHub aunque no encuentre sus cuentas de Discord, y menciona únicamente a quienes tengan una asociación verificada.
+
+Un administrador puede configurar una vez la variable opcional `DISCORD_USER_MAP` en el entorno protegido `Discord-PR-Notifications`, con un JSON como `{"login-github":"ID_DE_DISCORD"}` y un ID numérico real en lugar del marcador. Esta asociación fija tiene prioridad, no caduca y se comprueba contra los miembros del servidor antes de mencionar. Para el resto se conserva la caché cifrada de 48 horas; la búsqueda automática acepta diferencias de mayúsculas en el nombre de usuario de Discord.
 
 Para confirmar una asociación que falte, el autor de la PR o un miembro autorizado del repositorio puede dejar este comentario en la PR:
 
@@ -255,6 +432,11 @@ Reemplaza los valores por el login exacto del revisor solicitado y su ID numéri
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Las tres capas del escritorio y el entorno de instalación. |
 | [docs/STYLE.md](docs/STYLE.md) | Temas y enlace a la guía visual. |
 | [docs/guia](docs/guia/README.md) | Markdown generado desde Storybook. No se versiona. |
-| [docs/TREE.md](docs/TREE.md) | Carpetas de `desktop/`. |
+| [docs/TREE.md](docs/TREE.md) | Carpetas de `desktop/`, `api-router/`, las APIs de persistencia y los almacenes. |
+| [docs/POSTGRES.md](docs/POSTGRES.md) | Modelo del core PostgreSQL. |
+| [docs/SQLITE.md](docs/SQLITE.md) | Modelo del SQLite operativo. |
+| [docs/RUSTFS.md](docs/RUSTFS.md) | Modelo del bucket de justificantes. |
+| [docs/BLOCKEND.md](docs/BLOCKEND.md) | Modelo de Anvil, Hardhat y el contrato. |
+| [permanent-data.md](permanent-data.md) | Enlaces entre las cuatro bases. |
 | [AGENTS.md](AGENTS.md) | Cómo se trabaja una spec. |
 | [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Cómo contribuir: issues, ramas, commits y pull requests. |

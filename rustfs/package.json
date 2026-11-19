@@ -1,0 +1,14 @@
+{
+  "name": "atempo-rustfs",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "start": "node scripts/run-start.mjs",
+    "create-bucket": "node --env-file-if-exists=.env scripts/create-bucket.mjs"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-s3": "3.943.0"
+  }
+}

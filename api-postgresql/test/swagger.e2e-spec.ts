@@ -14,7 +14,12 @@ describe('Swagger (e2e)', () => {
       imports: [AppModule],
     })
       .overrideProvider(PostgresService)
-      .useValue({ check: async () => undefined })
+      .useValue({
+        check: async () => undefined,
+        listCourses: async () => [],
+        listPersonRoles: async () => [],
+        usesMock: () => true,
+      })
       .compile()
 
     app = moduleFixture.createNestApplication()
@@ -33,11 +38,13 @@ describe('Swagger (e2e)', () => {
       .expect('content-type', /html/)
   })
 
-  it('GET /docs-json exposes OpenAPI with /health', async () => {
+  it('GET /docs-json exposes OpenAPI with /health, /course and /person-role', async () => {
     const response = await request(app.getHttpServer())
       .get('/docs-json')
       .expect(200)
 
     expect(response.body.paths).toHaveProperty('/health')
+    expect(response.body.paths).toHaveProperty('/course')
+    expect(response.body.paths).toHaveProperty('/person-role')
   })
 })

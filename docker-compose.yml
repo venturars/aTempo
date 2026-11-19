@@ -2,8 +2,7 @@
 #   docker compose run --rm setup               instala APM y las dependencias
 #   docker compose up storybook                 sirve Storybook en http://localhost:6006
 #   docker compose run --rm desktop pnpm lint   comprueba desktop/ con las versiones del equipo
-#   docker compose up api-router                Nest en http://localhost:3000 (Swagger en /docs)
-#   docker compose up api-postgresql api-sqlite api-rustfs  APIs en http://localhost:3001–3003
+#   docker compose up api-router api-postgresql api-sqlite api-rustfs  APIs en http://localhost:3000–3003
 #   docker compose up desktop-gui               abre la ventana de Electron (opcional, ver el README)
 
 x-base: &base
@@ -24,6 +23,8 @@ services:
       - api-postgresql-node-modules:/work/api-postgresql/node_modules
       - api-rustfs-node-modules:/work/api-rustfs/node_modules
       - api-sqlite-venv:/work/api-sqlite/.venv
+      - blockend-node-modules:/work/blockend/node_modules
+      - postgres-node-modules:/work/postgres/node_modules
       - pnpm-store:/pnpm-store
 
   storybook:
@@ -51,102 +52,20 @@ services:
       - api-router-node-modules:/work/api-router/node_modules
       - pnpm-store:/pnpm-store
 
-  postgres:
-    # La base solo está expuesta a servicios dentro de la red de Compose.
-    image: postgres:17.12-trixie
-    environment:
-      POSTGRES_DB: atempo
-      POSTGRES_USER: atempo
-      POSTGRES_PASSWORD: ${ATEMPO_POSTGRES_PASSWORD:?Define ATEMPO_POSTGRES_PASSWORD before starting Compose}
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
-
-  api-postgresql:
-    <<: *base
-    working_dir: /work/api-postgresql
-    command: pnpm dev
-    depends_on:
-      postgres:
-        condition: service_healthy
-    ports:
-      - "3001:3001"
-    environment:
-      PORT: "3001"
-      DATABASE_URL: postgres://atempo:${ATEMPO_POSTGRES_PASSWORD:?Define ATEMPO_POSTGRES_PASSWORD before starting Compose}@postgres:5432/atempo
-      CHOKIDAR_USEPOLLING: "true"
-    volumes:
-      - ./api-postgresql:/work/api-postgresql
-      - api-postgresql-node-modules:/work/api-postgresql/node_modules
-      - pnpm-store:/pnpm-store
-
-  api-sqlite:
-    <<: *base
-    working_dir: /work/api-sqlite
-    command: /work/api-sqlite/.venv/bin/python -m flask --app api_sqlite.app:create_app run --host 0.0.0.0 --port 3002
-    ports:
-      - "3002:3002"
-    environment:
-      PORT: "3002"
-      SQLITE_DATABASE_URL: sqlite:////var/lib/atempo/api-sqlite.sqlite
-    volumes:
-      - ./api-sqlite:/work/api-sqlite
-      - api-sqlite-venv:/work/api-sqlite/.venv
-      - api-sqlite-data:/var/lib/atempo
-
-  rustfs:
-    # El almacén conserva los objetos en su propio volumen Docker.
-    image: rustfs/rustfs:1.0.0
-    environment:
-      RUSTFS_VOLUMES: /data
-      RUSTFS_ADDRESS: 0.0.0.0:9000
-      RUSTFS_CONSOLE_ADDRESS: 0.0.0.0:9001
-      RUSTFS_CONSOLE_ENABLE: "true"
-      RUSTFS_ACCESS_KEY: devadmin
-      RUSTFS_SECRET_KEY: devsecret
-      RUSTFS_OBS_LOGGER_LEVEL: error
-    volumes:
-      - rustfs-data:/data
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9000/health >/dev/null"]
-      interval: 5s
-      timeout: 5s
-      retries: 12
-      start_period: 20s
-
-  api-rustfs:
-    <<: *base
-    working_dir: /work/api-rustfs
-    command: pnpm dev
-    depends_on:
-      rustfs:
-        condition: service_healthy
-    ports:
-      - "3003:3003"
-    environment:
-      PORT: "3003"
-      RUSTFS_ENDPOINT: rustfs
-      RUSTFS_PORT: "9000"
-      RUSTFS_USE_SSL: "false"
-      RUSTFS_ACCESS_KEY: devadmin
-      RUSTFS_SECRET_KEY: devsecret
-      CHOKIDAR_USEPOLLING: "true"
-    volumes:
-      - ./api-rustfs:/work/api-rustfs
-      - api-rustfs-node-modules:/work/api-rustfs/node_modules
-      - pnpm-store:/pnpm-store
-
   desktop:
     <<: *base
     working_dir: /work/desktop
     volumes:
       - .:/work
       - desktop-node-modules:/work/desktop/node_modules
+      - pnpm-store:/pnpm-store
+
+  blockend:
+    <<: *base
+    working_dir: /work/blockend
+    volumes:
+      - .:/work
+      - blockend-node-modules:/work/blockend/node_modules
       - pnpm-store:/pnpm-store
 
   # Opcional: construye y abre la app en la pantalla del ordenador, a través de su servidor X11.
@@ -170,9 +89,268 @@ services:
       - desktop-node-modules:/work/desktop/node_modules
       - pnpm-store:/pnpm-store
 
-# Cada API conserva sus dependencias y datos Linux en volúmenes separados.
+  # PostgreSQL usa el volumen existente y carga el esquema operativo al inicializar una base nueva.
+  # PostgreSQL no tiene perfil para que las APIs puedan arrancarlo como dependencia.
+  # docker compose --profile db up -d postgres drizzle-studio
+  postgres:
+    image: postgres:17.12-trixie
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-atempo}
+      POSTGRES_PASSWORD: ${ATEMPO_POSTGRES_PASSWORD:-${POSTGRES_PASSWORD:?Define ATEMPO_POSTGRES_PASSWORD or POSTGRES_PASSWORD before starting Compose}}
+      POSTGRES_DB: ${POSTGRES_DB:-atempo}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
-# Cada proyecto tiene sus node_modules: desktop/, docs/storybook/ y api-router/ tienen cada uno su lockfile.
+  # API REST de persistencia PostgreSQL para la SDK.
+  api-postgresql:
+    <<: *base
+    working_dir: /work/api-postgresql
+    command: pnpm dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: "3001"
+      DATABASE_URL: postgres://${POSTGRES_USER:-atempo}:${ATEMPO_POSTGRES_PASSWORD:-${POSTGRES_PASSWORD:?Define ATEMPO_POSTGRES_PASSWORD or POSTGRES_PASSWORD before starting Compose}}@postgres:5432/${POSTGRES_DB:-atempo}
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./api-postgresql:/work/api-postgresql
+      - api-postgresql-node-modules:/work/api-postgresql/node_modules
+      - pnpm-store:/pnpm-store
+
+  # API SQLite conserva sus datos en un volumen separado de Electron y sqlite/data.
+  api-sqlite:
+    <<: *base
+    working_dir: /work/api-sqlite
+    command: /work/api-sqlite/.venv/bin/python -m flask --app api_sqlite.app:create_app run --host 0.0.0.0 --port 3002
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: "3002"
+      SQLITE_DATABASE_URL: sqlite:////var/lib/atempo/api-sqlite.sqlite
+    volumes:
+      - ./api-sqlite:/work/api-sqlite
+      - api-sqlite-venv:/work/api-sqlite/.venv
+      - api-sqlite-data:/var/lib/atempo
+
+  # Drizzle Studio: visor de las tablas de postgres/. Va detrás del perfil db.
+  # Se abre desde https://local.drizzle.studio y habla con http://localhost:4983.
+  drizzle-studio:
+    <<: *base
+    profiles: [db]
+    working_dir: /work/postgres
+    # Dentro del contenedor escucha en todas las interfaces; Docker lo publica solo en 127.0.0.1 de tu ordenador.
+    command: pnpm exec drizzle-kit studio --host 0.0.0.0 --port 4983
+    ports:
+      - "127.0.0.1:4983:4983"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-atempo}
+      POSTGRES_PASSWORD: ${ATEMPO_POSTGRES_PASSWORD:-${POSTGRES_PASSWORD:?Define ATEMPO_POSTGRES_PASSWORD or POSTGRES_PASSWORD before starting Compose}}
+      POSTGRES_DB: ${POSTGRES_DB:-atempo}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - .:/work
+      - postgres-node-modules:/work/postgres/node_modules
+      - pnpm-store:/pnpm-store
+
+  # SQLite operativo y Datasette. Van detrás del perfil sqlite. La base vive en sqlite/data/, fuera de git.
+  # docker compose --profile sqlite up -d datasette
+  init-db:
+    profiles: [sqlite]
+    image: keinos/sqlite3:3.47.0
+    volumes:
+      - ./sqlite/data:/data
+      - ./sqlite/schema.sql:/schema.sql:ro
+    entrypoint: ["sh", "-c"]
+    command: ["test -f /data/operational.sqlite || sqlite3 /data/operational.sqlite < /schema.sql"]
+
+  datasette:
+    profiles: [sqlite]
+    image: datasetteproject/datasette:0.65.1
+    command: ["datasette", "/data/operational.sqlite", "--host", "0.0.0.0", "--port", "8001"]
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./sqlite/data:/data:ro
+    depends_on:
+      init-db:
+        condition: service_completed_successfully
+
+  # Anvil (notario) y Otterscan (visor del log). Van detrás del perfil blockend. El deploy del contrato se lanza en local, ver blockend/README.md.
+  # docker compose --profile blockend up -d anvil otterscan
+  anvil:
+    profiles: [blockend]
+    image: ghcr.io/foundry-rs/foundry:v1.2.3
+    command: ["anvil --host 0.0.0.0 --port 8545 --chain-id 31337"]
+    ports:
+      - "8545:8545"
+
+  otterscan:
+    profiles: [blockend]
+    image: otterscan/otterscan:v2.8.0
+    environment:
+      OTTERSCAN_CONFIG: '{"erigonURL":"http://localhost:8545","experimental":false,"sourcify":{"sources":{"aTempo":{"url":"http://localhost:5100/sourcify","backendFormat":"RepositoryV1"}}}}'
+    ports:
+      - "5100:80"
+    volumes:
+      - ./blockend/sourcify:/usr/share/nginx/html/sourcify:ro
+    depends_on:
+      - anvil
+
+  # RustFS conserva los objetos de justificantes; la API lo usa y el perfil permite crear el bucket.
+  # Consola: http://localhost:9001/rustfs/console/
+  # docker compose --profile rustfs up -d rustfs create-bucket
+  rustfs:
+    image: rustfs/rustfs:1.0.3
+    command: ["/data"]
+    environment:
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-atempo}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-atempoatempo}
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_OBS_LOGGER_LEVEL: error
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - rustfs-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9000/health >/dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  # La API conserva /health HTTP; el cliente S3 comprueba el almacén aparte.
+  api-rustfs:
+    <<: *base
+    working_dir: /work/api-rustfs
+    command: pnpm dev
+    depends_on:
+      rustfs:
+        condition: service_healthy
+    ports:
+      - "3003:3003"
+    environment:
+      PORT: "3003"
+      RUSTFS_ENDPOINT: rustfs
+      RUSTFS_PORT: "9000"
+      RUSTFS_USE_SSL: "false"
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-atempo}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-atempoatempo}
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./api-rustfs:/work/api-rustfs
+      - api-rustfs-node-modules:/work/api-rustfs/node_modules
+      - pnpm-store:/pnpm-store
+
+# Espera a que la API S3 responda y crea el bucket si no existe. Usa la CLI de Amazon.
+  create-bucket:
+    profiles: [rustfs]
+    image: amazon/aws-cli:2.40.4
+    environment:
+      AWS_ACCESS_KEY_ID: ${RUSTFS_ACCESS_KEY:-atempo}
+      AWS_SECRET_ACCESS_KEY: ${RUSTFS_SECRET_KEY:-atempoatempo}
+      AWS_DEFAULT_REGION: us-east-1
+      ENDPOINT: http://rustfs:9000
+    depends_on:
+      - rustfs
+    volumes:
+      - ./rustfs/create-bucket.sh:/create-bucket.sh:ro
+    entrypoint: ["/bin/sh", "/create-bucket.sh"]
+
+  # Tests de esquema de los almacenes. Perfil test: docker compose up sin nombre no los arranca.
+  # docker compose run --rm postgres-test
+  # docker compose run --rm sqlite-test
+  # docker compose run --rm rustfs-test
+  # docker compose run --rm blockend pnpm test
+  postgres-test-db:
+    profiles: [test]
+    image: postgres:16.16-alpine
+    environment:
+      POSTGRES_USER: atempo
+      POSTGRES_PASSWORD: atempo
+      POSTGRES_DB: atempo
+    tmpfs:
+      - /var/lib/postgresql/data
+    volumes:
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atempo -d atempo"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+
+  postgres-test:
+    profiles: [test]
+    image: postgres:16.16-alpine
+    depends_on:
+      postgres-test-db:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres-test-db
+      PGUSER: atempo
+      PGPASSWORD: atempo
+      PGDATABASE: atempo
+    volumes:
+      - ./postgres/init/01_schema.sql:/schema.sql:ro
+      - ./postgres/test:/tests:ro
+    entrypoint: ["sh", "/tests/run.sh"]
+
+  sqlite-test:
+    profiles: [test]
+    image: keinos/sqlite3:3.47.0
+    volumes:
+      - ./sqlite/schema.sql:/schema.sql:ro
+      - ./sqlite/test:/tests:ro
+    tmpfs:
+      - /tmp
+    entrypoint: ["sh", "/tests/run.sh"]
+
+  rustfs-test-store:
+    profiles: [test]
+    image: rustfs/rustfs:1.0.3
+    command: ["/data"]
+    environment:
+      RUSTFS_ACCESS_KEY: atempo
+      RUSTFS_SECRET_KEY: atempoatempo
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+      RUSTFS_CONSOLE_ENABLE: "true"
+    tmpfs:
+      - /data:uid=10001,gid=10001,mode=0770
+
+  rustfs-test:
+    profiles: [test]
+    image: amazon/aws-cli:2.40.4
+    environment:
+      AWS_ACCESS_KEY_ID: atempo
+      AWS_SECRET_ACCESS_KEY: atempoatempo
+      AWS_DEFAULT_REGION: us-east-1
+      ENDPOINT: http://rustfs-test-store:9000
+    depends_on:
+      - rustfs-test-store
+    volumes:
+      - ./rustfs/test:/tests:ro
+    entrypoint: ["/bin/sh", "/tests/run.sh"]
+
+# Cada proyecto tiene sus node_modules: desktop/, docs/storybook/, api-router/, blockend/ y postgres/ tienen cada uno su lockfile.
 # pnpm-store es la caché de pnpm y sí se comparte.
 # Docker les pone delante el nombre de la carpeta: cada copia del repositorio tiene los suyos.
 volumes:
@@ -182,7 +360,9 @@ volumes:
   api-postgresql-node-modules:
   api-rustfs-node-modules:
   api-sqlite-venv:
+  api-sqlite-data:
+  blockend-node-modules:
+  postgres-node-modules:
   pnpm-store:
   postgres-data:
-  api-sqlite-data:
   rustfs-data:

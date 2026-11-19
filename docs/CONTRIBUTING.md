@@ -89,6 +89,15 @@ docker compose run --rm desktop pnpm lint
 docker compose run --rm desktop pnpm typecheck
 ```
 
+Si el cambio toca un almacén, lanza sus pruebas de esquema:
+
+```sh
+docker compose run --rm postgres-test
+docker compose run --rm sqlite-test
+docker compose run --rm rustfs-test
+docker compose run --rm blockend pnpm test
+```
+
 - `pnpm run test:visual` es la excepción: se lanza en el ordenador, no en Docker.
 - Si cambias algo de `docs/storybook` (historias, reglas, tema o vista previa), regenera la guía y comprueba que está al día. Las dos órdenes tienen que salir bien:
 
