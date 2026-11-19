@@ -33,6 +33,7 @@ export type InvitePersonInput = {
   name: string
   email: string
   role: 'teacher' | 'student'
+  admin?: boolean
 }
 export type CreateCourseInput = {
   name: string
@@ -213,6 +214,11 @@ function validatePerson(
     return { ok: false, error: 'Escribe un correo válido.' }
   if (input.role !== 'teacher' && input.role !== 'student')
     return { ok: false, error: 'Selecciona el rol profesor o alumno.' }
+  if (
+    input.admin !== undefined &&
+    (typeof input.admin !== 'boolean' || (input.admin && input.role !== 'teacher'))
+  )
+    return { ok: false, error: 'El rol de administrador solo se puede añadir a un profesor.' }
   if (
     state.people.some(
       (person) =>
@@ -399,7 +405,7 @@ export const useAdminStore = create<AdminStore>((set, get) => {
         id: nextId('person', state.people),
         organizationId: state.organization.id,
         ...result.value,
-        roles: [input.role],
+        roles: input.admin ? ['admin', 'teacher'] : [input.role],
         state: 'invited'
       }
       set({ people: [...state.people, person] })
@@ -414,9 +420,14 @@ export const useAdminStore = create<AdminStore>((set, get) => {
       )
       if (!existing) return { ok: false, error: 'No se encuentra la persona en la organización.' }
       const isAdmin = existing.roles.includes('admin')
+      const preserveRoles =
+        isAdmin && (id === state.currentPersonId || !existing.roles.includes('teacher'))
       const result = validatePerson(state, input, id)
       if (!result.ok) return result
-      const roles = isAdmin ? [...existing.roles] : [input.role]
+      const roles: Person['roles'] = preserveRoles ? [...existing.roles] : [input.role]
+      if (!preserveRoles && input.role === 'teacher' && (input.admin ?? isAdmin)) {
+        roles.unshift('admin')
+      }
       if (!roles.includes('teacher') && state.courses.some((course) => course.teacherId === id))
         return { ok: false, error: 'Reasigna los cursos de esta persona antes de cambiar su rol.' }
       if (

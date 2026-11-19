@@ -16,7 +16,7 @@ pnpm dev
 
 Abre <http://localhost:5191/admin> y pulsa **Abrir demo de administración**. No hay credenciales que introducir. Aparece el inicio de la organización Neoland, con **Personas**, **Cursos** y **Mis clases**. El administrador de ejemplo también es profesor.
 
-1. En **Personas**, pulsa **Invitar persona**. Escribe nombre, correo y rol, y pulsa **Preparar invitación**. La persona aparece con invitación pendiente; no se envía ningún email ni se activa su cuenta.
+1. En **Personas**, pulsa **Invitar persona**. Escribe nombre, correo y rol, y pulsa **Preparar invitación**. Para un profesor, activa **También es administrador** si necesita ese rol. Puedes activarlo o desactivarlo después en **Editar**. La persona aparece con invitación pendiente; no se envía ningún email ni se activa su cuenta.
 2. En **Cursos**, pulsa **Crear curso**. Pon un nombre, selecciona profesor y alumnos y guarda. Puedes seleccionar las personas que acabas de invitar, conservando su estado pendiente.
 3. Abre el curso y pulsa **Programar sesión**. Selecciona fecha, inicio, fin y aula. El fin debe ser posterior al inicio en el mismo día.
 4. Abre la sesión. Debe mostrar el profesor del curso y su alumnado, con la asistencia pendiente.

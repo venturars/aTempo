@@ -90,7 +90,14 @@ export function PeopleScreen(): React.JSX.Element {
               .filter((person) => person.organizationId === organization.id)
               .map((person) => (
                 <tr key={person.id}>
-                  <td className="font-medium">{person.name}</td>
+                  <td>
+                    <span className="font-medium">{person.name}</span>
+                    {person.id === currentPersonId ? (
+                      <span className="mt-1 block max-w-40 whitespace-normal text-xs text-base-content/60">
+                        No puedes eliminar tu propia cuenta.
+                      </span>
+                    ) : null}
+                  </td>
                   <td>{person.email}</td>
                   <td>{personRole(person)}</td>
                   <td>
@@ -119,11 +126,7 @@ export function PeopleScreen(): React.JSX.Element {
                         >
                           Eliminar
                         </button>
-                      ) : (
-                        <span className="self-center text-xs text-base-content/60">
-                          No puedes eliminar tu propia cuenta.
-                        </span>
-                      )}
+                      ) : null}
                     </div>
                   </td>
                 </tr>

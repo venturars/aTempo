@@ -13,6 +13,11 @@ export function PersonForm({
 }): React.JSX.Element {
   const invitePerson = useAdminStore((state) => state.invitePerson)
   const updatePerson = useAdminStore((state) => state.updatePerson)
+  const currentPersonId = useAdminStore((state) => state.currentPersonId)
+  const [isAdmin, setIsAdmin] = useState(person?.roles.includes('admin') ?? false)
+  const rolesReadOnly =
+    person?.roles.includes('admin') &&
+    (person.id === currentPersonId || !person.roles.includes('teacher'))
   const [name, setName] = useState(person?.name ?? '')
   const [email, setEmail] = useState(person?.email ?? '')
   const [role, setRole] = useState<'teacher' | 'student'>(
@@ -22,7 +27,7 @@ export function PersonForm({
 
   function onSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault()
-    const input = { name, email, role }
+    const input = { name, email, role, admin: role === 'teacher' && isAdmin }
     const result = person ? updatePerson(person.id, input) : invitePerson(input)
     if (!result.ok) {
       setError(result.error)
@@ -63,21 +68,37 @@ export function PersonForm({
       </div>
       <div className="field">
         <label htmlFor="invite-role">Rol</label>
-        {person?.roles.includes('admin') ? (
+        {person && rolesReadOnly ? (
           <input id="invite-role" className="input w-full" value={personRole(person)} readOnly />
         ) : (
           <select
             id="invite-role"
             className="select w-full"
             value={role}
-            onChange={(event) => setRole(event.target.value as 'teacher' | 'student')}
+            onChange={(event) => {
+              const nextRole = event.target.value === 'teacher' ? 'teacher' : 'student'
+              setRole(nextRole)
+              if (nextRole === 'student') setIsAdmin(false)
+            }}
           >
             <option value="student">Alumno</option>
             <option value="teacher">Profesor</option>
           </select>
         )}
       </div>
-      {person?.roles.includes('admin') ? (
+      {!rolesReadOnly && role === 'teacher' ? (
+        <label className="flex items-center gap-3">
+          <input
+            className="toggle toggle-primary"
+            type="checkbox"
+            role="switch"
+            checked={isAdmin}
+            onChange={(event) => setIsAdmin(event.target.checked)}
+          />
+          También es administrador
+        </label>
+      ) : null}
+      {rolesReadOnly ? (
         <p className="text-sm text-base-content/60">
           Esta cuenta conserva su rol de administrador.
         </p>
