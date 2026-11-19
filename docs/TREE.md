@@ -81,12 +81,17 @@ domain/
     person/
       list-persons.ts
       get-person-by-id.ts
+      list-persons-by-course.ts
+      list-persons-by-role.ts
     course/
       list-courses.ts
       get-course-by-id.ts
+      list-courses-by-person.ts
+      list-courses-by-organization.ts
     role/
       list-roles.ts
       get-role-by-name.ts
+      list-roles-by-person.ts
     person-course/
       list-person-courses.ts
     person-role/
@@ -97,6 +102,7 @@ domain/
     postgres.spec.ts
     types.spec.ts
     reads.spec.ts
+    filters.spec.ts
 ```
 
 # Árbol de `api-sqlite/`

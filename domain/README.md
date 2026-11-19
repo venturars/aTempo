@@ -16,7 +16,7 @@ pnpm test
 pnpm build
 ```
 
-`pnpm test` sustituye el driver: PostgreSQL no tiene que estar en marcha. Los tests cubren `DATABASE_URL` ausente, ping ok, ping fallido, `assert*` que lanza sin llamar al driver, y listar u obtener una fila.
+`pnpm test` sustituye el driver: PostgreSQL no tiene que estar en marcha. Los tests cubren `DATABASE_URL` ausente, ping ok, ping fallido, `assert*` que lanza sin llamar al driver, listar u obtener una fila, y listar por relación (`listXByY`).
 
 ## Conexión
 
