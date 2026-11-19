@@ -300,6 +300,8 @@ pnpm run test:visual --workers=1 --retries=0 --global-timeout=300000 --update-sn
 
 La suite del sistema visual sirve `docs/storybook/storybook-static` en `http://127.0.0.1:6006` y lo cierra al terminar, aunque falle. Necesita las dependencias de `docs/storybook/` instaladas en tu ordenador (`pnpm install` en esa carpeta), no solo en Docker, y el puerto 6006 libre: si tienes Storybook en Docker, páralo antes con `docker compose stop storybook`.
 
+Cada pull request a `staging` pasa lint, typecheck y el build de Storybook en GitHub Actions ([ci.yml](.github/workflows/ci.yml)), en cada paquete que cambia. Un paquete es cualquier carpeta con un `pnpm-lock.yaml`, así que uno nuevo entra solo. Si una comprobación falla, «CI / ci» queda en rojo.
+
 ### Ventana de Electron desde Docker (experimental)
 
 `desktop-gui` construye la app dentro de Docker y abre su ventana en tu pantalla, a través del servidor X11 de tu ordenador. Es más lenta que `pnpm dev` en el ordenador: no usa la GPU y no recarga al editar. Solo está probada en macOS.
