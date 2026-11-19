@@ -2,7 +2,7 @@
 
 Servicio de persistencia con NestJS y TypeScript. La SDK de lógica de negocio hablará con este servicio para leer y escribir en PostgreSQL. El API-router no habla con la base.
 
-Hoy expone `GET /health` y `GET /person`, que lista la tabla `person` del esquema core (#32) cuando hay `DATABASE_URL`. Sin `DATABASE_URL`, el servicio usa un **mock de PostgreSQL** (`src/postgres/postgres-mock.ts`): health y person responden **200** con datos de prueba fijos. `POSTGRES_MOCK=1` fuerza el mock aunque exista `DATABASE_URL`. El escritorio no llama a este servicio.
+Hoy expone `GET /health` y `GET /person`, `GET /person-role`, `GET /course` que lista la tabla `person` del esquema core (#32) cuando hay `DATABASE_URL`. Sin `DATABASE_URL`, el servicio usa un **mock de PostgreSQL** (`src/postgres/postgres-mock.ts`): health y person responden **200** con datos de prueba fijos. `POSTGRES_MOCK=1` fuerza el mock aunque exista `DATABASE_URL`. El escritorio no llama a este servicio.
 
 ## Arranque
 
@@ -30,6 +30,8 @@ pnpm dev
 1. Con `pnpm dev`, abre `http://localhost:3001/docs`.
 2. **person** → `GET /person` → **Execute**: **200** con el mock o con filas reales de la tabla `person`.
 3. **health** → `GET /health` → **Execute**: **200** en mock; con Postgres real, **503** si la base no responde.
+4. **course** → `GET /course` → **Execute**: **200** con el mock o filas reales.
+5. **person-role** → `GET /person-role` → **Execute**: **200** con el mock o filas reales.
 
 El documento OpenAPI en JSON está en `/docs-json`.
 
