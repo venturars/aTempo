@@ -20,6 +20,7 @@ describe('Swagger (e2e)', () => {
         listCourses: async () => [],
         listPersonRoles: async () => [],
         listPersonCourses: async () => [],
+        findPersonById: async () => null,
         usesMock: () => true,
       })
       .compile()
@@ -48,6 +49,7 @@ describe('Swagger (e2e)', () => {
     expect(response.body.paths).toHaveProperty('/health')
     expect(response.body.paths).toHaveProperty('/person')
     expect(response.body.paths).toHaveProperty('/course')
+    expect(response.body.paths).toHaveProperty('/person/{id}')
     expect(response.body.paths).toHaveProperty('/person-role')
     expect(response.body.paths).toHaveProperty('/person-course')
   })

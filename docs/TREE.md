@@ -100,7 +100,7 @@ api-postgresql/
       health-response.dto.ts
     person/
       person.module.ts
-      person.controller.ts
+      person.controller.ts     # GET /person y GET /person/:id
       person.service.ts
       person-response.dto.ts
     course/

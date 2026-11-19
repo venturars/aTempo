@@ -9,4 +9,8 @@ export class PersonService {
   async listAll(): Promise<PersonResponseDto[]> {
     return this.postgres.listPersons()
   }
+
+  async findById(id: string): Promise<PersonResponseDto | null> {
+    return this.postgres.findPersonById(id)
+  }
 }
