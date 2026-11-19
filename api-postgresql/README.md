@@ -2,7 +2,7 @@
 
 Servicio de persistencia con NestJS y TypeScript. La SDK de lógica de negocio hablará con este servicio para leer y escribir en PostgreSQL. El API-router no habla con la base.
 
-Expone `GET /health`, los listados `GET /person`, `GET /course`, `GET /person-role` y `GET /person-course`, y `GET /person/:id`. Con `DATABASE_URL`, cada listado consulta su tabla del esquema core (#32) y `GET /person/:id` devuelve una fila por UUID. Sin `DATABASE_URL`, el servicio usa un **mock de PostgreSQL** (`src/postgres/postgres-mock.ts`) y responde **200** con datos de prueba fijos. `POSTGRES_MOCK=1` fuerza el mock aunque exista `DATABASE_URL`. El escritorio no llama a este servicio.
+Expone `GET /health`, los listados `GET /person`, `GET /course`, `GET /organization`, `GET /person-role` y `GET /person-course`, y `GET /person/:id`. Con `DATABASE_URL`, cada listado consulta su tabla del esquema core (#32) y `GET /person/:id` devuelve una fila por UUID. Sin `DATABASE_URL`, el servicio usa un **mock de PostgreSQL** (`src/postgres/postgres-mock.ts`) y responde **200** con datos de prueba fijos. `POSTGRES_MOCK=1` fuerza el mock aunque exista `DATABASE_URL`. El escritorio no llama a este servicio.
 
 ## Arranque
 
@@ -63,8 +63,9 @@ pnpm dev
    - **person** → `GET /person/{id}` → pega `3fa85f64-5717-4562-b3fc-2c963f66afa6` → **200** (mock). Otro UUID válido → **404**; un `id` que no es UUID → **400**; con Postgres real, la fila de `person` con ese `id` → **200**, sin fila → **404**, base caída → **503**.
 3. **health** → `GET /health` → **Execute**: **200** en mock; con Postgres real, **503** si la base no responde.
 4. **course** → `GET /course` → **Execute**: **200** con el mock o filas reales.
-5. **person-role** → `GET /person-role` → **Execute**: **200** con el mock o filas reales.
-6. **person-course** → `GET /person-course` → **Execute**: **200** con el array fijo de ejemplo o con todas las filas de `person_course` (`person_id` y `course_id`). Con la tabla vacía devuelve `[]`; si la consulta real falla, **503**.
+5. **organization** → `GET /organization` → **Execute**: **200** con el mock o todas las filas reales de `organization` (`id`, `name` y `tax_id`). Con la tabla vacía devuelve `[]`; si la consulta real falla, **503**.
+6. **person-role** → `GET /person-role` → **Execute**: **200** con el mock o filas reales.
+7. **person-course** → `GET /person-course` → **Execute**: **200** con el array fijo de ejemplo o con todas las filas de `person_course` (`person_id` y `course_id`). Con la tabla vacía devuelve `[]`; si la consulta real falla, **503**.
 
 El documento OpenAPI en JSON está en `/docs-json`.
 
