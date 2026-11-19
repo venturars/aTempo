@@ -6,7 +6,7 @@ Carpeta de la SDK: `domain/`. HTTP de PostgreSQL: `api-postgresql/`. Persistenci
 
 El flujo de producto con PostgreSQL es Frontend → `api-postgresql` → `domain` → PostgreSQL. `api-postgresql` transforma HTTP. `domain` valida los tipos del core y abre PostgreSQL. Nest no escribe SQL.
 
-`domain/` es un paquete librería, hermano de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. Cubre tipos y lecturas de `organization`, `person`, `course`, `person_course`, `role` y `person_role`. Si un objeto no cumple esos campos, lanza y no llama a la base.
+`domain/` es un paquete librería, hermano de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. Cubre tipos, lecturas y escrituras de `organization`, `person`, `course`, `person_course`, `role` y `person_role`. `role` no se escribe. Si un objeto no cumple esos campos, lanza y no llama a la base.
 
 Hoy `domain/` existe y se prueba con un driver sustituido. `api-postgresql/` aún no lo importa: abre `pg` en `PostgresService` y expone `GET /health` y `GET /course`. `api-router/` solo expone `GET /health`. `api-rustfs/` solo expone `GET /health`. `api-sqlite/` solo expone `GET /health` (`SELECT 1`). El login y el registro del renderer no llaman a estas APIs. PostgreSQL, `api-postgresql/`, RustFS, `api-rustfs/` y `api-sqlite/` no están en Docker Compose. `domain/` tampoco.
 
@@ -55,7 +55,7 @@ Son almacenes y cadena, no una capa del escritorio ni del API-router. Cada una t
 
 El modelo y los enlaces están en `docs/POSTGRES.md`, `docs/SQLITE.md`, `docs/RUSTFS.md`, `docs/BLOCKEND.md` y `permanent-data.md`.
 
-Hoy `api-postgresql/` comprueba que PostgreSQL responde (`GET /health`) y lista `course` con su propio `Pool`. `domain/` trae el pool y las lecturas del core; este servicio aún no lo importa. `api-rustfs/` no abre RustFS en el health. El renderer y el API-router no abren estas bases.
+Hoy `api-postgresql/` comprueba que PostgreSQL responde (`GET /health`) y lista `course` con su propio `Pool`. `domain/` trae el pool, las lecturas y las escrituras del core; este servicio aún no lo importa. `api-rustfs/` no abre RustFS en el health. El renderer y el API-router no abren estas bases.
 
 ## aTempo de escritorio
 

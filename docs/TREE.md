@@ -78,24 +78,37 @@ domain/
     organization/
       list-organizations.ts
       get-organization-by-id.ts
+      create-organization.ts
+      update-organization.ts
+      delete-organization.ts
     person/
       list-persons.ts
       get-person-by-id.ts
       list-persons-by-course.ts
       list-persons-by-role.ts
+      create-person.ts
+      update-person.ts
+      delete-person.ts
     course/
       list-courses.ts
       get-course-by-id.ts
       list-courses-by-person.ts
       list-courses-by-organization.ts
+      create-course.ts
+      update-course.ts
+      delete-course.ts
     role/
       list-roles.ts
       get-role-by-name.ts
       list-roles-by-person.ts
     person-course/
       list-person-courses.ts
+      add-person-course.ts
+      remove-person-course.ts
     person-role/
       list-person-roles.ts
+      add-person-role.ts
+      remove-person-role.ts
   test/
     jest.json
     helpers.ts
@@ -103,6 +116,7 @@ domain/
     types.spec.ts
     reads.spec.ts
     filters.spec.ts
+    writes.spec.ts
 ```
 
 # Árbol de `api-sqlite/`

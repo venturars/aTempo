@@ -24,7 +24,7 @@ aTempo de escritorio es la aplicación del profesor. Sirve para registrar la asi
 - **pg 8.23.1** abre PostgreSQL (`DATABASE_URL`, timeout 3 s).
 - **pnpm** es el gestor de paquetes de `domain/`. Las versiones van fijas, sin `^`.
 
-`domain/` es la SDK: un paquete librería en la raíz, hermano de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. Fija los tipos del core (`organization`, `person`, `course`, `person_course`, `role`, `person_role`) y las lecturas. Si un objeto no cumple esos campos, lanza y no llama a PostgreSQL. No es un servicio HTTP: sin servidor, sin Swagger y sin Docker Compose.
+`domain/` es la SDK: un paquete librería en la raíz, hermano de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. Fija los tipos del core (`organization`, `person`, `course`, `person_course`, `role`, `person_role`), las lecturas y las escrituras. `role` no se escribe. Si un objeto no cumple esos campos, lanza y no llama a PostgreSQL. No es un servicio HTTP: sin servidor, sin Swagger y sin Docker Compose.
 
 ## 4. Stack de `api-router/`
 

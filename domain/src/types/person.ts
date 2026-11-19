@@ -14,13 +14,14 @@ export interface Person {
   phone: string | null
 }
 
-export function assertPerson(value: unknown): asserts value is Person {
+export type PersonInput = Omit<Person, 'id'>
+
+export function assertPersonInput(value: unknown): asserts value is PersonInput {
   if (value === null || typeof value !== 'object') {
     throw new Error('person debe ser un objeto')
   }
 
   const row = value as Record<string, unknown>
-  assertUuid(row.id, 'person.id')
   assertNonEmptyString(
     row.identification_document,
     'person.identification_document',
@@ -30,4 +31,14 @@ export function assertPerson(value: unknown): asserts value is Person {
   assertNonEmptyString(row.last_name, 'person.last_name')
   assertNullableString(row.birth_date, 'person.birth_date')
   assertNullableString(row.phone, 'person.phone')
+}
+
+export function assertPerson(value: unknown): asserts value is Person {
+  if (value === null || typeof value !== 'object') {
+    throw new Error('person debe ser un objeto')
+  }
+
+  const row = value as Record<string, unknown>
+  assertUuid(row.id, 'person.id')
+  assertPersonInput(value)
 }

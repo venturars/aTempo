@@ -63,6 +63,16 @@ export function rowsResult(
   }
 }
 
+export function commandResult(rowCount: number): QueryResult<QueryResultRow> {
+  return {
+    rows: [],
+    rowCount,
+    command: 'DELETE',
+    oid: 0,
+    fields: [],
+  }
+}
+
 export function mockDriver(
   impl?: QueryFn,
 ): { sql: string; params: unknown[] }[] {

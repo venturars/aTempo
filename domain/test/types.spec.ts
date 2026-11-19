@@ -1,6 +1,9 @@
-import { assertCourse } from '../src/types/course'
-import { assertOrganization } from '../src/types/organization'
-import { assertPerson } from '../src/types/person'
+import { assertCourse, assertCourseInput } from '../src/types/course'
+import {
+  assertOrganization,
+  assertOrganizationInput,
+} from '../src/types/organization'
+import { assertPerson, assertPersonInput } from '../src/types/person'
 import { assertPersonCourse } from '../src/types/person-course'
 import { assertPersonRole } from '../src/types/person-role'
 import { assertRole } from '../src/types/role'
@@ -29,6 +32,30 @@ describe('assert*', () => {
     expect(() => assertPerson(incomplete)).toThrow(
       'person.identification_document debe ser un string no vacío',
     )
+  })
+
+  it('rejects a create input missing a field', () => {
+    expect(() => assertOrganizationInput({ name: 'Acme' })).toThrow(
+      'organization.tax_id debe ser un string no vacío',
+    )
+    expect(() =>
+      assertPersonInput({
+        email: validPerson.email,
+        first_name: validPerson.first_name,
+        last_name: validPerson.last_name,
+        birth_date: validPerson.birth_date,
+        phone: validPerson.phone,
+      }),
+    ).toThrow('person.identification_document debe ser un string no vacío')
+    expect(() =>
+      assertCourseInput({
+        organization_id: validCourse.organization_id,
+        name: validCourse.name,
+        acronym: validCourse.acronym,
+        start_at: validCourse.start_at,
+        end_at: validCourse.end_at,
+      }),
+    ).toThrow('course.contract_address debe ser un string no vacío')
   })
 
   it('rejects an invented role name', () => {
