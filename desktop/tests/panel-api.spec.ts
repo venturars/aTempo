@@ -8,10 +8,9 @@ import {
   type ApiClient
 } from '../src/renderer/src/api/client'
 import { ApiError, type AttendanceRecord } from '../src/renderer/src/api/contract'
+import { localDay } from '../src/renderer/src/api/isoTime'
 import { sampleSession, studentIdOf, type FixtureName } from '../src/renderer/src/api/fixtures'
 import { usePanelStore } from '../src/renderer/src/panel/panelStore'
-
-// La pestaña Hoy del panel, conectada al cliente de la API con el transporte mock (#141).
 
 const diegoMolero = studentIdOf('Diego Molero')
 const diegoTorres = studentIdOf('Diego Torres')
@@ -19,8 +18,6 @@ const diegoTorres = studentIdOf('Diego Torres')
 type Store = ReturnType<typeof usePanelStore.getState>
 
 const store = (): Store => usePanelStore.getState()
-
-// Empieza cada caso con el mock y el store recién creados, y la clase de hoy cargada.
 async function freshToday(fixture: FixtureName = 'success'): Promise<void> {
   resetApiClient(fixture)
   usePanelStore.setState(usePanelStore.getInitialState(), true)
@@ -31,6 +28,10 @@ function sessionId(): string {
   const session = store().session
   if (session === null) throw new Error('No hay clase hoy.')
   return session.id
+}
+
+function today(time: string): string {
+  return `${localDay()}T${time}:00+01:00`
 }
 
 async function arrive(studentId: string, time: string): Promise<void> {
@@ -48,12 +49,11 @@ test.afterEach(() => {
 test('marks on-time and late arrivals', async () => {
   await freshToday()
   await store().openSession()
-  // Inicio a las 09:00 con 10 minutos de margen.
   await arrive(diegoMolero, '09:05')
   await arrive(diegoTorres, '09:15')
   expect(store().records[diegoMolero]?.status).toBe('present')
   expect(store().records[diegoTorres]?.status).toBe('late')
-  expect(store().records[diegoMolero]?.checkedInAt).toBe('2026-11-11T09:05:00+01:00')
+  expect(store().records[diegoMolero]?.checkedInAt).toBe(today('09:05'))
 })
 
 test('keeps a repeated arrival unchanged', async () => {
@@ -62,7 +62,7 @@ test('keeps a repeated arrival unchanged', async () => {
   await arrive(diegoMolero, '09:05')
   await arrive(diegoMolero, '09:30')
   expect(store().records[diegoMolero]?.status).toBe('present')
-  expect(store().records[diegoMolero]?.checkedInAt).toBe('2026-11-11T09:05:00+01:00')
+  expect(store().records[diegoMolero]?.checkedInAt).toBe(today('09:05'))
 })
 
 test('closes the roll and marks pending as absent', async () => {
@@ -83,12 +83,12 @@ test('edits the arrival time with a reason', async () => {
   store().requestTime(diegoMolero, '09:20')
   expect(store().pendingCorrection?.correction).toEqual({
     status: 'late',
-    checkedInAt: '2026-11-11T09:20:00+01:00'
+    checkedInAt: today('09:20')
   })
   await store().saveCorrection('Llegó más tarde de lo que marcó')
   const record = store().records[diegoMolero]
   expect(record?.status).toBe('late')
-  expect(record?.checkedInAt).toBe('2026-11-11T09:20:00+01:00')
+  expect(record?.checkedInAt).toBe(today('09:20'))
   expect(record?.reason).toBe('Llegó más tarde de lo que marcó')
   expect(record?.updatedBy).toBe('teacher-ventura-rodriguez')
   expect(record?.updatedAt).not.toBeNull()
@@ -103,7 +103,6 @@ test('does not save a correction without a reason or that changes nothing', asyn
   expect(store().pendingCorrection).not.toBeNull()
   store().cancelCorrection()
   expect(store().pendingCorrection).toBeNull()
-  // Pendiente no es una marca que pueda poner el profesor.
   store().requestMark(diegoMolero, 'pendiente')
   expect(store().pendingCorrection).toBeNull()
 })
@@ -112,17 +111,56 @@ test('keeps the arrival of a student who checked in from becoming absent', async
   await freshToday()
   await store().openSession()
   await store().simulateArrival()
-  expect(store().demoArrivals[diegoMolero]).toBe(true)
   store().requestMark(diegoMolero, 'ausente')
   expect(store().pendingCorrection).toBeNull()
-  // Una hora no se pide para quien no ha llegado.
+  store().resetToday()
+  await store().loadToday()
+  store().requestMark(diegoMolero, 'ausente')
+  expect(store().pendingCorrection).toBeNull()
   store().requestTime(diegoTorres, '09:10')
   expect(store().pendingCorrection).toBeNull()
 })
 
+test('asks for the sessions of the real day', async () => {
+  await freshToday()
+  expect(store().session?.startsAt.slice(0, 10)).toBe(localDay())
+})
+
+test('keeps one correction at a time while it is saving', async () => {
+  await freshToday()
+  await store().openSession()
+  const client = getApiClient()
+  let finish: (record: AttendanceRecord) => void = () => {}
+  client.correctAttendance = () =>
+    new Promise<AttendanceRecord>((resolve) => {
+      finish = resolve
+    })
+  store().requestMark(diegoMolero, 'retraso')
+  const saving = store().saveCorrection('Llegó tarde')
+  expect(store().busy).toBe(true)
+  store().cancelCorrection()
+  store().requestMark(diegoTorres, 'ausente')
+  expect(store().pendingCorrection?.studentId).toBe(diegoMolero)
+  finish({ ...store().records[diegoMolero]!, status: 'late', reason: 'Llegó tarde' })
+  await saving
+  expect(store().pendingCorrection).toBeNull()
+  expect(store().records[diegoMolero]?.status).toBe('late')
+})
+
+test('does not show a code error when closing overlaps a code renewal', async () => {
+  await freshToday()
+  await store().openSession()
+  await Promise.all([store().refreshCheckInCode(), store().closeSession()])
+  expect(store().session?.state).toBe('closed')
+  expect(store().todayError).toBeNull()
+  await store().reopenSession()
+  await Promise.all([store().closeSession(), store().refreshCheckInCode()])
+  expect(store().todayError).toBeNull()
+})
+
 test('applies the contract rules in the mock', async () => {
   const client = resetApiClient('success')
-  const [session] = await client.listSessions('2026-11-11')
+  const [session] = await client.listSessions(localDay())
   if (session === undefined) throw new Error('No hay clase hoy.')
   expect(await client.listSessions('2026-11-12')).toEqual([])
   await expect(client.listSessions('11/11/2026')).rejects.toMatchObject({
@@ -138,7 +176,6 @@ test('applies the contract rules in the mock', async () => {
     statusCode: 404,
     code: 'COURSE_NOT_FOUND'
   })
-  // Antes de abrir no se corrige y no hay código.
   await expect(
     client.correctAttendance(session.id, diegoMolero, { status: 'present', reason: 'Prueba' })
   ).rejects.toMatchObject({ statusCode: 409, code: 'SESSION_NOT_EDITABLE' })
@@ -168,7 +205,7 @@ test('applies the contract rules in the mock', async () => {
     client.correctAttendance(session.id, diegoMolero, {
       status: 'absent',
       reason: 'Prueba',
-      checkedInAt: '2026-11-11T09:05:00+01:00'
+      checkedInAt: today('09:05')
     })
   ).rejects.toMatchObject({ statusCode: 400, details: [{ field: 'checkedInAt' }] })
   await expect(
@@ -183,13 +220,9 @@ test('applies the contract rules in the mock', async () => {
   expect(await getApiClient().listCourseStudents(session.courseId)).toHaveLength(15)
 })
 
-// Reglas de conexión del cliente, con un transporte de prueba que cuenta las llamadas.
-
 function noResponse(): ApiError {
   return new ApiError(0, 'Network Error', 'NETWORK_ERROR', 'No hay respuesta del servidor.')
 }
-
-// Un transporte donde cada operación falla las primeras `failures` veces.
 function flakyTransport(
   failures: number,
   error: () => ApiError
@@ -260,6 +293,24 @@ test('never retries a write blindly', async () => {
   expect(calls()).toBe(1)
 })
 
+test('aborts the transport request when the caller cancels', async () => {
+  let seen: AbortSignal | undefined
+  const transport: ApiClient = {
+    ...flakyTransport(0, noResponse).transport,
+    openSession: (_sessionId, options) => {
+      seen = options?.signal
+      return new Promise(() => {})
+    }
+  }
+  const controller = new AbortController()
+  const opening = withRequestRules(transport).openSession('session-1', {
+    signal: controller.signal
+  })
+  controller.abort()
+  await expect(opening).rejects.toMatchObject({ code: 'REQUEST_CANCELLED' })
+  expect(seen?.aborted).toBe(true)
+})
+
 test('cancels a request without retrying it', async () => {
   const { transport, calls } = flakyTransport(0, noResponse)
   const controller = new AbortController()
@@ -269,8 +320,6 @@ test('cancels a request without retrying it', async () => {
   ).rejects.toMatchObject({ statusCode: 0, code: 'REQUEST_CANCELLED' })
   expect(calls()).toBe(0)
 })
-
-// Pantalla
 
 const row = (window: Page, name: string): Locator =>
   window.getByRole('row').filter({ has: window.getByRole('button', { name, exact: true }) })
@@ -284,7 +333,6 @@ async function withPanel(
   try {
     const window = await app.firstWindow()
     if (clock) {
-      // Reloj controlado: los temporizadores del cliente se crean después de instalarlo.
       await window.clock.install({ time: new Date('2026-11-11T08:00:00Z') })
       await window.reload()
     }
@@ -428,6 +476,22 @@ test('stops waiting after ten seconds without an answer', async () => {
         'El servidor tarda demasiado en responder. Inténtalo de nuevo.'
       )
       await expect(open).toBeEnabled()
+    },
+    { clock: true }
+  )
+})
+
+test('keeps asking for the check-in code after it fails', async () => {
+  await withPanel(
+    'code-unavailable',
+    async (window) => {
+      await window.getByRole('button', { name: 'Abrir lista', exact: true }).click()
+      const waiting = window.getByText('Pidiendo el código…', { exact: true })
+      await expect(waiting).toBeVisible()
+      await window.clock.fastForward(1_000)
+      await expect(waiting).toBeVisible()
+      await window.clock.fastForward(5_000)
+      await expect(window.getByText(/^Código \d{6}$/)).toBeVisible()
     },
     { clock: true }
   )

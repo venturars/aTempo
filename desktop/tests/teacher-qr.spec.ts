@@ -46,7 +46,6 @@ async function open(p: Page): Promise<void> {
   await p.getByRole('button', { name: 'Abrir lista', exact: true }).click()
   await seconds(p, 30)
 }
-// Cada corrección pide un motivo antes de guardarse.
 async function giveReason(p: Page): Promise<void> {
   const dialog = p.getByRole('dialog', { name: 'Motivo del cambio' })
   await dialog.getByLabel('Motivo', { exact: true }).fill('Corrección en clase')
@@ -62,7 +61,6 @@ test('saves a time edit made after cancelling a previous edit with Escape', asyn
     await diego.getByRole('button', { name: todayEntry[0], exact: true }).click()
     await diego.locator('input[type=time]').press('Escape')
     await diego.getByRole('button', { name: todayEntry[0], exact: true }).click()
-    // Una hora distinta de la de llegada, para que la edición guarde algo.
     await diego.locator('input[type=time]').fill('09:07')
     await diego.locator('input[type=time]').press('Enter')
     await giveReason(p)
@@ -78,7 +76,6 @@ test('keeps a manual mark when a time is opened and left without changes', async
     await diego.getByRole('button', { name: 'Pendiente', exact: true }).click()
     await p.getByRole('menu').getByRole('button', { name: 'Tarde', exact: true }).click()
     await giveReason(p)
-    // Una marca puesta a mano no trae hora: el campo empieza vacío.
     await diego.getByRole('button', { name: '—', exact: true }).click()
     await diego.locator('input[type=time]').press('Enter')
     await expect(p.getByRole('dialog')).toHaveCount(0)
@@ -261,16 +258,16 @@ test('simulates next eligible arrival, preserves manual marks and exhausts valid
     await open(p)
     await p.getByRole('button', { name: 'Simular llegada', exact: true }).press('Enter')
     const diego = row(p, 'Diego Molero')
+    await diego.getByRole('button', { name: 'Presente', exact: true }).click()
+    await expect(
+      p.getByRole('menu').getByRole('button', { name: 'Ausente', exact: true })
+    ).toHaveCount(0)
+    await p.getByRole('menu').getByRole('button', { name: 'Presente', exact: true }).click()
     await diego.getByRole('button', { name: todayEntry[0], exact: true }).click()
     await diego.locator('input[type=time]').fill('09:33')
     await diego.locator('input[type=time]').press('Enter')
     await giveReason(p)
-    // La hora corregida pasa el margen: el estado cambia solo a Tarde.
-    await diego.getByRole('button', { name: 'Tarde', exact: true }).click()
-    await expect(
-      p.getByRole('menu').getByRole('button', { name: 'Ausente', exact: true })
-    ).toHaveCount(0)
-    await p.getByRole('menu').getByRole('button', { name: 'Tarde', exact: true }).click()
+    await expect(diego.getByRole('button', { name: 'Tarde', exact: true })).toBeVisible()
     const other = row(p, 'Diego Torres')
     await other.getByRole('button', { name: 'Pendiente', exact: true }).click()
     await p.getByRole('menu').getByRole('button', { name: 'Ausente', exact: true }).click()

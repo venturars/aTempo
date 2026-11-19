@@ -34,20 +34,21 @@ function inFinder(x: number, y: number, size: number): boolean {
   return corner(0, 0) || corner(size - 7, 0) || corner(0, size - 7)
 }
 
-// Dibuja el código que da el cliente y pide otro cuando caduca.
+const renewRetryDelay = 5000
+
 export function SessionQr({
   code,
   expiresAt,
   onExpire
 }: {
-  code: string
-  expiresAt: string
-  onExpire: () => void
+  code: string | null
+  expiresAt: string | null
+  onExpire: () => Promise<boolean>
 }): React.JSX.Element {
   const [now, setNow] = useState(() => Date.now())
-  // El último código caducado que ya se pidió renovar: así se pide una sola vez.
-  const renewed = useRef<string | null>(null)
-  const expiry = Date.parse(expiresAt)
+  const renewing = useRef(false)
+  const lastRenewal = useRef(0)
+  const expiry = expiresAt === null ? 0 : Date.parse(expiresAt)
 
   useEffect(() => {
     const refresh = (): void => setNow(Date.now())
@@ -61,18 +62,24 @@ export function SessionQr({
     }
   }, [expiresAt])
 
-  const expired = now >= expiry
+  const expired = code === null || now >= expiry
   useEffect(() => {
-    if (expired && renewed.current !== expiresAt) {
-      renewed.current = expiresAt
-      onExpire()
+    if (!expired || renewing.current || now - lastRenewal.current < renewRetryDelay) {
+      return
     }
-  }, [expired, expiresAt, onExpire])
+    renewing.current = true
+    lastRenewal.current = now
+    void onExpire().then((requested) => {
+      renewing.current = false
+      if (!requested) {
+        lastRenewal.current = 0
+      }
+    })
+  }, [expired, now, onExpire])
 
-  // Entre que caduca y llega el código nuevo, la cuenta se queda en 1.
   const seconds = Math.min(30, Math.max(1, Math.ceil((expiry - now) / 1000)))
   const size = 21
-  const cells = useMemo(() => qrModules(size, Number(code)), [code])
+  const cells = useMemo(() => (code === null ? [] : qrModules(size, Number(code))), [code])
   return (
     <div className="flex shrink-0 flex-col items-center gap-2">
       <p className="text-sm font-medium">QR de ejemplo</p>
@@ -97,10 +104,16 @@ export function SessionQr({
           )
         )}
       </svg>
-      <p className="text-sm font-medium tabular-nums">Código {code}</p>
-      <p className="text-sm">
-        Cambia en {seconds} {seconds === 1 ? 'segundo' : 'segundos'}
-      </p>
+      {code === null ? (
+        <p className="text-sm">Pidiendo el código…</p>
+      ) : (
+        <>
+          <p className="text-sm font-medium tabular-nums">Código {code}</p>
+          <p className="text-sm">
+            Cambia en {seconds} {seconds === 1 ? 'segundo' : 'segundos'}
+          </p>
+        </>
+      )}
     </div>
   )
 }

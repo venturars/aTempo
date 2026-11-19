@@ -1,17 +1,27 @@
-// Las fechas de los datos de ejemplo están en la hora de Madrid en noviembre: UTC+1.
 const sampleTimeZone = '+01:00'
 
-// Une un día (2026-11-11) y una hora (09:04) en una hora ISO 8601.
 export function isoAt(day: string, time: string): string {
   return `${day}T${time}:00${sampleTimeZone}`
 }
 
-// La hora de una fecha ISO tal como está escrita: 2026-11-11T09:04:00+01:00 da 09:04.
+export function atSessionTime(sessionStartsAt: string, time: string): string {
+  return `${sessionStartsAt.slice(0, 11)}${time}:00${sessionStartsAt.slice(19)}`
+}
+
 export function clockTime(iso: string): string {
   return iso.slice(11, 16)
 }
 
-// El día de una fecha ISO tal como está escrito: 2026-11-11T09:04:00+01:00 da 2026-11-11.
 export function dayOf(iso: string): string {
   return iso.slice(0, 10)
+}
+
+export function isClockTime(value: string): boolean {
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(value)
+}
+
+export function localDay(date: Date = new Date()): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${date.getFullYear()}-${month}-${day}`
 }

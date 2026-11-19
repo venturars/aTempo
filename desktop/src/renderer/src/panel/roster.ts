@@ -61,9 +61,6 @@ export const todayEntry = rosterNames.map((name) => {
 
 export const todayLabel = 'Mié 11 nov 2026'
 
-// El mismo día que todayLabel, como lo escribe la API.
-export const todayDate = '2026-11-11'
-
 // La clase del Dashboard. Si cae en todayLabel, el título es Hoy. Si no, es la próxima.
 export const dashboardDate = todayLabel
 

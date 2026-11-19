@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import { checkedInByStudent } from '../api/attendanceRules'
 import { clockTime } from '../api/isoTime'
 import {
   todayArrival,
@@ -247,14 +248,12 @@ function TodayView(): React.JSX.Element {
   const resetToday = usePanelStore((state) => state.resetToday)
   const navigate = useNavigate()
 
-  // La clase de hoy se pide una vez. Al volver a la pestaña, ya está cargada.
   useEffect(() => {
     if (todayLoad === 'loading') {
       void loadToday()
     }
   }, [todayLoad, loadToday])
 
-  // Con la sesión caducada (401), se vuelve al login.
   useEffect(() => {
     if (todayLoad === 'signedOut') {
       resetToday()
@@ -315,7 +314,6 @@ function TodayClass(): React.JSX.Element {
   const checkInCode = usePanelStore((state) => state.checkInCode)
   const busy = usePanelStore((state) => state.busy)
   const canSimulateArrival = usePanelStore((state) => state.canSimulateArrival)
-  const demoArrivals = usePanelStore((state) => state.demoArrivals)
   const simulateArrival = usePanelStore((state) => state.simulateArrival)
   const openSession = usePanelStore((state) => state.openSession)
   const askClose = usePanelStore((state) => state.askClose)
@@ -329,7 +327,9 @@ function TodayClass(): React.JSX.Element {
     .map((student) => ({
       ...student,
       mark: todayMark({ session, records }, student.studentId),
-      time: todayArrival({ records }, student.studentId)
+      time: todayArrival({ records }, student.studentId),
+      checkedIn:
+        records[student.studentId] !== undefined && checkedInByStudent(records[student.studentId])
     }))
     .sort((a, b) => compareByName(a.name, b.name))
   const present = roster.filter((row) => row.mark === 'presente').length
@@ -343,13 +343,11 @@ function TodayClass(): React.JSX.Element {
     <section className="card overflow-hidden bg-base-100 shadow-sm">
       {phase === 'abierta' ? (
         <div className="card-body flex-row flex-wrap items-center gap-6">
-          {checkInCode !== null ? (
-            <SessionQr
-              code={checkInCode.code}
-              expiresAt={checkInCode.expiresAt}
-              onExpire={refreshCheckInCode}
-            />
-          ) : null}
+          <SessionQr
+            code={checkInCode?.code ?? null}
+            expiresAt={checkInCode?.expiresAt ?? null}
+            onExpire={refreshCheckInCode}
+          />
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <h2 className="text-lg font-medium">{courseName}</h2>
             <p className="text-sm text-base-content/60">{courseTime}</p>
@@ -405,7 +403,6 @@ function TodayClass(): React.JSX.Element {
       )}
       <RosterTable
         roster={roster}
-        demoArrivals={demoArrivals}
         phase={phase}
         openStudent={openStudent}
         requestMark={requestMark}
@@ -418,7 +415,6 @@ function TodayClass(): React.JSX.Element {
 
 function RosterTable({
   roster,
-  demoArrivals = {},
   phase,
   openStudent,
   requestMark,
@@ -426,8 +422,7 @@ function RosterTable({
   compact = false,
   embedded = false
 }: {
-  demoArrivals?: Record<string, true>
-  roster: (TodayStudent & { mark: Attendance | 'none'; time: string })[]
+  roster: (TodayStudent & { mark: Attendance | 'none'; time: string; checkedIn: boolean })[]
   phase: Phase
   openStudent: (name: string) => void
   requestMark: (studentId: string, mark: Attendance) => void
@@ -436,7 +431,6 @@ function RosterTable({
   embedded?: boolean
 }): React.JSX.Element {
   const started = phase !== 'programada'
-  // Con la lista abierta o cerrada, el profesor puede corregir marcas y horas.
   const editable = phase === 'abierta' || phase === 'cerrada'
   return (
     <div
@@ -465,7 +459,7 @@ function RosterTable({
           </thead>
         ) : null}
         <tbody>
-          {roster.map(({ studentId, name, mark: status, time }) => (
+          {roster.map(({ studentId, name, mark: status, time, checkedIn }) => (
             <tr key={studentId}>
               <td>
                 <div className="flex w-full items-center gap-3">
@@ -494,7 +488,7 @@ function RosterTable({
                 <td>
                   <MarkControl
                     status={status}
-                    arrivalAccepted={demoArrivals[studentId] === true}
+                    arrivalAccepted={checkedIn}
                     enabled={editable}
                     person={name}
                     when={dashboardDate}

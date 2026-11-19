@@ -20,7 +20,6 @@ function startupHash(): string | undefined {
   return undefined
 }
 
-// --api-fixture=<nombre> elige los datos del mock de la API. El renderer la lee de ?apiFixture.
 function apiFixture(): string | undefined {
   const flag = process.argv.find((argument) => argument.startsWith('--api-fixture='))
   return flag?.slice('--api-fixture='.length)

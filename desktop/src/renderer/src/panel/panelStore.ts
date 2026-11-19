@@ -9,19 +9,12 @@ import {
   type ErrorCode,
   type Session
 } from '../api/contract'
-import { clockTime, dayOf, isoAt } from '../api/isoTime'
-import { statusForArrival } from '../student/attendanceStatus'
+import { arrivalStatus, checkedInByStudent } from '../api/attendanceRules'
+import { atSessionTime, clockTime, isClockTime, localDay } from '../api/isoTime'
 import { correctedStatusOf, markOf, phaseOf } from './apiValues'
-import { todayDate, type Attendance, type Phase, type SessionMarkBook } from './roster'
-
-function validArrival(time: string): boolean {
-  return /^([01]\d|2[0-3]):[0-5]\d$/.test(time)
-}
+import type { Attendance, Phase, SessionMarkBook } from './roster'
 
 export type PanelTab = 0 | 1 | 2 | 3
-
-// Qué enseña la pestaña Hoy: cargando, la clase, sin clases, sin acceso, un fallo al leer
-// o la sesión caducada, que vuelve al login.
 export type TodayLoad = 'loading' | 'ready' | 'empty' | 'denied' | 'failed' | 'signedOut'
 
 export type TodayStudent = {
@@ -29,7 +22,6 @@ export type TodayStudent = {
   name: string
 }
 
-// Un cambio elegido que espera su motivo en el diálogo.
 export type PendingCorrection = {
   studentId: string
   name: string
@@ -46,7 +38,6 @@ type PanelState = {
   busy: boolean
   todayError: string | null
   canSimulateArrival: boolean
-  demoArrivals: Record<string, true>
   pendingCorrection: PendingCorrection | null
   sessionMarks: SessionMarkBook
   classId: string | null
@@ -66,7 +57,7 @@ type PanelState = {
   cancelClose: () => void
   closeSession: () => Promise<void>
   reopenSession: () => Promise<void>
-  refreshCheckInCode: () => Promise<void>
+  refreshCheckInCode: () => Promise<boolean>
   simulateArrival: () => Promise<void>
   requestMark: (studentId: string, mark: Attendance) => void
   requestTime: (studentId: string, time: string) => void
@@ -78,12 +69,10 @@ type PanelState = {
   goBack: () => void
 }
 
-// La fase de la clase de hoy. Sin clase, la pantalla se comporta como programada.
 export function todayPhase(state: Pick<PanelState, 'session'>): Phase {
   return state.session === null ? 'programada' : phaseOf(state.session.state)
 }
 
-// La marca de un alumno. Antes de abrir la lista no hay marca: 'none'.
 export function todayMark(
   state: Pick<PanelState, 'session' | 'records'>,
   studentId: string
@@ -95,13 +84,11 @@ export function todayMark(
   return record === undefined ? 'pendiente' : markOf(record.status)
 }
 
-// La hora de entrada de un alumno, o una raya si no tiene.
 export function todayArrival(state: Pick<PanelState, 'records'>, studentId: string): string {
   const checkedInAt = state.records[studentId]?.checkedInAt
   return checkedInAt === null || checkedInAt === undefined ? '—' : clockTime(checkedInAt)
 }
 
-// El mensaje de cada `code` del contrato. Lo que no está aquí usa el mensaje genérico.
 const errorMessages: Partial<Record<ErrorCode, string>> = {
   NETWORK_ERROR: 'No se ha podido conectar con el servidor. Inténtalo de nuevo.',
   NETWORK_TIMEOUT: 'El servidor tarda demasiado en responder. Inténtalo de nuevo.',
@@ -130,8 +117,6 @@ function hasCode(error: unknown, code: ErrorCode): boolean {
   return error instanceof ApiError && error.code === code
 }
 
-// Tras estos errores, la pantalla vuelve a leer la clase para enseñar cómo está de verdad:
-// un 409 o un 404 porque cambió en otro sitio, y uno de conexión porque no se sabe si se aplicó.
 function needsReread(error: unknown): boolean {
   return (
     (error instanceof ApiError && (error.statusCode === 409 || error.statusCode === 404)) ||
@@ -139,11 +124,15 @@ function needsReread(error: unknown): boolean {
   )
 }
 
+type CodeResult = {
+  code: CheckInCode | null
+  error: unknown
+}
+
 function recordsById(records: AttendanceRecord[]): Record<string, AttendanceRecord> {
   return Object.fromEntries(records.map((record) => [record.studentId, record]))
 }
 
-// Con StrictMode, React monta la pestaña dos veces: la segunda carga espera a la primera.
 let todayRequest: Promise<void> | null = null
 
 export const usePanelStore = create<PanelState>((set, get) => {
@@ -158,7 +147,25 @@ export const usePanelStore = create<PanelState>((set, get) => {
     })
   }
 
-  // Lee la sesión y su lista. Antes de abrir, la lista sale de los alumnos del curso.
+  async function fetchCode(sessionId: string): Promise<CodeResult> {
+    try {
+      return { code: await getApiClient().getCheckInCode(sessionId), error: null }
+    } catch (error) {
+      return { code: null, error }
+    }
+  }
+
+  function showCodeError(error: unknown): void {
+    if (error === null || hasCode(error, 'REQUEST_CANCELLED')) {
+      return
+    }
+    if (hasCode(error, 'UNAUTHENTICATED')) {
+      set({ todayLoad: 'signedOut' })
+      return
+    }
+    set({ todayError: errorMessage(error) })
+  }
+
   async function showSession(session: Session): Promise<void> {
     const client = getApiClient()
     if (session.state === 'scheduled') {
@@ -170,20 +177,22 @@ export const usePanelStore = create<PanelState>((set, get) => {
         checkInCode: null,
         todayLoad: 'ready'
       })
-    } else {
-      const records = await client.listAttendances(session.id)
-      set({
-        session,
-        students: records.map(({ studentId, name }) => ({ studentId, name })),
-        records: recordsById(records),
-        todayLoad: 'ready'
-      })
+      updateDemo()
+      return
     }
-    if (session.state === 'open') {
-      await get().refreshCheckInCode()
-    } else {
-      set({ checkInCode: null })
-    }
+    const noCode: CodeResult = { code: null, error: null }
+    const [records, codeResult] = await Promise.all([
+      client.listAttendances(session.id),
+      session.state === 'open' ? fetchCode(session.id) : Promise.resolve(noCode)
+    ])
+    set({
+      session,
+      students: records.map(({ studentId, name }) => ({ studentId, name })),
+      records: recordsById(records),
+      checkInCode: codeResult.code,
+      todayLoad: 'ready'
+    })
+    showCodeError(codeResult.error)
     updateDemo()
   }
 
@@ -192,8 +201,6 @@ export const usePanelStore = create<PanelState>((set, get) => {
     await showSession(session)
   }
 
-  // Enseña el error de una escritura y, si hace falta, vuelve a leer la clase.
-  // Una cancelación no enseña nada. Una sesión caducada vuelve al login.
   async function showFailure(error: unknown, sessionId: string): Promise<void> {
     if (hasCode(error, 'REQUEST_CANCELLED')) {
       return
@@ -204,18 +211,14 @@ export const usePanelStore = create<PanelState>((set, get) => {
     }
     set({ todayError: errorMessage(error) })
     if (needsReread(error)) {
-      try {
-        await reloadSession(sessionId)
-      } catch {
-        // Si no se puede leer, el aviso que ya se ve basta.
-      }
+      await reloadSession(sessionId).catch(() => undefined)
     }
   }
 
   async function loadToday(): Promise<void> {
     set({ todayError: null })
     try {
-      const sessions = await getApiClient().listSessions(todayDate)
+      const sessions = await getApiClient().listSessions(localDay())
       const session = sessions[0]
       if (session === undefined) {
         set({ todayLoad: 'empty', session: null, students: [], records: {} })
@@ -247,7 +250,6 @@ export const usePanelStore = create<PanelState>((set, get) => {
     busy: false,
     todayError: null,
     canSimulateArrival: false,
-    demoArrivals: {},
     pendingCorrection: null,
     sessionMarks: {},
     classId: null,
@@ -268,7 +270,6 @@ export const usePanelStore = create<PanelState>((set, get) => {
       })
       return todayRequest
     },
-    // Deja la pestaña Hoy como al arrancar. Se usa al volver al login.
     resetToday: () => {
       set({
         todayLoad: 'loading',
@@ -278,7 +279,6 @@ export const usePanelStore = create<PanelState>((set, get) => {
         checkInCode: null,
         todayError: null,
         canSimulateArrival: false,
-        demoArrivals: {},
         pendingCorrection: null
       })
     },
@@ -289,9 +289,7 @@ export const usePanelStore = create<PanelState>((set, get) => {
       }
       set({ busy: true, todayError: null })
       try {
-        await getApiClient().openSession(session.id)
-        set({ demoArrivals: {} })
-        await reloadSession(session.id)
+        await showSession(await getApiClient().openSession(session.id))
       } catch (error) {
         await showFailure(error, session.id)
       } finally {
@@ -312,15 +310,13 @@ export const usePanelStore = create<PanelState>((set, get) => {
       }
       set({ busy: true, todayError: null })
       try {
-        await getApiClient().closeSession(session.id)
-        await reloadSession(session.id)
+        await showSession(await getApiClient().closeSession(session.id))
       } catch (error) {
         await showFailure(error, session.id)
       } finally {
         set({ busy: false })
       }
     },
-    // Solo en la demo: el contrato v1 todavía no permite volver a abrir.
     reopenSession: async () => {
       const session = get().session
       const demo = getDemoControls()
@@ -329,8 +325,7 @@ export const usePanelStore = create<PanelState>((set, get) => {
       }
       set({ busy: true, todayError: null })
       try {
-        await demo.reopenSession(session.id)
-        await reloadSession(session.id)
+        await showSession(await demo.reopenSession(session.id))
       } catch (error) {
         await showFailure(error, session.id)
       } finally {
@@ -339,20 +334,18 @@ export const usePanelStore = create<PanelState>((set, get) => {
     },
     refreshCheckInCode: async () => {
       const session = get().session
-      if (session === null || session.state !== 'open') {
-        return
+      if (session === null || session.state !== 'open' || get().busy) {
+        return false
       }
-      try {
-        const code = await getApiClient().getCheckInCode(session.id)
-        set({ checkInCode: code })
-      } catch (error) {
-        // Sin volver a leer: leer la clase abierta pide otra vez el código.
-        if (hasCode(error, 'UNAUTHENTICATED')) {
-          set({ todayLoad: 'signedOut' })
-        } else if (!hasCode(error, 'REQUEST_CANCELLED')) {
-          set({ todayError: errorMessage(error) })
-        }
+      const result = await fetchCode(session.id)
+      if (get().busy || get().session?.state !== 'open') {
+        return true
       }
+      if (result.code !== null) {
+        set({ checkInCode: result.code })
+      }
+      showCodeError(result.error)
+      return true
     },
     simulateArrival: async () => {
       const session = get().session
@@ -364,10 +357,7 @@ export const usePanelStore = create<PanelState>((set, get) => {
       try {
         const record = await demo.simulateNextArrival(session.id)
         if (record !== null) {
-          set((state) => ({
-            records: { ...state.records, [record.studentId]: record },
-            demoArrivals: { ...state.demoArrivals, [record.studentId]: true }
-          }))
+          set((state) => ({ records: { ...state.records, [record.studentId]: record } }))
         }
       } catch (error) {
         await showFailure(error, session.id)
@@ -380,38 +370,39 @@ export const usePanelStore = create<PanelState>((set, get) => {
       const state = get()
       const status = correctedStatusOf(mark)
       const record = state.records[studentId]
+      if (state.busy || state.pendingCorrection !== null) {
+        return
+      }
       if (status === null || record === undefined || todayPhase(state) === 'programada') {
         return
       }
-      // Elegir la marca que ya tiene no cambia nada.
       if (record.status === status) {
         return
       }
-      // Quien registró su llegada no puede pasar a ausente.
-      if (state.demoArrivals[studentId] && status === 'absent') {
+      if (status === 'absent' && checkedInByStudent(record)) {
         return
       }
       set({ pendingCorrection: { studentId, name: record.name, correction: { status } } })
     },
     requestTime: (studentId, time) => {
-      const session = get().session
+      const { session, busy, pendingCorrection } = get()
       const record = get().records[studentId]
-      if (session === null || record === undefined || !validArrival(time)) {
+      if (busy || pendingCorrection !== null) {
         return
       }
-      // Solo tiene hora quien ha llegado.
+      if (session === null || record === undefined || !isClockTime(time)) {
+        return
+      }
       if (record.status !== 'present' && record.status !== 'late') {
         return
       }
-      // La hora nueva decide si es puntual o tarde, con la misma regla que la llegada.
-      const arrival = statusForArrival(time, clockTime(session.startsAt), session.lateMinutes)
       set({
         pendingCorrection: {
           studentId,
           name: record.name,
           correction: {
-            status: arrival === 'presente' ? 'present' : 'late',
-            checkedInAt: isoAt(dayOf(session.startsAt), time)
+            status: arrivalStatus(session, time),
+            checkedInAt: atSessionTime(session.startsAt, time)
           }
         }
       })
@@ -441,6 +432,9 @@ export const usePanelStore = create<PanelState>((set, get) => {
       }
     },
     cancelCorrection: () => {
+      if (get().busy) {
+        return
+      }
       set({ pendingCorrection: null })
     },
     setSessionMark: (sessionId, name, mark) => {

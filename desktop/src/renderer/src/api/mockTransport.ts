@@ -1,4 +1,4 @@
-import { statusForArrival } from '../student/attendanceStatus'
+import { arrivalStatus } from './attendanceRules'
 import type { ApiClient } from './client'
 import {
   ApiError,
@@ -7,6 +7,7 @@ import {
   type CheckInCode,
   type CourseStudent,
   type FieldError,
+  type RequestOptions,
   type ServerErrorCode,
   type Session
 } from './contract'
@@ -15,20 +16,14 @@ import {
   sampleSession,
   sampleStudents,
   sampleTeacherId,
-  sampleToday,
   type FixtureName
 } from './fixtures'
-import { clockTime, dayOf, isoAt } from './isoTime'
+import { atSessionTime, dayOf } from './isoTime'
 
-// Lo que el mock ofrece para la demo y no es parte del contrato.
 export type DemoControls = {
-  // Si queda algún alumno pendiente que pueda llegar.
   hasNextArrival: (sessionId: string) => boolean
-  // Hace llegar al siguiente alumno pendiente, a su hora de ejemplo.
   simulateNextArrival: (sessionId: string) => Promise<AttendanceRecord | null>
-  // Registra la llegada de un alumno a una hora. Aplica las reglas de POST /check-ins.
   arrive: (sessionId: string, studentId: string, time: string) => Promise<AttendanceRecord>
-  // Vuelve a abrir una sesión cerrada. El contrato v1 todavía no lo incluye.
   reopenSession: (sessionId: string) => Promise<Session>
 }
 
@@ -37,21 +32,16 @@ export type MockTransport = {
   demo: DemoControls
 }
 
-// El código del QR dura 30 segundos.
 const codeLifetime = 30_000
 
 type MockState = {
   sessions: Session[]
   students: CourseStudent[]
-  // Registros de asistencia por sesión y por alumno. Se crean al abrir la sesión.
   records: Record<string, Record<string, AttendanceRecord>>
-  // Cuándo se abrió cada sesión, en milisegundos. El código del QR cuenta desde ahí.
   openedAt: Record<string, number>
   arrivals: Record<string, string>
   codesServed: number
 }
-
-// Los errores que responde el mock, con el estado y el `code` del contrato.
 
 function notFound(code: ServerErrorCode, message: string): ApiError {
   return new ApiError(404, 'Not Found', code, message)
@@ -87,8 +77,6 @@ function serverError(): ApiError {
 }
 
 const correctedStatuses = ['present', 'late', 'absent']
-
-// Las comprobaciones del body de PUT /sessions/:sessionId/attendances/:studentId.
 function correctionErrors(correction: AttendanceCorrection): FieldError[] {
   const errors: FieldError[] = []
   if (!correctedStatuses.includes(correction.status)) {
@@ -115,9 +103,9 @@ function pendingRecord(student: CourseStudent): AttendanceRecord {
   }
 }
 
-export function createMockTransport(fixture: FixtureName): MockTransport {
+export function createMockTransport(fixture: FixtureName, today: string): MockTransport {
   const state: MockState = {
-    sessions: fixture === 'empty' ? [] : [sampleSession()],
+    sessions: fixture === 'empty' ? [] : [sampleSession(today)],
     students: sampleStudents(),
     records: {},
     openedAt: {},
@@ -125,7 +113,6 @@ export function createMockTransport(fixture: FixtureName): MockTransport {
     codesServed: 0
   }
 
-  // Con denied o unauthenticated, nada pasa del control de acceso.
   function checkAccess(): void {
     if (fixture === 'denied') {
       throw forbidden()
@@ -135,8 +122,7 @@ export function createMockTransport(fixture: FixtureName): MockTransport {
     }
   }
 
-  // Con network, timeout o server-error, las escrituras fallan cada una a su manera.
-  async function checkWrite(): Promise<void> {
+  async function checkWrite(options: RequestOptions = {}): Promise<void> {
     checkAccess()
     if (fixture === 'network') {
       throw noResponse()
@@ -145,8 +131,9 @@ export function createMockTransport(fixture: FixtureName): MockTransport {
       throw serverError()
     }
     if (fixture === 'timeout') {
-      // Nunca responde: el cliente corta a los 10 segundos.
-      await new Promise<never>(() => {})
+      await new Promise<never>((_, reject) => {
+        options.signal?.addEventListener('abort', () => reject(noResponse()))
+      })
     }
   }
 
@@ -170,7 +157,6 @@ export function createMockTransport(fixture: FixtureName): MockTransport {
     return state.records[sessionId] ?? {}
   }
 
-  // Los registros en el orden de la lista de la clase. Antes de abrir, todos están pendientes.
   function attendancesOf(sessionId: string): AttendanceRecord[] {
     const records = recordsOf(sessionId)
     return state.students.map((student) => ({
@@ -186,11 +172,9 @@ export function createMockTransport(fixture: FixtureName): MockTransport {
     )
   }
 
-  // El código cambia cada 30 segundos desde que se abrió la sesión.
   function currentCode(sessionId: string): CheckInCode {
     const openedAt = state.openedAt[sessionId] ?? Date.now()
     const period = Math.floor(Math.max(0, Date.now() - openedAt) / codeLifetime)
-    // Seis cifras que cambian en cada periodo.
     const code = String(100000 + ((Math.floor(openedAt / 1000) + period * 7919) % 900000))
     const expiresAt = new Date(openedAt + (period + 1) * codeLifetime).toISOString()
     return { code, expiresAt }
@@ -209,8 +193,6 @@ export function createMockTransport(fixture: FixtureName): MockTransport {
     return next?.studentId ?? null
   }
 
-  // Las reglas de POST /check-ins: sesión abierta, alumno matriculado y la hora decide la marca.
-  // Una llegada repetida devuelve el registro que ya había, sin cambiarlo.
   async function arrive(
     sessionId: string,
     studentId: string,
@@ -234,9 +216,8 @@ export function createMockTransport(fixture: FixtureName): MockTransport {
     if (record.status !== 'pending') {
       return { ...record }
     }
-    const status = statusForArrival(time, clockTime(session.startsAt), session.lateMinutes)
-    const checkedInAt = isoAt(dayOf(session.startsAt), time)
-    record.status = status === 'presente' ? 'present' : 'late'
+    const checkedInAt = atSessionTime(session.startsAt, time)
+    record.status = arrivalStatus(session, time)
     record.checkedInAt = checkedInAt
     record.updatedBy = studentId
     record.updatedAt = checkedInAt
@@ -265,25 +246,24 @@ export function createMockTransport(fixture: FixtureName): MockTransport {
       return attendancesOf(sessionId)
     },
 
-    openSession: async (sessionId) => {
-      await checkWrite()
+    openSession: async (sessionId, options) => {
+      await checkWrite(options)
       const session = findSession(sessionId)
       if (fixture === 'conflict' && session.state === 'scheduled') {
-        // Otra persona la abrió antes: el servidor ya la tiene abierta.
         startSession(session)
       }
       if (session.state !== 'scheduled') {
         throw conflict('SESSION_NOT_SCHEDULED', 'La sesión no está programada.')
       }
-      if (dayOf(session.startsAt) !== sampleToday) {
+      if (dayOf(session.startsAt) !== today) {
         throw conflict('SESSION_NOT_TODAY', 'La sesión solo se puede abrir el día de la clase.')
       }
       startSession(session)
       return { ...session }
     },
 
-    closeSession: async (sessionId) => {
-      await checkWrite()
+    closeSession: async (sessionId, options) => {
+      await checkWrite(options)
       const session = findSession(sessionId)
       if (session.state !== 'open') {
         throw conflict('SESSION_NOT_OPEN', 'La sesión no está abierta.')
@@ -307,6 +287,14 @@ export function createMockTransport(fixture: FixtureName): MockTransport {
         throw conflict('SESSION_NOT_OPEN', 'La sesión no está abierta.')
       }
       state.codesServed += 1
+      if (fixture === 'code-unavailable' && state.codesServed <= 2) {
+        throw new ApiError(
+          503,
+          'Service Unavailable',
+          'SERVICE_UNAVAILABLE',
+          'El servicio no está disponible.'
+        )
+      }
       const code = currentCode(sessionId)
       if (fixture === 'expired-code' && state.codesServed === 1) {
         return { ...code, expiresAt: new Date(Date.now() - 1000).toISOString() }
@@ -314,9 +302,8 @@ export function createMockTransport(fixture: FixtureName): MockTransport {
       return code
     },
 
-    correctAttendance: async (sessionId, studentId, correction) => {
-      await checkWrite()
-      // Como el ValidationPipe de NestJS: el body se comprueba antes que nada.
+    correctAttendance: async (sessionId, studentId, correction, options) => {
+      await checkWrite(options)
       const errors = correctionErrors(correction)
       if (errors.length > 0) {
         throw invalid(errors)

@@ -227,6 +227,7 @@ desktop/
           app.css       # importa docs/storybook/src/system.css
           fonts/        # Geist e Inter, woff2 con licencia OFL
         api/
+          attendanceRules.ts # regla de puntual o tarde y llegada del propio alumno
           client.ts        # ApiClient: una función por endpoint y elección del transporte
           contract.ts      # tipos del contrato API v1
           fixtures.ts      # datos y casos del mock (--api-fixture)

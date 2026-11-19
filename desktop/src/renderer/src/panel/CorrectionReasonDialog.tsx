@@ -4,8 +4,6 @@ import { markOf } from './apiValues'
 import { markLabel } from './marks'
 import { usePanelStore, type PendingCorrection } from './panelStore'
 
-// Diálogo provisional: pide el motivo de cada corrección antes de enviarla.
-// Está aislado aquí para cambiarlo entero por el diseño definitivo.
 export function CorrectionReasonDialog(): React.JSX.Element | null {
   const pending = usePanelStore((state) => state.pendingCorrection)
   if (pending === null) {
@@ -27,7 +25,6 @@ function ReasonDialog({ pending }: { pending: PendingCorrection }): React.JSX.El
       : `${markLabel[markOf(status)]}, entrada a las ${clockTime(checkedInAt)}`
 
   useEffect(() => {
-    // Al cerrar, el foco vuelve al control que abrió el diálogo.
     const previous = document.activeElement
     fieldRef.current?.focus()
     function onKey(event: KeyboardEvent): void {
@@ -79,7 +76,7 @@ function ReasonDialog({ pending }: { pending: PendingCorrection }): React.JSX.El
           />
         </label>
         <div className="modal-action">
-          <button type="button" className="btn" onClick={cancelCorrection}>
+          <button type="button" className="btn" disabled={busy} onClick={cancelCorrection}>
             Cancelar
           </button>
           <button type="submit" className="btn btn-primary" disabled={busy || reason.trim() === ''}>

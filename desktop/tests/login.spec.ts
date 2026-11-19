@@ -205,7 +205,6 @@ test('opens the professor panel from the demo login and keeps attendance navigat
     await reason.getByLabel('Motivo', { exact: true }).fill('Corrección en clase')
     await reason.getByRole('button', { name: 'Guardar', exact: true }).click()
     await expect(molero.getByText('Presente')).toBeVisible()
-    // Una marca puesta a mano llega sin hora de entrada.
     await expect(molero.getByRole('button', { name: '—', exact: true })).toBeVisible()
 
     await window.getByRole('button', { name: 'Cerrar lista' }).click()
