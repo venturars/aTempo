@@ -9,4 +9,11 @@ export class PersonCourseService {
   async list(): Promise<PersonCourseResponseDto[]> {
     return this.postgres.listPersonCourses()
   }
+
+  async delete(
+    personId: string,
+    courseId: string,
+  ): Promise<PersonCourseResponseDto | null> {
+    return this.postgres.deletePersonCourse(personId, courseId)
+  }
 }
