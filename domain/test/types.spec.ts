@@ -104,6 +104,9 @@ describe('assert*', () => {
         end_at: validCourse.start_at,
       }),
     ).toThrow('course.end_at debe ser posterior a course.start_at')
+    expect(() =>
+      assertCourse({ ...validCourse, start_at: '2026-09-01T08:00' }),
+    ).toThrow('course.start_at debe ser una fecha con zona horaria')
   })
 
   it('rejects an invented role name', () => {

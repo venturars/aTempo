@@ -20,7 +20,7 @@ pnpm build
 
 Antes de un INSERT o UPDATE, `domain/` comprueba esas reglas. Si fallan, no escribe. El CHECK y el trigger de PostgreSQL se quedan.
 
-El email se recorta y pasa a minúsculas, igual que el login del escritorio. `contract_address` se guarda en hex minúsculas: `0xABC…` y `0xabc…` son la misma dirección. `start_at` y `end_at` salen como ISO UTC (`2026-09-01T08:00:00.000Z`). `birth_date` sale como `YYYY-MM-DD`. Un delete de persona, curso u organización borra las filas hijas (`person_role`, `person_course` y, en organización, también sus cursos) en `BEGIN` / `COMMIT` sobre un mismo cliente del pool. Si el último DELETE falla, hay `ROLLBACK`. Borrar una organización quita todos sus cursos y matrículas. El esquema no usa `ON DELETE CASCADE`.
+El email se recorta y pasa a minúsculas, igual que el login del escritorio. `contract_address` se guarda en hex minúsculas: `0xABC…` y `0xabc…` son la misma dirección. `start_at` y `end_at` entran con `Z` o un desfase (`+01:00`) y salen como ISO UTC (`2026-09-01T08:00:00.000Z`). Una hora sin zona (`2026-09-01T08:00`) se rechaza. `birth_date` sale como `YYYY-MM-DD`. Un delete de persona, curso u organización borra las filas hijas (`person_role`, `person_course` y, en organización, también sus cursos) en `BEGIN` / `COMMIT` sobre un mismo cliente del pool. Si el último DELETE falla, hay `ROLLBACK`. Borrar una organización quita todos sus cursos y matrículas. El esquema no usa `ON DELETE CASCADE`.
 
 ## Conexión
 

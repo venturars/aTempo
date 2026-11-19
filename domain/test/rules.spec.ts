@@ -62,6 +62,9 @@ describe('reglas de negocio', () => {
     await expect(
       createCourse({ ...courseInput, contract_address: '0x123' }),
     ).rejects.toThrow('course.contract_address debe ser 0x y 40 hex')
+    await expect(
+      createCourse({ ...courseInput, start_at: '2026-09-01T08:00' }),
+    ).rejects.toThrow('course.start_at debe ser una fecha con zona horaria')
     expect(calls).toHaveLength(0)
   })
 
@@ -91,7 +94,7 @@ describe('reglas de negocio', () => {
     expect(wrote(calls)).toBe(false)
   })
 
-  it('does not insert when email or identification_document exists', async () => {
+  it('does not insert when identification_document exists', async () => {
     const calls = mockDriver(async () => rowsResult([validPerson]))
     await expect(createPerson(personInput)).rejects.toThrow(
       'person.identification_document ya existe',

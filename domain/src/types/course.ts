@@ -1,6 +1,8 @@
 import { assertNonEmptyString, assertUuid } from './assert'
 
 const CONTRACT_ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/
+const INSTANT_RE =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(Z|[+-]\d{2}:\d{2})$/
 
 export interface Course {
   id: string
@@ -40,15 +42,20 @@ export function normalizeContractAddress(value: string): string {
   return `0x${value.slice(2).toLowerCase()}`
 }
 
+function assertInstant(value: string, label: string): number {
+  if (!INSTANT_RE.test(value)) {
+    throw new Error(`${label} debe ser una fecha con zona horaria`)
+  }
+  const ms = Date.parse(value)
+  if (Number.isNaN(ms)) {
+    throw new Error(`${label} debe ser una fecha`)
+  }
+  return ms
+}
+
 export function assertCourseDates(startAt: string, endAt: string): void {
-  const start = Date.parse(startAt)
-  const end = Date.parse(endAt)
-  if (Number.isNaN(start)) {
-    throw new Error('course.start_at debe ser una fecha')
-  }
-  if (Number.isNaN(end)) {
-    throw new Error('course.end_at debe ser una fecha')
-  }
+  const start = assertInstant(startAt, 'course.start_at')
+  const end = assertInstant(endAt, 'course.end_at')
   if (!(end > start)) {
     throw new Error('course.end_at debe ser posterior a course.start_at')
   }
