@@ -155,16 +155,40 @@ describe('escrituras', () => {
     await expect(updateCourse(validCourse)).resolves.toBeNull()
   })
 
+  it('deletes dependents before the parent row', async () => {
+    const personCalls = mockDriver(async () => commandResult(1))
+    await expect(deletePerson(PERSON_ID)).resolves.toBe(true)
+    expect(personCalls.map((call) => call.sql)).toEqual([
+      expect.stringContaining('DELETE FROM person_role'),
+      expect.stringContaining('DELETE FROM person_course'),
+      expect.stringContaining('DELETE FROM person'),
+    ])
+
+    const courseCalls = mockDriver(async () => commandResult(1))
+    await expect(deleteCourse(COURSE_ID)).resolves.toBe(true)
+    expect(courseCalls.map((call) => call.sql)).toEqual([
+      expect.stringContaining('DELETE FROM person_course'),
+      expect.stringContaining('DELETE FROM course'),
+    ])
+
+    const orgCalls = mockDriver(async () => commandResult(1))
+    await expect(deleteOrganization(ORG_ID)).resolves.toBe(true)
+    expect(orgCalls.map((call) => call.sql)).toEqual([
+      expect.stringContaining('DELETE FROM person_course'),
+      expect.stringContaining('DELETE FROM course'),
+      expect.stringContaining('DELETE FROM organization'),
+    ])
+  })
+
   it('deletes by key and reports whether a row was removed', async () => {
     mockDriver(async () => commandResult(1))
-    await expect(deleteOrganization(ORG_ID)).resolves.toBe(true)
-    await expect(deletePerson(PERSON_ID)).resolves.toBe(true)
-    await expect(deleteCourse(COURSE_ID)).resolves.toBe(true)
     await expect(removePersonCourse(PERSON_ID, COURSE_ID)).resolves.toBe(true)
     await expect(removePersonRole(PERSON_ID, 'teacher')).resolves.toBe(true)
 
     mockDriver(async () => commandResult(0))
     await expect(deleteOrganization(ORG_ID)).resolves.toBe(false)
+    await expect(deletePerson(PERSON_ID)).resolves.toBe(false)
+    await expect(deleteCourse(COURSE_ID)).resolves.toBe(false)
     await expect(removePersonCourse(PERSON_ID, COURSE_ID)).resolves.toBe(false)
   })
 })

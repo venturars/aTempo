@@ -1,9 +1,17 @@
-import { assertCourse, assertCourseInput } from '../src/types/course'
+import {
+  assertCourse,
+  assertCourseInput,
+  normalizeContractAddress,
+} from '../src/types/course'
 import {
   assertOrganization,
   assertOrganizationInput,
 } from '../src/types/organization'
-import { assertPerson, assertPersonInput } from '../src/types/person'
+import {
+  assertPerson,
+  assertPersonInput,
+  normalizeEmail,
+} from '../src/types/person'
 import { assertPersonCourse } from '../src/types/person-course'
 import { assertPersonRole } from '../src/types/person-role'
 import { assertRole } from '../src/types/role'
@@ -16,6 +24,20 @@ import {
 } from './helpers'
 
 describe('assert*', () => {
+  it('normalizes email like the desktop login', () => {
+    expect(normalizeEmail('  Ada.Lopez@Clase.TEST ')).toBe(
+      'ada.lopez@clase.test',
+    )
+  })
+
+  it('normalizes contract address to lowercase hex', () => {
+    expect(
+      normalizeContractAddress(
+        '0x5FBDB2315678AFECb367F032D93F642F64180AA3',
+      ),
+    ).toBe('0x5fbdb2315678afecb367f032d93f642f64180aa3')
+  })
+
   it('accepts a complete person', () => {
     expect(() => assertPerson(validPerson)).not.toThrow()
   })

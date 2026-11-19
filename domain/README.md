@@ -20,6 +20,8 @@ pnpm build
 
 Antes de un INSERT o UPDATE, `domain/` comprueba esas reglas. Si fallan, no escribe. El CHECK y el trigger de PostgreSQL se quedan.
 
+El email se recorta y pasa a minúsculas, igual que el login del escritorio. `contract_address` se guarda en hex minúsculas: `0xABC…` y `0xabc…` son la misma dirección. Un delete de persona, curso u organización borra antes `person_role` y `person_course` (y los cursos de la organización). El esquema no usa `ON DELETE CASCADE`.
+
 ## Conexión
 
 La conexión real usa `DATABASE_URL` (timeout 3 s). `check()` ejecuta `SELECT 1`.

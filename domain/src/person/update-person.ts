@@ -1,5 +1,5 @@
 import { query } from '../postgres/db'
-import { assertPerson, type Person } from '../types/person'
+import { assertPerson, normalizeEmail, type Person } from '../types/person'
 import { assertEmailAvailable } from './assert-email-available'
 import { assertIdentificationDocumentAvailable } from './assert-identification-document-available'
 
@@ -23,16 +23,17 @@ RETURNING
 
 export async function updatePerson(input: unknown): Promise<Person | null> {
   assertPerson(input)
+  const email = normalizeEmail(input.email)
   await assertIdentificationDocumentAvailable(
     input.identification_document,
     input.id,
   )
-  await assertEmailAvailable(input.email, input.id)
+  await assertEmailAvailable(email, input.id)
 
   const result = await query<Person>(UPDATE, [
     input.id,
     input.identification_document,
-    input.email,
+    email,
     input.first_name,
     input.last_name,
     input.birth_date,

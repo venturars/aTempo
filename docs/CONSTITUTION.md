@@ -24,7 +24,7 @@ aTempo de escritorio es la aplicación del profesor. Sirve para registrar la asi
 - **pg 8.23.1** abre PostgreSQL (`DATABASE_URL`, timeout 3 s).
 - **pnpm** es el gestor de paquetes de `domain/`. Las versiones van fijas, sin `^`.
 
-`domain/` es la SDK: un paquete librería en la raíz, hermano de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. Fija los tipos del core (`organization`, `person`, `course`, `person_course`, `role`, `person_role`), las lecturas, las escrituras y las reglas que copia de PostgreSQL: `end_at > start_at`, `contract_address` `0x`+40 hex, student exclusivo y unicidades. `role` no se escribe. Si un objeto no cumple esos campos o reglas, lanza y no escribe en PostgreSQL. No es un servicio HTTP: sin servidor, sin Swagger y sin Docker Compose.
+`domain/` es la SDK: un paquete librería en la raíz, hermano de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. Fija los tipos del core (`organization`, `person`, `course`, `person_course`, `role`, `person_role`), las lecturas, las escrituras y las reglas que copia de PostgreSQL: `end_at > start_at`, `contract_address` `0x`+40 hex, student exclusivo y unicidades. El email se guarda recortado y en minúsculas, igual que `normalizeEmail` del escritorio. `contract_address` se guarda en hex minúsculas. Un delete quita antes las filas hijas (`person_role`, `person_course`, cursos de la organización). `role` no se escribe. Si un objeto no cumple esos campos o reglas, lanza y no escribe en PostgreSQL. No es un servicio HTTP: sin servidor, sin Swagger y sin Docker Compose.
 
 ## 4. Stack de `api-router/`
 

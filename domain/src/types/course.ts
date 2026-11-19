@@ -36,6 +36,10 @@ export function assertContractAddress(value: string): void {
   }
 }
 
+export function normalizeContractAddress(value: string): string {
+  return `0x${value.slice(2).toLowerCase()}`
+}
+
 export function assertCourseDates(startAt: string, endAt: string): void {
   const start = Date.parse(startAt)
   const end = Date.parse(endAt)

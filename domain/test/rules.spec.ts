@@ -5,6 +5,7 @@ import { updateOrganization } from '../src/organization/update-organization'
 import { createPerson } from '../src/person/create-person'
 import { addPersonRole } from '../src/person-role/add-person-role'
 import {
+  emptyResult,
   mockDriver,
   OTHER_ID,
   PERSON_ID,
@@ -106,7 +107,7 @@ describe('reglas de negocio', () => {
   it('does not update when acronym belongs to another course', async () => {
     const other = { ...validCourse, id: OTHER_ID }
     const calls = mockDriver(async (sql) => {
-      if (sql.includes('WHERE contract_address')) {
+      if (sql.includes('lower(contract_address)')) {
         return rowsResult([validCourse])
       }
       return rowsResult([other])
@@ -115,6 +116,34 @@ describe('reglas de negocio', () => {
       'course.acronym ya existe en la organización',
     )
     expect(wrote(calls)).toBe(false)
+  })
+
+  it('treats emails that differ only by case as the same', async () => {
+    const calls = mockDriver(async (sql) => {
+      if (sql.includes('WHERE identification_document')) {
+        return emptyResult()
+      }
+      return rowsResult([validPerson])
+    })
+    await expect(
+      createPerson({
+        ...personInput,
+        identification_document: '88888888X',
+        email: '  Demo@ATEMPO.local ',
+      }),
+    ).rejects.toThrow('person.email ya existe')
+    expect(wrote(calls)).toBe(false)
+    expect(calls[1].params).toEqual(['demo@atempo.local'])
+  })
+
+  it('treats contract addresses that differ only by case as the same', async () => {
+    const mixed = validCourse.contract_address.toUpperCase().replace('0X', '0x')
+    const calls = mockDriver(async () => rowsResult([validCourse]))
+    await expect(
+      createCourse({ ...courseInput, contract_address: mixed }),
+    ).rejects.toThrow('course.contract_address ya existe')
+    expect(wrote(calls)).toBe(false)
+    expect(calls[0].params).toEqual([validCourse.contract_address])
   })
 
   it('does not insert student when the person has another role', async () => {

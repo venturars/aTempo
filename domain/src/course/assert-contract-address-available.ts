@@ -1,5 +1,9 @@
 import { query } from '../postgres/db'
-import { assertCourse, type Course } from '../types/course'
+import {
+  assertCourse,
+  normalizeContractAddress,
+  type Course,
+} from '../types/course'
 
 const SELECT = `SELECT
   id::text AS id,
@@ -10,13 +14,14 @@ const SELECT = `SELECT
   end_at::text AS end_at,
   contract_address
 FROM course
-WHERE contract_address = $1`
+WHERE lower(contract_address) = $1`
 
 export async function assertContractAddressAvailable(
   contractAddress: string,
   ignoreId?: string,
 ): Promise<void> {
-  const result = await query<Course>(SELECT, [contractAddress])
+  const wanted = normalizeContractAddress(contractAddress)
+  const result = await query<Course>(SELECT, [wanted])
   const row = result.rows[0]
   if (!row) {
     return

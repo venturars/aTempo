@@ -7,6 +7,7 @@ export {
 export {
   assertPerson,
   assertPersonInput,
+  normalizeEmail,
   type Person,
   type PersonInput,
 } from './types/person'
@@ -15,6 +16,7 @@ export {
   assertCourseDates,
   assertCourseInput,
   assertContractAddress,
+  normalizeContractAddress,
   type Course,
   type CourseInput,
 } from './types/course'

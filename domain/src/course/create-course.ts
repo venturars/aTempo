@@ -1,5 +1,10 @@
 import { query } from '../postgres/db'
-import { assertCourse, assertCourseInput, type Course } from '../types/course'
+import {
+  assertCourse,
+  assertCourseInput,
+  normalizeContractAddress,
+  type Course,
+} from '../types/course'
 import { assertAcronymAvailable } from './assert-acronym-available'
 import { assertContractAddressAvailable } from './assert-contract-address-available'
 
@@ -22,7 +27,8 @@ RETURNING
 
 export async function createCourse(input: unknown): Promise<Course> {
   assertCourseInput(input)
-  await assertContractAddressAvailable(input.contract_address)
+  const contractAddress = normalizeContractAddress(input.contract_address)
+  await assertContractAddressAvailable(contractAddress)
   await assertAcronymAvailable(input.organization_id, input.acronym)
 
   const result = await query<Course>(INSERT, [
@@ -31,7 +37,7 @@ export async function createCourse(input: unknown): Promise<Course> {
     input.acronym,
     input.start_at,
     input.end_at,
-    input.contract_address,
+    contractAddress,
   ])
   const row = result.rows[0]
   if (!row) {

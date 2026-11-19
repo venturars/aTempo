@@ -16,6 +16,10 @@ export interface Person {
 
 export type PersonInput = Omit<Person, 'id'>
 
+export function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase()
+}
+
 export function assertPersonInput(value: unknown): asserts value is PersonInput {
   if (value === null || typeof value !== 'object') {
     throw new Error('person debe ser un objeto')
@@ -27,6 +31,9 @@ export function assertPersonInput(value: unknown): asserts value is PersonInput 
     'person.identification_document',
   )
   assertNonEmptyString(row.email, 'person.email')
+  if (normalizeEmail(row.email).length === 0) {
+    throw new Error('person.email debe ser un string no vacío')
+  }
   assertNonEmptyString(row.first_name, 'person.first_name')
   assertNonEmptyString(row.last_name, 'person.last_name')
   assertNullableString(row.birth_date, 'person.birth_date')
