@@ -36,7 +36,7 @@ Fija los tipos del core (`organization`, `person`, `course`, `person_course`, `r
 - **SQLAlchemy Core 2.0.44** abre SQLite (`SQLITE_DATABASE_URL`).
 - Las dependencias van fijadas en `domain/python-domain/pyproject.toml`.
 
-Fija los tipos de `session` y `attendance`, las lecturas, las escrituras y las reglas que copia de SQLite: `end_at > start_at`, `status` `open`/`closing`/`closed`, `closed_at` solo en `closed`, estados de asistencia y `check_in_method`. `start_at`, `end_at`, `closed_at` y `checked_in_at` entran con `Z` o un desfase. Un delete de sesión quita en la misma transacción las filas de `attendance`. Si un objeto no cumple esos campos o reglas, o si la sesión no existe o la asistencia ya está, lanza y no escribe. `api-sqlite/` queda detrás de este paquete: Flask transforma HTTP y no escribe SQL.
+Fija los tipos de `session` y `attendance`, las lecturas, las escrituras y las reglas que copia de SQLite: `end_at > start_at`, `status` `open`/`closing`/`closed`, `closed_at` solo en `closed`, estados de asistencia y `check_in_method`. `start_at`, `end_at`, `closed_at` y `checked_in_at` entran con `Z` o un desfase y se guardan en ISO UTC (`2026-09-01T08:00:00.000Z`). Los UUID se guardan en minúsculas. `present` y `present_late` llevan `check_in_method` y `checked_in_at` dentro de la sesión; `absent` y `notified_absence` van sin fichaje. No comprueba la matrícula: `course_id` y `student_id` son referencias lógicas al core, sin FK. Un delete de sesión quita en la misma transacción las filas de `attendance`. Si un objeto no cumple esos campos o reglas, o si la sesión no existe o la asistencia ya está, lanza y no escribe. `api-sqlite/` queda detrás de este paquete: Flask transforma HTTP y no escribe SQL.
 
 ## 4. Stack de `api-router/`
 

@@ -9,9 +9,9 @@ Esta base no es el `atempo.sqlite` del escritorio. No se abre desde `desktop/` n
 Dos tablas:
 
 - `session` — `professor_id` (UUID de `person.id`), `late_after_minutes`, `expected_count`, `status` (`open` | `closing` | `closed`), `closed_at` solo en `closed`
-- `attendance` — PK `(session_id, student_id)`; una fila por alumno del roster; `status` (`present` | `present_late` | `absent` | `notified_absence`); `check_in_method` (`button` | `qr`); `checked_in_at`
+- `attendance` — PK `(session_id, student_id)`; una fila por alumno del roster; `status` (`present` | `present_late` | `absent` | `notified_absence`); `check_in_method` (`button` | `qr`); `checked_in_at`. `present` y `present_late` llevan método y hora de fichaje dentro de la sesión; `absent` y `notified_absence` van sin fichaje.
 
-`course_id`, `student_id` y `professor_id` son referencias lógicas al core, no FK entre bases.
+`course_id`, `student_id` y `professor_id` son referencias lógicas al core, no FK entre bases. `python-domain` no comprueba la matrícula.
 
 `expected_count` vive **solo** aquí. No va al contrato.
 
@@ -19,7 +19,7 @@ No hay `absence_notice`, `session_seal`, `recorded_by`, `justification`, `docume
 
 ## Configuración
 
-El esquema está en `sqlite/schema.sql`. Fechas y UUID van como `TEXT` (ISO-8601 y UUID). `closed_at` queda vacío mientras la sesión no está `closed`.
+El esquema está en `sqlite/schema.sql`. Fechas y UUID van como `TEXT`. El SDK guarda instantes en ISO UTC (`2026-09-01T08:00:00.000Z`) y UUID en minúsculas, para que el `CHECK (end_at > start_at)` y la PK de asistencia comparen bien. `closed_at` queda vacío mientras la sesión no está `closed`.
 
 Durante la ventana, esta base guarda el fichaje y el `status`. Al cerrar, esos estados se escriben en el contrato. Después, SQLite copia el `status` de `changeStatus`.
 

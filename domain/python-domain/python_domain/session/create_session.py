@@ -24,16 +24,14 @@ INSERT = f"""INSERT INTO session (
   :closed_at,
   :late_after_minutes,
   :expected_count
-)"""
-
-SELECT = f"SELECT {SESSION_COLUMNS} FROM session WHERE id = :id"
+)
+RETURNING {SESSION_COLUMNS}"""
 
 
 def create_session(value: object) -> Session:
     body = assert_session_input(value)
     session_id = str(uuid4())
-    query(INSERT, {"id": session_id, **body})
-    result = query(SELECT, {"id": session_id})
+    result = query(INSERT, {"id": session_id, **body})
     if not result.rows:
         raise RuntimeError("session no se ha creado")
     return assert_session(result.rows[0])

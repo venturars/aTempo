@@ -7,6 +7,7 @@ from python_domain.types.assert_values import (
     assert_nullable_instant,
     assert_nullable_int,
     assert_uuid,
+    normalize_instant,
 )
 
 SESSION_STATUSES = ("open", "closing", "closed")
@@ -43,13 +44,6 @@ def assert_session_status(value: object, label: str = "session.status") -> Sessi
     return text  # type: ignore[return-value]
 
 
-def assert_session_dates(start_at: str, end_at: str) -> None:
-    start = assert_instant(start_at, "session.start_at")
-    end = assert_instant(end_at, "session.end_at")
-    if not end > start:
-        raise ValueError("session.end_at debe ser posterior a session.start_at")
-
-
 def assert_closed_at_matches_status(
     status: SessionStatus,
     closed_at: str | None,
@@ -66,11 +60,15 @@ def assert_session_input(value: object) -> SessionInput:
 
     course_id = assert_uuid(value.get("course_id"), "session.course_id")
     professor_id = assert_uuid(value.get("professor_id"), "session.professor_id")
-    start_at = assert_non_empty_string(value.get("start_at"), "session.start_at")
-    end_at = assert_non_empty_string(value.get("end_at"), "session.end_at")
-    assert_session_dates(start_at, end_at)
+    start = assert_instant(value.get("start_at"), "session.start_at")
+    end = assert_instant(value.get("end_at"), "session.end_at")
+    if not end > start:
+        raise ValueError("session.end_at debe ser posterior a session.start_at")
+    start_at = normalize_instant(start)
+    end_at = normalize_instant(end)
     status = assert_session_status(value.get("status"))
-    closed_at = assert_nullable_string_or_instant(value.get("closed_at"))
+    closed = assert_nullable_instant(value.get("closed_at"), "session.closed_at")
+    closed_at = None if closed is None else normalize_instant(closed)
     assert_closed_at_matches_status(status, closed_at)
     late_after_minutes = assert_int(
         value.get("late_after_minutes"),
@@ -103,10 +101,3 @@ def assert_session(value: object) -> Session:
     session_id = assert_uuid(value.get("id"), "session.id")
     body = assert_session_input(value)
     return {"id": session_id, **body}
-
-
-def assert_nullable_string_or_instant(value: object) -> str | None:
-    if value is None:
-        return None
-    assert_nullable_instant(value, "session.closed_at")
-    return str(value)

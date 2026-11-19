@@ -34,7 +34,7 @@ El analizador de tipos (basedpyright) usa este `.venv`. Si Cursor sigue marcando
 
 Antes de un INSERT o UPDATE, el paquete comprueba las reglas. Si fallan, no escribe. El CHECK de SQLite se queda.
 
-`start_at`, `end_at`, `closed_at` y `checked_in_at` entran con `Z` o un desfase. `closed_at` solo va con el estado `closed`. Un delete de sesión borra las filas de `attendance` en la misma transacción.
+`start_at`, `end_at`, `closed_at` y `checked_in_at` entran con `Z` o un desfase y se guardan en ISO UTC (`2026-09-01T08:00:00.000Z`). Los UUID se guardan en minúsculas. `present` y `present_late` llevan `check_in_method` y `checked_in_at` dentro de la ventana de la sesión; `absent` y `notified_absence` van sin fichaje. No se comprueba la matrícula: `course_id` y `student_id` apuntan al core sin FK. `closed_at` solo va con el estado `closed`. Un delete de sesión borra las filas de `attendance` en la misma transacción. Un INSERT o UPDATE de sesión o asistencia lee la fila en el mismo `RETURNING`.
 
 ## Conexión
 

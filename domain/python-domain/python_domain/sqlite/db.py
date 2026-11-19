@@ -47,11 +47,18 @@ def get_engine() -> Engine:
     return engine
 
 
+def _rowcount(result: Result[Any], fallback: int) -> int:
+    count = result.rowcount
+    if count is None or count < 0:
+        return fallback
+    return count
+
+
 def _from_result(result: Result[Any]) -> QueryResult:
     if result.returns_rows:
         rows = [dict(row) for row in result.mappings().all()]
-        return QueryResult(rows, result.rowcount or len(rows))
-    return QueryResult([], result.rowcount or 0)
+        return QueryResult(rows, _rowcount(result, len(rows)))
+    return QueryResult([], _rowcount(result, 0))
 
 
 def query(sql: str, params: dict[str, Any] | None = None) -> QueryResult:

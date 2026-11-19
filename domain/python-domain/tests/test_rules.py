@@ -1,6 +1,7 @@
 import unittest
 
 from python_domain.attendance.add_attendance import add_attendance
+from python_domain.attendance.list_attendances import list_attendances
 from python_domain.session.create_session import create_session
 
 from helpers import (
@@ -39,6 +40,39 @@ class RuleTests(unittest.TestCase):
         add_attendance({**valid_attendance, "session_id": session["id"]})
         with self.assertRaisesRegex(ValueError, "attendance ya existe"):
             add_attendance({**valid_attendance, "session_id": session["id"]})
+
+    def test_treats_uppercase_student_id_as_the_same_attendance(self) -> None:
+        session = create_session(valid_session_input)
+        student_id = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+        add_attendance({
+            **valid_attendance,
+            "session_id": session["id"],
+            "student_id": student_id.upper(),
+            "status": "absent",
+            "check_in_method": None,
+            "checked_in_at": None,
+        })
+        with self.assertRaisesRegex(ValueError, "attendance ya existe"):
+            add_attendance({
+                **valid_attendance,
+                "session_id": session["id"],
+                "student_id": student_id,
+            })
+        rows = list_attendances()
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["student_id"], student_id)
+
+    def test_does_not_insert_check_in_outside_the_session(self) -> None:
+        session = create_session(valid_session_input)
+        with self.assertRaisesRegex(
+            ValueError,
+            "attendance.checked_in_at debe estar dentro de la sesión",
+        ):
+            add_attendance({
+                **valid_attendance,
+                "session_id": session["id"],
+                "checked_in_at": "2026-01-01T09:00:00.000Z",
+            })
 
 
 if __name__ == "__main__":

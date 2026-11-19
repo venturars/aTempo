@@ -1,5 +1,5 @@
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 
 UUID_RE = re.compile(
     r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
@@ -20,7 +20,13 @@ def assert_uuid(value: object, label: str) -> str:
     text = assert_non_empty_string(value, label)
     if UUID_RE.match(text) is None:
         raise ValueError(f"{label} debe ser un uuid")
-    return text
+    return text.lower()
+
+
+def normalize_instant(value: datetime) -> str:
+    utc = value.astimezone(timezone.utc)
+    milliseconds = utc.microsecond // 1000
+    return utc.strftime("%Y-%m-%dT%H:%M:%S") + f".{milliseconds:03d}Z"
 
 
 def assert_nullable_string(value: object, label: str) -> str | None:

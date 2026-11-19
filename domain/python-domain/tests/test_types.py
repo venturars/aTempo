@@ -104,6 +104,52 @@ class TypeTests(unittest.TestCase):
             "checked_in_at": None,
         })
 
+    def test_normalizes_offset_instants_to_utc(self) -> None:
+        body = assert_session_input({
+            **valid_session_input,
+            "start_at": "2026-01-01T10:00:00+02:00",
+            "end_at": "2026-01-01T09:00:00Z",
+        })
+        self.assertEqual(body["start_at"], "2026-01-01T08:00:00.000Z")
+        self.assertEqual(body["end_at"], "2026-01-01T09:00:00.000Z")
+
+    def test_lowercases_uuids(self) -> None:
+        body = assert_session_input({
+            **valid_session_input,
+            "course_id": "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE",
+        })
+        self.assertEqual(body["course_id"], "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
+        row = assert_attendance({
+            **valid_attendance,
+            "session_id": "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE",
+            "student_id": "BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB",
+        })
+        self.assertEqual(row["session_id"], "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
+        self.assertEqual(row["student_id"], "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")
+
+    def test_rejects_absent_with_check_in(self) -> None:
+        with self.assertRaisesRegex(
+            ValueError,
+            "attendance.check_in_method solo puede ir con present o present_late",
+        ):
+            assert_attendance({
+                **valid_attendance,
+                "status": "absent",
+                "check_in_method": "qr",
+                "checked_in_at": "2026-01-01T10:05:00.000Z",
+            })
+
+    def test_rejects_present_without_check_in(self) -> None:
+        with self.assertRaisesRegex(
+            ValueError,
+            "attendance.check_in_method es obligatorio si el estado es present o present_late",
+        ):
+            assert_attendance({
+                **valid_attendance,
+                "check_in_method": None,
+                "checked_in_at": None,
+            })
+
 
 if __name__ == "__main__":
     unittest.main()

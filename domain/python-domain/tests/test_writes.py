@@ -35,6 +35,17 @@ class WriteTests(unittest.TestCase):
             create_session({"status": "open"})
         self.assertEqual(list_attendances(), [])
 
+    def test_stores_offset_dates_as_utc(self) -> None:
+        created = create_session({
+            **valid_session_input,
+            "start_at": "2026-01-01T10:00:00+02:00",
+            "end_at": "2026-01-01T09:00:00Z",
+        })
+        self.assertEqual(created["start_at"], "2026-01-01T08:00:00.000Z")
+        self.assertEqual(created["end_at"], "2026-01-01T09:00:00.000Z")
+        found = get_session_by_id(created["id"])
+        self.assertEqual(found, created)
+
     def test_creates_and_updates_a_session(self) -> None:
         created = create_session(valid_session_input)
         self.assertEqual(created["status"], "open")

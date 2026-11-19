@@ -12,15 +12,13 @@ SET
   closed_at = :closed_at,
   late_after_minutes = :late_after_minutes,
   expected_count = :expected_count
-WHERE id = :id"""
-
-SELECT = f"SELECT {SESSION_COLUMNS} FROM session WHERE id = :id"
+WHERE id = :id
+RETURNING {SESSION_COLUMNS}"""
 
 
 def update_session(value: object) -> Session | None:
     session = assert_session(value)
-    query(UPDATE, dict(session))
-    result = query(SELECT, {"id": session["id"]})
+    result = query(UPDATE, dict(session))
     if not result.rows:
         return None
     return assert_session(result.rows[0])
