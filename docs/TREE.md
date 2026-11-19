@@ -51,10 +51,52 @@ docs/BLOCKEND.md
 permanent-data.md
 ```
 
-# Árbol de `sdk/` (pendiente)
+# Árbol de `domain/`
 
 ```text
-sdk/                  # lógica de negocio; paquete aún no creado
+domain/
+  package.json
+  pnpm-lock.yaml
+  .npmrc
+  tsconfig.json
+  tsconfig.build.json
+  eslint.config.mjs
+  README.md
+  src/
+    index.ts
+    types/
+      assert.ts
+      organization.ts
+      person.ts
+      course.ts
+      person-course.ts
+      role.ts
+      person-role.ts
+    postgres/
+      db/index.ts         # Pool con DATABASE_URL, timeout 3 s
+      postgres/index.ts   # check(): SELECT 1
+    organization/
+      list-organizations.ts
+      get-organization-by-id.ts
+    person/
+      list-persons.ts
+      get-person-by-id.ts
+    course/
+      list-courses.ts
+      get-course-by-id.ts
+    role/
+      list-roles.ts
+      get-role-by-name.ts
+    person-course/
+      list-person-courses.ts
+    person-role/
+      list-person-roles.ts
+  test/
+    jest.json
+    helpers.ts
+    postgres.spec.ts
+    types.spec.ts
+    reads.spec.ts
 ```
 
 # Árbol de `api-sqlite/`

@@ -42,10 +42,11 @@ El lector del alumno ofrece lecturas simuladas y no usa cámara. Estos flujos no
 | Carpeta | Qué es |
 | --- | --- |
 | `desktop/` | Prototipo para profesor y alumno con Electron y React; las demos usan datos en memoria. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/sign-up` para el registro. |
-| `api-router/` | API REST con NestJS entre los frontends y la SDK de lógica de negocio (pendiente). |
-| `api-postgresql/` | API REST con NestJS entre la SDK y PostgreSQL. |
-| `api-rustfs/` | API REST con Express entre la SDK y RustFS (persistencia de objetos). |
-| `api-sqlite/` | Servicio Flask con Pydantic y SQLAlchemy Core entre la SDK prevista y SQLite. |
+| `domain/` | SDK: paquete librería con tipos del core y lecturas de PostgreSQL. No es un servicio HTTP. |
+| `api-router/` | API REST con NestJS. |
+| `api-postgresql/` | API REST con NestJS. El flujo de producto es Frontend → `api-postgresql` → `domain` → PostgreSQL. |
+| `api-rustfs/` | API REST con Express entre `domain/` y RustFS (persistencia de objetos). |
+| `api-sqlite/` | Servicio Flask con Pydantic y SQLAlchemy Core entre `domain/` y SQLite. |
 | `postgres/` | Core PostgreSQL y Drizzle Studio para ver sus tablas. No se abre desde el escritorio ni desde el API-router. |
 | `sqlite/` | SQLite operativo de fichaje y Datasette. Distinto del `atempo.sqlite` del escritorio. |
 | `rustfs/` | Justificantes (bucket `justifications`) y consola de RustFS. |

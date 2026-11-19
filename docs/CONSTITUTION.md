@@ -18,36 +18,43 @@ aTempo de escritorio es la aplicación del profesor. Sirve para registrar la asi
 - **SQLite** es la base local. Se abre con `node:sqlite` y la clase `DatabaseSync` en el proceso principal.
 - **pnpm** es el gestor de paquetes de `desktop/`. Las versiones van fijas, sin `^`.
 
-## 3. Stack de `api-router/`
+## 3. Stack de `domain/`
+
+- **TypeScript** escribe el paquete.
+- **pg 8.23.1** abre PostgreSQL (`DATABASE_URL`, timeout 3 s).
+- **pnpm** es el gestor de paquetes de `domain/`. Las versiones van fijas, sin `^`.
+
+`domain/` es la SDK: un paquete librería en la raíz, hermano de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. Fija los tipos del core (`organization`, `person`, `course`, `person_course`, `role`, `person_role`) y las lecturas. Si un objeto no cumple esos campos, lanza y no llama a PostgreSQL. No es un servicio HTTP: sin servidor, sin Swagger y sin Docker Compose.
+
+## 4. Stack de `api-router/`
 
 - **NestJS 11** expone REST y transforma las peticiones de los frontends.
 - **@nestjs/swagger** documenta la API y sirve Swagger UI en `/docs` para pruebas manuales.
 - **TypeScript** escribe el servicio.
 - **pnpm** es el gestor de paquetes de `api-router/`. Las versiones van fijas, sin `^`.
 
-La SDK de lógica de negocio vivirá en `sdk/` (carpeta pendiente), al mismo nivel que `desktop/` y `api-router/`. El API-router no implementa reglas de negocio; solo delegará en esa SDK.
+El API-router no implementa reglas de negocio.
 
-## 4. Stack de `api-postgresql/`
+## 5. Stack de `api-postgresql/`
 
-- **NestJS 11** expone la persistencia que usará la SDK para leer y escribir en PostgreSQL.
-- **pg** abre la conexión y comprueba que la base responde.
+- **NestJS 11** expone REST hacia PostgreSQL.
 - **@nestjs/swagger** documenta la API y sirve Swagger UI en `/docs` para pruebas manuales.
 - **TypeScript** escribe el servicio.
 - **pnpm** es el gestor de paquetes de `api-postgresql/`. Las versiones van fijas, sin `^`.
 
-Este servicio no implementa reglas de negocio. El API-router no habla con PostgreSQL. El escritorio no llama a este servicio.
+El flujo de producto es Frontend → `api-postgresql` → `domain` → PostgreSQL. Nest transforma HTTP y delega en `domain`. `domain` abre la base. Nest no escribe SQL. El escritorio no llama a este servicio.
 
-## 5. Stack de `api-rustfs/`
+## 6. Stack de `api-rustfs/`
 
-- **Express 5** expone REST hacia la SDK para persistencia de objetos en RustFS.
+- **Express 5** expone REST hacia `domain/` para persistencia de objetos en RustFS.
 - **Cliente npm `minio` (API S3)** habla con RustFS.
 - **swagger-ui-express** documenta la API y sirve Swagger UI en `/docs` para pruebas manuales.
 - **TypeScript** escribe el servicio.
 - **pnpm** es el gestor de paquetes de `api-rustfs/`. Las versiones van fijas, sin `^`.
 
-El API-router no accede a RustFS; la SDK consumirá este servicio cuando exista.
+El API-router no accede a RustFS; `domain/` lo consumirá cuando exista esa persistencia.
 
-## 6. Stack de `api-sqlite/`
+## 7. Stack de `api-sqlite/`
 
 - **Flask** expone el servicio local de persistencia.
 - **Pydantic** valida los modelos de entrada y salida.
@@ -55,10 +62,10 @@ El API-router no accede a RustFS; la SDK consumirá este servicio cuando exista.
 - **Flasgger** sirve Swagger UI y OpenAPI para comprobar el servicio.
 - **Python** ejecuta el paquete, que tiene sus dependencias fijadas en `api-sqlite/pyproject.toml`.
 
-`api-sqlite/` está detrás de la SDK: el `api-router` delega en la SDK y esta accede a las APIs de persistencia. La SQLite de este servicio es independiente de `desktop/atempo.sqlite`.
+`api-sqlite/` está detrás de `domain/`. La SQLite de este servicio es independiente de `desktop/atempo.sqlite`.
 
-## 7. Dónde seguir
+## 8. Dónde seguir
 
 - [STYLE.md](STYLE.md): los dos temas y el enlace a la guía visual.
-- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, flujo de `api-router/` y las APIs de persistencia, y los almacenes; se prevén la SDK y más APIs.
-- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/`, `api-postgresql/`, `api-rustfs/`, `api-sqlite/` y los almacenes; se prevén `sdk/` y más carpetas de APIs.
+- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, flujo Frontend → `api-postgresql` → `domain` → PostgreSQL, y los almacenes.
+- [TREE.md](TREE.md): árboles de `desktop/`, `domain/`, `api-router/`, `api-postgresql/`, `api-rustfs/`, `api-sqlite/` y los almacenes.

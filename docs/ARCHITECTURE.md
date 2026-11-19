@@ -1,51 +1,51 @@
 # Arquitectura de aTempo
 
-## API-router, SDK y persistencia
+## API, SDK y persistencia
 
-Carpeta del router: `api-router/`. Persistencia relacional: `api-postgresql/` y `api-sqlite/`. Objetos en almacén S3-compatible: `api-rustfs/`.
+Carpeta de la SDK: `domain/`. HTTP de PostgreSQL: `api-postgresql/`. Persistencia SQLite: `api-sqlite/`. Objetos S3-compatible: `api-rustfs/`. `api-router/` sigue en el repositorio.
 
-Los frontends (Electron en `desktop/` y el futuro portal web) hablarán REST con el API-router, un servicio NestJS. El API-router transforma HTTP y delegará en la **SDK (lógica de negocio)**. Esa SDK vivirá en `sdk/`, al mismo nivel que `desktop/` y `api-router/`; la carpeta aún no existe. La SDK hablará con `api-postgresql/` para leer y escribir en PostgreSQL, con `api-sqlite/` para SQLite local y con `api-rustfs/` para objetos en RustFS. Este flujo está previsto: la SDK todavía no existe y los servicios aún no están conectados entre sí. El API-router no habla con la base ni con RustFS. Redis, Postgres y el resto de microservicios del backend quedan fuera del escritorio.
+El flujo de producto con PostgreSQL es Frontend → `api-postgresql` → `domain` → PostgreSQL. `api-postgresql` transforma HTTP. `domain` valida los tipos del core y abre PostgreSQL. Nest no escribe SQL.
 
-Hoy `api-router/` solo expone `GET /health`. `api-postgresql/` expone `GET /health` y `GET /course` (listado SQL de `course` con `DATABASE_URL`; sin URL, mock local con datos de prueba). `api-rustfs/` solo expone `GET /health`, que confirma que el servicio HTTP responde (igual que `api-router/`). `api-sqlite/` solo expone `GET /health`, que ejecuta `SELECT 1` para comprobar SQLite. El login y el registro del renderer no llaman a ninguna de estas APIs. PostgreSQL, `api-postgresql/`, RustFS, `api-rustfs/` y `api-sqlite/` no están en Docker Compose.
+`domain/` es un paquete librería, hermano de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. Cubre tipos y lecturas de `organization`, `person`, `course`, `person_course`, `role` y `person_role`. Si un objeto no cumple esos campos, lanza y no llama a la base.
 
-La documentación interactiva (OpenAPI y Swagger UI) de cada servicio vive en **`/docs`** con el servicio en marcha; sirve para probar endpoints a mano, no implementa lógica de negocio. `api-postgresql/` escucha en el puerto **3001**, `api-sqlite/` en el **3002** y `api-rustfs/` en el **3003** (`PORT` en cada uno).
+Hoy `domain/` existe y se prueba con un driver sustituido. `api-postgresql/` aún no lo importa: abre `pg` en `PostgresService` y expone `GET /health` y `GET /course`. `api-router/` solo expone `GET /health`. `api-rustfs/` solo expone `GET /health`. `api-sqlite/` solo expone `GET /health` (`SELECT 1`). El login y el registro del renderer no llaman a estas APIs. PostgreSQL, `api-postgresql/`, RustFS, `api-rustfs/` y `api-sqlite/` no están en Docker Compose. `domain/` tampoco.
+
+La documentación interactiva (OpenAPI y Swagger UI) de cada servicio HTTP vive en **`/docs`** con el servicio en marcha. `api-postgresql/` escucha en el puerto **3001**, `api-sqlite/` en el **3002** y `api-rustfs/` en el **3003** (`PORT` en cada uno).
 
 ```mermaid
 flowchart LR
   electron[FrontendElectron]
   web[FrontendWeb]
-  router[APIRouterNest]
-  sdk[sdk_logicaDeNegocio_pendiente]
+  apiPg[apiPostgresql]
+  domainLib[domain]
+  postgres[(PostgreSQL)]
   sqliteApi[api_sqlite_Flask]
   serviceSqlite[(SQLite_del_servicio)]
-  apiPg[apiPostgresql]
-  postgres[(PostgreSQL)]
   objectApi[api_rustfs_Express]
   rustfs[(RustFS)]
-  electron --> router
-  web --> router
-  router --> sdk
-  sdk --> sqliteApi
+  electron --> apiPg
+  web --> apiPg
+  apiPg --> domainLib
+  domainLib --> postgres
+  domainLib -.-> sqliteApi
   sqliteApi --> serviceSqlite
-  sdk --> apiPg
-  sdk --> objectApi
-  apiPg --> postgres
+  domainLib -.-> objectApi
   objectApi --> rustfs
 ```
 
-`sdk/` es un paquete hermano de `desktop/`, `api-router/`, `api-postgresql/`, `api-rustfs/` y `api-sqlite/`. El API-router y los frontends la consumirán cuando exista. `api-postgresql/` ya está y espera a esa SDK. `api-rustfs/` también: la SDK lo usará para objetos en RustFS.
+`domain/` hablará con `api-sqlite/` y `api-rustfs/` cuando esas persistencias entren en el paquete. Redis y el resto de microservicios del backend quedan fuera del escritorio.
 
 ## api-sqlite
 
 Carpeta: `api-sqlite/`.
 
-Servicio Flask con modelos Pydantic y consultas mediante SQLAlchemy Core. La SDK delegará aquí la persistencia local. Hoy solo expone `GET /health`, que ejecuta `SELECT 1`; responde `200` si SQLite funciona y `503` si falla la conexión. Un cuerpo JSON inválido se rechaza antes de consultar la base. Swagger UI está en `/docs` y OpenAPI en `/docs-json`. Escucha en el puerto **3002** (`PORT`). `SQLITE_DATABASE_URL` configura la base, por defecto `sqlite:///./api-sqlite.sqlite`, independiente de la base de Electron. No está en Docker Compose.
+Servicio Flask con modelos Pydantic y consultas mediante SQLAlchemy Core. `domain/` delegará aquí la persistencia local. Hoy solo expone `GET /health`, que ejecuta `SELECT 1`; responde `200` si SQLite funciona y `503` si falla la conexión. Un cuerpo JSON inválido se rechaza antes de consultar la base. Swagger UI está en `/docs` y OpenAPI en `/docs-json`. Escucha en el puerto **3002** (`PORT`). `SQLITE_DATABASE_URL` configura la base, por defecto `sqlite:///./api-sqlite.sqlite`, independiente de la base de Electron. No está en Docker Compose.
 
 ## api-rustfs
 
 Carpeta: `api-rustfs/`.
 
-Servicio Express y TypeScript. La SDK delegará en él la lectura y escritura de objetos en RustFS. Hoy solo expone `GET /health`, que confirma que el servicio HTTP responde (igual que `api-router/`). Swagger UI en **`/docs`** y OpenAPI en **`/docs-json`**, igual que en `api-router/`. Por defecto escucha en el puerto **3003** (`PORT`). No está en Docker Compose en este paso.
+Servicio Express y TypeScript. `domain/` delegará en él la lectura y escritura de objetos en RustFS. Hoy solo expone `GET /health`, que confirma que el servicio HTTP responde (igual que `api-router/`). Swagger UI en **`/docs`** y OpenAPI en **`/docs-json`**, igual que en `api-router/`. Por defecto escucha en el puerto **3003** (`PORT`). No está en Docker Compose en este paso.
 
 ## Almacenes
 
@@ -55,7 +55,7 @@ Son bases y cadena, no una capa del escritorio ni del API-router. Cada una tiene
 
 El modelo y los enlaces están en `docs/POSTGRES.md`, `docs/SQLITE.md`, `docs/RUSTFS.md`, `docs/BLOCKEND.md` y `permanent-data.md`.
 
-Hoy `api-postgresql/` comprueba que PostgreSQL responde (`GET /health`). `api-rustfs/` no abre RustFS en el health. El renderer y el API-router no abren estas bases. La SDK las usará cuando exista.
+Hoy `api-postgresql/` comprueba que PostgreSQL responde (`GET /health`) y lista `course` con su propio `Pool`. `domain/` trae el pool y las lecturas del core; este servicio aún no lo importa. `api-rustfs/` no abre RustFS en el health. El renderer y el API-router no abren estas bases.
 
 ## aTempo de escritorio
 
