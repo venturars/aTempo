@@ -1,3 +1,4 @@
+import { ORGANIZATION_COLUMNS } from '../postgres/columns'
 import { query } from '../postgres/db'
 import { assertOrganization, type Organization } from '../types/organization'
 import { assertTaxIdAvailable } from './assert-tax-id-available'
@@ -5,7 +6,8 @@ import { assertTaxIdAvailable } from './assert-tax-id-available'
 const UPDATE = `UPDATE organization
 SET name = $2, tax_id = $3
 WHERE id = $1::uuid
-RETURNING id::text AS id, name, tax_id`
+RETURNING
+  ${ORGANIZATION_COLUMNS}`
 
 export async function updateOrganization(
   input: unknown,

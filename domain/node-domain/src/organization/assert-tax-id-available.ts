@@ -1,8 +1,12 @@
+import { ORGANIZATION_COLUMNS } from '../postgres/columns'
 import { query } from '../postgres/db'
 import { assertNonEmptyString } from '../types/assert'
 import { assertOrganization, type Organization } from '../types/organization'
 
-const SELECT = `SELECT id::text AS id, name, tax_id FROM organization WHERE tax_id = $1`
+const SELECT = `SELECT
+  ${ORGANIZATION_COLUMNS}
+FROM organization
+WHERE tax_id = $1`
 
 export async function assertTaxIdAvailable(
   taxId: string,

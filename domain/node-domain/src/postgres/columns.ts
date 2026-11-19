@@ -1,3 +1,7 @@
+export const ORGANIZATION_COLUMNS = `id::text AS id,
+  name,
+  tax_id`
+
 export const PERSON_COLUMNS = `id::text AS id,
   identification_document,
   email,

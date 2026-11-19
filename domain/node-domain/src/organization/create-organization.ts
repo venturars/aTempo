@@ -1,3 +1,4 @@
+import { ORGANIZATION_COLUMNS } from '../postgres/columns'
 import { query } from '../postgres/db'
 import {
   assertOrganization,
@@ -8,7 +9,8 @@ import { assertTaxIdAvailable } from './assert-tax-id-available'
 
 const INSERT = `INSERT INTO organization (name, tax_id)
 VALUES ($1, $2)
-RETURNING id::text AS id, name, tax_id`
+RETURNING
+  ${ORGANIZATION_COLUMNS}`
 
 export async function createOrganization(
   input: unknown,
