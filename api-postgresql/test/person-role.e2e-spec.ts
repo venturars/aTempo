@@ -20,6 +20,7 @@ describe('PersonRole (e2e)', () => {
       .overrideProvider(PostgresService)
       .useValue({
         check: postgres.check ?? (async () => undefined),
+        listCourses: async () => [],
         listPersonRoles:
           postgres.listPersonRoles ??
           (async () => POSTGRES_MOCK_PERSON_ROLES),

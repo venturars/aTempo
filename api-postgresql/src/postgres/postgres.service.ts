@@ -1,7 +1,11 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common'
 import { Pool } from 'pg'
+import type { CourseResponseDto } from '../course/course-response.dto'
 import type { PersonRoleResponseDto } from '../person-role/person-role-response.dto'
-import { POSTGRES_MOCK_PERSON_ROLES } from './postgres-mock'
+import {
+  POSTGRES_MOCK_COURSES,
+  POSTGRES_MOCK_PERSON_ROLES,
+} from './postgres-mock'
 
 @Injectable()
 export class PostgresService implements OnModuleDestroy {
@@ -37,6 +41,36 @@ export class PostgresService implements OnModuleDestroy {
     await pool.query('SELECT 1')
   }
 
+  async listCourses(): Promise<CourseResponseDto[]> {
+    if (this.usesMock()) {
+      return POSTGRES_MOCK_COURSES
+    }
+
+    const pool = this.poolFor(process.env.DATABASE_URL!)
+    const result = await pool.query<{
+      id: string
+      organization_id: string
+      name: string
+      acronym: string
+      start_at: Date | string
+      end_at: Date | string
+      contract_address: string
+    }>(
+      `SELECT id, organization_id, name, acronym, start_at, end_at, contract_address
+       FROM course`,
+    )
+
+    return result.rows.map((row) => ({
+      id: row.id,
+      organization_id: row.organization_id,
+      name: row.name,
+      acronym: row.acronym,
+      start_at: formatTimestamp(row.start_at),
+      end_at: formatTimestamp(row.end_at),
+      contract_address: row.contract_address,
+    }))
+  }
+
   async listPersonRoles(): Promise<PersonRoleResponseDto[]> {
     if (this.usesMock()) {
       return POSTGRES_MOCK_PERSON_ROLES
@@ -53,4 +87,12 @@ export class PostgresService implements OnModuleDestroy {
   async onModuleDestroy(): Promise<void> {
     await this.pool?.end()
   }
+}
+
+function formatTimestamp(value: Date | string): string {
+  if (value instanceof Date) {
+    return value.toISOString()
+  }
+
+  return value
 }

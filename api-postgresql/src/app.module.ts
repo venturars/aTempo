@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common'
+import { CourseModule } from './course/course.module'
 import { HealthModule } from './health/health.module'
 import { PersonRoleModule } from './person-role/person-role.module'
 
@@ -6,6 +7,6 @@ import { PersonRoleModule } from './person-role/person-role.module'
 // El API-router no llama a PostgreSQL.
 
 @Module({
-  imports: [HealthModule, PersonRoleModule],
+  imports: [HealthModule, CourseModule, PersonRoleModule],
 })
 export class AppModule {}

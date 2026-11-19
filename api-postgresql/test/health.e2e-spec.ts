@@ -16,6 +16,7 @@ describe('Health (e2e)', () => {
       .overrideProvider(PostgresService)
       .useValue({
         check,
+        listCourses: async () => [],
         listPersonRoles: async () => [],
         usesMock: () => false,
       })
