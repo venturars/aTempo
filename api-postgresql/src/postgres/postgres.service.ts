@@ -1,5 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common'
 import { Pool } from 'pg'
+import type { PersonResponseDto } from '../person/person-response.dto'
+import { POSTGRES_MOCK_PERSONS } from './postgres-mock'
 import type { CourseResponseDto } from '../course/course-response.dto'
 import type { PersonRoleResponseDto } from '../person-role/person-role-response.dto'
 import {
@@ -41,6 +43,9 @@ export class PostgresService implements OnModuleDestroy {
     await pool.query('SELECT 1')
   }
 
+  async listPersons(): Promise<PersonResponseDto[]> {
+    if (this.usesMock()) {
+      return POSTGRES_MOCK_PERSONS
   async listCourses(): Promise<CourseResponseDto[]> {
     if (this.usesMock()) {
       return POSTGRES_MOCK_COURSES
@@ -49,6 +54,15 @@ export class PostgresService implements OnModuleDestroy {
     const pool = this.poolFor(process.env.DATABASE_URL!)
     const result = await pool.query<{
       id: string
+      identification_document: string
+      email: string
+      first_name: string
+      last_name: string
+      birth_date: Date | string | null
+      phone: string | null
+    }>(
+      `SELECT id, identification_document, email, first_name, last_name, birth_date, phone
+       FROM person`,
       organization_id: string
       name: string
       acronym: string
@@ -62,6 +76,13 @@ export class PostgresService implements OnModuleDestroy {
 
     return result.rows.map((row) => ({
       id: row.id,
+      identification_document: row.identification_document,
+      email: row.email,
+      first_name: row.first_name,
+      last_name: row.last_name,
+      birth_date: formatBirthDate(row.birth_date),
+      phone: row.phone,
+    }))
       organization_id: row.organization_id,
       name: row.name,
       acronym: row.acronym,
@@ -89,6 +110,13 @@ export class PostgresService implements OnModuleDestroy {
   }
 }
 
+function formatBirthDate(value: Date | string | null): string | null {
+  if (value === null) {
+    return null
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10)
 function formatTimestamp(value: Date | string): string {
   if (value instanceof Date) {
     return value.toISOString()

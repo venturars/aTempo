@@ -93,11 +93,16 @@ api-postgresql/
     postgres/
       postgres.module.ts
       postgres.service.ts  # pg con DATABASE_URL; mock si no hay URL
-      postgres-mock.ts     # filas de course y person_role de prueba
+      postgres-mock.ts     
     health/
       health.module.ts
       health.controller.ts
       health-response.dto.ts
+    person/
+      person.module.ts
+      person.controller.ts
+      person.service.ts
+      person-response.dto.ts
     course/
       course.module.ts
       course.controller.ts
