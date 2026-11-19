@@ -19,6 +19,7 @@ describe('Swagger (e2e)', () => {
         listPersons: async () => [],
         listCourses: async () => [],
         listPersonRoles: async () => [],
+        listPersonCourses: async () => [],
         usesMock: () => true,
       })
       .compile()
@@ -48,5 +49,17 @@ describe('Swagger (e2e)', () => {
     expect(response.body.paths).toHaveProperty('/person')
     expect(response.body.paths).toHaveProperty('/course')
     expect(response.body.paths).toHaveProperty('/person-role')
+    expect(response.body.paths).toHaveProperty('/person-course')
+  })
+
+  it('GET /docs-json exposes GET /person-course with its tag', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/docs-json')
+      .expect(200)
+
+    expect(response.body.paths['/person-course']).toHaveProperty('get')
+    expect(response.body.paths['/person-course'].get.tags).toContain(
+      'person-course',
+    )
   })
 })
