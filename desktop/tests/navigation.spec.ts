@@ -80,6 +80,14 @@ test('shows the login when the app opens without flags', async () => {
   })
 })
 
+test('shows the organization list with --organizations', async () => {
+  await withApp(['--organizations'], async (window) => {
+    expect(await readRoute(window)).toBe('organization/list')
+    await expect(window.getByRole('heading', { name: 'Organizaciones', level: 1 })).toBeVisible()
+    await expectNoLoginScreen(window)
+  })
+})
+
 test('shows the organization summary with --organization-dashboard', async () => {
   await withApp(['--organization-dashboard'], async (window) => {
     expect(await readRoute(window)).toBe('organization/dashboard')

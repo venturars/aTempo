@@ -226,6 +226,7 @@ desktop/
             history.tsx    # /student/history, historial
           organization/
             dashboard.tsx  # /organization/dashboard, Resumen de la organización
+            list.tsx        # /organization/list, lista de prueba
           teacher/
             panel.tsx      # /teacher/panel, PanelScreen
         env.d.ts
@@ -259,7 +260,9 @@ desktop/
           settingsStore.ts
         organization/
           OrganizationDashboardScreen.tsx
+          OrganizationListScreen.tsx
           organizationExample.ts
+          organizationList.ts
         register/
           RegisterScreen.tsx
           registerStore.ts
