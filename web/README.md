@@ -16,7 +16,7 @@ pnpm dev
 
 Abre <http://localhost:5191/admin> y pulsa **Abrir demo de administración**. No hay credenciales que introducir. Aparece el inicio de la organización Neoland, con **Personas**, **Cursos** y **Mis clases**. El administrador de ejemplo también es profesor.
 
-1. En **Personas**, pulsa **Invitar persona**. Escribe nombre, correo y rol, y pulsa **Preparar invitación**. Para un profesor, activa **También es administrador** si necesita ese rol. Puedes activarlo o desactivarlo después en **Editar**. La persona aparece con invitación pendiente; no se envía ningún email ni se activa su cuenta.
+1. En **Personas**, pulsa **Invitar persona** y completa el nombre y el correo. Selecciona **Profesor** para ver el interruptor **También es administrador**. Actívalo si necesita ese rol y pulsa **Preparar invitación**. La fila muestra **Administrador y profesor** e **Invitación pendiente**. Puedes quitar y volver a dar ese rol desde **Editar**.
 2. En **Cursos**, pulsa **Crear curso**. Pon un nombre, selecciona profesor y alumnos y guarda. Puedes seleccionar las personas que acabas de invitar, conservando su estado pendiente.
 3. Abre el curso y pulsa **Programar sesión**. Selecciona fecha, inicio, fin y aula. El fin debe ser posterior al inicio en el mismo día.
 4. Abre la sesión. Debe mostrar el profesor del curso y su alumnado, con la asistencia pendiente.
@@ -36,7 +36,7 @@ Las fechas del rango son inclusivas y se calculan sin cambios por zona horaria o
 
 ### Editar y eliminar
 
-- En **Personas**, cada fila ofrece **Editar** y **Eliminar**. Editar abre el mismo formulario con los datos actuales; **Guardar cambios** conserva el identificador y el estado de la cuenta. La cuenta admin permite editar nombre/correo, muestra sus roles actuales en solo lectura y no puede eliminarse a sí misma.
+- En **Personas**, **Editar** abre el mismo formulario con los datos actuales y **Guardar cambios** conserva el identificador y el estado de la cuenta. En tu propia fila, el aviso bajo el nombre explica por qué solo aparece **Editar**. Puedes cambiar el nombre y el correo de tu cuenta.
 - Para eliminar un profesor asignado, edita antes sus cursos y selecciona otro profesor. Eliminar un alumno lo retira también de los cursos donde estaba matriculado. Cambiar un rol se rechaza mientras deje asignaciones incompatibles.
 - Abre un curso para **Editar curso** o **Eliminar curso**. Editar permite cambiar nombre, profesor y alumnado. Eliminar pide confirmación e indica cuántas sesiones programadas se borrarán con el curso; las personas permanecen.
 - Abre una sesión para **Editar sesión** o **Eliminar sesión**. Editar permite cambiar fecha, horario y aula, manteniendo su curso. Eliminar esa sesión conserva el curso y su alumnado.
@@ -46,15 +46,15 @@ La evidencia histórica de la ampliación CRUD es: batería completa 65/65 y com
 
 El tema claro/oscuro se cambia desde la cabecera. **Cerrar sesión** vuelve a la entrada de la demo; los datos continúan en memoria mientras no recargues. Recargar el navegador restaura los datos iniciales y exige abrir de nuevo la demo. Entrar o salir de administración no cambia las cuentas ni la sesión del alumno. Para parar Vite, usa **Ctrl+C** en su terminal.
 
-La demo es local y no está conectada al registro de organizaciones, la activación de invitaciones de #130 ni las APIs de persistencia. El alcance y las dependencias están en [admin-prototype.md](../docs/admin-prototype.md).
+El panel guarda las invitaciones pendientes en la demo web. La activación y la creación de contraseña se prueban con una invitación de ejemplo en [el PR #130 de Electron](https://github.com/venturars/aTempo/pull/130). El envío de correo y la conexión entre ambas demos están pendientes. Consulta el alcance en [admin-prototype.md](../docs/admin-prototype.md).
 
 ## Probar al alumno
 
 Con el mismo servidor en marcha, abre <http://localhost:5191/>. La cuenta pública de ejemplo es `ada.lopez@clase.test` / `clase-2026`. La sesión, las cuentas, las entradas y los avisos se guardan en `localStorage`, así que siguen al abrir el enlace del QR en una pestaña nueva.
 
-En Registrar asistencia, el QR de la clase de ejemplo es `ATEMPO-CLASE-1109` y el código de 6 cifras es `482913`.
+Para registrar asistencia, abre **Hoy → Abrir lista** en [el Electron del PR #130](https://github.com/venturars/aTempo/pull/130). Escanea su QR o escribe en la web las seis cifras que aparecen debajo. Ambos cambian cada 30 segundos. Consulta los pasos para probar con un móvil en [el PR #123](https://github.com/venturars/aTempo/pull/123).
 
-Para volver a probar el recorrido en desarrollo, abre http://localhost:5191/?reiniciar. Borra las entradas y los avisos de esa pestaña, entra con la cuenta de ejemplo y abre el inicio del alumno.
+Para volver a probar el recorrido en desarrollo, abre http://localhost:5191/?reiniciar. Restablece la demo en este navegador y abre el inicio del alumno.
 
 ## Comprobar los cambios
 
