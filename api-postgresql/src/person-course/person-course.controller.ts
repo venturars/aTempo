@@ -1,5 +1,17 @@
-import { Controller, Get, ServiceUnavailableException } from '@nestjs/common'
 import {
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  NotFoundException,
+  Param,
+  ParseUUIDPipe,
+  ServiceUnavailableException,
+} from '@nestjs/common'
+import {
+  ApiBadRequestResponse,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiServiceUnavailableResponse,
   ApiTags,
@@ -20,6 +32,31 @@ export class PersonCourseController {
       return await this.personCourse.list()
     } catch {
       throw new ServiceUnavailableException()
+    }
+  }
+
+  @Delete(':personId/:courseId')
+  @HttpCode(204)
+  @ApiNoContentResponse({ description: 'Se borró la matrícula' })
+  @ApiBadRequestResponse({ description: 'personId o courseId no es un UUID' })
+  @ApiNotFoundResponse({
+    description: 'No existe esa persona en ese curso',
+  })
+  @ApiServiceUnavailableResponse({ description: 'PostgreSQL no responde' })
+  async remove(
+    @Param('personId', ParseUUIDPipe) personId: string,
+    @Param('courseId', ParseUUIDPipe) courseId: string,
+  ): Promise<void> {
+    let deleted: PersonCourseResponseDto | null
+
+    try {
+      deleted = await this.personCourse.delete(personId, courseId)
+    } catch {
+      throw new ServiceUnavailableException()
+    }
+
+    if (deleted === null) {
+      throw new NotFoundException()
     }
   }
 }

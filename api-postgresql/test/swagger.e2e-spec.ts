@@ -21,6 +21,7 @@ describe('Swagger (e2e)', () => {
         listOrganizations: async () => [],
         listPersonRoles: async () => [],
         listPersonCourses: async () => [],
+        deletePersonCourse: async () => null,
         findPersonById: async () => null,
         usesMock: () => true,
       })
@@ -79,5 +80,16 @@ describe('Swagger (e2e)', () => {
       type: 'array',
       items: { $ref: '#/components/schemas/OrganizationResponseDto' },
     })
+  })
+
+  it('GET /docs-json exposes DELETE /person-course/{personId}/{courseId}', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/docs-json')
+      .expect(200)
+
+    const route = response.body.paths['/person-course/{personId}/{courseId}']
+
+    expect(route).toHaveProperty('delete')
+    expect(route.delete.tags).toContain('person-course')
   })
 })

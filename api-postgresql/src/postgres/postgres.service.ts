@@ -122,6 +122,27 @@ export class PostgresService implements OnModuleDestroy {
     return result.rows
   }
 
+  async deletePersonCourse(
+    personId: string,
+    courseId: string,
+  ): Promise<PersonCourseResponseDto | null> {
+    if (this.usesMock()) {
+      return (
+        POSTGRES_MOCK_PERSON_COURSES.find(
+          (row) => row.person_id === personId && row.course_id === courseId,
+        ) ?? null
+      )
+    }
+
+    const result = await this.poolFor(
+      process.env.DATABASE_URL!,
+    ).query<PersonCourseResponseDto>(
+      'DELETE FROM person_course WHERE person_id = $1 AND course_id = $2 RETURNING person_id, course_id',
+      [personId, courseId],
+    )
+    return result.rows[0] ?? null
+  }
+
   async onModuleDestroy(): Promise<void> {
     await this.pool?.end()
   }
