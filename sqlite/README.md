@@ -61,7 +61,7 @@ sqlite3 data/operational.sqlite < schema.sql
 sqlite3 data/operational.sqlite '.tables'
 ```
 
-Si `data/operational.sqlite` ya existe, no vuelvas a cargar el esquema: fallaría porque las tablas ya están. Para empezar de cero, borra antes el fichero con `rm data/operational.sqlite`.
+Si `data/operational.sqlite` ya existe, no vuelvas a cargar el esquema: fallaría porque las tablas ya están. SQLite no añade un `CHECK` nuevo a esas tablas. Un fichero creado con un `schema.sql` anterior se queda sin las reglas nuevas (instante UTC con milisegundos, fichaje obligatorio en `present`). Para aplicarlas, borra el fichero con `rm data/operational.sqlite` y vuelve a crearlo. El mismo criterio vale para el volumen `api-sqlite-data`.
 
 Para consultarla desde la terminal: `sqlite3 data/operational.sqlite`. Para salir, `.quit`.
 

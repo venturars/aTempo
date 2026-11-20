@@ -28,7 +28,7 @@ python -m pip install -e .
 python -m unittest discover -s tests -v
 ```
 
-Las pruebas usan SQLite en memoria y cargan `sqlite/schema.sql`. PostgreSQL no tiene que estar en marcha. `query()` abre un `BEGIN` diferido; `with_transaction` usa `BEGIN IMMEDIATE` para las escrituras que comprueban y luego insertan.
+Las pruebas usan SQLite en memoria y cargan `sqlite/schema.sql`. PostgreSQL no tiene que estar en marcha. `query()` abre un `BEGIN` diferido; `with_transaction` usa `BEGIN IMMEDIATE` para las escrituras que comprueban y luego insertan. `assert_session_exists` y `assert_attendance_available` reciben esa `tx`: sin ella abrirían otra conexión.
 
 El analizador de tipos (basedpyright) usa este `.venv`. Si Cursor sigue marcando `sqlalchemy` como no resuelto, elige el intérprete `domain/python-domain/.venv` o recarga la ventana.
 
