@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { useLoginStore } from '../src/renderer/src/login/loginStore'
+import { teacherDemoAccount } from '../src/renderer/src/login/teacherDemoAccount'
 import { useSessionStore } from '../src/renderer/src/session/sessionStore'
 
 type AuthBridge = {
@@ -106,7 +107,7 @@ test.describe('Auth0 login store', () => {
 
   test('preserves the demo login path when no router is configured', () => {
     useLoginStore.getState().setEmail('profesor@atempo.test')
-    useLoginStore.getState().setPassword('Profesor123!')
+    useLoginStore.getState().setPassword(teacherDemoAccount.password)
 
     expect(useLoginStore.getState().submit()).toBe(true)
 
