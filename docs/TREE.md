@@ -55,6 +55,7 @@ postgres/
   tsconfig.json
   drizzle.config.ts
   init/01_schema.sql
+  init/02_unique_lower.sql
   test/run.sh
   test/valid.sql
 sqlite/
@@ -95,10 +96,125 @@ docs/BLOCKEND.md
 permanent-data.md
 ```
 
-# Árbol de `sdk/` (pendiente)
+# Árbol de `domain/`
 
 ```text
-sdk/                  # lógica de negocio; paquete aún no creado
+domain/
+  README.md
+  node-domain/
+    package.json
+    pnpm-lock.yaml
+    .npmrc
+    tsconfig.json
+    tsconfig.build.json
+    eslint.config.mjs
+    README.md
+    src/
+      index.ts
+      types/
+        assert.ts
+        organization.ts
+        person.ts
+        course.ts
+        person-course.ts
+        role.ts
+        person-role.ts
+      postgres/
+        columns.ts          # Proyección ISO UTC y YYYY-MM-DD
+        db/index.ts         # Pool con DATABASE_URL, timeout 3 s, withTransaction
+        postgres/index.ts   # check(): SELECT 1
+      organization/
+        list-organizations.ts
+        get-organization-by-id.ts
+        create-organization.ts
+        update-organization.ts
+        delete-organization.ts
+        assert-tax-id-available.ts
+        assert-organization-exists.ts
+      person/
+        list-persons.ts
+        get-person-by-id.ts
+        list-persons-by-course.ts
+        list-persons-by-role.ts
+        create-person.ts
+        update-person.ts
+        delete-person.ts
+        assert-email-available.ts
+        assert-identification-document-available.ts
+        assert-person-exists.ts
+      course/
+        list-courses.ts
+        get-course-by-id.ts
+        list-courses-by-person.ts
+        list-courses-by-organization.ts
+        create-course.ts
+        update-course.ts
+        delete-course.ts
+        assert-contract-address-available.ts
+        assert-acronym-available.ts
+        assert-course-exists.ts
+      role/
+        list-roles.ts
+        get-role-by-name.ts
+        list-roles-by-person.ts
+      person-course/
+        list-person-courses.ts
+        add-person-course.ts
+        remove-person-course.ts
+        assert-person-course-available.ts
+      person-role/
+        list-person-roles.ts
+        add-person-role.ts
+        remove-person-role.ts
+        assert-student-exclusive.ts
+        assert-person-role-available.ts
+    test/
+      jest.json
+      helpers.ts
+      postgres.spec.ts
+      types.spec.ts
+      reads.spec.ts
+      filters.spec.ts
+      writes.spec.ts
+      rules.spec.ts
+  python-domain/
+    pyproject.toml
+    README.md
+    python_domain/
+      __init__.py
+      types/
+        assert_values.py
+        session.py
+        attendance.py
+      sqlite/
+        db.py
+        check.py
+      session/
+        columns.py
+        list_sessions.py
+        get_session_by_id.py
+        list_sessions_by_course.py
+        list_sessions_by_professor.py
+        create_session.py
+        update_session.py
+        delete_session.py
+        assert_session_exists.py
+      attendance/
+        columns.py
+        list_attendances.py
+        list_attendances_by_session.py
+        add_attendance.py
+        update_attendance.py
+        remove_attendance.py
+        assert_attendance_available.py
+    tests/
+      helpers.py
+      test_sqlite.py
+      test_types.py
+      test_reads.py
+      test_filters.py
+      test_writes.py
+      test_rules.py
 ```
 
 # Árbol de `api-sqlite/`

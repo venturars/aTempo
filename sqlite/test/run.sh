@@ -46,5 +46,8 @@ must_fail "closing with closed_at" "$TESTS/reject-closing-with-closed-at.sql"
 must_fail "end_at before start_at" "$TESTS/reject-end-before-start.sql"
 must_fail "duplicate attendance primary key" "$TESTS/reject-duplicate-attendance.sql"
 must_fail "attendance without session" "$TESTS/reject-missing-session.sql"
+must_fail "present without check-in" "$TESTS/reject-present-without-check-in.sql"
+must_fail "absent with check-in" "$TESTS/reject-absent-with-check-in.sql"
+must_fail "offset instant" "$TESTS/reject-offset-instant.sql"
 
 echo "ok: sqlite schema tests"
