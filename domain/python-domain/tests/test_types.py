@@ -58,6 +58,26 @@ class TypeTests(unittest.TestCase):
                 "start_at": "2026-01-01T10:00",
             })
 
+    def test_rejects_an_instant_that_overflows_utc(self) -> None:
+        with self.assertRaisesRegex(
+            ValueError,
+            r"session\.start_at debe ser una fecha$",
+        ):
+            assert_session_input({
+                **valid_session_input,
+                "start_at": "0001-01-01T00:30:00.000+01:00",
+                "end_at": "0001-01-01T02:00:00.000Z",
+            })
+        with self.assertRaisesRegex(
+            ValueError,
+            r"session\.end_at debe ser una fecha$",
+        ):
+            assert_session_input({
+                **valid_session_input,
+                "start_at": "9999-12-31T20:00:00.000Z",
+                "end_at": "9999-12-31T23:30:00.000-01:00",
+            })
+
     def test_rejects_an_impossible_start_at(self) -> None:
         with self.assertRaisesRegex(
             ValueError,
@@ -95,6 +115,27 @@ class TypeTests(unittest.TestCase):
             "session.late_after_minutes debe ser un entero no negativo",
         ):
             assert_session_input({**valid_session_input, "late_after_minutes": -1})
+
+    def test_rejects_an_integer_sqlite_cannot_store(self) -> None:
+        with self.assertRaisesRegex(
+            ValueError,
+            "session.late_after_minutes no cabe en un entero de 64 bits",
+        ):
+            assert_session_input({**valid_session_input, "late_after_minutes": 2**63})
+        with self.assertRaisesRegex(
+            ValueError,
+            "session.expected_count no cabe en un entero de 64 bits",
+        ):
+            assert_session_input({**valid_session_input, "expected_count": 2**63})
+
+    def test_accepts_the_largest_sqlite_integer(self) -> None:
+        body = assert_session_input({
+            **valid_session_input,
+            "late_after_minutes": 2**63 - 1,
+            "expected_count": 2**63 - 1,
+        })
+        self.assertEqual(body["late_after_minutes"], 2**63 - 1)
+        self.assertEqual(body["expected_count"], 2**63 - 1)
 
     def test_accepts_closing_without_closed_at(self) -> None:
         body = assert_session_input({

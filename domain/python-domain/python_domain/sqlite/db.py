@@ -1,3 +1,4 @@
+import contextvars
 import os
 from collections.abc import Callable
 from typing import Any
@@ -16,6 +17,7 @@ class QueryResult:
 
 
 _engine: Engine | None = None
+_begin_immediate = contextvars.ContextVar("begin_immediate", default=False)
 
 
 def _configure_connection(dbapi_connection: Any, _connection_record: Any) -> None:
@@ -25,8 +27,11 @@ def _configure_connection(dbapi_connection: Any, _connection_record: Any) -> Non
     cursor.close()
 
 
-def _begin_immediate(connection: Any) -> None:
-    connection.exec_driver_sql("BEGIN IMMEDIATE")
+def _on_begin(connection: Any) -> None:
+    if _begin_immediate.get():
+        connection.exec_driver_sql("BEGIN IMMEDIATE")
+        return
+    connection.exec_driver_sql("BEGIN")
 
 
 def get_engine() -> Engine:
@@ -48,7 +53,7 @@ def get_engine() -> Engine:
         engine = create_engine(url)
 
     event.listen(engine, "connect", _configure_connection)
-    event.listen(engine, "begin", _begin_immediate)
+    event.listen(engine, "begin", _on_begin)
     _engine = engine
     return engine
 
@@ -74,13 +79,17 @@ def query(sql: str, params: dict[str, Any] | None = None) -> QueryResult:
 
 
 def with_transaction(fn: Callable[[QueryFn], Any]) -> Any:
-    with get_engine().begin() as connection:
+    token = _begin_immediate.set(True)
+    try:
+        with get_engine().begin() as connection:
 
-        def run(sql: str, params: dict[str, Any] | None = None) -> QueryResult:
-            result = connection.execute(text(sql), params or {})
-            return _from_result(result)
+            def run(sql: str, params: dict[str, Any] | None = None) -> QueryResult:
+                result = connection.execute(text(sql), params or {})
+                return _from_result(result)
 
-        return fn(run)
+            return fn(run)
+    finally:
+        _begin_immediate.reset(token)
 
 
 def close_engine() -> None:

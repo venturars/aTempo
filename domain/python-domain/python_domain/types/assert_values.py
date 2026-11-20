@@ -23,13 +23,16 @@ def assert_uuid(value: object, label: str) -> str:
     return text.lower()
 
 
-def truncate_to_milliseconds(value: datetime) -> datetime:
-    utc = value.astimezone(timezone.utc)
+def truncate_to_milliseconds(value: datetime, label: str = "fecha") -> datetime:
+    try:
+        utc = value.astimezone(timezone.utc)
+    except OverflowError as error:
+        raise ValueError(f"{label} debe ser una fecha") from error
     return utc.replace(microsecond=(utc.microsecond // 1000) * 1000)
 
 
-def normalize_instant(value: datetime) -> str:
-    utc = truncate_to_milliseconds(value)
+def normalize_instant(value: datetime, label: str = "fecha") -> str:
+    utc = truncate_to_milliseconds(value, label)
     milliseconds = utc.microsecond // 1000
     return (
         f"{utc.year:04d}-{utc.month:02d}-{utc.day:02d}"
@@ -38,15 +41,15 @@ def normalize_instant(value: datetime) -> str:
     )
 
 
-def assert_nullable_string(value: object, label: str) -> str | None:
-    if value is not None and not isinstance(value, str):
-        raise ValueError(f"{label} debe ser string o null")
-    return value
+_SQLITE_INT_MIN = -2**63
+_SQLITE_INT_MAX = 2**63 - 1
 
 
 def assert_int(value: object, label: str) -> int:
     if type(value) is not int:
         raise ValueError(f"{label} debe ser un entero")
+    if value < _SQLITE_INT_MIN or value > _SQLITE_INT_MAX:
+        raise ValueError(f"{label} no cabe en un entero de 64 bits")
     return value
 
 

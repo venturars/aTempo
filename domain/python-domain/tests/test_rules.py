@@ -1,14 +1,19 @@
 import unittest
 
+from sqlalchemy.exc import IntegrityError
+
 from python_domain.attendance.add_attendance import add_attendance
 from python_domain.attendance.list_attendances import list_attendances
 from python_domain.attendance.update_attendance import update_attendance
 from python_domain.session.create_session import create_session
 from python_domain.session.get_session_by_id import get_session_by_id
+from python_domain.session.list_sessions import list_sessions
 from python_domain.session.update_session import update_session
+from python_domain.sqlite.db import query
 
 from helpers import (
     OTHER_ID,
+    SESSION_ID,
     close_memory_db,
     open_memory_db,
     valid_attendance,
@@ -124,6 +129,39 @@ class RuleTests(unittest.TestCase):
                 "end_at": "2026-01-01T12:00:00.000Z",
             })
         self.assertEqual(get_session_by_id(session["id"]), session)
+
+    def test_database_rejects_present_without_check_in(self) -> None:
+        session = create_session(valid_session_input)
+        with self.assertRaises(IntegrityError):
+            query(
+                """INSERT INTO attendance (
+                  session_id, student_id, status, check_in_method, checked_in_at
+                ) VALUES (
+                  :session_id, :student_id, 'present', NULL, NULL
+                )""",
+                {"session_id": session["id"], "student_id": OTHER_ID},
+            )
+        self.assertEqual(list_attendances(), [])
+
+    def test_database_rejects_an_offset_end_at(self) -> None:
+        with self.assertRaises(IntegrityError):
+            query(
+                """INSERT INTO session (
+                  id, course_id, professor_id, start_at, end_at, status,
+                  closed_at, late_after_minutes, expected_count
+                ) VALUES (
+                  :id, :course_id, :professor_id,
+                  '2026-01-01T10:00:00.000Z',
+                  '2026-01-01T11:00:00.000+02:00',
+                  'open', NULL, 10, 20
+                )""",
+                {
+                    "id": SESSION_ID,
+                    "course_id": valid_session_input["course_id"],
+                    "professor_id": valid_session_input["professor_id"],
+                },
+            )
+        self.assertEqual(list_sessions(), [])
 
 
 if __name__ == "__main__":

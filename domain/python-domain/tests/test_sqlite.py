@@ -9,12 +9,12 @@ from python_domain.attendance.add_attendance import add_attendance
 from python_domain.attendance.list_attendances import list_attendances
 from python_domain.attendance.update_attendance import update_attendance
 from python_domain.session.create_session import create_session
+from python_domain.session.list_sessions import list_sessions
 from python_domain.session.update_session import update_session
 from python_domain.sqlite.check import check
 from python_domain.sqlite.db import get_engine, query, reset_db, with_transaction
 
 from helpers import (
-    STUDENT_ID,
     close_memory_db,
     count_begins,
     open_file_db,
@@ -94,18 +94,29 @@ class SqliteTests(unittest.TestCase):
             results: list[object] = []
             errors: list[BaseException] = []
 
-            def worker() -> None:
-                try:
-                    results.append(add_attendance(body))
-                except BaseException as error:
-                    errors.append(error)
+            def delay_lookup(_conn, _cursor, statement, *_args) -> None:
+                if "FROM attendance" in statement and "INSERT" not in statement:
+                    time.sleep(0.2)
 
-            first = threading.Thread(target=worker)
-            second = threading.Thread(target=worker)
-            first.start()
-            second.start()
-            first.join(timeout=5)
-            second.join(timeout=5)
+            engine = get_engine()
+            event.listen(engine, "before_cursor_execute", delay_lookup)
+            try:
+
+                def worker() -> None:
+                    try:
+                        results.append(add_attendance(body))
+                    except BaseException as error:
+                        errors.append(error)
+
+                first = threading.Thread(target=worker)
+                second = threading.Thread(target=worker)
+                first.start()
+                second.start()
+                first.join(timeout=5)
+                second.join(timeout=5)
+            finally:
+                event.remove(engine, "before_cursor_execute", delay_lookup)
+
             self.assertEqual(len(results), 1)
             self.assertEqual(len(errors), 1)
             self.assertIsInstance(errors[0], ValueError)
@@ -118,34 +129,46 @@ class SqliteTests(unittest.TestCase):
             except OSError:
                 pass
 
-    def test_concurrent_update_attendance_does_not_raise(self) -> None:
+    def test_read_does_not_block_during_write_transaction(self) -> None:
         path = open_file_db()
         try:
             session = create_session(valid_session_input)
-            created = add_attendance({
-                **valid_attendance,
-                "session_id": session["id"],
-            })
+            started = threading.Event()
+            release = threading.Event()
+            listed: list[object] = []
             errors: list[BaseException] = []
 
-            def worker() -> None:
+            def hold(tx):
+                tx(
+                    "SELECT id FROM session WHERE id = :id",
+                    {"id": session["id"]},
+                )
+                started.set()
+                if not release.wait(timeout=5):
+                    raise TimeoutError("release")
+
+            holder = threading.Thread(
+                target=lambda: with_transaction(hold),
+                daemon=True,
+            )
+            holder.start()
+            self.assertTrue(started.wait(timeout=2))
+
+            def read() -> None:
                 try:
-                    update_attendance({
-                        **created,
-                        "student_id": STUDENT_ID,
-                        "status": "present_late",
-                    })
+                    listed.extend(list_sessions())
                 except BaseException as error:
                     errors.append(error)
 
-            first = threading.Thread(target=worker)
-            second = threading.Thread(target=worker)
-            first.start()
-            second.start()
-            first.join(timeout=5)
-            second.join(timeout=5)
+            reader = threading.Thread(target=read, daemon=True)
+            reader.start()
+            reader.join(timeout=2)
+            self.assertFalse(reader.is_alive())
             self.assertEqual(errors, [])
-            self.assertEqual(len(list_attendances()), 1)
+            self.assertEqual(len(listed), 1)
+            release.set()
+            holder.join(timeout=2)
+            self.assertFalse(holder.is_alive())
         finally:
             close_memory_db()
             try:

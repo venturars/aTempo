@@ -64,7 +64,11 @@ def assert_attendance(value: object) -> Attendance:
         value.get("checked_in_at"),
         "attendance.checked_in_at",
     )
-    instant = None if checked is None else normalize_instant(checked)
+    instant = (
+        None
+        if checked is None
+        else normalize_instant(checked, "attendance.checked_in_at")
+    )
     assert_attendance_matches_status(status, check_in_method, instant)
 
     return {

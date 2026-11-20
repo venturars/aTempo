@@ -19,7 +19,7 @@ No hay `absence_notice`, `session_seal`, `recorded_by`, `justification`, `docume
 
 ## Configuración
 
-El esquema está en `sqlite/schema.sql`. Fechas y UUID van como `TEXT`. El SDK guarda instantes en ISO UTC (`2026-09-01T08:00:00.000Z`) y UUID en minúsculas, para que el `CHECK (end_at > start_at)` y la PK de asistencia comparen bien. `closed_at` queda vacío mientras la sesión no está `closed`.
+El esquema está en `sqlite/schema.sql`. Fechas y UUID van como `TEXT`. El esquema solo acepta instantes ISO UTC con milisegundos (`2026-09-01T08:00:00.000Z`) y el SDK guarda los UUID en minúsculas, para que el `CHECK (end_at > start_at)` y la PK de asistencia comparen bien. En asistencia, `present` y `present_late` exigen método y hora; `absent` y `notified_absence` los prohíben. `closed_at` queda vacío mientras la sesión no está `closed`.
 
 Durante la ventana, esta base guarda el fichaje y el `status`. Al cerrar, esos estados se escriben en el contrato. Después, SQLite copia el `status` de `changeStatus`.
 

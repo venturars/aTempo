@@ -36,6 +36,14 @@ class WriteTests(unittest.TestCase):
             create_session({"status": "open"})
         self.assertEqual(list_sessions(), [])
 
+    def test_does_not_write_when_late_after_minutes_does_not_fit(self) -> None:
+        with self.assertRaisesRegex(
+            ValueError,
+            "session.late_after_minutes no cabe en un entero de 64 bits",
+        ):
+            create_session({**valid_session_input, "late_after_minutes": 2**63})
+        self.assertEqual(list_sessions(), [])
+
     def test_stores_offset_dates_as_utc(self) -> None:
         created = create_session({
             **valid_session_input,
