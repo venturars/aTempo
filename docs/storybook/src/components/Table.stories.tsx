@@ -33,6 +33,31 @@ export const Gallery: Story = {
           </tbody>
         </table>
       </Section>
+      <Section title="Panel">
+        <div className="panel-card w-full max-w-xl overflow-hidden rounded-box">
+          <table className="table panel-table">
+            <thead>
+              <tr>
+                <th scope="col">Fecha</th>
+                <th scope="col">Llegada</th>
+                <th scope="col">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>17 nov 2026</td>
+                <td>09:02</td>
+                <td><span className="badge badge-sm badge-soft badge-success">Presente</span></td>
+              </tr>
+              <tr>
+                <td>16 nov 2026</td>
+                <td>09:16</td>
+                <td><span className="badge badge-sm badge-soft badge-warning">Tarde</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </Section>
     </Frame>
   )
 }

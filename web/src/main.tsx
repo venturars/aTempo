@@ -1,3 +1,4 @@
+import './demoReset'
 import './styles/app.css'
 
 import { StrictMode } from 'react'

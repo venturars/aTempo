@@ -1,6 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { applyTheme, readTheme, type ThemeName } from '../session/sessionStore'
+import { destinationAfterSignIn, hasPendingCheckIn } from '../student/checkIn/pendingCheckIn'
 import { useLoginStore } from './loginStore'
 
 export function LoginScreen(): React.JSX.Element {
@@ -13,31 +13,28 @@ export function LoginScreen(): React.JSX.Element {
   const setPassword = useLoginStore((state) => state.setPassword)
   const submit = useLoginStore((state) => state.submit)
   const navigate = useNavigate()
-  const [theme, setTheme] = useState<ThemeName>(readTheme)
-
-  function onTheme(): void {
-    const next = theme === 'atempo-claro' ? 'atempo-oscuro' : 'atempo-claro'
-    applyTheme(next)
-    setTheme(next)
-  }
+  // Viene del QR de clase sin la sesión abierta: al entrar se apunta la entrada.
+  const [fromClassQr] = useState(hasPendingCheckIn)
 
   function onSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault()
-    if (submit()) void navigate({ to: '/student/dashboard' })
+    if (submit()) void navigate({ to: destinationAfterSignIn() })
   }
 
   return (
     <main className="flex min-h-screen items-center justify-center p-4 md:p-8">
-      <section className="flex w-full max-w-md flex-col gap-6 rounded-box bg-base-100 p-4 md:p-8">
-        <button className="btn btn-ghost w-fit" type="button" onClick={onTheme}>
-          {theme === 'atempo-claro' ? 'Tema oscuro' : 'Tema claro'}
-        </button>
-        <div className="flex flex-col gap-2">
-          <p>aTempo</p>
-          <h1 className="text-2xl font-medium">Entra con tu correo.</h1>
+      <section className="page-enter panel-card flex w-full max-w-md flex-col gap-7 rounded-box p-6 md:p-10">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <p className="text-lg font-semibold tracking-tight">aTempo</p>
+          <div className="flex flex-col gap-1">
+            <h1 className="text-2xl font-semibold tracking-tight">Hola de nuevo</h1>
+            {fromClassQr ? (
+              <p className="text-sm text-base-content/60">Entra para registrar tu asistencia.</p>
+            ) : null}
+          </div>
         </div>
         <form className="flex flex-col gap-5" noValidate onSubmit={onSubmit}>
-          <div className="flex flex-col gap-2">
+          <div className="field">
             <label htmlFor="email">Correo</label>
             <input
               id="email"
@@ -48,9 +45,9 @@ export function LoginScreen(): React.JSX.Element {
               aria-invalid={emailError !== ''}
               onChange={(event) => setEmail(event.target.value)}
             />
-            {emailError !== '' ? <p className="text-sm">{emailError}</p> : null}
+            {emailError !== '' ? <p className="text-sm text-error">{emailError}</p> : null}
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="field">
             <label htmlFor="password">Contraseña</label>
             <input
               id="password"
@@ -61,20 +58,20 @@ export function LoginScreen(): React.JSX.Element {
               aria-invalid={passwordError !== ''}
               onChange={(event) => setPassword(event.target.value)}
             />
-            {passwordError !== '' ? <p className="text-sm">{passwordError}</p> : null}
+            {passwordError !== '' ? <p className="text-sm text-error">{passwordError}</p> : null}
           </div>
           <button className="btn btn-primary" type="submit">
             Entrar
           </button>
           {loginError !== '' ? (
-            <div className="alert" role="alert">
+            <div className="alert alert-soft alert-error" role="alert">
               <span>{loginError}</span>
             </div>
           ) : null}
         </form>
-        <p>
+        <p className="text-center text-sm text-base-content/60">
           ¿No tienes cuenta?{' '}
-          <Link to="/sign-up" className="link">
+          <Link to="/sign-up" className="link link-primary font-medium">
             Crear mi cuenta
           </Link>
         </p>
