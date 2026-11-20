@@ -1,5 +1,6 @@
 import { COURSE_COLUMNS } from '../postgres/columns'
 import { query } from '../postgres/db'
+import { normalizeUuid } from '../types/assert'
 import {
   assertCourse,
   normalizeContractAddress,
@@ -23,7 +24,7 @@ export async function assertContractAddressAvailable(
   }
 
   assertCourse(row)
-  if (row.id !== ignoreId) {
+  if (ignoreId === undefined || normalizeUuid(row.id) !== normalizeUuid(ignoreId)) {
     throw new Error('course.contract_address ya existe')
   }
 }

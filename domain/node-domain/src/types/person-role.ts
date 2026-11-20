@@ -1,4 +1,4 @@
-import { assertUuid } from './assert'
+import { assertUuid, normalizeUuid } from './assert'
 import { assertRoleName, type RoleName } from './role'
 
 export interface PersonRole {
@@ -15,5 +15,6 @@ export function assertPersonRole(
 
   const row = value as Record<string, unknown>
   assertUuid(row.person_id, 'person_role.person_id')
+  row.person_id = normalizeUuid(row.person_id)
   assertRoleName(row.role, 'person_role.role')
 }

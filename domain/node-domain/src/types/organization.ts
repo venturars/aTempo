@@ -1,4 +1,4 @@
-import { assertNonEmptyString, assertUuid } from './assert'
+import { assertNonEmptyString, assertUuid, normalizeUuid } from './assert'
 
 export interface Organization {
   id: string
@@ -29,5 +29,6 @@ export function assertOrganization(
 
   const row = value as Record<string, unknown>
   assertUuid(row.id, 'organization.id')
+  row.id = normalizeUuid(row.id)
   assertOrganizationInput(value)
 }

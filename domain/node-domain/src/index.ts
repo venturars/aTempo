@@ -1,3 +1,4 @@
+export { normalizeUuid } from './types/assert'
 export {
   assertOrganization,
   assertOrganizationInput,

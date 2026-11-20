@@ -2,6 +2,7 @@ import {
   assertNonEmptyString,
   assertNullableString,
   assertUuid,
+  normalizeUuid,
 } from './assert'
 
 export interface Person {
@@ -73,5 +74,6 @@ export function assertPerson(value: unknown): asserts value is Person {
 
   const row = value as Record<string, unknown>
   assertUuid(row.id, 'person.id')
+  row.id = normalizeUuid(row.id)
   assertPersonInput(value)
 }

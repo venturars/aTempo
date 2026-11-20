@@ -3,6 +3,7 @@ import { updateCourse } from '../src/course/update-course'
 import { createOrganization } from '../src/organization/create-organization'
 import { updateOrganization } from '../src/organization/update-organization'
 import { createPerson } from '../src/person/create-person'
+import { updatePerson } from '../src/person/update-person'
 import { addPersonRole } from '../src/person-role/add-person-role'
 import { addPersonCourse } from '../src/person-course/add-person-course'
 import {
@@ -82,6 +83,19 @@ describe('reglas de negocio', () => {
     await expect(updateOrganization(validOrganization)).resolves.toEqual(
       validOrganization,
     )
+    expect(wrote(calls)).toBe(true)
+  })
+
+  it('allows updating a person that keeps its email when the id differs only by case', async () => {
+    const calls = mockDriver(async (sql) => {
+      if (sql.includes('UPDATE person')) {
+        return rowsResult([validPerson])
+      }
+      return rowsResult([validPerson])
+    })
+    await expect(
+      updatePerson({ ...validPerson, id: validPerson.id.toUpperCase() }),
+    ).resolves.toEqual(validPerson)
     expect(wrote(calls)).toBe(true)
   })
 

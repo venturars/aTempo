@@ -1,4 +1,4 @@
-import { assertNonEmptyString, assertUuid } from './assert'
+import { assertNonEmptyString, assertUuid, normalizeUuid } from './assert'
 
 const CONTRACT_ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/
 const INSTANT_RE =
@@ -23,6 +23,7 @@ export function assertCourseInput(value: unknown): asserts value is CourseInput 
 
   const row = value as Record<string, unknown>
   assertUuid(row.organization_id, 'course.organization_id')
+  row.organization_id = normalizeUuid(row.organization_id)
   assertNonEmptyString(row.name, 'course.name')
   assertNonEmptyString(row.acronym, 'course.acronym')
   assertNonEmptyString(row.start_at, 'course.start_at')
@@ -68,5 +69,6 @@ export function assertCourse(value: unknown): asserts value is Course {
 
   const row = value as Record<string, unknown>
   assertUuid(row.id, 'course.id')
+  row.id = normalizeUuid(row.id)
   assertCourseInput(value)
 }

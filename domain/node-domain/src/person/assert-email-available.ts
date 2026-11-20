@@ -1,6 +1,6 @@
 import { PERSON_COLUMNS } from '../postgres/columns'
 import { query } from '../postgres/db'
-import { assertNonEmptyString } from '../types/assert'
+import { assertNonEmptyString, normalizeUuid } from '../types/assert'
 import {
   assertPerson,
   normalizeEmail,
@@ -26,7 +26,7 @@ export async function assertEmailAvailable(
   }
 
   assertPerson(row)
-  if (row.id !== ignoreId) {
+  if (ignoreId === undefined || normalizeUuid(row.id) !== normalizeUuid(ignoreId)) {
     throw new Error('person.email ya existe')
   }
 }

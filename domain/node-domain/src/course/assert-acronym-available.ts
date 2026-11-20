@@ -1,6 +1,6 @@
 import { COURSE_COLUMNS } from '../postgres/columns'
 import { query } from '../postgres/db'
-import { assertUuid } from '../types/assert'
+import { assertUuid, normalizeUuid } from '../types/assert'
 import { assertCourse, type Course } from '../types/course'
 
 const SELECT = `SELECT
@@ -22,7 +22,7 @@ export async function assertAcronymAvailable(
   }
 
   assertCourse(row)
-  if (row.id !== ignoreId) {
+  if (ignoreId === undefined || normalizeUuid(row.id) !== normalizeUuid(ignoreId)) {
     throw new Error('course.acronym ya existe en la organización')
   }
 }

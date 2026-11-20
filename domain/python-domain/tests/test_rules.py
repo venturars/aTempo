@@ -3,6 +3,8 @@ import unittest
 from python_domain.attendance.add_attendance import add_attendance
 from python_domain.attendance.list_attendances import list_attendances
 from python_domain.session.create_session import create_session
+from python_domain.session.get_session_by_id import get_session_by_id
+from python_domain.session.update_session import update_session
 
 from helpers import (
     OTHER_ID,
@@ -73,6 +75,20 @@ class RuleTests(unittest.TestCase):
                 "session_id": session["id"],
                 "checked_in_at": "2026-01-01T09:00:00.000Z",
             })
+
+    def test_does_not_shorten_the_session_past_a_stored_check_in(self) -> None:
+        session = create_session(valid_session_input)
+        add_attendance({**valid_attendance, "session_id": session["id"]})
+        with self.assertRaisesRegex(
+            ValueError,
+            "attendance.checked_in_at debe estar dentro de la sesión",
+        ):
+            update_session({
+                **session,
+                "start_at": "2026-01-01T11:00:00.000Z",
+                "end_at": "2026-01-01T12:00:00.000Z",
+            })
+        self.assertEqual(get_session_by_id(session["id"]), session)
 
 
 if __name__ == "__main__":

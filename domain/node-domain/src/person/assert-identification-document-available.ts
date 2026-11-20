@@ -1,6 +1,6 @@
 import { PERSON_COLUMNS } from '../postgres/columns'
 import { query } from '../postgres/db'
-import { assertNonEmptyString } from '../types/assert'
+import { assertNonEmptyString, normalizeUuid } from '../types/assert'
 import { assertPerson, type Person } from '../types/person'
 
 const SELECT = `SELECT
@@ -24,7 +24,7 @@ export async function assertIdentificationDocumentAvailable(
   }
 
   assertPerson(row)
-  if (row.id !== ignoreId) {
+  if (ignoreId === undefined || normalizeUuid(row.id) !== normalizeUuid(ignoreId)) {
     throw new Error('person.identification_document ya existe')
   }
 }

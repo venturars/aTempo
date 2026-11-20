@@ -17,6 +17,10 @@ export function assertUuid(value: unknown, label: string): asserts value is stri
   }
 }
 
+export function normalizeUuid(value: string): string {
+  return value.toLowerCase()
+}
+
 export function assertNullableString(
   value: unknown,
   label: string,

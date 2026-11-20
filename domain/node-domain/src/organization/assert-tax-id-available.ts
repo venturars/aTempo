@@ -1,6 +1,6 @@
 import { ORGANIZATION_COLUMNS } from '../postgres/columns'
 import { query } from '../postgres/db'
-import { assertNonEmptyString } from '../types/assert'
+import { assertNonEmptyString, normalizeUuid } from '../types/assert'
 import { assertOrganization, type Organization } from '../types/organization'
 
 const SELECT = `SELECT
@@ -21,7 +21,7 @@ export async function assertTaxIdAvailable(
   }
 
   assertOrganization(row)
-  if (row.id !== ignoreId) {
+  if (ignoreId === undefined || normalizeUuid(row.id) !== normalizeUuid(ignoreId)) {
     throw new Error('organization.tax_id ya existe')
   }
 }

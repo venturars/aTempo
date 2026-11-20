@@ -1,3 +1,4 @@
+import { normalizeUuid } from '../src/types/assert'
 import {
   assertCourse,
   assertCourseInput,
@@ -28,6 +29,32 @@ describe('assert*', () => {
     expect(normalizeEmail('  Ada.Lopez@Clase.TEST ')).toBe(
       'ada.lopez@clase.test',
     )
+  })
+
+  it('normalizes uuids to lowercase', () => {
+    expect(normalizeUuid(validPerson.id.toUpperCase())).toBe(validPerson.id)
+  })
+
+  it('lowercases person, organization and course ids', () => {
+    const person = { ...validPerson, id: validPerson.id.toUpperCase() }
+    assertPerson(person)
+    expect(person.id).toBe(validPerson.id)
+
+    const organization = {
+      ...validOrganization,
+      id: validOrganization.id.toUpperCase(),
+    }
+    assertOrganization(organization)
+    expect(organization.id).toBe(validOrganization.id)
+
+    const course = {
+      ...validCourse,
+      id: validCourse.id.toUpperCase(),
+      organization_id: validCourse.organization_id.toUpperCase(),
+    }
+    assertCourse(course)
+    expect(course.id).toBe(validCourse.id)
+    expect(course.organization_id).toBe(validCourse.organization_id)
   })
 
   it('normalizes contract address to lowercase hex', () => {

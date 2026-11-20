@@ -37,6 +37,17 @@ class TypeTests(unittest.TestCase):
                 "end_at": valid_session_input["start_at"],
             })
 
+    def test_rejects_end_at_equal_to_start_at_after_normalizing_milliseconds(self) -> None:
+        with self.assertRaisesRegex(
+            ValueError,
+            "session.end_at debe ser posterior a session.start_at",
+        ):
+            assert_session_input({
+                **valid_session_input,
+                "start_at": "2026-01-01T10:00:00.0001Z",
+                "end_at": "2026-01-01T10:00:00.0009Z",
+            })
+
     def test_rejects_a_start_at_without_timezone(self) -> None:
         with self.assertRaisesRegex(
             ValueError,

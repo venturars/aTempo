@@ -1,5 +1,9 @@
+from python_domain.attendance.list_attendances_by_session import (
+    list_attendances_by_session,
+)
 from python_domain.session.columns import SESSION_COLUMNS
 from python_domain.sqlite.db import query
+from python_domain.types.attendance import assert_checked_in_at_in_session
 from python_domain.types.session import Session, assert_session
 
 UPDATE = f"""UPDATE session
@@ -18,6 +22,12 @@ RETURNING {SESSION_COLUMNS}"""
 
 def update_session(value: object) -> Session | None:
     session = assert_session(value)
+    for attendance in list_attendances_by_session(session["id"]):
+        assert_checked_in_at_in_session(
+            attendance["checked_in_at"],
+            session["start_at"],
+            session["end_at"],
+        )
     result = query(UPDATE, dict(session))
     if not result.rows:
         return None

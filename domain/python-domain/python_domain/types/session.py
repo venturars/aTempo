@@ -60,12 +60,17 @@ def assert_session_input(value: object) -> SessionInput:
 
     course_id = assert_uuid(value.get("course_id"), "session.course_id")
     professor_id = assert_uuid(value.get("professor_id"), "session.professor_id")
-    start = assert_instant(value.get("start_at"), "session.start_at")
-    end = assert_instant(value.get("end_at"), "session.end_at")
-    if not end > start:
+    start_at = normalize_instant(
+        assert_instant(value.get("start_at"), "session.start_at"),
+    )
+    end_at = normalize_instant(
+        assert_instant(value.get("end_at"), "session.end_at"),
+    )
+    if not (
+        assert_instant(end_at, "session.end_at")
+        > assert_instant(start_at, "session.start_at")
+    ):
         raise ValueError("session.end_at debe ser posterior a session.start_at")
-    start_at = normalize_instant(start)
-    end_at = normalize_instant(end)
     status = assert_session_status(value.get("status"))
     closed = assert_nullable_instant(value.get("closed_at"), "session.closed_at")
     closed_at = None if closed is None else normalize_instant(closed)
