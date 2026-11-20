@@ -2,6 +2,7 @@ import {
   assertCalendarDate,
   assertNonEmptyString,
   assertNullableString,
+  assertString,
   assertUuid,
   normalizeUuid,
 } from './assert'
@@ -47,6 +48,14 @@ export function assertPersonInput(value: unknown): PersonInput {
 }
 
 export function assertPerson(value: unknown): Person {
+  return personWithId(value, true)
+}
+
+export function assertPersonUpdate(value: unknown): Person {
+  return personWithId(value, false)
+}
+
+function personWithId(value: unknown, allowEmptyNames: boolean): Person {
   if (value === null || typeof value !== 'object') {
     throw new Error('person debe ser un objeto')
   }
@@ -55,11 +64,11 @@ export function assertPerson(value: unknown): Person {
   assertUuid(row.id, 'person.id')
   return {
     id: normalizeUuid(row.id),
-    ...personFields(value, true),
+    ...personFields(value, allowEmptyNames),
   }
 }
 
-function personFields(value: unknown, allowEmptyFirstName: boolean): PersonInput {
+function personFields(value: unknown, allowEmptyNames: boolean): PersonInput {
   if (value === null || typeof value !== 'object') {
     throw new Error('person debe ser un objeto')
   }
@@ -73,13 +82,8 @@ function personFields(value: unknown, allowEmptyFirstName: boolean): PersonInput
   if (normalizeEmail(row.email).length === 0) {
     throw new Error('person.email debe ser un string no vacío')
   }
-  if (
-    typeof row.first_name !== 'string' ||
-    (!allowEmptyFirstName && row.first_name.length === 0)
-  ) {
-    throw new Error('person.first_name debe ser un string no vacío')
-  }
-  assertNonEmptyString(row.last_name, 'person.last_name')
+  assertString(row.first_name, 'person.first_name', allowEmptyNames)
+  assertString(row.last_name, 'person.last_name', allowEmptyNames)
   assertNullableString(row.birth_date, 'person.birth_date')
   assertBirthDate(row.birth_date)
   assertNullableString(row.phone, 'person.phone')

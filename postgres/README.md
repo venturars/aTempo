@@ -4,7 +4,7 @@ Tablas permanentes de aTempo: `organization`, `person`, `course`, `person_course
 
 Esta carpeta no habla con el escritorio ni con el API-router. Se consulta con `psql` o con un cliente visual, por ejemplo Drizzle Studio ([Ver las tablas con Drizzle Studio](#ver-las-tablas-con-drizzle-studio)). Compose orquesta el mismo PostgreSQL. Pasos: [Postgres con Docker](../README.md#postgres-con-docker) en la raíz.
 
-El esquema está en `init/01_schema.sql`. Una base ya creada no vuelve a ejecutar esa carpeta: los índices `lower(email)` y `lower(contract_address)` se aplican con `psql -d atempo -f init/02_unique_lower.sql`. Ese script falla si ya hay duplicados que solo se diferencian en mayúsculas.
+El esquema está en `init/01_schema.sql`. Una base ya creada no vuelve a ejecutar esa carpeta: los índices `lower(email)`, `lower(contract_address)`, `lower(tax_id)` y `lower(identification_document)` se aplican con `psql -d atempo -f init/02_unique_lower.sql`. Ese script falla si ya hay duplicados que solo se diferencian en mayúsculas.
 
 ## Pruebas
 

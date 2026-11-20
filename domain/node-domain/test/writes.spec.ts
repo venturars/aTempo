@@ -308,4 +308,26 @@ describe('escrituras', () => {
     })
     await expect(addPersonRole(student)).resolves.toEqual(student)
   })
+
+  it('adds a course enrollment in one transaction', async () => {
+    const calls = mockDriver(async (sql) => {
+      if (sql.includes('INSERT INTO person_course')) {
+        return rowsResult([validPersonCourse])
+      }
+      const existing = lookupById(sql)
+      if (existing) {
+        return existing
+      }
+      return emptyResult()
+    })
+    await expect(addPersonCourse(validPersonCourse)).resolves.toEqual(
+      validPersonCourse,
+    )
+    expect(calls.map((call) => call.sql)).toEqual([
+      'BEGIN',
+      expect.stringContaining('AS person_exists'),
+      expect.stringContaining('INSERT INTO person_course'),
+      'COMMIT',
+    ])
+  })
 })

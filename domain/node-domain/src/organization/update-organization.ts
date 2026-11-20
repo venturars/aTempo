@@ -1,6 +1,10 @@
 import { ORGANIZATION_COLUMNS } from '../postgres/columns'
 import { query } from '../postgres/db'
-import { assertOrganization, type Organization } from '../types/organization'
+import {
+  assertOrganization,
+  assertOrganizationUpdate,
+  type Organization,
+} from '../types/organization'
 import { assertTaxIdAvailable } from './assert-tax-id-available'
 
 const UPDATE = `UPDATE organization
@@ -12,7 +16,7 @@ RETURNING
 export async function updateOrganization(
   input: unknown,
 ): Promise<Organization | null> {
-  const organization = assertOrganization(input)
+  const organization = assertOrganizationUpdate(input)
   await assertTaxIdAvailable(organization.tax_id, organization.id)
 
   const result = await query<Organization>(UPDATE, [

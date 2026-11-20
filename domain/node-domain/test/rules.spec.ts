@@ -8,6 +8,7 @@ import { addPersonRole } from '../src/person-role/add-person-role'
 import { addPersonCourse } from '../src/person-course/add-person-course'
 import {
   emptyResult,
+  enrollmentFlags,
   lookupById,
   mockDriver,
   OTHER_ID,
@@ -390,8 +391,8 @@ describe('reglas de negocio', () => {
 
   it('does not insert a course enrollment when the course does not exist', async () => {
     const calls = mockDriver(async (sql) => {
-      if (sql.includes('FROM person') && sql.includes('WHERE id = $1::uuid')) {
-        return rowsResult([validPerson])
+      if (sql.includes('AS person_exists')) {
+        return enrollmentFlags({ course_exists: false })
       }
       return emptyResult()
     })
@@ -403,16 +404,23 @@ describe('reglas de negocio', () => {
 
   it('does not insert a repeated course enrollment', async () => {
     const calls = mockDriver(async (sql) => {
-      const existing = lookupById(sql)
-      if (existing) {
-        return existing
+      if (sql.includes('AS person_exists')) {
+        return enrollmentFlags({ already: true })
       }
-      return rowsResult([validPersonCourse])
+      return emptyResult()
     })
     await expect(addPersonCourse(validPersonCourse)).rejects.toThrow(
       'person_course ya existe',
     )
     expect(wrote(calls)).toBe(false)
+  })
+
+  it('does not query when first_name is empty on update', async () => {
+    const calls = mockDriver()
+    await expect(
+      updatePerson({ ...validPerson, first_name: '' }),
+    ).rejects.toThrow('person.first_name debe ser un string no vacío')
+    expect(calls).toHaveLength(0)
   })
 
   it('does not insert a repeated role', async () => {

@@ -1,13 +1,21 @@
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
+export function assertString(
+  value: unknown,
+  label: string,
+  allowEmpty = false,
+): asserts value is string {
+  if (typeof value !== 'string' || (!allowEmpty && value.length === 0)) {
+    throw new Error(`${label} debe ser un string no vacío`)
+  }
+}
+
 export function assertNonEmptyString(
   value: unknown,
   label: string,
 ): asserts value is string {
-  if (typeof value !== 'string' || value.length === 0) {
-    throw new Error(`${label} debe ser un string no vacío`)
-  }
+  assertString(value, label)
 }
 
 export function assertUuid(value: unknown, label: string): asserts value is string {
@@ -27,6 +35,10 @@ export function assertCalendarDate(
   day: number,
   label: string,
 ): void {
+  if (year < 1 || year > 9999) {
+    throw new Error(`${label} debe ser una fecha`)
+  }
+
   const date = new Date(Date.UTC(year, month - 1, day))
   date.setUTCFullYear(year)
   if (

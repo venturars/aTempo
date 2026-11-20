@@ -53,6 +53,30 @@ describe('lecturas', () => {
     await expect(getPersonById(PERSON_ID)).resolves.toEqual(row)
   })
 
+  it('lists rows whose labels are empty strings', async () => {
+    mockDriver(async (sql) => {
+      if (sql.includes('FROM person')) {
+        return rowsResult([{ ...validPerson, last_name: '' }])
+      }
+      if (sql.includes('FROM organization')) {
+        return rowsResult([{ ...validOrganization, name: '' }])
+      }
+      if (sql.includes('FROM course')) {
+        return rowsResult([{ ...validCourse, name: '', acronym: '' }])
+      }
+      return emptyResult()
+    })
+    await expect(listPersons()).resolves.toEqual([
+      { ...validPerson, last_name: '' },
+    ])
+    await expect(listOrganizations()).resolves.toEqual([
+      { ...validOrganization, name: '' },
+    ])
+    await expect(listCourses()).resolves.toEqual([
+      { ...validCourse, name: '', acronym: '' },
+    ])
+  })
+
   it('lists persons', async () => {
     mockDriver(async () => rowsResult([validPerson]))
     await expect(listPersons()).resolves.toEqual([validPerson])

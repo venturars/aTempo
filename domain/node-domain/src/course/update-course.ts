@@ -3,6 +3,7 @@ import { COURSE_COLUMNS } from '../postgres/columns'
 import { query } from '../postgres/db'
 import {
   assertCourse,
+  assertCourseUpdate,
   normalizeContractAddress,
   type Course,
 } from '../types/course'
@@ -22,7 +23,7 @@ RETURNING
   ${COURSE_COLUMNS}`
 
 export async function updateCourse(input: unknown): Promise<Course | null> {
-  const course = assertCourse(input)
+  const course = assertCourseUpdate(input)
   const contractAddress = normalizeContractAddress(course.contract_address)
   await assertOrganizationExists(course.organization_id)
   await assertContractAddressAvailable(contractAddress, course.id)

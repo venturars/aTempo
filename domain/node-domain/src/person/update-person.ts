@@ -1,6 +1,11 @@
 import { PERSON_COLUMNS } from '../postgres/columns'
 import { query } from '../postgres/db'
-import { assertPerson, normalizeEmail, type Person } from '../types/person'
+import {
+  assertPerson,
+  assertPersonUpdate,
+  normalizeEmail,
+  type Person,
+} from '../types/person'
 import { assertEmailAvailable } from './assert-email-available'
 import { assertIdentificationDocumentAvailable } from './assert-identification-document-available'
 
@@ -17,7 +22,7 @@ RETURNING
   ${PERSON_COLUMNS}`
 
 export async function updatePerson(input: unknown): Promise<Person | null> {
-  const person = assertPerson(input)
+  const person = assertPersonUpdate(input)
   const email = normalizeEmail(person.email)
   await assertIdentificationDocumentAvailable(
     person.identification_document,

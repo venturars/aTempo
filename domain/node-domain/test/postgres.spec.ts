@@ -45,5 +45,36 @@ describe('postgres', () => {
       assertMockSql('SELECT birth_date FROM person WHERE id = $1::uuid'),
     ).toThrow('la lectura de person debe proyectar to_char de birth_date')
     expect(() => assertMockSql('SELCT 1')).toThrow('consulta no reconocida')
+    expect(() =>
+      assertMockSql('DELETE FROM person WHERE id = $10::uuid'),
+    ).not.toThrow()
+  })
+
+  it('translates unique and foreign key errors from pg', async () => {
+    mockDriver(async () => {
+      throw Object.assign(new Error('duplicate key'), {
+        code: '23505',
+        constraint: 'person_email_key',
+      })
+    })
+    await expect(query('SELECT 1')).rejects.toThrow('person.email ya existe')
+
+    mockDriver(async () => {
+      throw Object.assign(new Error('duplicate key'), {
+        code: '23505',
+        constraint: 'organization_tax_id_lower_idx',
+      })
+    })
+    await expect(query('SELECT 1')).rejects.toThrow(
+      'organization.tax_id ya existe',
+    )
+
+    mockDriver(async () => {
+      throw Object.assign(new Error('foreign key'), {
+        code: '23503',
+        constraint: 'course_organization_id_fkey',
+      })
+    })
+    await expect(query('SELECT 1')).rejects.toThrow('organization no existe')
   })
 })

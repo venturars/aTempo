@@ -63,6 +63,19 @@ describe('assert*', () => {
     )
   })
 
+  it('normalizes course instants to utc', () => {
+    expect(
+      assertCourseInput({
+        organization_id: validCourse.organization_id,
+        name: validCourse.name,
+        acronym: validCourse.acronym,
+        start_at: '2026-09-01T08:00:00.000+01:00',
+        end_at: '2026-09-01T10:00:00.000Z',
+        contract_address: validCourse.contract_address,
+      }).start_at,
+    ).toBe('2026-09-01T07:00:00.000Z')
+  })
+
   it('normalizes contract address to lowercase hex', () => {
     expect(
       normalizeContractAddress(
@@ -86,6 +99,16 @@ describe('assert*', () => {
         phone: validPerson.phone,
       }),
     ).toThrow('person.birth_date debe ser una fecha')
+    expect(() =>
+      assertPersonInput({
+        identification_document: validPerson.identification_document,
+        email: validPerson.email,
+        first_name: validPerson.first_name,
+        last_name: validPerson.last_name,
+        birth_date: '0000-01-01',
+        phone: validPerson.phone,
+      }),
+    ).toThrow('person.birth_date debe ser una fecha')
   })
 
   it('accepts a birth_date in year 0050', () => {
@@ -94,7 +117,7 @@ describe('assert*', () => {
     ).not.toThrow()
   })
 
-  it('rejects an empty first_name on write and keeps it on read', () => {
+  it('rejects empty names on write and keeps them on read', () => {
     expect(() =>
       assertPersonInput({
         identification_document: validPerson.identification_document,
@@ -105,7 +128,30 @@ describe('assert*', () => {
         phone: validPerson.phone,
       }),
     ).toThrow('person.first_name debe ser un string no vacío')
+    expect(() =>
+      assertPersonInput({
+        identification_document: validPerson.identification_document,
+        email: validPerson.email,
+        first_name: validPerson.first_name,
+        last_name: '',
+        birth_date: validPerson.birth_date,
+        phone: validPerson.phone,
+      }),
+    ).toThrow('person.last_name debe ser un string no vacío')
     expect(assertPerson({ ...validPerson, first_name: '' }).first_name).toBe('')
+    expect(assertPerson({ ...validPerson, last_name: '' }).last_name).toBe('')
+    expect(assertOrganization({ ...validOrganization, name: '' }).name).toBe('')
+    expect(assertOrganization({ ...validOrganization, tax_id: '' }).tax_id).toBe(
+      '',
+    )
+    expect(assertCourse({ ...validCourse, name: '' }).name).toBe('')
+    expect(assertCourse({ ...validCourse, acronym: '' }).acronym).toBe('')
+    expect(() =>
+      assertOrganizationInput({ name: '', tax_id: validOrganization.tax_id }),
+    ).toThrow('organization.name debe ser un string no vacío')
+    expect(() =>
+      assertCourseInput({ ...validCourse, name: '' }),
+    ).toThrow('course.name debe ser un string no vacío')
   })
 
   it('rejects a person missing a field', () => {
@@ -166,6 +212,20 @@ describe('assert*', () => {
         start_at: '2026-02-30T08:00:00.000Z',
       }),
     ).toThrow(/^course\.start_at debe ser una fecha$/)
+    expect(() =>
+      assertCourse({
+        ...validCourse,
+        start_at: '0001-01-01T00:30:00.000+01:00',
+        end_at: '0001-01-01T02:00:00.000Z',
+      }),
+    ).toThrow(/^course\.start_at debe ser una fecha$/)
+    expect(() =>
+      assertCourse({
+        ...validCourse,
+        start_at: '2026-01-01T10:00:00.0001Z',
+        end_at: '2026-01-01T10:00:00.0009Z',
+      }),
+    ).toThrow('course.end_at debe ser posterior a course.start_at')
   })
 
   it('rejects an invented role name', () => {

@@ -43,9 +43,9 @@ if [ "$table_count" != "6" ]; then
 fi
 echo "ok: six tables"
 
-lower_idx=$(psql -tAc "SELECT COUNT(*) FROM pg_indexes WHERE schemaname = 'public' AND indexname IN ('person_email_lower_idx', 'course_contract_address_lower_idx')")
-if [ "$lower_idx" != "2" ]; then
-  echo "FAIL: expected person_email_lower_idx and course_contract_address_lower_idx, got $lower_idx"
+lower_idx=$(psql -tAc "SELECT COUNT(*) FROM pg_indexes WHERE schemaname = 'public' AND indexname IN ('person_email_lower_idx', 'course_contract_address_lower_idx', 'organization_tax_id_lower_idx', 'person_identification_document_lower_idx')")
+if [ "$lower_idx" != "4" ]; then
+  echo "FAIL: expected four lower unique indexes, got $lower_idx"
   exit 1
 fi
 echo "ok: lower unique indexes"
@@ -65,6 +65,15 @@ must_fail "end_at before start_at" \
 
 must_fail "duplicate tax_id" \
   "INSERT INTO organization (name, tax_id) VALUES ('Otra', 'B12345678');"
+
+must_fail "duplicate tax_id case" \
+  "INSERT INTO organization (name, tax_id) VALUES ('Otra', 'b12345678');"
+
+must_fail "duplicate identification_document" \
+  "INSERT INTO person (identification_document, email, first_name, last_name) VALUES ('12345678A', 'otra@example.com', 'Otra', 'Persona');"
+
+must_fail "duplicate identification_document case" \
+  "INSERT INTO person (identification_document, email, first_name, last_name) VALUES ('12345678a', 'otra2@example.com', 'Otra', 'Persona');"
 
 must_fail "duplicate email" \
   "INSERT INTO person (identification_document, email, first_name, last_name) VALUES ('99999999Z', 'ana@example.com', 'Otra', 'Persona');"

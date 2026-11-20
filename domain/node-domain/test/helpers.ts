@@ -75,7 +75,7 @@ export function commandResult(rowCount: number): QueryResult<QueryResultRow> {
 }
 
 const UUID_PARAM =
-  /\b(?:id|person_id|course_id|organization_id)\s*(?:=|<>)\s*\$\d+(?!:)/
+  /\b(?:id|person_id|course_id|organization_id)\s*(?:=|<>)\s*\$\d+(?!\d)(?!::)/
 
 export function assertMockSql(sql: string): void {
   const trimmed = sql.trim()
@@ -154,9 +154,29 @@ export function resetDriver(): void {
   delete process.env.DATABASE_URL
 }
 
+export function enrollmentFlags(
+  overrides: {
+    person_exists?: boolean
+    course_exists?: boolean
+    already?: boolean
+  } = {},
+): QueryResult<QueryResultRow> {
+  return rowsResult([
+    {
+      person_exists: true,
+      course_exists: true,
+      already: false,
+      ...overrides,
+    },
+  ])
+}
+
 export function lookupById(
   sql: string,
 ): QueryResult<QueryResultRow> | null {
+  if (sql.includes('AS person_exists')) {
+    return enrollmentFlags()
+  }
   if (
     sql.includes('FROM organization') &&
     sql.includes('WHERE id = $1::uuid')
