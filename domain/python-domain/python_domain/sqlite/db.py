@@ -18,10 +18,15 @@ class QueryResult:
 _engine: Engine | None = None
 
 
-def _enable_foreign_keys(dbapi_connection: Any, _connection_record: Any) -> None:
+def _configure_connection(dbapi_connection: Any, _connection_record: Any) -> None:
+    dbapi_connection.isolation_level = None
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
+
+
+def _begin_immediate(connection: Any) -> None:
+    connection.exec_driver_sql("BEGIN IMMEDIATE")
 
 
 def get_engine() -> Engine:
@@ -42,7 +47,8 @@ def get_engine() -> Engine:
     else:
         engine = create_engine(url)
 
-    event.listen(engine, "connect", _enable_foreign_keys)
+    event.listen(engine, "connect", _configure_connection)
+    event.listen(engine, "begin", _begin_immediate)
     _engine = engine
     return engine
 
