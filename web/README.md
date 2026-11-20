@@ -22,4 +22,16 @@ Para volver a probar el recorrido en desarrollo, abre http://localhost:5191/?rei
 
 También solo en desarrollo, el inicio (`/student/dashboard`) acepta otra hora y otro día para ver cada estado de Tempito: `?hora=08:50`, `?hora=08:59:45` (con segundos) o `?dia=sab&hora=10:00` (otro día de esta semana).
 
+## Probar el historial y las rutas del alumno
+
+Sin sesión, abrir una pantalla privada del alumno devuelve al login. El enlace de registro de asistencia por QR pide iniciar sesión antes de guardar la entrada.
+
+Con sesión iniciada y el servidor de desarrollo en marcha, abre estas rutas a 390 px en ambos temas:
+
+- `/student/history?fixture=carga` muestra el estado de carga.
+- `/student/history?fixture=vacio` muestra el historial vacío y los totales de una cuenta sin clases.
+- `/student/history?fixture=error` muestra un error de carga. **Reintentar** vuelve al historial de la cuenta.
+
+Los fixtures solo funcionan en desarrollo y no cambian las clases ni los avisos guardados. El historial sin parámetros muestra los datos de la cuenta.
+
 `pnpm build` comprueba los tipos y genera `dist/`.
