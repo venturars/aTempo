@@ -15,7 +15,7 @@ cd "$root" || exit 0
 needs_setup() {
   [[ -d .agents/skills/delivery-workflow && -d .claude/skills/delivery-workflow ]] || return 0
   [[ -n "$before" && ! "$before" =~ ^0+$ ]] || return 0
-  ! git diff --quiet "$before" "$after" -- apm.yml apm.lock.yaml desktop/pnpm-lock.yaml docs/storybook/pnpm-lock.yaml api-router/pnpm-lock.yaml Dockerfile docker/setup.sh 2>/dev/null
+  ! git diff --quiet "$before" "$after" -- apm.yml apm.lock.yaml desktop/pnpm-lock.yaml docs/storybook/pnpm-lock.yaml api-router/pnpm-lock.yaml api-postgresql/pnpm-lock.yaml api-rustfs/pnpm-lock.yaml api-sqlite/pyproject.toml Dockerfile .dockerignore docker-compose.yml docker/setup.sh docker/entrypoint.sh 2>/dev/null
 }
 
 needs_setup || exit 0

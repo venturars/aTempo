@@ -10,13 +10,18 @@
   },
   "workspaceMount": "source=${localWorkspaceFolder},target=/work,type=bind",
   "workspaceFolder": "/work",
+  "remoteUser": "node",
+  "overrideCommand": false,
   // Los node_modules de Linux, en volúmenes propios de esta copia del repositorio.
   "mounts": [
     "source=${localWorkspaceFolderBasename}-devcontainer-desktop-node-modules,target=/work/desktop/node_modules,type=volume",
     "source=${localWorkspaceFolderBasename}-devcontainer-storybook-node-modules,target=/work/docs/storybook/node_modules,type=volume",
     "source=${localWorkspaceFolderBasename}-devcontainer-api-router-node-modules,target=/work/api-router/node_modules,type=volume",
+    "source=${localWorkspaceFolderBasename}-devcontainer-api-postgresql-node-modules,target=/work/api-postgresql/node_modules,type=volume",
+    "source=${localWorkspaceFolderBasename}-devcontainer-api-rustfs-node-modules,target=/work/api-rustfs/node_modules,type=volume",
+    "source=${localWorkspaceFolderBasename}-devcontainer-api-sqlite-venv,target=/work/api-sqlite/.venv,type=volume",
     "source=${localWorkspaceFolderBasename}-devcontainer-pnpm-store,target=/pnpm-store,type=volume"
   ],
   "postCreateCommand": "bash docker/setup.sh",
-  "forwardPorts": [6006, 3000]
+  "forwardPorts": [6006, 3000, 3001, 3002, 3003]
 }
