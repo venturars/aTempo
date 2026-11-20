@@ -25,8 +25,9 @@ jobs:
     permissions:
       actions: read
       contents: read
-      issues: write
-      pull-requests: read
+      issues: read
+      # El ledger comenta la PR; GITHUB_TOKEN necesita permiso de escritura sobre PR.
+      pull-requests: write
     steps:
       # Ejecuta solo la acción fijada del paquete; nunca descarga código de la PR.
       - uses: venturars/delivery-workflow/.github/actions/discord-pr-notifications@9d12e301ce3ae504cb5b441c21704d9c80025251
