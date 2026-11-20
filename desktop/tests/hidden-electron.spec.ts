@@ -11,7 +11,13 @@ test('real build renders and accepts input without native visibility or focus', 
     await page.getByLabel('Correo').fill('hidden@clase.test')
     await page.getByLabel('Contraseña').fill('secreta12')
     await page.getByRole('button', { name: 'Entrar' }).click()
-    await expect(page.getByRole('status')).toContainText('hidden@clase.test')
+    await expect(page.getByRole('alert')).toHaveText(
+      'El correo o la contraseña no coinciden con la cuenta de ejemplo.'
+    )
+    await expect(page.getByRole('status')).toHaveCount(0)
+    const text = await page.locator('body').innerText()
+    expect(text).not.toContain('hidden@clase.test')
+    expect(text).not.toContain('secreta12')
     await page.getByLabel('Correo').focus()
     await expect(page.getByLabel('Correo')).toBeFocused()
     await page.keyboard.press('End')
