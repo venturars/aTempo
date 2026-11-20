@@ -25,15 +25,45 @@ Desde un arranque nuevo, usa el formulario **Entrar** con una de estas cuentas p
 | Profesor | `profesor@atempo.test` | `Profesor123!` | Hoy, en el panel del profesor |
 | Alumno | `ada.lopez@clase.test` | `clase-2026` | Dashboard de Ada López |
 
-Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alumnos y pasar lista.
+### Probar la invitación de profesor
 
-Para probar al alumno desde el login, sal completamente de la aplicación: en macOS usa **Cmd+Q**; cerrar solo la ventana no termina el proceso. Detén también `pnpm dev` con **Ctrl+C** en su terminal y vuelve a ejecutar `pnpm dev` desde `desktop/`.
+Con las dependencias de `desktop/` instaladas, detén el arranque normal y abre la demo con este comando desde `desktop/`.
+
+```sh
+pnpm dev -- --invitation=731905
+```
+
+1. En **Hola, Lucía**, escribe una contraseña de al menos 8 caracteres y pulsa **Entrar**. Se activa `lucia.martin@atempo.test` y se abre **Hoy**.
+2. Pulsa tu nombre al pie de la barra lateral y selecciona **Cerrar sesión**. Vuelve a entrar con el correo de Lucía y la contraseña que elegiste.
+3. Si vuelves a abrir la misma invitación durante ese arranque, aparece el login con un aviso de que la cuenta ya está activada.
+
+El comando simula el enlace de invitación. El envío de correo y la apertura de Electron desde un enlace real están pendientes. Usa `--invitation=264018` para probar a Bruno Sanz como alumno o `--invitation=000000` para ver el aviso de enlace no válido.
+
+### Cambiar la contraseña del profesor
+
+1. En el panel de profesor, pulsa tu nombre y elige **Cambiar contraseña**.
+2. Escribe la contraseña actual y una nueva de al menos 8 caracteres. Repite la nueva y pulsa **Guardar contraseña**.
+3. Usa **Cerrar sesión** para comprobar que la contraseña anterior se rechaza y que la nueva abre el panel.
+
+Las invitaciones activadas y los cambios de contraseña duran hasta que recargas el renderer o reinicias Electron.
+
+### Probar el QR y las correcciones
+
+Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alumnos y pasar lista. El QR y el código de 6 cifras de debajo cambian cada 30 segundos. El QR es un enlace al sitio del alumno, `http://localhost:5191/student/check-in?code=ATEMPO-CLASE-1109-<código>`. Ese sitio es `web/`, que está en otra rama (#122, #137 y PR #123). Desde el móvil, `localhost` es el propio móvil. Para escanear con el móvil en la misma wifi, arranca desde `desktop/` con la IP del ordenador:
+
+```sh
+VITE_STUDENT_SITE_URL=http://<ip-del-ordenador>:5191 pnpm dev
+```
+
+Con la lista cerrada, cambiar un estado pide un motivo. Al pasar el ratón por encima del estado se ve quién lo cambió, cuándo y por qué.
+
+En el escritorio del alumno, pulsa **Salir** en su inicio.
 
 Como alumno, pulsa **Registrar asistencia**, **Escanear** y **Llegar a las 08:58**. Debe aparecer el estado **Presente** con la hora **08:58**. Pulsa **Volver** y **Resumen de asistencia** para comprobar la nueva entrada en el historial.
 
-El correo admite mayúsculas y espacios laterales; la contraseña debe coincidir exactamente. Una contraseña incorrecta o un correo desconocido muestran un error y conservan el login. El registro crea alumnos y reserva el correo del profesor.
+El correo admite mayúsculas y espacios laterales; la contraseña debe coincidir exactamente. Una contraseña incorrecta o un correo desconocido muestran un error y conservan el login.
 
-Las cuentas, la sesión y la asistencia de ejemplo viven en memoria del renderer. Recargarlo o reiniciar completamente la aplicación vacía la sesión, restablece los datos de ejemplo y elimina los alumnos registrados durante ese arranque. Repite la salida completa y el arranque para probar otra cuenta desde cero.
+Las cuentas, las invitaciones activadas, la sesión, la asistencia y los cambios de ejemplo viven en memoria del renderer. Recargarlo o reiniciar completamente la aplicación vacía la sesión y restablece los datos de ejemplo. Para empezar desde cero, sal con **Cmd+Q** en macOS (cerrar solo la ventana no termina el proceso), detén `pnpm dev` con **Ctrl+C** y vuelve a ejecutarlo desde `desktop/`.
 
 El lector del alumno ofrece lecturas simuladas y no usa cámara. Estos flujos no se conectan al backend ni a un servicio de autenticación.
 
@@ -41,7 +71,7 @@ El lector del alumno ofrece lecturas simuladas y no usa cámara. Estos flujos no
 
 | Carpeta | Qué es |
 | --- | --- |
-| `desktop/` | Prototipo para profesor y alumno con Electron y React; las demos usan datos en memoria. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/sign-up` para el registro. |
+| `desktop/` | Prototipo para profesor y alumno con Electron y React; las demos usan datos en memoria. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/student/dashboard` para el dashboard del alumno. |
 | `api-router/` | API REST con NestJS entre los frontends y la SDK de lógica de negocio (pendiente). |
 | `api-postgresql/` | API REST con NestJS entre la SDK y PostgreSQL. |
 | `api-rustfs/` | API REST con Express entre la SDK y RustFS (persistencia de objetos). |

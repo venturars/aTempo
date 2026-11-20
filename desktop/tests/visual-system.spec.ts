@@ -126,7 +126,7 @@ async function expectTeacherRoute(page: Page): Promise<void> {
   await expect(page.locator('main h1')).toHaveCount(1)
   await expect(page.locator('main h1')).toBeVisible()
   await expect(page.locator('main h1')).toHaveText(/\S/)
-  await expect(page.getByRole('button', { name: /^(Entrar|Crear mi cuenta)$/ })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Entrar', exact: true })).toHaveCount(0)
   await expect(page.getByLabel('Correo', { exact: true })).toHaveCount(0)
   await expect(page.locator('input[type="password"]')).toHaveCount(0)
   const panels = page.locator('.teacher-panel')
@@ -296,10 +296,10 @@ for (const preference of ['light', 'dark'] as const) {
     })
   })
 }
-const routes = ['', 'sign-up', 'student/dashboard', 'organization/dashboard', 'teacher/panel']
+const routes = ['', 'student/dashboard', 'organization/dashboard', 'teacher/panel']
 for (const theme of themes) {
   for (const width of [390, 1280]) {
-    test(`cinco rutas conservan sistema y ancho: ${theme} ${width}`, async ({
+    test(`cuatro rutas conservan sistema y ancho: ${theme} ${width}`, async ({
       browserName
     }, info) => {
       test.skip(browserName !== 'chromium', 'Electron uses Chromium')
@@ -310,13 +310,8 @@ for (const theme of themes) {
           await page.evaluate((route) => {
             location.hash = `#/${route}`
           }, route)
-          if (route === '' || route === 'sign-up') {
-            await expect(
-              page.getByRole('button', {
-                name: route === '' ? 'Entrar' : 'Crear mi cuenta',
-                exact: true
-              })
-            ).toBeVisible()
+          if (route === '') {
+            await expect(page.getByRole('button', { name: 'Entrar', exact: true })).toBeVisible()
           } else if (route === 'teacher/panel') {
             await expectTeacherRoute(page)
           } else {

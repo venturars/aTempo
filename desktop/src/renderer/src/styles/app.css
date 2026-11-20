@@ -815,3 +815,8 @@
     max-width: 12rem;
   }
 }
+/* El QR se lee mejor oscuro sobre claro: en el tema oscuro, el fondo pasa a ser el color del texto. */
+.class-qr {
+  background-color: light-dark(var(--color-base-100), var(--color-base-content));
+  color: light-dark(var(--color-base-content), var(--color-base-100));
+}
