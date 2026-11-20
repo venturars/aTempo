@@ -56,6 +56,18 @@ Para registrar asistencia, abre **Hoy → Abrir lista** en [el Electron del PR #
 
 Para volver a probar el recorrido en desarrollo, abre http://localhost:5191/?reiniciar. Restablece la demo en este navegador y abre el inicio del alumno.
 
+## Probar el historial y las rutas del alumno
+
+Sin sesión, abrir una pantalla privada del alumno devuelve al login. El enlace de registro de asistencia por QR pide iniciar sesión antes de guardar la entrada.
+
+Con sesión iniciada y el servidor de desarrollo en marcha, abre estas rutas a 390 px en ambos temas:
+
+- `/student/history?fixture=carga` muestra el estado de carga.
+- `/student/history?fixture=vacio` muestra el historial vacío y los totales de una cuenta sin clases.
+- `/student/history?fixture=error` muestra un error de carga. **Reintentar** vuelve al historial de la cuenta.
+
+Los fixtures solo funcionan en desarrollo y no cambian las clases ni los avisos guardados. El historial sin parámetros muestra los datos de la cuenta.
+
 ## Comprobar los cambios
 
 Desde `web/`, `pnpm build` comprueba los tipos y genera `dist/`. Las pruebas focales de administración viven en `desktop/tests/` y reutilizan el Playwright ya instalado. Desde la raíz, con las dependencias nativas de `desktop/` instaladas:

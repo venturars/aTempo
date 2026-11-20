@@ -127,8 +127,10 @@ export function registerArrival(at: Date): CheckInResult {
   const email = useSessionStore.getState().email
   if (email === null) return { registered: false, message: 'Entra para registrar tu asistencia.' }
   const account = useStudentAccountsStore.getState().findByEmail(email)
+  if (account === undefined)
+    return { registered: false, message: 'Entra para registrar tu asistencia.' }
   const todayLabel = formatDay(at)
-  const previous = account?.history.find((entry) => entry.label === todayLabel)
+  const previous = account.history.find((entry) => entry.label === todayLabel)
   if (previous) {
     return {
       registered: false,
