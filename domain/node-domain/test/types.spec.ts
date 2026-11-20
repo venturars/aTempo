@@ -88,6 +88,26 @@ describe('assert*', () => {
     ).toThrow('person.birth_date debe ser una fecha')
   })
 
+  it('accepts a birth_date in year 0050', () => {
+    expect(() =>
+      assertPerson({ ...validPerson, birth_date: '0050-06-15' }),
+    ).not.toThrow()
+  })
+
+  it('rejects an empty first_name on write and keeps it on read', () => {
+    expect(() =>
+      assertPersonInput({
+        identification_document: validPerson.identification_document,
+        email: validPerson.email,
+        first_name: '',
+        last_name: validPerson.last_name,
+        birth_date: validPerson.birth_date,
+        phone: validPerson.phone,
+      }),
+    ).toThrow('person.first_name debe ser un string no vacío')
+    expect(assertPerson({ ...validPerson, first_name: '' }).first_name).toBe('')
+  })
+
   it('rejects a person missing a field', () => {
     const incomplete = {
       id: validPerson.id,
@@ -145,7 +165,7 @@ describe('assert*', () => {
         ...validCourse,
         start_at: '2026-02-30T08:00:00.000Z',
       }),
-    ).toThrow('course.start_at debe ser una fecha')
+    ).toThrow(/^course\.start_at debe ser una fecha$/)
   })
 
   it('rejects an invented role name', () => {

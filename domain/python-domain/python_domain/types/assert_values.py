@@ -31,7 +31,11 @@ def truncate_to_milliseconds(value: datetime) -> datetime:
 def normalize_instant(value: datetime) -> str:
     utc = truncate_to_milliseconds(value)
     milliseconds = utc.microsecond // 1000
-    return utc.strftime("%Y-%m-%dT%H:%M:%S") + f".{milliseconds:03d}Z"
+    return (
+        f"{utc.year:04d}-{utc.month:02d}-{utc.day:02d}"
+        f"T{utc.hour:02d}:{utc.minute:02d}:{utc.second:02d}"
+        f".{milliseconds:03d}Z"
+    )
 
 
 def assert_nullable_string(value: object, label: str) -> str | None:

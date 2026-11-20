@@ -7,6 +7,7 @@ from python_domain.attendance.update_attendance import update_attendance
 from python_domain.session.create_session import create_session
 from python_domain.session.delete_session import delete_session
 from python_domain.session.get_session_by_id import get_session_by_id
+from python_domain.session.list_sessions import list_sessions
 from python_domain.session.update_session import update_session
 
 from helpers import (
@@ -33,7 +34,7 @@ class WriteTests(unittest.TestCase):
             "session.course_id debe ser un string no vacío",
         ):
             create_session({"status": "open"})
-        self.assertEqual(list_attendances(), [])
+        self.assertEqual(list_sessions(), [])
 
     def test_stores_offset_dates_as_utc(self) -> None:
         created = create_session({
@@ -67,6 +68,40 @@ class WriteTests(unittest.TestCase):
             "closed_at": "2026-01-01T12:05:00.000Z",
         })
         self.assertIsNone(missing)
+
+    def test_update_attendance_returns_none_when_missing(self) -> None:
+        session = create_session(valid_session_input)
+        missing = update_attendance({
+            **valid_attendance,
+            "session_id": session["id"],
+            "student_id": OTHER_ID,
+        })
+        self.assertIsNone(missing)
+
+    def test_updates_when_ids_differ_only_by_case(self) -> None:
+        created = create_session(valid_session_input)
+        updated = update_session({
+            **created,
+            "id": created["id"].upper(),
+            "expected_count": 21,
+        })
+        assert updated is not None
+        self.assertEqual(updated["id"], created["id"])
+        self.assertEqual(updated["expected_count"], 21)
+        row = add_attendance({
+            **valid_attendance,
+            "session_id": created["id"],
+        })
+        attendance = update_attendance({
+            **row,
+            "session_id": created["id"].upper(),
+            "student_id": STUDENT_ID.upper(),
+            "status": "present_late",
+        })
+        assert attendance is not None
+        self.assertEqual(attendance["session_id"], created["id"])
+        self.assertEqual(attendance["student_id"], STUDENT_ID)
+        self.assertEqual(attendance["status"], "present_late")
 
     def test_adds_updates_and_removes_attendance(self) -> None:
         session = create_session(valid_session_input)

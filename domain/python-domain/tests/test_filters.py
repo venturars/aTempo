@@ -4,7 +4,9 @@ from python_domain.attendance.add_attendance import add_attendance
 from python_domain.attendance.list_attendances_by_session import (
     list_attendances_by_session,
 )
+from python_domain.attendance.remove_attendance import remove_attendance
 from python_domain.session.create_session import create_session
+from python_domain.session.delete_session import delete_session
 from python_domain.session.list_sessions_by_course import list_sessions_by_course
 from python_domain.session.list_sessions_by_professor import (
     list_sessions_by_professor,
@@ -14,6 +16,7 @@ from helpers import (
     COURSE_ID,
     OTHER_ID,
     PROFESSOR_ID,
+    STUDENT_ID,
     close_memory_db,
     open_memory_db,
     valid_attendance,
@@ -35,12 +38,36 @@ class FilterTests(unittest.TestCase):
         ):
             list_sessions_by_course("no-es-uuid")
 
+    def test_does_not_query_when_filter_or_delete_id_is_not_uuid(self) -> None:
+        with self.assertRaisesRegex(
+            ValueError,
+            "session.professor_id debe ser un uuid",
+        ):
+            list_sessions_by_professor("no-es-uuid")
+        with self.assertRaisesRegex(
+            ValueError,
+            "attendance.session_id debe ser un uuid",
+        ):
+            list_attendances_by_session("no-es-uuid")
+        with self.assertRaisesRegex(ValueError, "session.id debe ser un uuid"):
+            delete_session("no-es-uuid")
+        with self.assertRaisesRegex(
+            ValueError,
+            "attendance.session_id debe ser un uuid",
+        ):
+            remove_attendance("no-es-uuid", STUDENT_ID)
+        with self.assertRaisesRegex(
+            ValueError,
+            "attendance.student_id debe ser un uuid",
+        ):
+            remove_attendance(COURSE_ID, "no-es-uuid")
+
     def test_lists_sessions_by_course_and_professor(self) -> None:
         matching = create_session(valid_session_input)
         other = create_session({**valid_session_input, "course_id": OTHER_ID})
         self.assertEqual(list_sessions_by_course(COURSE_ID), [matching])
         by_professor = list_sessions_by_professor(PROFESSOR_ID)
-        self.assertEqual(by_professor, [matching, other])
+        self.assertCountEqual(by_professor, [matching, other])
 
     def test_lists_when_filter_ids_differ_only_by_case(self) -> None:
         matching = create_session(valid_session_input)

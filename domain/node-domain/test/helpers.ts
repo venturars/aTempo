@@ -74,6 +74,65 @@ export function commandResult(rowCount: number): QueryResult<QueryResultRow> {
   }
 }
 
+const UUID_PARAM =
+  /\b(?:id|person_id|course_id|organization_id)\s*(?:=|<>)\s*\$\d+(?!:)/
+
+export function assertMockSql(sql: string): void {
+  const trimmed = sql.trim()
+  if (
+    trimmed === 'BEGIN' ||
+    trimmed === 'COMMIT' ||
+    trimmed === 'ROLLBACK'
+  ) {
+    return
+  }
+  if (!/^(SELECT|INSERT|UPDATE|DELETE)\b/i.test(trimmed)) {
+    throw new Error(`consulta no reconocida: ${trimmed}`)
+  }
+
+  let depth = 0
+  for (const ch of trimmed) {
+    if (ch === '(') {
+      depth += 1
+    }
+    if (ch === ')') {
+      depth -= 1
+    }
+    if (depth < 0) {
+      throw new Error(`paréntesis desbalanceados: ${trimmed}`)
+    }
+  }
+  if (depth !== 0) {
+    throw new Error(`paréntesis desbalanceados: ${trimmed}`)
+  }
+
+  if (
+    /^(INSERT|UPDATE)\b/i.test(trimmed) &&
+    !/\bRETURNING\b/i.test(trimmed)
+  ) {
+    throw new Error('INSERT/UPDATE debe llevar RETURNING')
+  }
+  if (UUID_PARAM.test(trimmed)) {
+    throw new Error('el uuid debe ir con ::uuid')
+  }
+  if (
+    /\bFROM course\b/i.test(trimmed) &&
+    /^SELECT\b/i.test(trimmed) &&
+    /\bstart_at\b/i.test(trimmed) &&
+    !/\bto_char\s*\(/i.test(trimmed)
+  ) {
+    throw new Error('la lectura de course debe proyectar to_char')
+  }
+  if (
+    /\bFROM person\b/i.test(trimmed) &&
+    /^SELECT\b/i.test(trimmed) &&
+    /\bbirth_date\b/i.test(trimmed) &&
+    !/\bto_char\s*\(/i.test(trimmed)
+  ) {
+    throw new Error('la lectura de person debe proyectar to_char de birth_date')
+  }
+}
+
 export function mockDriver(
   impl?: QueryFn,
 ): { sql: string; params: unknown[] }[] {
@@ -82,6 +141,7 @@ export function mockDriver(
   const run = impl ?? fallback
 
   substituteQuery(async (sql, params = []) => {
+    assertMockSql(sql)
     calls.push({ sql, params })
     return run(sql, params)
   })
@@ -97,7 +157,10 @@ export function resetDriver(): void {
 export function lookupById(
   sql: string,
 ): QueryResult<QueryResultRow> | null {
-  if (sql.includes('FROM organization') && sql.includes('WHERE id')) {
+  if (
+    sql.includes('FROM organization') &&
+    sql.includes('WHERE id = $1::uuid')
+  ) {
     return rowsResult([validOrganization])
   }
   if (sql.includes('FROM person') && sql.includes('WHERE id = $1::uuid')) {

@@ -166,6 +166,45 @@ describe('escrituras', () => {
     await expect(updateCourse(validCourse)).resolves.toBeNull()
   })
 
+  it('updates a person when uniqueness queries return the same id', async () => {
+    const calls = mockDriver(async (sql) => {
+      if (sql.includes('UPDATE person')) {
+        return rowsResult([validPerson])
+      }
+      if (
+        sql.includes('FROM person') &&
+        (sql.includes('lower(identification_document)') ||
+          sql.includes('lower(email)'))
+      ) {
+        return rowsResult([{ id: validPerson.id }])
+      }
+      return emptyResult()
+    })
+    await expect(updatePerson(validPerson)).resolves.toEqual(validPerson)
+    expect(calls.some((call) => call.sql.includes('UPDATE person'))).toBe(true)
+  })
+
+  it('updates a course when uniqueness queries return the same id', async () => {
+    const calls = mockDriver(async (sql) => {
+      if (sql.includes('UPDATE course')) {
+        return rowsResult([validCourse])
+      }
+      const existing = lookupById(sql)
+      if (existing) {
+        return existing
+      }
+      if (
+        sql.includes('lower(contract_address)') ||
+        sql.includes('acronym')
+      ) {
+        return rowsResult([{ id: validCourse.id }])
+      }
+      return emptyResult()
+    })
+    await expect(updateCourse(validCourse)).resolves.toEqual(validCourse)
+    expect(calls.some((call) => call.sql.includes('UPDATE course'))).toBe(true)
+  })
+
   it('deletes dependents before the parent row', async () => {
     const personCalls = mockDriver(async () => commandResult(1))
     await expect(deletePerson(PERSON_ID)).resolves.toBe(true)
@@ -252,5 +291,21 @@ describe('escrituras', () => {
     await expect(deletePerson(PERSON_ID)).resolves.toBe(false)
     await expect(deleteCourse(COURSE_ID)).resolves.toBe(false)
     await expect(removePersonCourse(PERSON_ID, COURSE_ID)).resolves.toBe(false)
+    await expect(removePersonRole(PERSON_ID, 'teacher')).resolves.toBe(false)
+  })
+
+  it('adds student when the person has no roles', async () => {
+    const student = { person_id: PERSON_ID, role: 'student' as const }
+    mockDriver(async (sql) => {
+      if (sql.includes('INSERT INTO person_role')) {
+        return rowsResult([student])
+      }
+      const existing = lookupById(sql)
+      if (existing) {
+        return existing
+      }
+      return emptyResult()
+    })
+    await expect(addPersonRole(student)).resolves.toEqual(student)
   })
 })

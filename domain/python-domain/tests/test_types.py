@@ -61,7 +61,7 @@ class TypeTests(unittest.TestCase):
     def test_rejects_an_impossible_start_at(self) -> None:
         with self.assertRaisesRegex(
             ValueError,
-            "session.start_at debe ser una fecha",
+            r"session\.start_at debe ser una fecha$",
         ):
             assert_session_input({
                 **valid_session_input,
@@ -88,6 +88,31 @@ class TypeTests(unittest.TestCase):
                 **valid_session_input,
                 "closed_at": "2026-01-01T12:05:00.000Z",
             })
+
+    def test_rejects_negative_late_after_minutes(self) -> None:
+        with self.assertRaisesRegex(
+            ValueError,
+            "session.late_after_minutes debe ser un entero no negativo",
+        ):
+            assert_session_input({**valid_session_input, "late_after_minutes": -1})
+
+    def test_accepts_closing_without_closed_at(self) -> None:
+        body = assert_session_input({
+            **valid_session_input,
+            "status": "closing",
+            "closed_at": None,
+        })
+        self.assertEqual(body["status"], "closing")
+        self.assertIsNone(body["closed_at"])
+
+    def test_keeps_four_digit_years_before_1000(self) -> None:
+        body = assert_session_input({
+            **valid_session_input,
+            "start_at": "0999-12-31T23:00:00.000Z",
+            "end_at": "0999-12-31T23:59:59.000Z",
+        })
+        self.assertEqual(body["start_at"], "0999-12-31T23:00:00.000Z")
+        self.assertEqual(body["end_at"], "0999-12-31T23:59:59.000Z")
 
     def test_rejects_an_invented_session_status(self) -> None:
         with self.assertRaisesRegex(

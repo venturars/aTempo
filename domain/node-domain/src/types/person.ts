@@ -43,6 +43,23 @@ export function assertBirthDate(value: string | null): void {
 }
 
 export function assertPersonInput(value: unknown): PersonInput {
+  return personFields(value, false)
+}
+
+export function assertPerson(value: unknown): Person {
+  if (value === null || typeof value !== 'object') {
+    throw new Error('person debe ser un objeto')
+  }
+
+  const row = value as Record<string, unknown>
+  assertUuid(row.id, 'person.id')
+  return {
+    id: normalizeUuid(row.id),
+    ...personFields(value, true),
+  }
+}
+
+function personFields(value: unknown, allowEmptyFirstName: boolean): PersonInput {
   if (value === null || typeof value !== 'object') {
     throw new Error('person debe ser un objeto')
   }
@@ -56,7 +73,12 @@ export function assertPersonInput(value: unknown): PersonInput {
   if (normalizeEmail(row.email).length === 0) {
     throw new Error('person.email debe ser un string no vacío')
   }
-  assertNonEmptyString(row.first_name, 'person.first_name')
+  if (
+    typeof row.first_name !== 'string' ||
+    (!allowEmptyFirstName && row.first_name.length === 0)
+  ) {
+    throw new Error('person.first_name debe ser un string no vacío')
+  }
   assertNonEmptyString(row.last_name, 'person.last_name')
   assertNullableString(row.birth_date, 'person.birth_date')
   assertBirthDate(row.birth_date)
@@ -68,18 +90,5 @@ export function assertPersonInput(value: unknown): PersonInput {
     last_name: row.last_name,
     birth_date: row.birth_date,
     phone: row.phone,
-  }
-}
-
-export function assertPerson(value: unknown): Person {
-  if (value === null || typeof value !== 'object') {
-    throw new Error('person debe ser un objeto')
-  }
-
-  const row = value as Record<string, unknown>
-  assertUuid(row.id, 'person.id')
-  return {
-    id: normalizeUuid(row.id),
-    ...assertPersonInput(value),
   }
 }

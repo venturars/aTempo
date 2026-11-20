@@ -71,7 +71,7 @@ describe('reglas de negocio', () => {
         ...courseInput,
         start_at: '2026-02-30T08:00:00.000Z',
       }),
-    ).rejects.toThrow('course.start_at debe ser una fecha')
+    ).rejects.toThrow(/^course\.start_at debe ser una fecha$/)
     expect(calls).toHaveLength(0)
   })
 
@@ -105,12 +105,22 @@ describe('reglas de negocio', () => {
       if (sql.includes('UPDATE person')) {
         return rowsResult([validPerson])
       }
-      return rowsResult([validPerson])
+      if (
+        sql.includes('FROM person') &&
+        (sql.includes('lower(identification_document)') ||
+          sql.includes('lower(email)'))
+      ) {
+        return rowsResult([{ id: validPerson.id }])
+      }
+      return emptyResult()
     })
     await expect(
       updatePerson({ ...validPerson, id: validPerson.id.toUpperCase() }),
     ).resolves.toEqual(validPerson)
-    expect(wrote(calls)).toBe(true)
+    const update = calls.find((call) => call.sql.includes('UPDATE person'))
+    expect(update?.params[0]).toBe(validPerson.id)
+    expect(update?.sql).toContain('WHERE id = $1::uuid')
+    expect(update?.sql).toContain('RETURNING')
   })
 
   it('does not update when tax_id belongs to another organization', async () => {
@@ -179,9 +189,97 @@ describe('reglas de negocio', () => {
     expect(wrote(calls)).toBe(false)
   })
 
+  it('treats identification documents that differ only by case as the same', async () => {
+    const calls = mockDriver(async (sql) => {
+      if (sql.includes('lower(identification_document)')) {
+        return rowsResult([{ id: validPerson.id }])
+      }
+      return emptyResult()
+    })
+    await expect(
+      createPerson({
+        ...personInput,
+        identification_document: validPerson.identification_document.toLowerCase(),
+      }),
+    ).rejects.toThrow('person.identification_document ya existe')
+    expect(wrote(calls)).toBe(false)
+    expect(
+      calls.find((call) => call.sql.includes('lower(identification_document)'))
+        ?.params,
+    ).toEqual([validPerson.identification_document.toLowerCase()])
+  })
+
+  it('treats tax ids that differ only by case as the same', async () => {
+    const calls = mockDriver(async (sql) => {
+      if (sql.includes('lower(tax_id)')) {
+        return rowsResult([{ id: validOrganization.id }])
+      }
+      return emptyResult()
+    })
+    await expect(
+      createOrganization({
+        ...organizationInput,
+        tax_id: validOrganization.tax_id.toLowerCase(),
+      }),
+    ).rejects.toThrow('organization.tax_id ya existe')
+    expect(wrote(calls)).toBe(false)
+    expect(
+      calls.find((call) => call.sql.includes('lower(tax_id)'))?.params,
+    ).toEqual([validOrganization.tax_id.toLowerCase()])
+  })
+
+  it('does not update when email belongs to another person', async () => {
+    const calls = mockDriver(async (sql) => {
+      if (sql.includes('lower(email)')) {
+        return rowsResult([{ id: OTHER_ID }])
+      }
+      if (sql.includes('lower(identification_document)')) {
+        return rowsResult([{ id: validPerson.id }])
+      }
+      return emptyResult()
+    })
+    await expect(updatePerson(validPerson)).rejects.toThrow(
+      'person.email ya existe',
+    )
+    expect(wrote(calls)).toBe(false)
+  })
+
+  it('does not update when identification_document belongs to another person', async () => {
+    const calls = mockDriver(async (sql) => {
+      if (sql.includes('lower(identification_document)')) {
+        return rowsResult([{ id: OTHER_ID }])
+      }
+      return emptyResult()
+    })
+    await expect(updatePerson(validPerson)).rejects.toThrow(
+      'person.identification_document ya existe',
+    )
+    expect(wrote(calls)).toBe(false)
+  })
+
+  it('does not update when contract_address belongs to another course', async () => {
+    const calls = mockDriver(async (sql) => {
+      const existing = lookupById(sql)
+      if (existing) {
+        return existing
+      }
+      if (sql.includes('lower(contract_address)')) {
+        return rowsResult([{ id: OTHER_ID }])
+      }
+      if (sql.includes('acronym')) {
+        return rowsResult([{ id: validCourse.id }])
+      }
+      return emptyResult()
+    })
+    await expect(updateCourse(validCourse)).rejects.toThrow(
+      'course.contract_address ya existe',
+    )
+    expect(wrote(calls)).toBe(false)
+  })
+
   it('treats emails that differ only by case as the same', async () => {
     const calls = mockDriver(async (sql) => {
-      if (sql.includes('WHERE identification_document')) {
+      if (sql.includes('lower(identification_document)')) {
         return emptyResult()
       }
       return rowsResult([validPerson])

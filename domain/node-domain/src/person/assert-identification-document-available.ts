@@ -3,7 +3,7 @@ import { assertNonEmptyString, normalizeUuid } from '../types/assert'
 
 const SELECT = `SELECT id::text AS id
 FROM person
-WHERE identification_document = $1`
+WHERE lower(identification_document) = $1`
 
 export async function assertIdentificationDocumentAvailable(
   identificationDocument: string,
@@ -14,7 +14,9 @@ export async function assertIdentificationDocumentAvailable(
     'person.identification_document',
   )
 
-  const result = await query<{ id: string }>(SELECT, [identificationDocument])
+  const result = await query<{ id: string }>(SELECT, [
+    identificationDocument.toLowerCase(),
+  ])
   const row = result.rows[0]
   if (!row) {
     return

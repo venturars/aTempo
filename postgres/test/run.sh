@@ -1,15 +1,18 @@
 #!/bin/sh
 # Comprueba el esquema de Postgres. En el host: PGDATABASE=atempo_schema_test.
-# Compose monta el esquema en /schema.sql y los tests en /tests.
+# Compose monta 01_schema.sql en /schema.sql, 02_unique_lower.sql en
+# /unique_lower.sql y los tests en /tests.
 
 set -eu
 
 if [ -f /schema.sql ]; then
   SCHEMA=/schema.sql
+  LOWER=/unique_lower.sql
   TESTS=/tests
 else
   SCRIPT_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
   SCHEMA="$SCRIPT_DIR/../init/01_schema.sql"
+  LOWER="$SCRIPT_DIR/../init/02_unique_lower.sql"
   TESTS="$SCRIPT_DIR"
 fi
 
@@ -19,6 +22,7 @@ CREATE SCHEMA public;
 SQL
 
 psql -v ON_ERROR_STOP=1 -f "$SCHEMA"
+psql -v ON_ERROR_STOP=1 -f "$LOWER"
 psql -v ON_ERROR_STOP=1 -f "$TESTS/valid.sql"
 
 must_fail() {
@@ -38,6 +42,13 @@ if [ "$table_count" != "6" ]; then
   exit 1
 fi
 echo "ok: six tables"
+
+lower_idx=$(psql -tAc "SELECT COUNT(*) FROM pg_indexes WHERE schemaname = 'public' AND indexname IN ('person_email_lower_idx', 'course_contract_address_lower_idx')")
+if [ "$lower_idx" != "2" ]; then
+  echo "FAIL: expected person_email_lower_idx and course_contract_address_lower_idx, got $lower_idx"
+  exit 1
+fi
+echo "ok: lower unique indexes"
 
 role_names=$(psql -tAc "SELECT string_agg(name, ',' ORDER BY name) FROM role")
 if [ "$role_names" != "organization_admin,student,teacher" ]; then

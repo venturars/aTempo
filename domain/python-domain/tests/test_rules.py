@@ -2,6 +2,7 @@ import unittest
 
 from python_domain.attendance.add_attendance import add_attendance
 from python_domain.attendance.list_attendances import list_attendances
+from python_domain.attendance.update_attendance import update_attendance
 from python_domain.session.create_session import create_session
 from python_domain.session.get_session_by_id import get_session_by_id
 from python_domain.session.update_session import update_session
@@ -75,6 +76,40 @@ class RuleTests(unittest.TestCase):
                 "session_id": session["id"],
                 "checked_in_at": "2026-01-01T09:00:00.000Z",
             })
+
+    def test_does_not_update_check_in_outside_the_session(self) -> None:
+        session = create_session(valid_session_input)
+        created = add_attendance({
+            **valid_attendance,
+            "session_id": session["id"],
+        })
+        with self.assertRaisesRegex(
+            ValueError,
+            "attendance.checked_in_at debe estar dentro de la sesión",
+        ):
+            update_attendance({
+                **created,
+                "checked_in_at": "2026-01-01T09:00:00.000Z",
+            })
+        self.assertEqual(
+            list_attendances(),
+            [created],
+        )
+
+    def test_accepts_check_in_at_the_session_bounds(self) -> None:
+        session = create_session(valid_session_input)
+        at_start = add_attendance({
+            **valid_attendance,
+            "session_id": session["id"],
+            "checked_in_at": session["start_at"],
+        })
+        self.assertEqual(at_start["checked_in_at"], session["start_at"])
+        at_end = update_attendance({
+            **at_start,
+            "checked_in_at": session["end_at"],
+        })
+        assert at_end is not None
+        self.assertEqual(at_end["checked_in_at"], session["end_at"])
 
     def test_does_not_shorten_the_session_past_a_stored_check_in(self) -> None:
         session = create_session(valid_session_input)

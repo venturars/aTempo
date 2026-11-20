@@ -1,5 +1,9 @@
 import os
+import tempfile
+from collections.abc import Callable
 from pathlib import Path
+
+from sqlalchemy import event
 
 from python_domain.sqlite.db import get_engine, reset_db
 
@@ -42,3 +46,29 @@ def open_memory_db() -> None:
 def close_memory_db() -> None:
     reset_db()
     os.environ.pop("SQLITE_DATABASE_URL", None)
+
+
+def open_file_db() -> str:
+    fd, path = tempfile.mkstemp(suffix=".sqlite")
+    os.close(fd)
+    os.environ["SQLITE_DATABASE_URL"] = "sqlite:///" + Path(path).as_posix()
+    reset_db()
+    raw = get_engine().raw_connection()
+    raw.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
+    raw.commit()
+    return path
+
+
+def count_begins(fn: Callable[[], object]) -> int:
+    begins: list[int] = []
+
+    def on_begin(_connection) -> None:
+        begins.append(1)
+
+    engine = get_engine()
+    event.listen(engine, "begin", on_begin)
+    try:
+        fn()
+    finally:
+        event.remove(engine, "begin", on_begin)
+    return len(begins)

@@ -28,6 +28,7 @@ export function assertCalendarDate(
   label: string,
 ): void {
   const date = new Date(Date.UTC(year, month - 1, day))
+  date.setUTCFullYear(year)
   if (
     date.getUTCFullYear() !== year ||
     date.getUTCMonth() !== month - 1 ||

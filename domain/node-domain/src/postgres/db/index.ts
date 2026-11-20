@@ -69,10 +69,16 @@ export async function withTransaction<T>(
   }
 }
 
+function dropPool(): Pool | undefined {
+  const current = pool
+  pool = undefined
+  return current
+}
+
 export async function closePool(): Promise<void> {
-  if (pool) {
-    await pool.end()
-    pool = undefined
+  const current = dropPool()
+  if (current) {
+    await current.end()
   }
 }
 
@@ -82,6 +88,9 @@ export function substituteQuery(fn: QueryFn | undefined): void {
 }
 
 export function resetDb(): void {
-  pool = undefined
   queryOverride = undefined
+  const current = dropPool()
+  if (current) {
+    void current.end()
+  }
 }

@@ -47,6 +47,12 @@ describe('lecturas', () => {
     await expect(getPersonById(PERSON_ID)).resolves.toEqual(validPerson)
   })
 
+  it('returns a person whose first_name is empty', async () => {
+    const row = { ...validPerson, first_name: '' }
+    mockDriver(async () => rowsResult([row]))
+    await expect(getPersonById(PERSON_ID)).resolves.toEqual(row)
+  })
+
   it('lists persons', async () => {
     mockDriver(async () => rowsResult([validPerson]))
     await expect(listPersons()).resolves.toEqual([validPerson])

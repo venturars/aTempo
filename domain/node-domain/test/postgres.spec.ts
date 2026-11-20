@@ -1,6 +1,6 @@
 import { query } from '../src/postgres/db'
 import { check } from '../src/postgres/postgres'
-import { mockDriver, resetDriver } from './helpers'
+import { assertMockSql, mockDriver, resetDriver } from './helpers'
 
 describe('postgres', () => {
   afterEach(() => {
@@ -29,5 +29,21 @@ describe('postgres', () => {
     const calls = mockDriver()
     await query('SELECT 1')
     expect(calls).toHaveLength(1)
+  })
+
+  it('rejects SQL that is missing RETURNING, uuid casts or to_char', () => {
+    expect(() => assertMockSql('INSERT INTO person VALUES (1)')).toThrow(
+      'INSERT/UPDATE debe llevar RETURNING',
+    )
+    expect(() =>
+      assertMockSql('UPDATE person SET email = $2 WHERE id = $1 RETURNING *'),
+    ).toThrow('el uuid debe ir con ::uuid')
+    expect(() =>
+      assertMockSql('SELECT start_at FROM course WHERE id = $1::uuid'),
+    ).toThrow('la lectura de course debe proyectar to_char')
+    expect(() =>
+      assertMockSql('SELECT birth_date FROM person WHERE id = $1::uuid'),
+    ).toThrow('la lectura de person debe proyectar to_char de birth_date')
+    expect(() => assertMockSql('SELCT 1')).toThrow('consulta no reconocida')
   })
 })
