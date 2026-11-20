@@ -21,24 +21,23 @@ RETURNING
   ${PERSON_COLUMNS}`
 
 export async function createPerson(input: unknown): Promise<Person> {
-  assertPersonInput(input)
-  const email = normalizeEmail(input.email)
-  await assertIdentificationDocumentAvailable(input.identification_document)
+  const body = assertPersonInput(input)
+  const email = normalizeEmail(body.email)
+  await assertIdentificationDocumentAvailable(body.identification_document)
   await assertEmailAvailable(email)
 
   const result = await query<Person>(INSERT, [
-    input.identification_document,
+    body.identification_document,
     email,
-    input.first_name,
-    input.last_name,
-    input.birth_date,
-    input.phone,
+    body.first_name,
+    body.last_name,
+    body.birth_date,
+    body.phone,
   ])
   const row = result.rows[0]
   if (!row) {
     throw new Error('person no se ha creado')
   }
 
-  assertPerson(row)
-  return row
+  return assertPerson(row)
 }

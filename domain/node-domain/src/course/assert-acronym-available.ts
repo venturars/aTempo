@@ -1,10 +1,7 @@
-import { COURSE_COLUMNS } from '../postgres/columns'
 import { query } from '../postgres/db'
 import { assertUuid, normalizeUuid } from '../types/assert'
-import { assertCourse, type Course } from '../types/course'
 
-const SELECT = `SELECT
-  ${COURSE_COLUMNS}
+const SELECT = `SELECT id::text AS id
 FROM course
 WHERE organization_id = $1::uuid AND acronym = $2`
 
@@ -15,13 +12,12 @@ export async function assertAcronymAvailable(
 ): Promise<void> {
   assertUuid(organizationId, 'course.organization_id')
 
-  const result = await query<Course>(SELECT, [organizationId, acronym])
+  const result = await query<{ id: string }>(SELECT, [organizationId, acronym])
   const row = result.rows[0]
   if (!row) {
     return
   }
 
-  assertCourse(row)
   if (ignoreId === undefined || normalizeUuid(row.id) !== normalizeUuid(ignoreId)) {
     throw new Error('course.acronym ya existe en la organización')
   }

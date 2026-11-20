@@ -66,6 +66,12 @@ describe('reglas de negocio', () => {
     await expect(
       createCourse({ ...courseInput, start_at: '2026-09-01T08:00' }),
     ).rejects.toThrow('course.start_at debe ser una fecha con zona horaria')
+    await expect(
+      createCourse({
+        ...courseInput,
+        start_at: '2026-02-30T08:00:00.000Z',
+      }),
+    ).rejects.toThrow('course.start_at debe ser una fecha')
     expect(calls).toHaveLength(0)
   })
 
@@ -76,6 +82,14 @@ describe('reglas de negocio', () => {
     )
     expect(wrote(calls)).toBe(false)
     expect(calls).toHaveLength(1)
+  })
+
+  it('treats a stored tax_id as taken even if the row would fail assert', async () => {
+    const calls = mockDriver(async () => rowsResult([{ id: validOrganization.id }]))
+    await expect(createOrganization(organizationInput)).rejects.toThrow(
+      'organization.tax_id ya existe',
+    )
+    expect(wrote(calls)).toBe(false)
   })
 
   it('allows updating an organization that keeps its tax_id', async () => {

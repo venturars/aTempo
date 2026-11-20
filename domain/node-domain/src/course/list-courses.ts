@@ -8,8 +8,5 @@ FROM course`
 
 export async function listCourses(): Promise<Course[]> {
   const result = await query<Course>(SELECT)
-  return result.rows.map((row) => {
-    assertCourse(row)
-    return row
-  })
+  return result.rows.map((row) => assertCourse(row))
 }

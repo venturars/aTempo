@@ -15,8 +15,5 @@ export async function listPersonsByCourse(
   assertUuid(courseId, 'course.id')
 
   const result = await query<Person>(SELECT, [courseId])
-  return result.rows.map((row) => {
-    assertPerson(row)
-    return row
-  })
+  return result.rows.map((row) => assertPerson(row))
 }

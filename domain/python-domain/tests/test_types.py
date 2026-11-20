@@ -58,6 +58,16 @@ class TypeTests(unittest.TestCase):
                 "start_at": "2026-01-01T10:00",
             })
 
+    def test_rejects_an_impossible_start_at(self) -> None:
+        with self.assertRaisesRegex(
+            ValueError,
+            "session.start_at debe ser una fecha",
+        ):
+            assert_session_input({
+                **valid_session_input,
+                "start_at": "2026-02-30T08:00:00.000Z",
+            })
+
     def test_rejects_closed_without_closed_at(self) -> None:
         with self.assertRaisesRegex(
             ValueError,

@@ -13,8 +13,5 @@ export async function listPersonsByRole(roleName: string): Promise<Person[]> {
   assertRoleName(roleName)
 
   const result = await query<Person>(SELECT, [roleName])
-  return result.rows.map((row) => {
-    assertPerson(row)
-    return row
-  })
+  return result.rows.map((row) => assertPerson(row))
 }

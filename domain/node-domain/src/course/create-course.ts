@@ -22,18 +22,18 @@ RETURNING
   ${COURSE_COLUMNS}`
 
 export async function createCourse(input: unknown): Promise<Course> {
-  assertCourseInput(input)
-  const contractAddress = normalizeContractAddress(input.contract_address)
-  await assertOrganizationExists(input.organization_id)
+  const body = assertCourseInput(input)
+  const contractAddress = normalizeContractAddress(body.contract_address)
+  await assertOrganizationExists(body.organization_id)
   await assertContractAddressAvailable(contractAddress)
-  await assertAcronymAvailable(input.organization_id, input.acronym)
+  await assertAcronymAvailable(body.organization_id, body.acronym)
 
   const result = await query<Course>(INSERT, [
-    input.organization_id,
-    input.name,
-    input.acronym,
-    input.start_at,
-    input.end_at,
+    body.organization_id,
+    body.name,
+    body.acronym,
+    body.start_at,
+    body.end_at,
     contractAddress,
   ])
   const row = result.rows[0]
@@ -41,6 +41,5 @@ export async function createCourse(input: unknown): Promise<Course> {
     throw new Error('course no se ha creado')
   }
 
-  assertCourse(row)
-  return row
+  return assertCourse(row)
 }

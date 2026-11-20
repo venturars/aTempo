@@ -22,19 +22,19 @@ RETURNING
   ${COURSE_COLUMNS}`
 
 export async function updateCourse(input: unknown): Promise<Course | null> {
-  assertCourse(input)
-  const contractAddress = normalizeContractAddress(input.contract_address)
-  await assertOrganizationExists(input.organization_id)
-  await assertContractAddressAvailable(contractAddress, input.id)
-  await assertAcronymAvailable(input.organization_id, input.acronym, input.id)
+  const course = assertCourse(input)
+  const contractAddress = normalizeContractAddress(course.contract_address)
+  await assertOrganizationExists(course.organization_id)
+  await assertContractAddressAvailable(contractAddress, course.id)
+  await assertAcronymAvailable(course.organization_id, course.acronym, course.id)
 
   const result = await query<Course>(UPDATE, [
-    input.id,
-    input.organization_id,
-    input.name,
-    input.acronym,
-    input.start_at,
-    input.end_at,
+    course.id,
+    course.organization_id,
+    course.name,
+    course.acronym,
+    course.start_at,
+    course.end_at,
     contractAddress,
   ])
   const row = result.rows[0]
@@ -42,6 +42,5 @@ export async function updateCourse(input: unknown): Promise<Course | null> {
     return null
   }
 
-  assertCourse(row)
-  return row
+  return assertCourse(row)
 }

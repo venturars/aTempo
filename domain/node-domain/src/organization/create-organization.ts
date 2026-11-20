@@ -15,15 +15,14 @@ RETURNING
 export async function createOrganization(
   input: unknown,
 ): Promise<Organization> {
-  assertOrganizationInput(input)
-  await assertTaxIdAvailable(input.tax_id)
+  const body = assertOrganizationInput(input)
+  await assertTaxIdAvailable(body.tax_id)
 
-  const result = await query<Organization>(INSERT, [input.name, input.tax_id])
+  const result = await query<Organization>(INSERT, [body.name, body.tax_id])
   const row = result.rows[0]
   if (!row) {
     throw new Error('organization no se ha creado')
   }
 
-  assertOrganization(row)
-  return row
+  return assertOrganization(row)
 }

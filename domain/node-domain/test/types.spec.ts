@@ -35,26 +35,32 @@ describe('assert*', () => {
     expect(normalizeUuid(validPerson.id.toUpperCase())).toBe(validPerson.id)
   })
 
-  it('lowercases person, organization and course ids', () => {
-    const person = { ...validPerson, id: validPerson.id.toUpperCase() }
-    assertPerson(person)
+  it('lowercases person, organization and course ids without mutating the input', () => {
+    const personInput = { ...validPerson, id: validPerson.id.toUpperCase() }
+    const person = assertPerson(personInput)
     expect(person.id).toBe(validPerson.id)
+    expect(personInput.id).toBe(validPerson.id.toUpperCase())
 
-    const organization = {
+    const organizationInput = {
       ...validOrganization,
       id: validOrganization.id.toUpperCase(),
     }
-    assertOrganization(organization)
+    const organization = assertOrganization(organizationInput)
     expect(organization.id).toBe(validOrganization.id)
+    expect(organizationInput.id).toBe(validOrganization.id.toUpperCase())
 
-    const course = {
+    const courseInput = {
       ...validCourse,
       id: validCourse.id.toUpperCase(),
       organization_id: validCourse.organization_id.toUpperCase(),
     }
-    assertCourse(course)
+    const course = assertCourse(courseInput)
     expect(course.id).toBe(validCourse.id)
     expect(course.organization_id).toBe(validCourse.organization_id)
+    expect(courseInput.id).toBe(validCourse.id.toUpperCase())
+    expect(courseInput.organization_id).toBe(
+      validCourse.organization_id.toUpperCase(),
+    )
   })
 
   it('normalizes contract address to lowercase hex', () => {
@@ -134,6 +140,12 @@ describe('assert*', () => {
     expect(() =>
       assertCourse({ ...validCourse, start_at: '2026-09-01T08:00' }),
     ).toThrow('course.start_at debe ser una fecha con zona horaria')
+    expect(() =>
+      assertCourse({
+        ...validCourse,
+        start_at: '2026-02-30T08:00:00.000Z',
+      }),
+    ).toThrow('course.start_at debe ser una fecha')
   })
 
   it('rejects an invented role name', () => {

@@ -42,7 +42,11 @@ export async function withTransaction<T>(
       await queryOverride('COMMIT')
       return value
     } catch (error) {
-      await queryOverride('ROLLBACK')
+      try {
+        await queryOverride('ROLLBACK')
+      } catch {
+        // El error original importa más que un ROLLBACK que también falle.
+      }
       throw error
     }
   }

@@ -8,8 +8,5 @@ FROM person`
 
 export async function listPersons(): Promise<Person[]> {
   const result = await query<Person>(SELECT)
-  return result.rows.map((row) => {
-    assertPerson(row)
-    return row
-  })
+  return result.rows.map((row) => assertPerson(row))
 }

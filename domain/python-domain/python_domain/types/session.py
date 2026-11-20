@@ -8,6 +8,7 @@ from python_domain.types.assert_values import (
     assert_nullable_int,
     assert_uuid,
     normalize_instant,
+    truncate_to_milliseconds,
 )
 
 SESSION_STATUSES = ("open", "closing", "closed")
@@ -60,17 +61,16 @@ def assert_session_input(value: object) -> SessionInput:
 
     course_id = assert_uuid(value.get("course_id"), "session.course_id")
     professor_id = assert_uuid(value.get("professor_id"), "session.professor_id")
-    start_at = normalize_instant(
+    start = truncate_to_milliseconds(
         assert_instant(value.get("start_at"), "session.start_at"),
     )
-    end_at = normalize_instant(
+    end = truncate_to_milliseconds(
         assert_instant(value.get("end_at"), "session.end_at"),
     )
-    if not (
-        assert_instant(end_at, "session.end_at")
-        > assert_instant(start_at, "session.start_at")
-    ):
+    if not (end > start):
         raise ValueError("session.end_at debe ser posterior a session.start_at")
+    start_at = normalize_instant(start)
+    end_at = normalize_instant(end)
     status = assert_session_status(value.get("status"))
     closed = assert_nullable_instant(value.get("closed_at"), "session.closed_at")
     closed_at = None if closed is None else normalize_instant(closed)

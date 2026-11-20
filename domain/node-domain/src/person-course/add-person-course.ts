@@ -12,20 +12,19 @@ VALUES ($1::uuid, $2::uuid)
 RETURNING person_id::text AS person_id, course_id::text AS course_id`
 
 export async function addPersonCourse(input: unknown): Promise<PersonCourse> {
-  assertPersonCourse(input)
-  await assertPersonExists(input.person_id)
-  await assertCourseExists(input.course_id)
-  await assertPersonCourseAvailable(input.person_id, input.course_id)
+  const body = assertPersonCourse(input)
+  await assertPersonExists(body.person_id)
+  await assertCourseExists(body.course_id)
+  await assertPersonCourseAvailable(body.person_id, body.course_id)
 
   const result = await query<PersonCourse>(INSERT, [
-    input.person_id,
-    input.course_id,
+    body.person_id,
+    body.course_id,
   ])
   const row = result.rows[0]
   if (!row) {
     throw new Error('person_course no se ha creado')
   }
 
-  assertPersonCourse(row)
-  return row
+  return assertPersonCourse(row)
 }

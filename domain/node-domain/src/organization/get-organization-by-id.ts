@@ -19,6 +19,5 @@ export async function getOrganizationById(
     return null
   }
 
-  assertOrganization(row)
-  return row
+  return assertOrganization(row)
 }

@@ -17,6 +17,5 @@ export async function getPersonById(id: string): Promise<Person | null> {
     return null
   }
 
-  assertPerson(row)
-  return row
+  return assertPerson(row)
 }

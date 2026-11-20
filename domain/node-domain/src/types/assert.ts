@@ -21,6 +21,22 @@ export function normalizeUuid(value: string): string {
   return value.toLowerCase()
 }
 
+export function assertCalendarDate(
+  year: number,
+  month: number,
+  day: number,
+  label: string,
+): void {
+  const date = new Date(Date.UTC(year, month - 1, day))
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    throw new Error(`${label} debe ser una fecha`)
+  }
+}
+
 export function assertNullableString(
   value: unknown,
   label: string,

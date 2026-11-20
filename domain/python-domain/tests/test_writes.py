@@ -99,6 +99,19 @@ class WriteTests(unittest.TestCase):
     def test_delete_reports_false_when_the_session_is_missing(self) -> None:
         self.assertFalse(delete_session(SESSION_ID))
 
+    def test_deletes_when_the_id_differs_only_by_case(self) -> None:
+        session = create_session(valid_session_input)
+        self.assertTrue(delete_session(session["id"].upper()))
+        self.assertIsNone(get_session_by_id(session["id"]))
+
+    def test_removes_attendance_when_ids_differ_only_by_case(self) -> None:
+        session = create_session(valid_session_input)
+        add_attendance({**valid_attendance, "session_id": session["id"]})
+        self.assertTrue(
+            remove_attendance(session["id"].upper(), STUDENT_ID.upper()),
+        )
+        self.assertEqual(list_attendances(), [])
+
 
 if __name__ == "__main__":
     unittest.main()

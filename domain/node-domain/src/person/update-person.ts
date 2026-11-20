@@ -17,28 +17,27 @@ RETURNING
   ${PERSON_COLUMNS}`
 
 export async function updatePerson(input: unknown): Promise<Person | null> {
-  assertPerson(input)
-  const email = normalizeEmail(input.email)
+  const person = assertPerson(input)
+  const email = normalizeEmail(person.email)
   await assertIdentificationDocumentAvailable(
-    input.identification_document,
-    input.id,
+    person.identification_document,
+    person.id,
   )
-  await assertEmailAvailable(email, input.id)
+  await assertEmailAvailable(email, person.id)
 
   const result = await query<Person>(UPDATE, [
-    input.id,
-    input.identification_document,
+    person.id,
+    person.identification_document,
     email,
-    input.first_name,
-    input.last_name,
-    input.birth_date,
-    input.phone,
+    person.first_name,
+    person.last_name,
+    person.birth_date,
+    person.phone,
   ])
   const row = result.rows[0]
   if (!row) {
     return null
   }
 
-  assertPerson(row)
-  return row
+  return assertPerson(row)
 }

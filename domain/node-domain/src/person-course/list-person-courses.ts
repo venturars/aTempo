@@ -11,8 +11,5 @@ FROM person_course`
 
 export async function listPersonCourses(): Promise<PersonCourse[]> {
   const result = await query<PersonCourse>(SELECT)
-  return result.rows.map((row) => {
-    assertPersonCourse(row)
-    return row
-  })
+  return result.rows.map((row) => assertPersonCourse(row))
 }

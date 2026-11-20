@@ -1,8 +1,13 @@
-import { assertNonEmptyString, assertUuid, normalizeUuid } from './assert'
+import {
+  assertCalendarDate,
+  assertNonEmptyString,
+  assertUuid,
+  normalizeUuid,
+} from './assert'
 
 const CONTRACT_ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/
 const INSTANT_RE =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(Z|[+-]\d{2}:\d{2})$/
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,9})?)?(Z|[+-]\d{2}:\d{2})$/
 
 export interface Course {
   id: string
@@ -16,14 +21,13 @@ export interface Course {
 
 export type CourseInput = Omit<Course, 'id'>
 
-export function assertCourseInput(value: unknown): asserts value is CourseInput {
+export function assertCourseInput(value: unknown): CourseInput {
   if (value === null || typeof value !== 'object') {
     throw new Error('course debe ser un objeto')
   }
 
   const row = value as Record<string, unknown>
   assertUuid(row.organization_id, 'course.organization_id')
-  row.organization_id = normalizeUuid(row.organization_id)
   assertNonEmptyString(row.name, 'course.name')
   assertNonEmptyString(row.acronym, 'course.acronym')
   assertNonEmptyString(row.start_at, 'course.start_at')
@@ -31,6 +35,14 @@ export function assertCourseInput(value: unknown): asserts value is CourseInput 
   assertNonEmptyString(row.contract_address, 'course.contract_address')
   assertContractAddress(row.contract_address)
   assertCourseDates(row.start_at, row.end_at)
+  return {
+    organization_id: normalizeUuid(row.organization_id),
+    name: row.name,
+    acronym: row.acronym,
+    start_at: row.start_at,
+    end_at: row.end_at,
+    contract_address: row.contract_address,
+  }
 }
 
 export function assertContractAddress(value: string): void {
@@ -44,9 +56,16 @@ export function normalizeContractAddress(value: string): string {
 }
 
 function assertInstant(value: string, label: string): number {
-  if (!INSTANT_RE.test(value)) {
+  const match = INSTANT_RE.exec(value)
+  if (match === null) {
     throw new Error(`${label} debe ser una fecha con zona horaria`)
   }
+  assertCalendarDate(
+    Number(match[1]),
+    Number(match[2]),
+    Number(match[3]),
+    label,
+  )
   const ms = Date.parse(value)
   if (Number.isNaN(ms)) {
     throw new Error(`${label} debe ser una fecha`)
@@ -62,13 +81,15 @@ export function assertCourseDates(startAt: string, endAt: string): void {
   }
 }
 
-export function assertCourse(value: unknown): asserts value is Course {
+export function assertCourse(value: unknown): Course {
   if (value === null || typeof value !== 'object') {
     throw new Error('course debe ser un objeto')
   }
 
   const row = value as Record<string, unknown>
   assertUuid(row.id, 'course.id')
-  row.id = normalizeUuid(row.id)
-  assertCourseInput(value)
+  return {
+    id: normalizeUuid(row.id),
+    ...assertCourseInput(value),
+  }
 }

@@ -23,8 +23,13 @@ def assert_uuid(value: object, label: str) -> str:
     return text.lower()
 
 
-def normalize_instant(value: datetime) -> str:
+def truncate_to_milliseconds(value: datetime) -> datetime:
     utc = value.astimezone(timezone.utc)
+    return utc.replace(microsecond=(utc.microsecond // 1000) * 1000)
+
+
+def normalize_instant(value: datetime) -> str:
+    utc = truncate_to_milliseconds(value)
     milliseconds = utc.microsecond // 1000
     return utc.strftime("%Y-%m-%dT%H:%M:%S") + f".{milliseconds:03d}Z"
 

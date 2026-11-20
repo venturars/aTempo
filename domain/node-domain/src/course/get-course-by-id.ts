@@ -17,6 +17,5 @@ export async function getCourseById(id: string): Promise<Course | null> {
     return null
   }
 
-  assertCourse(row)
-  return row
+  return assertCourse(row)
 }

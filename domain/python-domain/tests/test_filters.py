@@ -42,6 +42,19 @@ class FilterTests(unittest.TestCase):
         by_professor = list_sessions_by_professor(PROFESSOR_ID)
         self.assertEqual(by_professor, [matching, other])
 
+    def test_lists_when_filter_ids_differ_only_by_case(self) -> None:
+        matching = create_session(valid_session_input)
+        row = add_attendance({**valid_attendance, "session_id": matching["id"]})
+        self.assertEqual(list_sessions_by_course(COURSE_ID.upper()), [matching])
+        self.assertEqual(
+            list_sessions_by_professor(PROFESSOR_ID.upper()),
+            [matching],
+        )
+        self.assertEqual(
+            list_attendances_by_session(matching["id"].upper()),
+            [row],
+        )
+
     def test_lists_attendances_by_session(self) -> None:
         session = create_session(valid_session_input)
         row = add_attendance({**valid_attendance, "session_id": session["id"]})

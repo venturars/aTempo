@@ -31,6 +31,11 @@ class ReadTests(unittest.TestCase):
         found = get_session_by_id(created["id"])
         self.assertEqual(found, created)
 
+    def test_finds_a_session_when_the_id_differs_only_by_case(self) -> None:
+        created = create_session(valid_session_input)
+        found = get_session_by_id(created["id"].upper())
+        self.assertEqual(found, created)
+
     def test_lists_sessions(self) -> None:
         created = create_session(valid_session_input)
         self.assertEqual(list_sessions(), [created])

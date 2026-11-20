@@ -1,4 +1,5 @@
 import {
+  assertCalendarDate,
   assertNonEmptyString,
   assertNullableString,
   assertUuid,
@@ -33,20 +34,15 @@ export function assertBirthDate(value: string | null): void {
     throw new Error('person.birth_date debe ser una fecha')
   }
 
-  const year = Number(match[1])
-  const month = Number(match[2])
-  const day = Number(match[3])
-  const date = new Date(Date.UTC(year, month - 1, day))
-  if (
-    date.getUTCFullYear() !== year ||
-    date.getUTCMonth() !== month - 1 ||
-    date.getUTCDate() !== day
-  ) {
-    throw new Error('person.birth_date debe ser una fecha')
-  }
+  assertCalendarDate(
+    Number(match[1]),
+    Number(match[2]),
+    Number(match[3]),
+    'person.birth_date',
+  )
 }
 
-export function assertPersonInput(value: unknown): asserts value is PersonInput {
+export function assertPersonInput(value: unknown): PersonInput {
   if (value === null || typeof value !== 'object') {
     throw new Error('person debe ser un objeto')
   }
@@ -65,15 +61,25 @@ export function assertPersonInput(value: unknown): asserts value is PersonInput 
   assertNullableString(row.birth_date, 'person.birth_date')
   assertBirthDate(row.birth_date)
   assertNullableString(row.phone, 'person.phone')
+  return {
+    identification_document: row.identification_document,
+    email: row.email,
+    first_name: row.first_name,
+    last_name: row.last_name,
+    birth_date: row.birth_date,
+    phone: row.phone,
+  }
 }
 
-export function assertPerson(value: unknown): asserts value is Person {
+export function assertPerson(value: unknown): Person {
   if (value === null || typeof value !== 'object') {
     throw new Error('person debe ser un objeto')
   }
 
   const row = value as Record<string, unknown>
   assertUuid(row.id, 'person.id')
-  row.id = normalizeUuid(row.id)
-  assertPersonInput(value)
+  return {
+    id: normalizeUuid(row.id),
+    ...assertPersonInput(value),
+  }
 }

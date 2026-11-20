@@ -6,7 +6,7 @@ DELETE_SESSION = "DELETE FROM session WHERE id = :id"
 
 
 def delete_session(session_id: str) -> bool:
-    assert_uuid(session_id, "session.id")
+    session_id = assert_uuid(session_id, "session.id")
 
     def run(query: QueryFn) -> bool:
         query(DELETE_ATTENDANCES, {"id": session_id})

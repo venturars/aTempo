@@ -12,19 +12,18 @@ RETURNING
 export async function updateOrganization(
   input: unknown,
 ): Promise<Organization | null> {
-  assertOrganization(input)
-  await assertTaxIdAvailable(input.tax_id, input.id)
+  const organization = assertOrganization(input)
+  await assertTaxIdAvailable(organization.tax_id, organization.id)
 
   const result = await query<Organization>(UPDATE, [
-    input.id,
-    input.name,
-    input.tax_id,
+    organization.id,
+    organization.name,
+    organization.tax_id,
   ])
   const row = result.rows[0]
   if (!row) {
     return null
   }
 
-  assertOrganization(row)
-  return row
+  return assertOrganization(row)
 }

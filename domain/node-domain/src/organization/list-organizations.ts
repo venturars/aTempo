@@ -8,8 +8,5 @@ FROM organization`
 
 export async function listOrganizations(): Promise<Organization[]> {
   const result = await query<Organization>(SELECT)
-  return result.rows.map((row) => {
-    assertOrganization(row)
-    return row
-  })
+  return result.rows.map((row) => assertOrganization(row))
 }

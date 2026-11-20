@@ -229,6 +229,19 @@ describe('escrituras', () => {
     ])
   })
 
+  it('keeps the original error when ROLLBACK fails', async () => {
+    mockDriver(async (sql) => {
+      if (sql.includes('DELETE FROM person WHERE')) {
+        throw new Error('timeout')
+      }
+      if (sql === 'ROLLBACK') {
+        throw new Error('rollback failed')
+      }
+      return commandResult(1)
+    })
+    await expect(deletePerson(PERSON_ID)).rejects.toThrow('timeout')
+  })
+
   it('deletes by key and reports whether a row was removed', async () => {
     mockDriver(async () => commandResult(1))
     await expect(removePersonCourse(PERSON_ID, COURSE_ID)).resolves.toBe(true)

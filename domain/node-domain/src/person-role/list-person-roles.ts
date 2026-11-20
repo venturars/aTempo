@@ -8,8 +8,5 @@ FROM person_role`
 
 export async function listPersonRoles(): Promise<PersonRole[]> {
   const result = await query<PersonRole>(SELECT)
-  return result.rows.map((row) => {
-    assertPersonRole(row)
-    return row
-  })
+  return result.rows.map((row) => assertPersonRole(row))
 }

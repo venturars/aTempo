@@ -7,7 +7,7 @@ SELECT = f"SELECT {SESSION_COLUMNS} FROM session WHERE id = :id"
 
 
 def get_session_by_id(session_id: str) -> Session | None:
-    assert_uuid(session_id, "session.id")
+    session_id = assert_uuid(session_id, "session.id")
     result = query(SELECT, {"id": session_id})
     if not result.rows:
         return None

@@ -7,6 +7,6 @@ SELECT = f"SELECT {SESSION_COLUMNS} FROM session WHERE course_id = :course_id"
 
 
 def list_sessions_by_course(course_id: str) -> list[Session]:
-    assert_uuid(course_id, "session.course_id")
+    course_id = assert_uuid(course_id, "session.course_id")
     result = query(SELECT, {"course_id": course_id})
     return [assert_session(row) for row in result.rows]

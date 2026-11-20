@@ -1,10 +1,7 @@
-import { PERSON_COLUMNS } from '../postgres/columns'
 import { query } from '../postgres/db'
 import { assertNonEmptyString, normalizeUuid } from '../types/assert'
-import { assertPerson, type Person } from '../types/person'
 
-const SELECT = `SELECT
-  ${PERSON_COLUMNS}
+const SELECT = `SELECT id::text AS id
 FROM person
 WHERE identification_document = $1`
 
@@ -17,13 +14,12 @@ export async function assertIdentificationDocumentAvailable(
     'person.identification_document',
   )
 
-  const result = await query<Person>(SELECT, [identificationDocument])
+  const result = await query<{ id: string }>(SELECT, [identificationDocument])
   const row = result.rows[0]
   if (!row) {
     return
   }
 
-  assertPerson(row)
   if (ignoreId === undefined || normalizeUuid(row.id) !== normalizeUuid(ignoreId)) {
     throw new Error('person.identification_document ya existe')
   }

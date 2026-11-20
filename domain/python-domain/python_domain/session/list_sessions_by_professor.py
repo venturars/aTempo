@@ -9,6 +9,6 @@ WHERE professor_id = :professor_id"""
 
 
 def list_sessions_by_professor(professor_id: str) -> list[Session]:
-    assert_uuid(professor_id, "session.professor_id")
+    professor_id = assert_uuid(professor_id, "session.professor_id")
     result = query(SELECT, {"professor_id": professor_id})
     return [assert_session(row) for row in result.rows]
