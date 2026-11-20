@@ -10,6 +10,13 @@ export class PersonCourseService {
     return this.postgres.listPersonCourses()
   }
 
+  async create(
+    personId: string,
+    courseId: string,
+  ): Promise<PersonCourseResponseDto> {
+    return this.postgres.createPersonCourse(personId, courseId)
+  }
+
   async delete(
     personId: string,
     courseId: string,

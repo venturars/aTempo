@@ -1,3 +1,47 @@
+# Árbol de `web/`
+
+```text
+web/
+  package.json           # Vite, React y TanStack Router; pnpm 10.33.0
+  pnpm-lock.yaml
+  README.md              # entrada y recorrido admin; acceso del alumno
+  src/
+    admin/
+      adminStore.ts      # CRUD mock de organización, personas, cursos y sesiones
+      AdminLayout.tsx    # entrada demo, navegación, tema y salida
+      AdminHome.tsx
+      PeopleScreen.tsx
+      CoursesScreen.tsx
+      CourseDetails.tsx  # detalle reutilizado para gestión y Mis clases
+      SessionDetails.tsx # listado pendiente del curso
+      PersonForm.tsx     # creación y edición de personas
+      CourseForm.tsx     # creación y edición de cursos
+      SessionForm.tsx    # creación y edición de sesiones
+      DeleteConfirmation.tsx # confirmación compartida de borrado
+      adminUi.tsx
+    shared/
+      ThemeToggle.tsx    # control existente compartido con StudentLayout
+    routes/
+      admin.tsx
+      admin/
+        index.tsx
+        people.tsx
+        courses/index.tsx
+        courses/$courseId.tsx
+        sessions/$sessionId.tsx
+        my-classes/index.tsx
+        my-classes/$courseId.tsx
+        my-classes/$courseId.index.tsx
+        my-classes/$courseId.$sessionId.tsx
+      student/           # pantallas del portal del alumno
+    student/             # vistas, datos y layout del alumno
+    session/             # sesión del alumno y preferencias de tema
+    styles/app.css       # importa el sistema visual de Storybook
+    routeTree.gen.ts     # generado por Vite, no se edita a mano
+```
+
+Las pruebas focales de admin están en `desktop/tests/admin-store.spec.ts` y `desktop/tests/admin-web.spec.ts`, con `desktop/playwright.admin.config.ts`.
+
 # Árbol de almacenes
 
 Cada almacén se instala y arranca en el ordenador. Compose orquesta los mismos procesos. No forman parte de `desktop/` ni de `api-router/`.
@@ -231,9 +275,10 @@ api-postgresql/
       person-role-response.dto.ts
     person-course/
       person-course.module.ts
-      person-course.controller.ts  # GET /person-course y DELETE /person-course/:personId/:courseId
+      person-course.controller.ts  # GET, POST /person-course y DELETE /person-course/:personId/:courseId
       person-course.service.ts
       person-course-response.dto.ts
+      create-person-course.dto.ts
     organization/
       organization.module.ts
       organization.controller.ts

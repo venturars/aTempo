@@ -1,4 +1,6 @@
 import {
+  Body,
+  ConflictException,
   Controller,
   Delete,
   Get,
@@ -6,16 +8,20 @@ import {
   NotFoundException,
   Param,
   ParseUUIDPipe,
+  Post,
   ServiceUnavailableException,
 } from '@nestjs/common'
 import {
   ApiBadRequestResponse,
+  ApiConflictResponse,
+  ApiCreatedResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiServiceUnavailableResponse,
   ApiTags,
 } from '@nestjs/swagger'
+import { CreatePersonCourseDto } from './create-person-course.dto'
 import { PersonCourseResponseDto } from './person-course-response.dto'
 import { PersonCourseService } from './person-course.service'
 
@@ -31,6 +37,35 @@ export class PersonCourseController {
     try {
       return await this.personCourse.list()
     } catch {
+      throw new ServiceUnavailableException()
+    }
+  }
+
+  @Post()
+  @ApiCreatedResponse({ type: PersonCourseResponseDto })
+  @ApiBadRequestResponse({
+    description: 'El cuerpo es inválido o un id no es UUID',
+  })
+  @ApiNotFoundResponse({
+    description: 'No existe la persona o el curso',
+  })
+  @ApiConflictResponse({
+    description: 'Esa persona ya está matriculada en ese curso',
+  })
+  @ApiServiceUnavailableResponse({ description: 'PostgreSQL no responde' })
+  async create(
+    @Body() body: CreatePersonCourseDto,
+  ): Promise<PersonCourseResponseDto> {
+    try {
+      return await this.personCourse.create(body.person_id, body.course_id)
+    } catch (error) {
+      const code = postgresErrorCode(error)
+      if (code === FOREIGN_KEY_VIOLATION) {
+        throw new NotFoundException()
+      }
+      if (code === UNIQUE_VIOLATION) {
+        throw new ConflictException()
+      }
       throw new ServiceUnavailableException()
     }
   }
@@ -59,4 +94,15 @@ export class PersonCourseController {
       throw new NotFoundException()
     }
   }
+}
+
+const FOREIGN_KEY_VIOLATION = '23503'
+const UNIQUE_VIOLATION = '23505'
+
+function postgresErrorCode(error: unknown): string | undefined {
+  if (typeof error === 'object' && error !== null && 'code' in error) {
+    const code = error.code
+    return typeof code === 'string' ? code : undefined
+  }
+  return undefined
 }

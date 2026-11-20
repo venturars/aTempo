@@ -2,7 +2,7 @@
 
 Servicio de persistencia con NestJS y TypeScript. El flujo de producto es Frontend → `api-postgresql` → `domain/node-domain` → PostgreSQL. Este servicio transforma HTTP. El API-router no habla con la base.
 
-Expone `GET /health`, los listados `GET /person`, `GET /course`, `GET /organization`, `GET /person-role` y `GET /person-course`, `GET /person/:id` y `DELETE /person-course/:personId/:courseId`. Con `DATABASE_URL`, cada listado consulta su tabla del esquema core (#32), `GET /person/:id` devuelve una fila por UUID y el DELETE borra una fila de `person_course`. Sin `DATABASE_URL`, el servicio usa un **mock de PostgreSQL** (`src/postgres/postgres-mock.ts`) y responde **200** con datos de prueba fijos (el DELETE de la pareja mock responde **204**). `POSTGRES_MOCK=1` fuerza el mock aunque exista `DATABASE_URL`. El escritorio no llama a este servicio.
+Expone `GET /health`, los listados `GET /person`, `GET /course`, `GET /organization`, `GET /person-role` y `GET /person-course`, `GET /person/:id`, `POST /person-course` y `DELETE /person-course/:personId/:courseId`. Con `DATABASE_URL`, cada listado consulta su tabla del esquema core (#32), `GET /person/:id` devuelve una fila por UUID, el POST inserta una matrícula y el DELETE borra una fila de `person_course`. Sin `DATABASE_URL`, el servicio usa un **mock de PostgreSQL** (`src/postgres/postgres-mock.ts`) y responde **200** con datos de prueba fijos (el DELETE de la pareja mock responde **204**). `POSTGRES_MOCK=1` fuerza el mock aunque exista `DATABASE_URL`. El escritorio no llama a este servicio.
 
 ## Arranque
 
@@ -66,6 +66,7 @@ pnpm dev
 5. **organization** → `GET /organization` → **Execute**: **200** con el mock o todas las filas reales de `organization` (`id`, `name` y `tax_id`). Con la tabla vacía devuelve `[]`; si la consulta real falla, **503**.
 6. **person-role** → `GET /person-role` → **Execute**: **200** con el mock o filas reales.
 7. **person-course** → `GET /person-course` → **Execute**: **200** con el array fijo de ejemplo o con todas las filas de `person_course` (`person_id` y `course_id`). Con la tabla vacía devuelve `[]`; si la consulta real falla, **503**.
+   - **person-course** → `POST /person-course` → cuerpo `{ "person_id", "course_id" }`. En mock, una pareja distinta a la de ejemplo → **201**; la pareja mock → **409**; UUID mal formado o cuerpo vacío → **400**. Con Postgres real, persona y curso existentes y pareja nueva → **201**; la misma pareja otra vez → **409**; un id que no está en `person` o `course` → **404**; si la base no responde → **503**. El POST no crea persona ni curso.
    - **person-course** → `DELETE /person-course/{personId}/{courseId}` → pega `3fa85f64-5717-4562-b3fc-2c963f66afa6` y `7c9e6679-7425-40de-944b-e07fc1f90ae7` → **204** (mock). Otra pareja de UUID válidos → **404**; un param que no es UUID → **400**. Con Postgres real, si existe la fila → **204** y esa pareja ya no aparece en `GET /person-course`; si no existe → **404**; si la base no responde → **503**. `person` y `course` no se borran.
 
 El documento OpenAPI en JSON está en `/docs-json`.
@@ -79,4 +80,4 @@ pnpm test
 pnpm build
 ```
 
-- `pnpm test` — e2e de los listados y Swagger con mocks en el propio servicio y sustitución de `PostgresService` donde hace falta; no requiere PostgreSQL.
+- `pnpm test` — e2e de los listados, `POST /person-course`, `DELETE /person-course` y Swagger con mocks en el propio servicio y sustitución de `PostgresService` donde hace falta; no requiere PostgreSQL. El mock no persiste: un POST **201** no añade filas al GET y un DELETE **204** no las quita. Con Postgres real, comprueba el paso 3 de la issue #151.
