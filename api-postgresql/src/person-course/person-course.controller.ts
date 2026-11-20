@@ -5,7 +5,6 @@ import {
   Delete,
   Get,
   HttpCode,
-  HttpException,
   NotFoundException,
   Param,
   ParseUUIDPipe,
@@ -43,7 +42,6 @@ export class PersonCourseController {
   }
 
   @Post()
-  @HttpCode(201)
   @ApiCreatedResponse({ type: PersonCourseResponseDto })
   @ApiBadRequestResponse({
     description: 'El cuerpo es inválido o un id no es UUID',
@@ -61,14 +59,11 @@ export class PersonCourseController {
     try {
       return await this.personCourse.create(body.person_id, body.course_id)
     } catch (error) {
-      if (error instanceof HttpException) {
-        throw error
-      }
       const code = postgresErrorCode(error)
-      if (code === '23503') {
+      if (code === FOREIGN_KEY_VIOLATION) {
         throw new NotFoundException()
       }
-      if (code === '23505') {
+      if (code === UNIQUE_VIOLATION) {
         throw new ConflictException()
       }
       throw new ServiceUnavailableException()
@@ -100,6 +95,9 @@ export class PersonCourseController {
     }
   }
 }
+
+const FOREIGN_KEY_VIOLATION = '23503'
+const UNIQUE_VIOLATION = '23505'
 
 function postgresErrorCode(error: unknown): string | undefined {
   if (typeof error === 'object' && error !== null && 'code' in error) {
