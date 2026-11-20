@@ -86,6 +86,9 @@ jobs:
       - run: pnpm run --if-present lint
       - run: pnpm run --if-present typecheck
       - run: pnpm run --if-present build-storybook
+      # Solo node-domain: el `test` de las APIs es e2e y el de blockend es Hardhat
+      - if: matrix.package == 'domain/node-domain'
+        run: pnpm test
 
   # La comprobación obligatoria. Pasa si no había paquetes que comprobar.
   ci:

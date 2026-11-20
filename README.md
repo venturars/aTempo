@@ -42,10 +42,11 @@ El lector del alumno ofrece lecturas simuladas y no usa cámara. Estos flujos no
 | Carpeta | Qué es |
 | --- | --- |
 | `desktop/` | Prototipo para profesor y alumno con Electron y React; las demos usan datos en memoria. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/sign-up` para el registro. |
-| `api-router/` | API REST con NestJS entre los frontends y la SDK de lógica de negocio (pendiente). |
-| `api-postgresql/` | API REST con NestJS entre la SDK y PostgreSQL. |
-| `api-rustfs/` | API REST con Express entre la SDK y RustFS (persistencia de objetos). |
-| `api-sqlite/` | Servicio Flask con Pydantic y SQLAlchemy Core entre la SDK prevista y SQLite. |
+| `domain/` | SDK: `node-domain/` (TypeScript, PostgreSQL). No es un servicio HTTP. |
+| `api-router/` | API REST con NestJS. |
+| `api-postgresql/` | API REST con NestJS. El flujo de producto es Frontend → `api-postgresql` → `domain/node-domain` → PostgreSQL. |
+| `api-rustfs/` | API REST con Express entre `domain/node-domain/` y RustFS (persistencia de objetos). |
+| `api-sqlite/` | Servicio Flask con Pydantic y SQLAlchemy Core para SQLite. |
 | `postgres/` | Core PostgreSQL y Drizzle Studio para ver sus tablas. No se abre desde el escritorio ni desde el API-router. |
 | `sqlite/` | SQLite operativo de fichaje y Datasette. Distinto del `atempo.sqlite` del escritorio. |
 | `rustfs/` | Justificantes (bucket `justifications`) y consola de RustFS. |
@@ -368,7 +369,7 @@ La API queda en <http://localhost:3001> y PostgreSQL en <http://localhost:5433> 
 
 ## API-sqlite
 
-`api-sqlite/` es el servicio de persistencia local previsto para la SDK. La SDK todavía está pendiente y no hay integración entre estos servicios. Su base SQLite es distinta de la base local de Electron.
+`api-sqlite/` es el servicio de persistencia local. Todavía no hay integración con `domain/`. Su base SQLite es distinta de la base local de Electron.
 
 Para usar el servicio en Docker, primero ejecuta `docker compose run --rm setup` y después:
 
