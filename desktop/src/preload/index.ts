@@ -1,8 +1,15 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
-// Custom APIs for renderer
-const api = {}
+const api = {
+  auth: {
+    isConfigured: (): Promise<boolean> => ipcRenderer.invoke('auth:is-configured'),
+    login: (credentials: { email: string; password: string }) =>
+      ipcRenderer.invoke('auth:login', credentials),
+    me: () => ipcRenderer.invoke('auth:me'),
+    logout: (): Promise<void> => ipcRenderer.invoke('auth:logout')
+  }
+}
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise

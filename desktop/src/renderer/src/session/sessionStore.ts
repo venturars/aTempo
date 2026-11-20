@@ -7,7 +7,9 @@ export type DashboardPath = '/student/dashboard' | '/teacher/panel' | '/organiza
 type SessionState = {
   profile: Profile | null
   email: string | null
+  startSession: (profile: Profile, email: string) => void
   startStudentSession: (email: string) => void
+  clearSession: () => void
 }
 
 const dashboardPaths: Record<Profile, DashboardPath> = {
@@ -23,7 +25,14 @@ export function dashboardPathForProfile(profile: Profile): DashboardPath {
 export const useSessionStore = create<SessionState>((set) => ({
   profile: null,
   email: null,
+  startSession: (profile, email) => {
+    set({ profile, email })
+  },
   startStudentSession: (email) => {
     set({ profile: 'student', email })
+  },
+  // Remove the renderer profile when Auth0 authentication expires.
+  clearSession: () => {
+    set({ profile: null, email: null })
   }
 }))
