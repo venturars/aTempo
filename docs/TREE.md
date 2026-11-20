@@ -261,8 +261,8 @@ desktop/
         organization/
           OrganizationDashboardScreen.tsx
           OrganizationListScreen.tsx
+          organizationApi.ts   # GET /organization de api-postgresql
           organizationExample.ts
-          organizationListExample.ts
         register/
           RegisterScreen.tsx
           registerStore.ts

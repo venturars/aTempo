@@ -95,7 +95,7 @@ Tras el arranque normal, el login valida la cuenta del profesor o del alumno y T
 
 Desde `desktop/`, `pnpm dev -- --organization-dashboard` abre directamente el Resumen de la organización sin credenciales.
 
-Desde `desktop/`, `pnpm dev:organization-list` abre directamente la lista de organizaciones sin credenciales. Es una pantalla de prueba con datos de ejemplo.
+Desde `desktop/`, `pnpm dev:organization-list` abre directamente la lista de organizaciones sin credenciales. Es una pantalla de prueba que lee `GET /organization` de `api-postgresql` en `http://localhost:3001`.
 
 La base usa la clase `DatabaseSync` de [`node:sqlite`](https://nodejs.org/api/sqlite.html). Electron 44 trae Node 24, y esa versión exporta `DatabaseSync`. El archivo es `atempo.sqlite`, en la carpeta de datos de Electron (`app.getPath('userData')`). Al arrancar se ejecuta `PRAGMA user_version = 1` para comprobar que el archivo abre. Los prototipos de login, registro, alumno, panel del profesor y Resumen de la organización no leen ni escriben esa base.
 
@@ -119,7 +119,7 @@ El enrutado es TanStack Router con hash history. `main.tsx` crea el router con `
 - `routes/student/scan.tsx` → `/student/scan`: el registro de asistencia del alumno (`ScanScreen`).
 - `routes/student/history.tsx` → `/student/history`: el historial del alumno (`HistoryScreen`).
 - `routes/organization/dashboard.tsx` → `/organization/dashboard`: el Resumen de la organización (`OrganizationDashboardScreen`).
-- `routes/organization/list.tsx` → `/organization/list`: la lista de organizaciones de prueba (`OrganizationListScreen`). Pinta `organizationListExample.ts`, con los campos de `GET /organization` (`id`, `name`, `tax_id`). No llama a la red.
+- `routes/organization/list.tsx` → `/organization/list`: la lista de organizaciones de prueba (`OrganizationListScreen`). Su `loader` llama a `fetchOrganizations()` de `organizationApi.ts`. Mientras carga pinta `OrganizationListLoading` y, si la llamada falla, `OrganizationListError`. La CSP de `index.html` permite esa llamada con `connect-src 'self' http://localhost:3001`.
 - `routes/teacher/panel.tsx` → `/teacher/panel`: el panel del profesor (`PanelScreen`).
 - `routes/__root.tsx`: la ruta raíz. Su `notFoundComponent` es el login, así que un hash que no es una ruta conocida también muestra el login.
 
