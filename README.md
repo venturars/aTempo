@@ -2,7 +2,7 @@
 
 aTempo registra la asistencia de los alumnos de una clase. Este repositorio tiene la aplicación de escritorio del profesor y la guía visual compartida.
 
-La visión, los perfiles y las decisiones de producto están en [principles.md](principles.md). El [sitio web del alumno](web/README.md) usa Vite, React y TanStack Router, y guarda los datos en `localStorage`.
+La visión, los perfiles y las decisiones de producto están en [principles.md](principles.md).
 
 ## Qué hay
 
