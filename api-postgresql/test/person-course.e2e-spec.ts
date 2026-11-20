@@ -7,6 +7,10 @@ import { configureApp } from '../src/configure-app'
 import { POSTGRES_MOCK_PERSON_COURSES } from '../src/postgres/postgres-mock'
 import { PostgresService } from '../src/postgres/postgres.service'
 
+const MOCK_ENROLLMENT = POSTGRES_MOCK_PERSON_COURSES[0]
+const UNKNOWN_PERSON_ID = '22222222-2222-2222-2222-222222222222'
+const UNKNOWN_COURSE_ID = '33333333-3333-3333-3333-333333333333'
+
 describe('Person course (e2e)', () => {
   let app: INestApplication<App>
   const originalDatabaseUrl = process.env.DATABASE_URL
@@ -106,5 +110,97 @@ describe('Person course (e2e)', () => {
     })
 
     await request(app.getHttpServer()).get('/person-course').expect(503)
+  })
+
+  it('DELETE mock enrollment returns 204 when DATABASE_URL is missing', async () => {
+    delete process.env.DATABASE_URL
+    delete process.env.POSTGRES_MOCK
+    await initApp()
+
+    await request(app.getHttpServer())
+      .delete(
+        `/person-course/${MOCK_ENROLLMENT.person_id}/${MOCK_ENROLLMENT.course_id}`,
+      )
+      .expect(204)
+
+    await request(app.getHttpServer())
+      .get('/person-course')
+      .expect(200)
+      .expect(POSTGRES_MOCK_PERSON_COURSES)
+  })
+
+  it('DELETE POSTGRES_MOCK enrollment returns 204 when DATABASE_URL is present', async () => {
+    process.env.DATABASE_URL = 'postgres://unused:unused@127.0.0.1:1/unused'
+    process.env.POSTGRES_MOCK = '1'
+    await initApp()
+
+    await request(app.getHttpServer())
+      .delete(
+        `/person-course/${MOCK_ENROLLMENT.person_id}/${MOCK_ENROLLMENT.course_id}`,
+      )
+      .expect(204)
+  })
+
+  it('DELETE another valid UUID pair returns 404 in the mock', async () => {
+    delete process.env.DATABASE_URL
+    delete process.env.POSTGRES_MOCK
+    await initApp()
+
+    await request(app.getHttpServer())
+      .delete(`/person-course/${UNKNOWN_PERSON_ID}/${UNKNOWN_COURSE_ID}`)
+      .expect(404)
+  })
+
+  it('DELETE returns 400 when a param is not a UUID', async () => {
+    delete process.env.DATABASE_URL
+    delete process.env.POSTGRES_MOCK
+    await initApp()
+
+    await request(app.getHttpServer())
+      .delete(`/person-course/abc/${MOCK_ENROLLMENT.course_id}`)
+      .expect(400)
+
+    await request(app.getHttpServer())
+      .delete(`/person-course/${MOCK_ENROLLMENT.person_id}/abc`)
+      .expect(400)
+  })
+
+  it('DELETE returns 204 when the query layer deletes a row', async () => {
+    delete process.env.DATABASE_URL
+    delete process.env.POSTGRES_MOCK
+    await initApp({
+      deletePersonCourse: async () => ({
+        person_id: UNKNOWN_PERSON_ID,
+        course_id: UNKNOWN_COURSE_ID,
+      }),
+    })
+
+    await request(app.getHttpServer())
+      .delete(`/person-course/${UNKNOWN_PERSON_ID}/${UNKNOWN_COURSE_ID}`)
+      .expect(204)
+  })
+
+  it('DELETE returns 404 when the query layer finds no row', async () => {
+    delete process.env.DATABASE_URL
+    delete process.env.POSTGRES_MOCK
+    await initApp({ deletePersonCourse: async () => null })
+
+    await request(app.getHttpServer())
+      .delete(`/person-course/${UNKNOWN_PERSON_ID}/${UNKNOWN_COURSE_ID}`)
+      .expect(404)
+  })
+
+  it('DELETE returns 503 when the real database query fails', async () => {
+    process.env.DATABASE_URL = 'postgres://unused:unused@127.0.0.1:1/unused'
+    delete process.env.POSTGRES_MOCK
+    await initApp({
+      deletePersonCourse: async () => {
+        throw new Error('PostgreSQL unavailable')
+      },
+    })
+
+    await request(app.getHttpServer())
+      .delete(`/person-course/${UNKNOWN_PERSON_ID}/${UNKNOWN_COURSE_ID}`)
+      .expect(503)
   })
 })

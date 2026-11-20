@@ -1,11 +1,13 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common'
 import { Pool } from 'pg'
 import type { CourseResponseDto } from '../course/course-response.dto'
+import type { OrganizationResponseDto } from '../organization/organization-response.dto'
 import type { PersonCourseResponseDto } from '../person-course/person-course-response.dto'
 import type { PersonResponseDto } from '../person/person-response.dto'
 import type { PersonRoleResponseDto } from '../person-role/person-role-response.dto'
 import {
   POSTGRES_MOCK_COURSES,
+  POSTGRES_MOCK_ORGANIZATIONS,
   POSTGRES_MOCK_PERSON_COURSES,
   POSTGRES_MOCK_PERSONS,
   POSTGRES_MOCK_PERSON_ROLES,
@@ -91,6 +93,16 @@ export class PostgresService implements OnModuleDestroy {
     }))
   }
 
+  async listOrganizations(): Promise<OrganizationResponseDto[]> {
+    if (this.usesMock()) return POSTGRES_MOCK_ORGANIZATIONS
+    const result = await this.poolFor(
+      process.env.DATABASE_URL!,
+    ).query<OrganizationResponseDto>(
+      'SELECT id, name, tax_id FROM organization',
+    )
+    return result.rows
+  }
+
   async listPersonRoles(): Promise<PersonRoleResponseDto[]> {
     if (this.usesMock()) return POSTGRES_MOCK_PERSON_ROLES
     const result = await this.poolFor(
@@ -108,6 +120,27 @@ export class PostgresService implements OnModuleDestroy {
       'SELECT person_id, course_id FROM person_course',
     )
     return result.rows
+  }
+
+  async deletePersonCourse(
+    personId: string,
+    courseId: string,
+  ): Promise<PersonCourseResponseDto | null> {
+    if (this.usesMock()) {
+      return (
+        POSTGRES_MOCK_PERSON_COURSES.find(
+          (row) => row.person_id === personId && row.course_id === courseId,
+        ) ?? null
+      )
+    }
+
+    const result = await this.poolFor(
+      process.env.DATABASE_URL!,
+    ).query<PersonCourseResponseDto>(
+      'DELETE FROM person_course WHERE person_id = $1 AND course_id = $2 RETURNING person_id, course_id',
+      [personId, courseId],
+    )
+    return result.rows[0] ?? null
   }
 
   async onModuleDestroy(): Promise<void> {

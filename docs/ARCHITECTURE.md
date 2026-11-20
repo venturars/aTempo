@@ -6,11 +6,11 @@ Carpeta de la SDK: `domain/`, con `node-domain/` (TypeScript) y `python-domain/`
 
 El flujo de producto con PostgreSQL es Frontend → `api-postgresql` → `domain/node-domain` → PostgreSQL. `api-postgresql` transforma HTTP. `domain/node-domain` valida los tipos y las reglas del core y abre PostgreSQL. Nest no escribe SQL.
 
-`domain/` es la carpeta de la SDK, hermana de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. `domain/node-domain/` cubre tipos, lecturas, escrituras y reglas de `organization`, `person`, `course`, `person_course`, `role` y `person_role`. `role` no se escribe. Un delete de persona, curso u organización borra las filas hijas en una transacción. `start_at` y `end_at` entran con zona horaria y salen en ISO UTC. Si un objeto no cumple esos campos o reglas, lanza y no escribe en la base. El CHECK y el trigger de PostgreSQL se quedan. `domain/python-domain/` cubre `session` y `attendance` en SQLite: instantes a ISO UTC, UUID en minúsculas, fichaje coherente con el estado. `api-sqlite/` quedará detrás.
+`domain/` es la carpeta de la SDK, hermana de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. `domain/node-domain/` cubre tipos, lecturas, escrituras y reglas de `organization`, `person`, `course`, `person_course`, `role` y `person_role`. `role` no se escribe. Un delete de persona, curso u organización borra las filas hijas en una transacción. `start_at` y `end_at` entran con zona horaria y salen en ISO UTC. Si un objeto no cumple esos campos o reglas, lanza y no escribe en la base. El CHECK y el trigger de PostgreSQL se quedan. `domain/python-domain/` cubre `session` y `attendance` en SQLite: instantes a ISO UTC, UUID en minúsculas, fichaje coherente con el estado. `api-sqlite/` queda detrás.
 
-Hoy `domain/node-domain/` existe y se prueba con un driver sustituido. `api-postgresql/` aún no lo importa: abre `pg` en `PostgresService` y expone `GET /health` y `GET /course`. `api-router/` solo expone `GET /health`. `api-rustfs/` solo expone `GET /health`. `api-sqlite/` solo expone `GET /health` (`SELECT 1`). El login y el registro del renderer no llaman a estas APIs. PostgreSQL, `api-postgresql/`, RustFS, `api-rustfs/` y `api-sqlite/` no están en Docker Compose. `domain/` tampoco.
+Hoy `domain/` existe y se prueba con un driver sustituido. `api-postgresql/` aún no lo importa: abre `pg` en `PostgresService`. Expone `GET /health`, los listados `GET /person`, `GET /course`, `GET /organization`, `GET /person-role` y `GET /person-course`, `GET /person/:id` (una fila de `person` por UUID: 200, 404 o 503) y `DELETE /person-course/:personId/:courseId` (una matrícula: 204, 404 o 503); con `DATABASE_URL` consulta PostgreSQL y sin ella usa un mock de prueba. `api-router/` solo expone `GET /health`. `api-rustfs/` solo expone `GET /health`, que confirma que el servicio HTTP responde; su conexión S3 se comprueba aparte. `api-sqlite/` solo expone `GET /health`, que ejecuta `SELECT 1`. El login y el registro del renderer no llaman a estas APIs. Compose publica las cuatro APIs en 3000–3003. Las APIs se conectan por la red interna a PostgreSQL (`postgres:5432`) y RustFS (`rustfs:9000`); los mismos servicios también sirven al almacén operativo. PostgreSQL se publica en el host por `5433` y RustFS por `9000`/`9001`. Los volúmenes compartidos `postgres-data` y `rustfs-data`, junto con `api-sqlite-data`, conservan sus datos. `domain/` no está en Docker Compose.
 
-La documentación interactiva (OpenAPI y Swagger UI) de cada servicio HTTP vive en **`/docs`** con el servicio en marcha. `api-postgresql/` escucha en el puerto **3001**, `api-sqlite/` en el **3002** y `api-rustfs/` en el **3003** (`PORT` en cada uno).
+La documentación interactiva (OpenAPI y Swagger UI) de cada servicio HTTP vive en **`/docs`**. Compose publica `api-router/` en el puerto **3000**, `api-postgresql/` en el **3001**, `api-sqlite/` en el **3002** y `api-rustfs/` en el **3003**.
 
 ```mermaid
 flowchart LR
@@ -40,13 +40,17 @@ El flujo de producto con SQLite es Frontend → `api-sqlite` → `domain/python-
 
 Carpeta: `api-sqlite/`.
 
-Servicio Flask con modelos Pydantic. El flujo de producto es Frontend → `api-sqlite` → `domain/python-domain` → SQLite. Este servicio aún no importa el paquete. Solo expone `GET /health`, que ejecuta `SELECT 1`; responde `200` si SQLite funciona y `503` si falla la conexión. Un cuerpo JSON inválido se rechaza antes de consultar la base. Swagger UI está en `/docs` y OpenAPI en `/docs-json`. Escucha en el puerto **3002** (`PORT`). `SQLITE_DATABASE_URL` configura la base, por defecto `sqlite:///./api-sqlite.sqlite`, independiente de la base de Electron. No está en Docker Compose.
+Servicio Flask con modelos Pydantic. El flujo de producto es Frontend → `api-sqlite` → `domain/python-domain` → SQLite. Este servicio aún no importa el paquete. Solo expone `GET /health`, que ejecuta `SELECT 1`; responde `200` si SQLite funciona y `503` si falla la conexión. Un cuerpo JSON inválido se rechaza antes de consultar la base. Swagger UI está en `/docs` y OpenAPI en `/docs-json`. Compose sirve en el puerto **3002** y ejecuta Flask escuchando en `0.0.0.0`. `SQLITE_DATABASE_URL` apunta a `sqlite:////var/lib/atempo/api-sqlite.sqlite`; el archivo persiste en el volumen `api-sqlite-data`. El entorno virtual Linux está en `api-sqlite-venv`; ambos son independientes de `.venv` y de la base de Electron.
 
 ## api-rustfs
 
 Carpeta: `api-rustfs/`.
 
-Servicio Express y TypeScript. `domain/node-domain/` delegará en él la lectura y escritura de objetos en RustFS. Hoy solo expone `GET /health`, que confirma que el servicio HTTP responde (igual que `api-router/`). Swagger UI en **`/docs`** y OpenAPI en **`/docs-json`**, igual que en `api-router/`. Por defecto escucha en el puerto **3003** (`PORT`). No está en Docker Compose en este paso.
+Servicio Express y TypeScript. `domain/node-domain/` delegará en él la lectura y escritura de objetos en RustFS. Hoy solo expone `GET /health`, que confirma que el servicio HTTP responde (igual que `api-router/`). Swagger UI en **`/docs`** y OpenAPI en **`/docs-json`**, igual que en `api-router/`. Compose lo sirve en el puerto **3003** y conecta al servicio interno `rustfs:9000`. `/health` no comprueba RustFS; el workflow valida S3 aparte. El volumen compartido `rustfs-data` conserva los objetos. RustFS publica el puerto S3 `9000` y la consola `9001` en el host.
+
+## api-postgresql
+
+`api-postgresql/` sirve NestJS en el puerto **3001**. Compose inicia PostgreSQL con el servicio interno `postgres` y espera a su healthcheck antes de arrancar la API. `GET /health` confirma la conexión. `ATEMPO_POSTGRES_PASSWORD` es obligatoria y `POSTGRES_PASSWORD` es su alternativa; ambas se leen desde `.env` ignorado por Git. Las APIs no montan el `.env`; Compose pasa solo las variables necesarias. PostgreSQL 17.12 comparte el volumen `postgres-data` y se publica en el host por `5433`; la API usa `postgres:5432`. Un volumen creado con PostgreSQL 16 requiere copia de seguridad y migración explícita antes de usarse con 17. CI usa un valor efímero. Este servicio aún no importa `domain/node-domain/`.
 
 ## Almacenes
 
@@ -56,7 +60,7 @@ Son almacenes y cadena, no una capa del escritorio ni del API-router. Cada una t
 
 El modelo y los enlaces están en `docs/POSTGRES.md`, `docs/SQLITE.md`, `docs/RUSTFS.md`, `docs/BLOCKEND.md` y `permanent-data.md`.
 
-Hoy `api-postgresql/` comprueba que PostgreSQL responde (`GET /health`) y lista `course` con su propio `Pool`. `domain/node-domain/` trae el pool, las lecturas y las escrituras del core; este servicio aún no lo importa. `api-rustfs/` no abre RustFS en el health. El renderer y el API-router no abren estas bases.
+`api-postgresql/` comprueba la conexión con `GET /health`, ofrece cinco listados (incluidos `GET /organization` y `GET /person-course`), `GET /person/:id` y `DELETE /person-course/:personId/:courseId`. `domain/node-domain/` trae el pool, las lecturas y las escrituras del core; este servicio aún no lo importa. `api-rustfs/` no abre RustFS en el health. El renderer y el API-router no abren estas bases.
 
 ## aTempo de escritorio
 
@@ -183,7 +187,7 @@ Docker instala lo que el proyecto necesita con versiones comunes para el equipo:
 - La imagen parte de `node:24.22.3-trixie`. El binario oficial de APM se comprueba con su SHA-256. Python 3.13 y su soporte de venv se instalan desde un snapshot Debian fijado.
 - `setup` ejecuta `apm install`, instala con lockfiles los paquetes Node de escritorio, Storybook, las APIs, `blockend/` y `postgres/`, y prepara el venv de `api-sqlite/`.
 - Las skills y agentes de delivery-workflow quedan en la carpeta del proyecto para Cursor, Codex y Claude Code.
-- Los `node_modules` y el venv Python viven en volúmenes Docker separados por paquete; pnpm comparte su caché. Las dependencias Linux no se mezclan con las del ordenador.
+- Los `node_modules` y el venv Python viven en volúmenes Docker separados por paquete; pnpm comparte su caché. Compose los crea vacíos y de root. `docker/entrypoint.sh` los deja del usuario `node` en cada arranque y el comando sigue con ese usuario. Las dependencias Linux no se mezclan con las del ordenador.
 - Compose sirve Storybook en 6006 y las APIs en 3000–3003. Las APIs alcanzan PostgreSQL y RustFS mediante sus nombres de servicio, y esos almacenes también conservan los puertos host de desarrollo. Los datos de `api-sqlite`, PostgreSQL y RustFS viven en volúmenes independientes.
 - Compose también ofrece perfiles para PostgreSQL operativo, SQLite operativo, RustFS de justificantes y blockend, documentados en el README. `desktop` ejecuta las comprobaciones de su paquete y `blockend` las de Hardhat.
 - El workflow `.github/workflows/docker-apis.yml` valida la instalación limpia y repetida, las APIs y sus datos persistentes en Ubuntu.

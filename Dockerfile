@@ -43,12 +43,17 @@ RUN case "$TARGETARCH" in \
 RUN git config --system --add safe.directory '*'
 
 # Los node_modules de Linux viven en volúmenes, nunca en la carpeta del proyecto.
+# Compose crea esos volúmenes vacíos y de root: el entrypoint los deja de node en cada arranque.
+COPY docker/entrypoint.sh /usr/local/bin/atempo-entrypoint
 RUN mkdir -p /work/desktop/node_modules /work/docs/storybook/node_modules /work/api-router/node_modules /work/blockend/node_modules /work/postgres/node_modules \
     /work/api-postgresql/node_modules /work/api-rustfs/node_modules /work/api-sqlite/.venv \
     /var/lib/atempo /pnpm-store \
-  && chown -R node:node /work /var/lib/atempo /pnpm-store
+  && chown -R node:node /work /var/lib/atempo /pnpm-store \
+  && chmod 755 /usr/local/bin/atempo-entrypoint
 
-USER node
+ENTRYPOINT ["atempo-entrypoint"]
+# Root solo para el entrypoint. El comando del servicio corre como node.
+USER root
 ENV CI=true \
   npm_config_store_dir=/pnpm-store
 WORKDIR /work
@@ -68,4 +73,3 @@ RUN apt-get update --snapshot "$DEBIAN_SNAPSHOT" \
     libasound2t64=1.2.14-1+deb13u1 \
     libgbm1=25.0.7-2+deb13u1 \
   && rm -rf /var/lib/apt/lists/*
-USER node
