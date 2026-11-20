@@ -33,7 +33,7 @@ flowchart LR
   objectApi --> rustfs
 ```
 
-`sdk/` es un paquete hermano de `desktop/`, `api-router/`, `api-postgresql/`, `api-rustfs/` y `api-sqlite/`. El API-router y los frontends la consumirán cuando exista. `api-postgresql/` ya está y espera a esa SDK. `api-rustfs/` también: la SDK lo usará para objetos en RustFS.
+`sdk/` es el paquete de dominio previsto, hermano de `desktop/`, `api-router/`, `api-postgresql/`, `api-rustfs/` y `api-sqlite/`. Lo consumirá el API-router. Los frontends usarán una SDK frontend distinta para llamar al router público; no consumirán directamente la SDK de dominio ni las APIs de persistencia. `api-postgresql/` ya está y espera a esa SDK de dominio. `api-rustfs/` también: la SDK lo usará para objetos en RustFS.
 
 ## api-sqlite
 
@@ -50,6 +50,18 @@ Servicio Express y TypeScript. La SDK delegará en él la lectura y escritura de
 ## api-postgresql
 
 `api-postgresql/` sirve NestJS en el puerto **3001**. Compose inicia PostgreSQL con el servicio interno `postgres` y espera a su healthcheck antes de arrancar la API. `GET /health` confirma la conexión. `ATEMPO_POSTGRES_PASSWORD` es obligatoria y `POSTGRES_PASSWORD` es su alternativa; ambas se leen desde `.env` ignorado por Git. Las APIs no montan el `.env`; Compose pasa solo las variables necesarias. PostgreSQL 17.12 comparte el volumen `postgres-data` y se publica en el host por `5433`; la API usa `postgres:5432`. Un volumen creado con PostgreSQL 16 requiere copia de seguridad y migración explícita antes de usarse con 17. CI usa un valor efímero.
+
+## Web y administración
+
+El paquete `web/` contiene el portal del alumno y el prototipo de administración bajo `/admin`. Comparten Vite, React, el router de TanStack y el tema de `docs/storybook/src/system.css`. El control de tema existente se comparte mediante `web/src/shared/ThemeToggle.tsx`; no hay un tema ni otro paquete de componentes para admin.
+
+`web/src/admin/adminStore.ts` guarda en memoria personas, cursos, matrículas, sesiones y la sesión de demo. Sus acciones validan entradas, pertenencia a la organización y rol admin antes de escribir. Las invitaciones preparan personas pendientes y no envían correo ni activan cuentas. Cada sesión muestra el alumnado de su curso como pendiente. `Mis clases` reutiliza los detalles en modo lectura y filtra los cursos del administrador que también es profesor; no sustituye al panel de asistencia de Electron.
+
+El CRUD usa `PersonForm`, `CourseForm` y `SessionForm` tanto al crear como al editar. `DeleteConfirmation` muestra el efecto del borrado y exige confirmación. Las actualizaciones conservan IDs; los nuevos IDs no reutilizan los borrados durante ese arranque. Eliminar un alumno limpia sus matrículas; eliminar un curso elimina atómicamente sus sesiones programadas. Un profesor asignado debe reasignarse antes de borrarlo y la sesión admin actual no puede eliminar su propia cuenta. Estas reglas protegen las relaciones del mock; no implementan borrado de históricos de asistencia.
+
+La entrada explícita de demo no usa contraseñas y no es autenticación de producción. Recargar vuelve al seed; salir cierra la sesión admin conservando los datos de ese arranque. La sesión/cuentas del alumno siguen en sus stores actuales y no se cambian al entrar o salir de admin.
+
+Este store es un mock del prototipo, no una segunda SDK. El trabajo local de #90 se conserva por separado para una futura SDK frontend que consuma el API-router; la SDK de dominio mantiene las reglas de negocio y acceso a persistencia. Los endpoints administrativos aún no están acordados en el brief v1. Alcance, referencias y comprobaciones en [admin-prototype.md](admin-prototype.md); pasos para abrirlo en [web/README.md](../web/README.md#probar-administración).
 
 ## Almacenes
 
@@ -179,6 +191,7 @@ Escaneo e historial tienen un enlace «Volver» a `/student/dashboard`.
 Las suites Playwright lanzan el build real a través de `desktop/tests/helpers/electron.ts`. El arnés de tests comprueba la fuente y el build antes del arranque e instala guardas nativas antes de cargar el main. En macOS mantiene las ventanas ocultas, bloquea su activación y vigila el primer plano y el cierre de los procesos propios, con auditoría persistente. Aborta si no puede observar o mantener esas condiciones; no admite un arranque visible. El smoke obligatorio y los comandos están en [README.md](../README.md#escritorio).
 
 El arnés vive exclusivamente en `desktop/tests/`: el arranque normal y las capas de la aplicación conservan su comportamiento.
+
 ## Entorno de instalación
 
 Docker instala lo que el proyecto necesita con versiones comunes para el equipo: Node 24.22.3, pnpm 10.33.0 y APM 0.35.0. La imagen también instala Python 3.13 para ejecutar `api-sqlite/`; APM conserva además su propio Python integrado. La instalación se define en `Dockerfile`, `docker-compose.yml` y `docker/setup.sh`.
@@ -197,12 +210,12 @@ Docker es el instalador, no el entorno de trabajo. Cursor y Codex se usan sobre 
 
 Se descartó trabajar dentro de un Dev Container:
 
-| | Docker como instalador | Dev Container |
-| --- | --- | --- |
-| App de escritorio de Codex | Funciona | No abre proyectos dentro de un contenedor |
-| App de escritorio de Cursor | Funciona | Con su extensión de Dev Containers, que falla a menudo |
-| Ventana de Electron | En el ordenador, o desde Docker con `desktop-gui` y X11 | Sin pantalla dentro del contenedor |
-| Lo que necesita cada ordenador | Docker, git, `gh`, Node y bash | Docker y git |
-| Windows | WSL o Git Bash para el flujo | Resuelto: el contenedor es Linux |
+|                                | Docker como instalador                                  | Dev Container                                          |
+| ------------------------------ | ------------------------------------------------------- | ------------------------------------------------------ |
+| App de escritorio de Codex     | Funciona                                                | No abre proyectos dentro de un contenedor              |
+| App de escritorio de Cursor    | Funciona                                                | Con su extensión de Dev Containers, que falla a menudo |
+| Ventana de Electron            | En el ordenador, o desde Docker con `desktop-gui` y X11 | Sin pantalla dentro del contenedor                     |
+| Lo que necesita cada ordenador | Docker, git, `gh`, Node y bash                          | Docker y git                                           |
+| Windows                        | WSL o Git Bash para el flujo                            | Resuelto: el contenedor es Linux                       |
 
 `.devcontainer/devcontainer.json` usa la misma imagen para quien pueda abrir un Dev Container. Es opcional.
