@@ -159,9 +159,10 @@ api-postgresql/
       person-role-response.dto.ts
     person-course/
       person-course.module.ts
-      person-course.controller.ts  # GET /person-course y DELETE /person-course/:personId/:courseId
+      person-course.controller.ts  # GET, POST /person-course y DELETE /person-course/:personId/:courseId
       person-course.service.ts
       person-course-response.dto.ts
+      create-person-course.dto.ts
     organization/
       organization.module.ts
       organization.controller.ts

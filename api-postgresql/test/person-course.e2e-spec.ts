@@ -123,10 +123,11 @@ describe('Person course (e2e)', () => {
       )
       .expect(204)
 
-    await request(app.getHttpServer())
+    const listed = await request(app.getHttpServer())
       .get('/person-course')
       .expect(200)
-      .expect(POSTGRES_MOCK_PERSON_COURSES)
+    // el mock no cambia: el DELETE no borra nada en memoria
+    expect(listed.body).toEqual(POSTGRES_MOCK_PERSON_COURSES)
   })
 
   it('DELETE POSTGRES_MOCK enrollment returns 204 when DATABASE_URL is present', async () => {
@@ -202,5 +203,152 @@ describe('Person course (e2e)', () => {
     await request(app.getHttpServer())
       .delete(`/person-course/${UNKNOWN_PERSON_ID}/${UNKNOWN_COURSE_ID}`)
       .expect(503)
+  })
+
+  describe('POST /person-course', () => {
+    const mockPair = POSTGRES_MOCK_PERSON_COURSES[0]
+    const otherPair = {
+      person_id: '8c540e7a-5e8e-4744-9896-e6159dbd0c72',
+      course_id: 'a84c351e-80d1-4408-8d29-7915164ed167',
+    }
+
+    it('returns 201 for a new pair when DATABASE_URL is missing', async () => {
+      delete process.env.DATABASE_URL
+      delete process.env.POSTGRES_MOCK
+      await initApp()
+
+      await request(app.getHttpServer())
+        .post('/person-course')
+        .send(otherPair)
+        .expect(201)
+        .expect(otherPair)
+
+      const listed = await request(app.getHttpServer())
+        .get('/person-course')
+        .expect(200)
+      // el mock no cambia: el POST no guarda nada en memoria
+      expect(listed.body).toEqual(POSTGRES_MOCK_PERSON_COURSES)
+    })
+
+    it('returns 409 for the fixed mock pair when DATABASE_URL is missing', async () => {
+      delete process.env.DATABASE_URL
+      delete process.env.POSTGRES_MOCK
+      await initApp()
+
+      await request(app.getHttpServer())
+        .post('/person-course')
+        .send(mockPair)
+        .expect(409)
+    })
+
+    it('POSTGRES_MOCK returns 201 for a new pair and 409 for the fixed pair', async () => {
+      process.env.DATABASE_URL = 'postgres://unused:unused@127.0.0.1:1/unused'
+      process.env.POSTGRES_MOCK = '1'
+      await initApp()
+
+      await request(app.getHttpServer())
+        .post('/person-course')
+        .send(otherPair)
+        .expect(201)
+        .expect(otherPair)
+
+      await request(app.getHttpServer())
+        .post('/person-course')
+        .send(mockPair)
+        .expect(409)
+    })
+
+    it('returns 400 when the body is empty', async () => {
+      delete process.env.DATABASE_URL
+      delete process.env.POSTGRES_MOCK
+      await initApp()
+
+      await request(app.getHttpServer()).post('/person-course').send({}).expect(400)
+    })
+
+    it('returns 400 when an id is not a UUID', async () => {
+      delete process.env.DATABASE_URL
+      delete process.env.POSTGRES_MOCK
+      await initApp()
+
+      await request(app.getHttpServer())
+        .post('/person-course')
+        .send({ person_id: 'not-a-uuid', course_id: otherPair.course_id })
+        .expect(400)
+    })
+
+    it('returns 400 when the body is not JSON', async () => {
+      delete process.env.DATABASE_URL
+      delete process.env.POSTGRES_MOCK
+      await initApp()
+
+      await request(app.getHttpServer())
+        .post('/person-course')
+        .set('Content-Type', 'application/json')
+        .send('not-json')
+        .expect(400)
+    })
+
+    it('returns 201 when the service inserts the row', async () => {
+      delete process.env.DATABASE_URL
+      delete process.env.POSTGRES_MOCK
+      await initApp({
+        createPersonCourse: async (personId, courseId) => ({
+          person_id: personId,
+          course_id: courseId,
+        }),
+      })
+
+      await request(app.getHttpServer())
+        .post('/person-course')
+        .send(otherPair)
+        .expect(201)
+        .expect(otherPair)
+    })
+
+    it('returns 404 when Postgres reports a missing foreign key', async () => {
+      delete process.env.DATABASE_URL
+      delete process.env.POSTGRES_MOCK
+      await initApp({
+        createPersonCourse: async () => {
+          throw Object.assign(new Error('foreign key'), { code: '23503' })
+        },
+      })
+
+      await request(app.getHttpServer())
+        .post('/person-course')
+        .send(otherPair)
+        .expect(404)
+    })
+
+    it('returns 409 when Postgres reports a duplicate pair', async () => {
+      delete process.env.DATABASE_URL
+      delete process.env.POSTGRES_MOCK
+      await initApp({
+        createPersonCourse: async () => {
+          throw Object.assign(new Error('unique violation'), { code: '23505' })
+        },
+      })
+
+      await request(app.getHttpServer())
+        .post('/person-course')
+        .send(otherPair)
+        .expect(409)
+    })
+
+    it('returns 503 when the real insert fails', async () => {
+      process.env.DATABASE_URL = 'postgres://unused:unused@127.0.0.1:1/unused'
+      delete process.env.POSTGRES_MOCK
+      await initApp({
+        createPersonCourse: async () => {
+          throw new Error('PostgreSQL unavailable')
+        },
+      })
+
+      await request(app.getHttpServer())
+        .post('/person-course')
+        .send(otherPair)
+        .expect(503)
+    })
   })
 })
