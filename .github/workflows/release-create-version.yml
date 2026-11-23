@@ -1,4 +1,4 @@
-name: Crear tag de versión
+name: "Release: create version"
 
 # Cuándo se ejecuta: cada vez que se actualiza la rama main
 on:
@@ -11,7 +11,7 @@ permissions:
 
 # Si se actualiza main dos veces seguidas, las ejecuciones van en fila, no a la vez
 concurrency:
-  group: crear-tag-version
+  group: release-create-version
   cancel-in-progress: false
 
 jobs:

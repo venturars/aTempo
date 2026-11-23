@@ -1,4 +1,4 @@
-name: Discord PR notifications
+name: "Discord: notify pull request"
 
 on:
   pull_request_target:

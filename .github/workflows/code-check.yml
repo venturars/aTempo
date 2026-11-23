@@ -1,8 +1,8 @@
 # Comprueba cada pull request a staging. Cada carpeta con un pnpm-lock.yaml es un paquete:
 # se comprueban los que la pull request cambia (todos si cambia algo compartido) con lint,
 # typecheck y build-storybook, si el paquete tiene el script.
-# La única comprobación obligatoria es «CI / ci»: falla si algún paquete falla.
-name: CI
+# La única comprobación obligatoria es «Code: check / ci»: falla si algún paquete falla.
+name: "Code: check"
 
 on:
   pull_request:
@@ -18,7 +18,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  plan:
+  select-packages:
     runs-on: ubuntu-latest
     outputs:
       packages: ${{ steps.packages.outputs.packages }}
@@ -55,14 +55,14 @@ jobs:
 
   # Sin «name»: GitHub lo llama «check (<paquete>)», y solo «check» si se salta
   check:
-    needs: plan
-    if: needs.plan.outputs.packages != '[]'
+    needs: select-packages
+    if: needs.select-packages.outputs.packages != '[]'
     runs-on: ubuntu-latest
     strategy:
       # Un paquete en rojo no detiene a los demás
       fail-fast: false
       matrix:
-        package: ${{ fromJSON(needs.plan.outputs.packages) }}
+        package: ${{ fromJSON(needs.select-packages.outputs.packages) }}
     defaults:
       run:
         working-directory: ${{ matrix.package }}
@@ -89,7 +89,7 @@ jobs:
 
   # La comprobación obligatoria. Pasa si no había paquetes que comprobar.
   ci:
-    needs: [plan, check]
+    needs: [select-packages, check]
     if: always()
     runs-on: ubuntu-latest
     steps:
