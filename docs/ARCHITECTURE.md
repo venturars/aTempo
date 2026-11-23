@@ -196,7 +196,7 @@ El arnés vive exclusivamente en `desktop/tests/`: el arranque normal y las capa
 
 Docker instala lo que el proyecto necesita con versiones comunes para el equipo: Node 24.22.3, pnpm 10.33.0 y APM 0.35.0. La imagen también instala Python 3.13 para ejecutar `api-sqlite/`; APM conserva además su propio Python integrado. La instalación se define en `Dockerfile`, `docker-compose.yml` y `docker/setup.sh`.
 
-- La imagen parte de `node:24.22.3-trixie`. El binario oficial de APM se comprueba con su SHA-256. Python 3.13 y su soporte de venv se instalan desde un snapshot Debian fijado.
+- La imagen parte de `node:24.22.3-trixie`. El binario oficial de APM se comprueba con su SHA-256. Python 3.13 y su soporte de venv se instalan desde un snapshot Debian fijado. apt no comprueba la caducidad de ese snapshot: los `Release` de `trixie-updates` y `trixie-security` caducan a los siete días y la construcción fallaría una semana después de fijar la fecha. La firma sí se comprueba.
 - `setup` ejecuta `apm install`, instala con lockfiles los paquetes Node de escritorio, Storybook, las APIs, `blockend/` y `postgres/`, y prepara el venv de `api-sqlite/`.
 - Las skills y agentes de delivery-workflow quedan en la carpeta del proyecto para Cursor, Codex y Claude Code.
 - Los `node_modules` y el venv Python viven en volúmenes Docker separados por paquete; pnpm comparte su caché. Compose los crea vacíos y de root. `docker/entrypoint.sh` los deja del usuario `node` en cada arranque y el comando sigue con ese usuario. Las dependencias Linux no se mezclan con las del ordenador.
