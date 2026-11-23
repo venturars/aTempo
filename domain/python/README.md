@@ -4,7 +4,7 @@ SDK Python de aTempo. Paquete librería dentro de `domain/`. Tipos de `session` 
 
 El flujo de producto es Frontend → `api-sqlite` → `domain/python` → SQLite. Este paquete abre la base. Flask no escribe SQL.
 
-Las funciones públicas reciben y devuelven un objeto (RORO). Las queries viven en `python_domain/sqlite/queries/`. El pool y los repositorios viven en `python_domain/sqlite/`. Los casos de uso validan parámetros, aplican reglas, persisten y sanean la respuesta. Un fallo de tipo o de regla lanza un error de dominio (`ValidationError`, `NotFoundError`, `ConflictError`, `ConfigurationError` o `PersistenceError`).
+Las funciones públicas reciben y devuelven un objeto (RORO). Las queries viven en `python_domain/sqlite/queries/`. El pool y los ejecutores viven en `python_domain/sqlite/`. Los casos de uso validan parámetros, aplican reglas, persisten y sanean la respuesta. Un fallo de tipo o de regla lanza un error de dominio (`ValidationError`, `NotFoundError`, `ConflictError`, `ConfigurationError` o `PersistenceError`).
 
 ## Instalar y probar
 

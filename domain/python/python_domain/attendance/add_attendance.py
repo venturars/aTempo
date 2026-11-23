@@ -6,7 +6,7 @@ from python_domain.attendance.assert_attendance_available import (
 from python_domain.errors import PersistenceError
 from python_domain.session.assert_session_exists import assert_session_exists
 from python_domain.sqlite.pool import SqliteQuery, with_transaction
-from python_domain.sqlite.repositories.attendance import insert_attendance
+from python_domain.sqlite.executors.attendance import insert_attendance
 from python_domain.types.attendance import (
     Attendance,
     assert_attendance,

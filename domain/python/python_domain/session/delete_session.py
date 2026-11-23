@@ -1,7 +1,7 @@
 from typing import TypedDict
 
 from python_domain.sqlite.pool import SqliteQuery, with_transaction
-from python_domain.sqlite.repositories.session import (
+from python_domain.sqlite.executors.session import (
     delete_session_attendances,
     delete_session_by_id,
 )

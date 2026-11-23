@@ -1,6 +1,6 @@
 from typing import TypedDict
 
-from python_domain.sqlite.repositories.session import list_sessions as list_session_rows
+from python_domain.sqlite.executors.session import list_sessions as list_session_rows
 from python_domain.types.session import Session, assert_session
 
 

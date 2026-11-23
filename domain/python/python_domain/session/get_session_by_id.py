@@ -1,6 +1,6 @@
 from typing import TypedDict
 
-from python_domain.sqlite.repositories.session import find_session_by_id
+from python_domain.sqlite.executors.session import find_session_by_id
 from python_domain.types.assert_values import assert_uuid
 from python_domain.types.session import Session, assert_session
 

@@ -2,7 +2,7 @@ from typing import TypedDict
 
 from python_domain.errors import ConflictError
 from python_domain.sqlite.pool import SqliteQuery
-from python_domain.sqlite.repositories.attendance import attendance_exists
+from python_domain.sqlite.executors.attendance import attendance_exists
 
 
 class AssertAttendanceAvailableInput(TypedDict):

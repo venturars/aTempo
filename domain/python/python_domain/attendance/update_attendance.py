@@ -2,7 +2,7 @@ from typing import TypedDict
 
 from python_domain.session.assert_session_exists import assert_session_exists
 from python_domain.sqlite.pool import SqliteQuery, with_transaction
-from python_domain.sqlite.repositories.attendance import update_attendance_row
+from python_domain.sqlite.executors.attendance import update_attendance_row
 from python_domain.types.attendance import (
     Attendance,
     assert_attendance,

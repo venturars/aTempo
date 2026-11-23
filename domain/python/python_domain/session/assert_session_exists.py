@@ -2,7 +2,7 @@ from typing import TypedDict
 
 from python_domain.errors import NotFoundError
 from python_domain.sqlite.pool import SqliteQuery
-from python_domain.sqlite.repositories.session import find_session_by_id
+from python_domain.sqlite.executors.session import find_session_by_id
 from python_domain.types.session import Session
 
 

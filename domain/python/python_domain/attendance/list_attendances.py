@@ -1,6 +1,6 @@
 from typing import TypedDict
 
-from python_domain.sqlite.repositories.attendance import (
+from python_domain.sqlite.executors.attendance import (
     list_attendances as list_attendance_rows,
 )
 from python_domain.types.attendance import Attendance, assert_attendance

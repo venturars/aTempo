@@ -2,7 +2,7 @@ from typing import TypedDict
 from uuid import uuid4
 
 from python_domain.errors import PersistenceError
-from python_domain.sqlite.repositories.session import insert_session
+from python_domain.sqlite.executors.session import insert_session
 from python_domain.types.session import (
     Session,
     SessionCreate,

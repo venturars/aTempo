@@ -1,6 +1,6 @@
 from typing import TypedDict
 
-from python_domain.sqlite.repositories.attendance import delete_attendance
+from python_domain.sqlite.executors.attendance import delete_attendance
 from python_domain.types.assert_values import assert_uuid
 
 

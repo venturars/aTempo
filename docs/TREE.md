@@ -119,7 +119,7 @@ domain/
         map_error.py        # UNIQUE/FK a errores de dominio
         check.py            # check(): SELECT 1
         queries/            # SQL por entidad
-        repositories/       # Ejecutan las queries
+        executors/          # Ejecutan las queries
       session/
       attendance/
     tests/
