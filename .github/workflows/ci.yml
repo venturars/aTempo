@@ -87,11 +87,11 @@ jobs:
       - run: pnpm run --if-present typecheck
       - run: pnpm run --if-present build-storybook
 
-  python-domain:
+  python:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: domain/python-domain
+        working-directory: domain/python
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -102,7 +102,7 @@ jobs:
 
   # La comprobación obligatoria. Pasa si no había paquetes que comprobar.
   ci:
-    needs: [plan, check, python-domain]
+    needs: [plan, check, python]
     if: always()
     runs-on: ubuntu-latest
     steps:

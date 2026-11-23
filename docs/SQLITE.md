@@ -11,7 +11,7 @@ Dos tablas:
 - `session` — `professor_id` (UUID de `person.id`), `late_after_minutes`, `expected_count`, `status` (`open` | `closing` | `closed`), `closed_at` solo en `closed`
 - `attendance` — PK `(session_id, student_id)`; una fila por alumno del roster; `status` (`present` | `present_late` | `absent` | `notified_absence`); `check_in_method` (`button` | `qr`); `checked_in_at`. `present` y `present_late` llevan método y hora de fichaje dentro de la sesión; `absent` y `notified_absence` van sin fichaje.
 
-`course_id`, `student_id` y `professor_id` son referencias lógicas al core, no FK entre bases. `python-domain` no comprueba la matrícula.
+`course_id`, `student_id` y `professor_id` son referencias lógicas al core, no FK entre bases. `python` no comprueba la matrícula.
 
 `expected_count` vive **solo** aquí. No va al contrato.
 

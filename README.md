@@ -42,11 +42,11 @@ El lector del alumno ofrece lecturas simuladas y no usa cámara. Estos flujos no
 | Carpeta | Qué es |
 | --- | --- |
 | `desktop/` | Prototipo para profesor y alumno con Electron y React; las demos usan datos en memoria. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/sign-up` para el registro. |
-| `domain/` | SDK: `python-domain/` (Python, SQLite de fichaje). No es un servicio HTTP. |
+| `domain/` | SDK: `python/` (Python, SQLite de fichaje). No es un servicio HTTP. |
 | `api-router/` | API REST con NestJS. |
 | `api-postgresql/` | API REST con NestJS entre la SDK y PostgreSQL. |
 | `api-rustfs/` | API REST con Express entre la SDK y RustFS (persistencia de objetos). |
-| `api-sqlite/` | Servicio Flask con Pydantic y SQLAlchemy Core entre `domain/python-domain/` y SQLite. |
+| `api-sqlite/` | Servicio Flask con Pydantic y SQLAlchemy Core entre `domain/python/` y SQLite. |
 | `postgres/` | Core PostgreSQL y Drizzle Studio para ver sus tablas. No se abre desde el escritorio ni desde el API-router. |
 | `sqlite/` | SQLite operativo de fichaje y Datasette. Distinto del `atempo.sqlite` del escritorio. |
 | `rustfs/` | Justificantes (bucket `justifications`) y consola de RustFS. |
@@ -56,7 +56,7 @@ El lector del alumno ofrece lecturas simuladas y no usa cámara. Estos flujos no
 | `docs/` | Cómo se construye: constitución, arquitectura, estilo, árbol y modelo de cada almacén. |
 | `permanent-data.md` | Enlaces entre las cuatro bases. No es un quinto almacén. |
 
-Cada servicio tiene sus dependencias propias y no hay workspace en la raíz. Los paquetes JavaScript usan pnpm 10.33.0 y versiones fijas. `api-sqlite/` y `domain/python-domain/` usan Python y dependencias fijadas en su `pyproject.toml`. `postgres/`, `sqlite/`, `blockend/` y `rustfs/` se instalan y arrancan en el ordenador. Compose de la raíz orquesta los mismos procesos, cada uno con su perfil (`db`, `sqlite`, `blockend` y `rustfs`); no es requisito. Ninguno entra en el compose de instalación. El modelo de cada una está en `docs/` (nombres en MAYÚSCULAS) y el arranque nativo en su `README.md`.
+Cada servicio tiene sus dependencias propias y no hay workspace en la raíz. Los paquetes JavaScript usan pnpm 10.33.0 y versiones fijas. `api-sqlite/` y `domain/python/` usan Python y dependencias fijadas en su `pyproject.toml`. `postgres/`, `sqlite/`, `blockend/` y `rustfs/` se instalan y arrancan en el ordenador. Compose de la raíz orquesta los mismos procesos, cada uno con su perfil (`db`, `sqlite`, `blockend` y `rustfs`); no es requisito. Ninguno entra en el compose de instalación. El modelo de cada una está en `docs/` (nombres en MAYÚSCULAS) y el arranque nativo en su `README.md`.
 
 | Almacén | Visor | URL |
 | --- | --- | --- |
@@ -369,7 +369,7 @@ La API queda en <http://localhost:3001> y PostgreSQL en <http://localhost:5433> 
 
 ## API-sqlite
 
-`api-sqlite/` es el servicio de persistencia local previsto para `domain/python-domain/`. Todavía no hay integración entre estos paquetes. Su base SQLite es distinta de la base local de Electron.
+`api-sqlite/` es el servicio de persistencia local previsto para `domain/python/`. Todavía no hay integración entre estos paquetes. Su base SQLite es distinta de la base local de Electron.
 
 Para usar el servicio en Docker, primero ejecuta `docker compose run --rm setup` y después:
 

@@ -101,36 +101,27 @@ permanent-data.md
 ```text
 domain/
   README.md
-  python-domain/
+  python/
     pyproject.toml
     README.md
     python_domain/
       __init__.py
+      errors/
+        __init__.py
+        domain_error.py     # DomainError y subclases
       types/
         assert_values.py
         session.py
         attendance.py
       sqlite/
-        db.py
-        check.py
+        columns.py
+        pool.py             # SQLITE_DATABASE_URL, BEGIN y BEGIN IMMEDIATE
+        map_error.py        # UNIQUE/FK a errores de dominio
+        check.py            # check(): SELECT 1
+        queries/            # SQL por entidad
+        repositories/       # Ejecutan las queries
       session/
-        columns.py
-        list_sessions.py
-        get_session_by_id.py
-        list_sessions_by_course.py
-        list_sessions_by_professor.py
-        create_session.py
-        update_session.py
-        delete_session.py
-        assert_session_exists.py
       attendance/
-        columns.py
-        list_attendances.py
-        list_attendances_by_session.py
-        add_attendance.py
-        update_attendance.py
-        remove_attendance.py
-        assert_attendance_available.py
     tests/
       helpers.py
       test_sqlite.py
