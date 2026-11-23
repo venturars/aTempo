@@ -4,7 +4,7 @@ SDK TypeScript de justificantes de aTempo. Paquete librería dentro de `domain/`
 
 El flujo de producto es Frontend → `api-rustfs` → `domain/rustfs` → RustFS. Este paquete abre el almacén. Express no importa este SDK todavía.
 
-Las funciones públicas reciben y devuelven un objeto (RORO). El cliente S3, los comandos y los repositorios viven en `src/rustfs/`. Los casos de uso validan parámetros, aplican reglas, persisten y sanean la respuesta. Un fallo de tipo o de regla lanza un error de dominio (`ValidationError`, `ConflictError`, `ConfigurationError` o `PersistenceError`). El SDK no exporta el `S3Client` ni borra objetos.
+Las funciones públicas reciben y devuelven un objeto (RORO). El cliente S3, los comandos y el almacén viven en `src/rustfs/`. Los casos de uso validan parámetros, aplican reglas, persisten y sanean la respuesta. Un fallo de tipo o de regla lanza un error de dominio (`ValidationError`, `ConflictError`, `ConfigurationError` o `PersistenceError`). El SDK no exporta el `S3Client` ni borra objetos.
 
 ## Instalar y probar
 

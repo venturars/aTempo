@@ -1,4 +1,4 @@
-import { justificationKeyExists } from '../rustfs/repositories/justification'
+import { justificationKeyExists } from '../rustfs/store/justification'
 import { assertUuid, normalizeUuid } from '../types/assert'
 
 export type JustificationExistsInput = {

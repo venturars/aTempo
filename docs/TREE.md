@@ -125,7 +125,7 @@ domain/
         check.ts
         commands/
           justification.ts
-        repositories/
+        store/
           justification.ts
       justification/
         put-justification.ts

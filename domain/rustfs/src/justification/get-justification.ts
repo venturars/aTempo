@@ -1,4 +1,4 @@
-import { findJustificationById } from '../rustfs/repositories/justification'
+import { findJustificationById } from '../rustfs/store/justification'
 import { assertUuid, normalizeUuid } from '../types/assert'
 import type { Justification } from '../types/justification'
 

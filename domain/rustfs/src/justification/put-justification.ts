@@ -2,7 +2,7 @@ import { ConflictError } from '../errors'
 import {
   insertJustification,
   justificationKeyExists,
-} from '../rustfs/repositories/justification'
+} from '../rustfs/store/justification'
 import {
   assertJustificationCreate,
   type Justification,
