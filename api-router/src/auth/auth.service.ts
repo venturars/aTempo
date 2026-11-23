@@ -1,35 +1,76 @@
-import { createPublicKey, verify, type JsonWebKey as CryptoJsonWebKey } from 'node:crypto'
-import { Injectable, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common'
+import {
+  createPublicKey,
+  verify,
+  type JsonWebKey as CryptoJsonWebKey,
+} from 'node:crypto'
+import {
+  Injectable,
+  ServiceUnavailableException,
+  UnauthorizedException,
+} from '@nestjs/common'
 import { LoginResponseDto } from './login-response.dto'
 import { MeResponseDto } from './me-response.dto'
 
-type Auth0TokenResponse = {
-  access_token?: unknown
-  expires_in?: unknown
-  error?: unknown
+type JwtHeader = { alg: 'RS256'; kid: string }
+type JwtPayload = {
+  aud: string | string[]
+  exp: number
+  iss: string
+  nbf?: number
+  sub: string
+}
+type Auth0RsaKey = CryptoJsonWebKey & {
+  kid: string
+  kty: 'RSA'
+  n: string
+  e: string
 }
 
-type JwtHeader = { alg?: unknown; kid?: unknown }
-type JwtPayload = {
-  aud?: unknown
-  exp?: unknown
-  iss?: unknown
-  nbf?: unknown
-  sub?: unknown
+// Los datos externos se validan antes de usarlos como claims o claves RSA.
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
-type Auth0JsonWebKey = {
-  kid?: string
-  kty?: string
-  [key: string]: unknown
+
+function isJwtHeader(value: unknown): value is JwtHeader {
+  return (
+    isRecord(value) && value.alg === 'RS256' && typeof value.kid === 'string'
+  )
 }
-type JsonWebKeySet = { keys?: Auth0JsonWebKey[] }
+
+function isJwtPayload(value: unknown): value is JwtPayload {
+  if (!isRecord(value)) return false
+
+  const audienceIsValid =
+    typeof value.aud === 'string' ||
+    (Array.isArray(value.aud) &&
+      value.aud.every((audience: unknown) => typeof audience === 'string'))
+
+  return (
+    audienceIsValid &&
+    typeof value.exp === 'number' &&
+    typeof value.iss === 'string' &&
+    (value.nbf === undefined || typeof value.nbf === 'number') &&
+    typeof value.sub === 'string' &&
+    value.sub.length > 0
+  )
+}
+
+function isAuth0RsaKey(value: unknown): value is Auth0RsaKey {
+  return (
+    isRecord(value) &&
+    value.kty === 'RSA' &&
+    typeof value.kid === 'string' &&
+    typeof value.n === 'string' &&
+    typeof value.e === 'string'
+  )
+}
 
 const auth0RequestTimeoutMs = 10_000
 const jwksCacheDurationMs = 5 * 60_000
 
 @Injectable()
 export class AuthService {
-  private cachedKeys: Auth0JsonWebKey[] = []
+  private cachedKeys: Auth0RsaKey[] = []
   private cachedKeysUntil = 0
 
   async login(email: string, password: string): Promise<LoginResponseDto> {
@@ -45,27 +86,39 @@ export class AuthService {
         client_id: config.clientId,
         client_secret: config.clientSecret,
         audience: config.audience,
-        scope: 'openid profile email'
+        scope: 'openid profile email',
       }),
-      signal: AbortSignal.timeout(auth0RequestTimeoutMs)
+      signal: AbortSignal.timeout(auth0RequestTimeoutMs),
     }).catch(() => {
-      throw new ServiceUnavailableException({ code: 'AUTH_PROVIDER_UNAVAILABLE' })
+      throw new ServiceUnavailableException({
+        code: 'AUTH_PROVIDER_UNAVAILABLE',
+      })
     })
 
-    const result = (await response.json().catch(() => ({}))) as Auth0TokenResponse
-    if (result.error === 'invalid_grant') {
+    const result: unknown = await response.json().catch(() => null)
+    if (isRecord(result) && result.error === 'invalid_grant') {
       throw new UnauthorizedException({ code: 'INVALID_CREDENTIALS' })
     }
     if (!response.ok) {
-      throw new ServiceUnavailableException({ code: 'AUTH_PROVIDER_UNAVAILABLE' })
+      throw new ServiceUnavailableException({
+        code: 'AUTH_PROVIDER_UNAVAILABLE',
+      })
     }
-    if (typeof result.access_token !== 'string' || result.access_token.length === 0) {
-      throw new ServiceUnavailableException({ code: 'AUTH_PROVIDER_INVALID_RESPONSE' })
+    if (
+      !isRecord(result) ||
+      typeof result.access_token !== 'string' ||
+      result.access_token.length === 0
+    ) {
+      throw new ServiceUnavailableException({
+        code: 'AUTH_PROVIDER_INVALID_RESPONSE',
+      })
     }
 
     return {
       accessToken: result.access_token,
-      ...(typeof result.expires_in === 'number' ? { expiresIn: result.expires_in } : {})
+      ...(typeof result.expires_in === 'number'
+        ? { expiresIn: result.expires_in }
+        : {}),
     }
   }
 
@@ -76,32 +129,45 @@ export class AuthService {
 
     const config = this.getAuth0Config()
     const [encodedHeader, encodedPayload, encodedSignature] = token.split('.')
-    if (encodedHeader === undefined || encodedPayload === undefined || encodedSignature === undefined) {
+    if (
+      encodedHeader === undefined ||
+      encodedPayload === undefined ||
+      encodedSignature === undefined
+    ) {
       throw this.invalidToken()
     }
 
-    let header: JwtHeader
-    let payload: JwtPayload
+    let header: unknown
+    let payload: unknown
     let signature: Buffer
     try {
-      header = JSON.parse(Buffer.from(encodedHeader, 'base64url').toString('utf8')) as JwtHeader
-      payload = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString('utf8')) as JwtPayload
+      header = JSON.parse(
+        Buffer.from(encodedHeader, 'base64url').toString('utf8'),
+      )
+      payload = JSON.parse(
+        Buffer.from(encodedPayload, 'base64url').toString('utf8'),
+      )
       signature = Buffer.from(encodedSignature, 'base64url')
     } catch {
       throw this.invalidToken()
     }
 
-    if (header.alg !== 'RS256' || typeof header.kid !== 'string') throw this.invalidToken()
+    if (!isJwtHeader(header) || !isJwtPayload(payload))
+      throw this.invalidToken()
 
     let keys = await this.getSigningKeys(config.issuer).catch(() => {
-      throw new ServiceUnavailableException({ code: 'AUTH_PROVIDER_UNAVAILABLE' })
+      throw new ServiceUnavailableException({
+        code: 'AUTH_PROVIDER_UNAVAILABLE',
+      })
     })
-    let jwk = keys.find((key) => key.kid === header.kid && key.kty === 'RSA')
+    let jwk = keys.find((key) => key.kid === header.kid)
     if (jwk === undefined) {
       keys = await this.getSigningKeys(config.issuer, true).catch(() => {
-        throw new ServiceUnavailableException({ code: 'AUTH_PROVIDER_UNAVAILABLE' })
+        throw new ServiceUnavailableException({
+          code: 'AUTH_PROVIDER_UNAVAILABLE',
+        })
       })
-      jwk = keys.find((key) => key.kid === header.kid && key.kty === 'RSA')
+      jwk = keys.find((key) => key.kid === header.kid)
     }
     if (jwk === undefined) throw this.invalidToken()
 
@@ -110,8 +176,8 @@ export class AuthService {
       signatureIsValid = verify(
         'RSA-SHA256',
         Buffer.from(`${encodedHeader}.${encodedPayload}`),
-        createPublicKey({ key: jwk as unknown as CryptoJsonWebKey, format: 'jwk' }),
-        signature
+        createPublicKey({ key: jwk, format: 'jwk' }),
+        signature,
       )
     } catch {
       throw this.invalidToken()
@@ -120,19 +186,16 @@ export class AuthService {
     const now = Math.floor(Date.now() / 1000)
     const audienceMatches =
       payload.aud === config.audience ||
-      (Array.isArray(payload.aud) && payload.aud.some((value) => value === config.audience))
+      (Array.isArray(payload.aud) &&
+        payload.aud.some((value) => value === config.audience))
     const issuerMatches = payload.iss === config.issuer
 
     if (
       !signatureIsValid ||
       !issuerMatches ||
       !audienceMatches ||
-      typeof payload.exp !== 'number' ||
       payload.exp <= now ||
-      (payload.nbf !== undefined &&
-        (typeof payload.nbf !== 'number' || payload.nbf > now)) ||
-      typeof payload.sub !== 'string' ||
-      payload.sub.length === 0
+      (payload.nbf !== undefined && payload.nbf > now)
     ) {
       throw this.invalidToken()
     }
@@ -140,21 +203,32 @@ export class AuthService {
     return { sub: payload.sub }
   }
 
-  private getAuth0Config(): { issuer: string; clientId: string; clientSecret: string; audience: string } {
+  private getAuth0Config(): {
+    issuer: string
+    clientId: string
+    clientSecret: string
+    audience: string
+  } {
     const domain = process.env.AUTH0_DOMAIN?.trim()
     const clientId = process.env.AUTH0_CLIENT_ID?.trim()
     const clientSecret = process.env.AUTH0_CLIENT_SECRET?.trim()
     const audience = process.env.AUTH0_AUDIENCE?.trim()
 
     if (!domain || !clientId || !clientSecret || !audience) {
-      throw new ServiceUnavailableException({ code: 'AUTH_PROVIDER_NOT_CONFIGURED' })
+      throw new ServiceUnavailableException({
+        code: 'AUTH_PROVIDER_NOT_CONFIGURED',
+      })
     }
 
     let tenantUrl: URL
     try {
-      tenantUrl = new URL(domain.startsWith('https://') ? domain : `https://${domain}`)
+      tenantUrl = new URL(
+        domain.startsWith('https://') ? domain : `https://${domain}`,
+      )
     } catch {
-      throw new ServiceUnavailableException({ code: 'AUTH_PROVIDER_NOT_CONFIGURED' })
+      throw new ServiceUnavailableException({
+        code: 'AUTH_PROVIDER_NOT_CONFIGURED',
+      })
     }
     if (
       tenantUrl.protocol !== 'https:' ||
@@ -164,31 +238,42 @@ export class AuthService {
       tenantUrl.search !== '' ||
       tenantUrl.hash !== ''
     ) {
-      throw new ServiceUnavailableException({ code: 'AUTH_PROVIDER_NOT_CONFIGURED' })
+      throw new ServiceUnavailableException({
+        code: 'AUTH_PROVIDER_NOT_CONFIGURED',
+      })
     }
 
     return {
       issuer: `${tenantUrl.origin}/`,
       clientId,
       clientSecret,
-      audience
+      audience,
     }
   }
 
-  private async getSigningKeys(issuer: string, refresh = false): Promise<Auth0JsonWebKey[]> {
-    if (!refresh && this.cachedKeys.length > 0 && this.cachedKeysUntil > Date.now()) {
+  private async getSigningKeys(
+    issuer: string,
+    refresh = false,
+  ): Promise<Auth0RsaKey[]> {
+    if (
+      !refresh &&
+      this.cachedKeys.length > 0 &&
+      this.cachedKeysUntil > Date.now()
+    ) {
       return this.cachedKeys
     }
 
     const response = await fetch(`${issuer}.well-known/jwks.json`, {
-      signal: AbortSignal.timeout(auth0RequestTimeoutMs)
+      signal: AbortSignal.timeout(auth0RequestTimeoutMs),
     })
     if (!response.ok) throw new Error('JWKS request failed')
 
-    const keySet = (await response.json()) as JsonWebKeySet
-    if (!Array.isArray(keySet.keys)) throw new Error('JWKS response is invalid')
+    const keySet: unknown = await response.json()
+    if (!isRecord(keySet) || !Array.isArray(keySet.keys))
+      throw new Error('JWKS response is invalid')
 
-    this.cachedKeys = keySet.keys
+    const rawKeys: unknown[] = keySet.keys
+    this.cachedKeys = rawKeys.filter(isAuth0RsaKey)
     this.cachedKeysUntil = Date.now() + jwksCacheDurationMs
     return this.cachedKeys
   }
