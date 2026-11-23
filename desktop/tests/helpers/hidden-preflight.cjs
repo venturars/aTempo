@@ -11,7 +11,8 @@ function preflight() {
     function inspect(node) {
       if (
         ts.isNewExpression(node) &&
-        node.expression.getText(tree) !== 'node_sqlite.DatabaseSync'
+        // Error y URL no abren ventanas: los usa la validación del router de Auth0 (#180).
+        !['node_sqlite.DatabaseSync', 'Error', 'URL'].includes(node.expression.getText(tree))
       ) {
         if (!['BrowserWindow', 'electron.BrowserWindow'].includes(node.expression.getText(tree))) {
           throw new Error(`Unreviewed constructor in ${file}`)
