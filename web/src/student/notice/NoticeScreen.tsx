@@ -99,7 +99,7 @@ export function NoticeScreen(): React.JSX.Element {
       reason: reason.trim(),
       attachmentName: documentName
     })
-    showFlash('¡Gracias por avisar! Tu profe ya lo sabe.')
+    showFlash('Gracias por avisar. Tu profe ya lo sabe.')
     void navigate({ to: '/student/dashboard' })
   }
 

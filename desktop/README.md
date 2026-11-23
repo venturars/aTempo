@@ -1,24 +1,18 @@
 # desktop
 
-An Electron application with React and TypeScript
+App de escritorio del profesor, con Electron, React y TypeScript. Las cuentas de ejemplo, la invitación y el QR se prueban como explica el [README raíz](../README.md).
 
-## Recommended IDE Setup
+## Arrancar
 
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
-
-## Project Setup
-
-### Install
+Con Node 24 y pnpm 10.33.0:
 
 ```bash
-$ pnpm install
+$ pnpm install --frozen-lockfile
+$ pnpm dev
+$ pnpm dev -- --invitation=731905
 ```
 
-### Development
-
-```bash
-$ pnpm run dev
-```
+El último comando simula el enlace de invitación de Lucía.
 
 ### Visual test
 

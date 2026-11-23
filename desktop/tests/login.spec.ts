@@ -3,7 +3,7 @@ import { launchHiddenElectron } from './helpers/electron'
 
 const dayNames = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes']
 const dayLetters = ['L', 'M', 'X', 'J', 'V']
-const sessionMarkLabels = Array.from({ length: 12 }, () => 'Presente').concat('Retraso', 'Ausencia')
+const sessionMarkLabels = Array.from({ length: 12 }, () => 'Presente').concat('Tarde', 'Ausencia')
 const absentFromScreen = [
   'Google',
   'Microsoft',
@@ -104,7 +104,7 @@ async function expectTrimester(window: Page): Promise<void> {
 
 async function expectLegend(window: Page): Promise<void> {
   const legend = window.getByRole('list').filter({ hasText: 'Presente' })
-  await expect(legend.getByRole('listitem')).toHaveText(['Presente', 'Retraso', 'Ausencia'])
+  await expect(legend.getByRole('listitem')).toHaveText(['Presente', 'Tarde', 'Ausencia'])
 }
 
 async function expectLoginFields(window: Page): Promise<void> {
@@ -269,9 +269,9 @@ test('opens the professor panel from the demo login and keeps attendance navigat
     await expect(window.getByRole('heading', { level: 1, name: 'Diego Torres' })).toBeVisible()
 
     await window.getByRole('button', { name: 'Ajustes' }).click()
-    await window.getByRole('button', { name: 'Tinta' }).click()
+    await window.getByRole('button', { name: 'Claro' }).click()
     await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-claro')
-    await window.getByRole('button', { name: 'Noche' }).click()
+    await window.getByRole('button', { name: 'Oscuro' }).click()
     await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-oscuro')
   })
 })

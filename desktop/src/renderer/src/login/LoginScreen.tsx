@@ -128,7 +128,7 @@ function ClaimPanel(): React.JSX.Element {
     >
       <div className="flex flex-col gap-2">
         <p>aTempo</p>
-        <h1 id="claim" className="text-2xl font-medium">
+        <h1 id="claim" className="text-2xl font-semibold tracking-tight">
           Pasar lista ya no es parte de la clase.
         </h1>
       </div>
@@ -229,7 +229,7 @@ function ActivateForm({ invitation }: { invitation: Invitation }): React.JSX.Ele
   return (
     <section className="flex w-full max-w-md flex-col gap-8 rounded-box bg-base-100 p-4 md:p-8">
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-medium">Hola, {firstName}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Hola, {firstName}</h1>
         <p className="text-base-content/70">
           Te han invitado a aTempo. Elige una contraseña para entrar con {invitation.email}.
         </p>

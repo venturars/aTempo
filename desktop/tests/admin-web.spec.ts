@@ -123,7 +123,7 @@ test('validates and cancels course and session forms', async ({ page }) => {
   await expect(page.getByRole('alert')).toContainText('profesor')
   await page.getByRole('button', { name: 'Cancelar', exact: true }).click()
   await expect(page.getByRole('row')).toHaveCount(3)
-  await page.getByRole('link', { name: 'Desarrollo web', exact: true }).click()
+  await page.getByRole('link', { name: 'AI Engineering', exact: true }).click()
   await page.getByRole('button', { name: 'Programar sesión', exact: true }).click()
   await page.getByRole('button', { name: 'Guardar sesión', exact: true }).click()
   await expect(page.getByRole('alert')).toContainText('fecha')
@@ -139,11 +139,11 @@ test('dual-role admin sees only assigned classes in the reused read-only view', 
   await enterAdmin(page)
   await createCourse(page, 'Mi curso nuevo', 'Miguel Rodríguez', 'Ana López')
   await adminNav(page, 'Mis clases')
-  await expect(page.getByRole('link', { name: 'Desarrollo web', exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'AI Engineering', exact: true })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Mi curso nuevo', exact: true })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Diseño UX/UI', exact: true })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Crear curso', exact: true })).toHaveCount(0)
-  await page.getByRole('link', { name: 'Desarrollo web', exact: true }).click()
+  await page.getByRole('link', { name: 'AI Engineering', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Programar sesión', exact: true })).toHaveCount(0)
   await expect(page.getByRole('button', { name: /Editar|Eliminar/ })).toHaveCount(0)
   await page.getByRole('table', { name: 'Sesiones del curso' }).getByRole('link').click()
@@ -181,10 +181,7 @@ for (const width of [390, 1280]) {
   for (const theme of ['atempo-oscuro', 'atempo-claro']) {
     test(`admin forms and tables fit ${width}px in ${theme}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 })
-      await page.addInitScript(
-        (name) => localStorage.setItem('atempo-student-theme', name),
-        theme
-      )
+      await page.addInitScript((name) => localStorage.setItem('atempo-student-theme', name), theme)
       await enterAdmin(page)
       await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
       await page.screenshot({
@@ -381,7 +378,7 @@ test('admin details can be edited while their actual roles remain read-only', as
     page.getByRole('button', { name: 'Eliminar Miguel Docente', exact: true })
   ).toHaveCount(0)
   await adminNav(page, 'Mis clases')
-  await expect(page.getByRole('link', { name: 'Desarrollo web', exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'AI Engineering', exact: true })).toBeVisible()
 })
 
 test('student deletion cleans enrolments and an assigned teacher requires course reassignment', async ({
@@ -400,7 +397,7 @@ test('student deletion cleans enrolments and an assigned teacher requires course
   await page.getByRole('button', { name: 'Eliminar Ana López', exact: true }).click()
   await dialog.getByRole('button', { name: 'Eliminar', exact: true }).click()
   await adminNav(page, 'Cursos')
-  await page.getByRole('link', { name: 'Desarrollo web', exact: true }).click()
+  await page.getByRole('link', { name: 'AI Engineering', exact: true }).click()
   await expect(
     page.getByRole('heading', { name: 'Alumnos matriculados · 1', exact: true })
   ).toBeVisible()
@@ -428,14 +425,14 @@ test('course edits update its session roster and course deletion removes its ses
 }) => {
   await enterAdmin(page)
   await adminNav(page, 'Cursos')
-  await page.getByRole('link', { name: 'Desarrollo web', exact: true }).click()
+  await page.getByRole('link', { name: 'AI Engineering', exact: true }).click()
   const originalCoursePath = new URL(page.url()).pathname
   await page.getByRole('button', { name: 'Editar curso', exact: true }).click()
   await expect(page.getByLabel('Profesor', { exact: true })).toHaveValue('person-admin')
   await expect(page.getByRole('checkbox', { name: 'Ana López', exact: true })).toBeChecked()
   await page.getByLabel('Nombre del curso', { exact: true }).fill('Cambio cancelado')
   await page.getByRole('button', { name: 'Cancelar', exact: true }).click()
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Desarrollo web')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('AI Engineering')
   await page.getByRole('button', { name: 'Editar curso', exact: true }).click()
   await page.getByLabel('Nombre del curso', { exact: true }).fill('Curso editado')
   await page.getByLabel('Profesor', { exact: true }).selectOption('person-teacher')
@@ -487,7 +484,7 @@ test('session editing is prefilled and validated; deleting it preserves its cour
 }) => {
   await enterAdmin(page)
   await adminNav(page, 'Cursos')
-  await page.getByRole('link', { name: 'Desarrollo web', exact: true }).click()
+  await page.getByRole('link', { name: 'AI Engineering', exact: true }).click()
   await page.getByRole('table', { name: 'Sesiones del curso' }).getByRole('link').click()
   const originalPath = new URL(page.url()).pathname
   await page.getByRole('button', { name: 'Editar sesión', exact: true }).click()
@@ -512,7 +509,7 @@ test('session editing is prefilled and validated; deleting it preserves its cour
   ).toBeVisible()
   await page.getByRole('button', { name: 'Eliminar sesión', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Eliminar sesión', exact: true })
-  await expect(dialog).toContainText('Desarrollo web')
+  await expect(dialog).toContainText('AI Engineering')
   await expect(dialog).toContainText('1 de diciembre de 2026')
   await dialog.getByRole('button', { name: 'Cancelar', exact: true }).click()
   await page.getByRole('button', { name: 'Eliminar sesión', exact: true }).click()
@@ -521,7 +518,7 @@ test('session editing is prefilled and validated; deleting it preserves its cour
   await expect(
     page.getByText('Todavía no hay sesiones programadas.', { exact: true })
   ).toBeVisible()
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Desarrollo web')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('AI Engineering')
 })
 
 for (const theme of ['atempo-oscuro', 'atempo-claro']) {
@@ -587,7 +584,7 @@ async function openWeeklyForm(page: Page): Promise<void> {
 async function openSeedCourse(page: Page): Promise<void> {
   await enterAdmin(page)
   await adminNav(page, 'Cursos')
-  await page.getByRole('link', { name: 'Desarrollo web', exact: true }).click()
+  await page.getByRole('link', { name: 'AI Engineering', exact: true }).click()
 }
 
 test('weekly preview creates four independent sessions and returns to course for individual CRUD', async ({
@@ -710,10 +707,7 @@ for (const width of [390, 1280]) {
       page
     }) => {
       await page.setViewportSize({ width, height: 900 })
-      await page.addInitScript(
-        (name) => localStorage.setItem('atempo-student-theme', name),
-        theme
-      )
+      await page.addInitScript((name) => localStorage.setItem('atempo-student-theme', name), theme)
       await openSeedCourse(page)
       await openWeeklyForm(page)
       await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
