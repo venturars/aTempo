@@ -13,6 +13,8 @@ import {
   POSTGRES_MOCK_PERSON_ROLES,
 } from './postgres-mock'
 
+const MOCK_PERSON_COURSE = POSTGRES_MOCK_PERSON_COURSES[0]!
+
 type PersonRow = {
   id: string
   identification_document: string
@@ -122,6 +124,52 @@ export class PostgresService implements OnModuleDestroy {
     return result.rows
   }
 
+  async createPersonCourse(
+    personId: string,
+    courseId: string,
+  ): Promise<PersonCourseResponseDto> {
+    if (this.usesMock()) {
+      if (
+        personId === MOCK_PERSON_COURSE.person_id &&
+        courseId === MOCK_PERSON_COURSE.course_id
+      ) {
+        throw postgresError('23505', 'person_course already exists')
+      }
+      return { person_id: personId, course_id: courseId }
+    }
+
+    const result = await this.poolFor(
+      process.env.DATABASE_URL!,
+    ).query<PersonCourseResponseDto>(
+      `INSERT INTO person_course (person_id, course_id)
+VALUES ($1, $2)
+RETURNING person_id, course_id`,
+      [personId, courseId],
+    )
+    return result.rows[0]
+  }
+
+  async deletePersonCourse(
+    personId: string,
+    courseId: string,
+  ): Promise<PersonCourseResponseDto | null> {
+    if (this.usesMock()) {
+      return (
+        POSTGRES_MOCK_PERSON_COURSES.find(
+          (row) => row.person_id === personId && row.course_id === courseId,
+        ) ?? null
+      )
+    }
+
+    const result = await this.poolFor(
+      process.env.DATABASE_URL!,
+    ).query<PersonCourseResponseDto>(
+      'DELETE FROM person_course WHERE person_id = $1 AND course_id = $2 RETURNING person_id, course_id',
+      [personId, courseId],
+    )
+    return result.rows[0] ?? null
+  }
+
   async onModuleDestroy(): Promise<void> {
     await this.pool?.end()
   }
@@ -129,4 +177,10 @@ export class PostgresService implements OnModuleDestroy {
 
 function formatTimestamp(value: Date | string): string {
   return value instanceof Date ? value.toISOString() : value
+}
+
+function postgresError(code: string, message: string): Error & { code: string } {
+  const error = new Error(message) as Error & { code: string }
+  error.code = code
+  return error
 }

@@ -45,7 +45,7 @@ export const POSTGRES_MOCK_PERSON_ROLES: PersonRoleResponseDto[] = [
   },
 ]
 
-// La relación de ejemplo permite probar GET /person-course sin PostgreSQL.
+// La relación de ejemplo permite probar GET y DELETE /person-course sin PostgreSQL.
 export const POSTGRES_MOCK_PERSON_COURSES: PersonCourseResponseDto[] = [
   {
     person_id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
