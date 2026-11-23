@@ -9,6 +9,7 @@ import {
   type Session
 } from './contract'
 import { isFixtureName, type FixtureName } from './fixtures'
+import { createHttpTransport } from './httpTransport'
 import { localDay } from './isoTime'
 import { createMockTransport, type DemoControls } from './mockTransport'
 
@@ -120,12 +121,24 @@ export function withRequestRules(transport: ApiClient): ApiClient {
 let client: ApiClient | null = null
 let demo: DemoControls | null = null
 
+function addressParam(name: string): string | null {
+  return new URLSearchParams(globalThis.location?.search ?? '').get(name)
+}
+
 function fixtureFromAddress(): FixtureName {
-  const name = new URLSearchParams(globalThis.location?.search ?? '').get('apiFixture')
+  const name = addressParam('apiFixture')
   return isFixtureName(name) ? name : 'success'
 }
 
-export function resetApiClient(fixture: FixtureName = fixtureFromAddress()): ApiClient {
+export function resetApiClient(
+  fixture: FixtureName = fixtureFromAddress(),
+  apiUrl: string | null = addressParam('apiUrl')
+): ApiClient {
+  if (apiUrl !== null && apiUrl !== '') {
+    client = withRequestRules(createHttpTransport(apiUrl))
+    demo = null
+    return client
+  }
   const transport = createMockTransport(fixture, localDay())
   client = withRequestRules(transport.client)
   demo = transport.demo

@@ -20,9 +20,23 @@ function startupHash(): string | undefined {
   return undefined
 }
 
-function apiFixture(): string | undefined {
-  const flag = process.argv.find((argument) => argument.startsWith('--api-fixture='))
-  return flag?.slice('--api-fixture='.length)
+function flagValue(name: string): string | undefined {
+  const prefix = `--${name}=`
+  const flag = process.argv.find((argument) => argument.startsWith(prefix))
+  return flag?.slice(prefix.length)
+}
+
+function apiQuery(): Record<string, string> {
+  const query: Record<string, string> = {}
+  const fixture = flagValue('api-fixture')
+  const apiUrl = flagValue('api-url')
+  if (fixture !== undefined) {
+    query.apiFixture = fixture
+  }
+  if (apiUrl !== undefined) {
+    query.apiUrl = apiUrl
+  }
+  return query
 }
 
 function createWindow(): void {
@@ -51,13 +65,15 @@ function createWindow(): void {
   })
 
   const hash = startupHash()
-  const fixture = apiFixture()
-  const query = fixture === undefined ? undefined : { apiFixture: fixture }
+  const query = apiQuery()
+  const params = Object.entries(query)
+    .map(([name, value]) => `${name}=${encodeURIComponent(value)}`)
+    .join('&')
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    const search = fixture === undefined ? '' : `?apiFixture=${encodeURIComponent(fixture)}`
+    const search = params === '' ? '' : `?${params}`
     const rendererUrl =
       hash === undefined
         ? `${process.env['ELECTRON_RENDERER_URL']}${search}`

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { checkedInByStudent } from '../api/attendanceRules'
+import { getDemoControls } from '../api/client'
 import { clockTime } from '../api/isoTime'
 import {
   todayArrival,
@@ -318,6 +319,7 @@ function TodayClass(): React.JSX.Element {
   const openSession = usePanelStore((state) => state.openSession)
   const askClose = usePanelStore((state) => state.askClose)
   const reopenSession = usePanelStore((state) => state.reopenSession)
+  const canReopen = getDemoControls() !== null
   const refreshCheckInCode = usePanelStore((state) => state.refreshCheckInCode)
   const openStudent = usePanelStore((state) => state.openStudent)
   const requestMark = usePanelStore((state) => state.requestMark)
@@ -385,7 +387,7 @@ function TodayClass(): React.JSX.Element {
               <button
                 type="button"
                 className="btn"
-                disabled={busy}
+                disabled={busy || !canReopen}
                 onClick={() => void reopenSession()}
               >
                 Volver a abrir
