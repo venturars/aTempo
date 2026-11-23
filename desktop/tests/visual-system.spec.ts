@@ -178,6 +178,13 @@ async function expectFocus(control: Locator): Promise<void> {
   await expect(control).toHaveCSS('outline-width', '2px')
   await expect(control).not.toHaveCSS('outline-color', 'rgba(0, 0, 0, 0)')
 }
+// Los campos marcan el foco con el anillo compartido de system.css, no con outline.
+async function expectFieldFocus(control: Locator): Promise<void> {
+  await control.focus()
+  await expect(control).toBeFocused()
+  await expect(control).toHaveCSS('outline-style', 'none')
+  await expect(control).toHaveCSS('box-shadow', / 0px 0px 0px 1px inset, .+ 0px 0px 0px 3px$/)
+}
 for (const theme of themes) {
   test(`fundamentos coinciden en ambos consumidores: ${theme}`, async ({ page }) => {
     await story(page, 'fundamentos-tema--gallery', theme)
@@ -253,7 +260,7 @@ for (const theme of themes) {
     await expectFocus(page.getByRole('button', { name: 'Guardar', exact: true }))
     await story(page, 'entrada-input--gallery', theme)
     await expect(page.getByLabel('Correo', { exact: true })).toHaveAttribute('aria-invalid', 'true')
-    await expectFocus(page.getByLabel('Neutro', { exact: true }))
+    await expectFieldFocus(page.getByLabel('Neutro', { exact: true }))
     const context = await browser.newContext({ hasTouch: true, isMobile: true })
     try {
       const touch = await context.newPage()
