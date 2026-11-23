@@ -82,6 +82,17 @@ describe('Swagger (e2e)', () => {
     })
   })
 
+  it('GET /docs-json exposes POST /person-course with its tag', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/docs-json')
+      .expect(200)
+
+    expect(response.body.paths['/person-course']).toHaveProperty('post')
+    expect(response.body.paths['/person-course'].post.tags).toContain(
+      'person-course',
+    )
+  })
+
   it('GET /docs-json exposes DELETE /person-course/{personId}/{courseId}', async () => {
     const response = await request(app.getHttpServer())
       .get('/docs-json')
