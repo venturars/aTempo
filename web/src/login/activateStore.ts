@@ -1,37 +1,42 @@
-import { create } from 'zustand'
 import { useSessionStore } from '../session/sessionStore'
 import { useStudentAccountsStore } from '../student/studentAccounts'
 import { findInvitation, type Invitation } from './invitations'
-import { validateActivation } from './validateActivation'
-
-type ActivateState = {
-  password: string
-  passwordError: string
-  setPassword: (password: string) => void
-  submit: (code: string) => boolean
-}
+import {
+  hasErrors,
+  normalizeDocument,
+  validateActivation,
+  type ActivationErrors,
+  type ActivationForm
+} from './validateActivation'
 
 // Una invitación ya está activada si hay una cuenta con su correo.
 export function isInvitationUsed(invitation: Invitation): boolean {
   return useStudentAccountsStore.getState().findByEmail(invitation.email) !== undefined
 }
 
-export const useActivateStore = create<ActivateState>((set, get) => ({
-  password: '',
-  passwordError: '',
-  setPassword: (password) => set({ password, passwordError: '' }),
-  submit: (code) => {
-    const passwordError = validateActivation(get().password)
-    if (passwordError !== '') {
-      set({ passwordError })
-      return false
-    }
-    const invitation = findInvitation(code)
-    if (invitation === undefined || isInvitationUsed(invitation)) return false
+type ActivationResult = { entered: true } | { entered: false; errors: ActivationErrors }
 
-    useStudentAccountsStore.getState().addAccount(invitation.name, invitation.email, get().password)
-    useSessionStore.getState().startStudentSession(invitation.email)
-    set({ password: '', passwordError: '' })
-    return true
+// Crea la cuenta y abre la sesión, o devuelve los errores del formulario.
+export function activateInvitation(code: string, form: ActivationForm): ActivationResult {
+  const errors = validateActivation(form)
+  const document = normalizeDocument(form.identificationDocument)
+  const taken = useStudentAccountsStore
+    .getState()
+    .accounts.some((account) => account.identificationDocument === document)
+  if (errors.identificationDocument === '' && taken) {
+    errors.identificationDocument = 'Ya hay una cuenta con este documento.'
   }
-}))
+  if (hasErrors(errors)) return { entered: false, errors }
+
+  const invitation = findInvitation(code)
+  if (invitation === undefined || isInvitationUsed(invitation)) return { entered: false, errors }
+  useStudentAccountsStore.getState().addAccount({
+    firstName: form.firstName,
+    lastName: form.lastName,
+    identificationDocument: document,
+    email: invitation.email,
+    password: form.password
+  })
+  useSessionStore.getState().startStudentSession(invitation.email)
+  return { entered: true }
+}
