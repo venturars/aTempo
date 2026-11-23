@@ -38,6 +38,8 @@ function block(target, method) {
 try {
   require('./hidden-preflight.cjs').preflight()
   record('bootstrap', process.pid)
+  // Each launch gets its own profile: the saved theme and the local database must not leak between tests or into the real app.
+  app.setPath('userData', path.join(path.dirname(process.env.ATEMPO_NATIVE_AUDIT), 'user-data'))
   // Install before loading the real main, including its ready-to-show handler.
   for (const method of [
     'show',

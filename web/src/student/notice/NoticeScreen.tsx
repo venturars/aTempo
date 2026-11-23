@@ -99,14 +99,14 @@ export function NoticeScreen(): React.JSX.Element {
       reason: reason.trim(),
       attachmentName: documentName
     })
-    showFlash('Gracias por avisar. Tu profe ya lo sabe.')
+    showFlash('Gracias por avisar. Tu profesor ya lo sabe.')
     void navigate({ to: '/student/dashboard' })
   }
 
   return (
     <StudentLayout>
       <div className="mx-auto flex w-full max-w-md flex-col gap-5">
-        <h1 className="text-2xl font-semibold tracking-tight">Avisa a tu profe</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Avisa a tu profesor</h1>
         <form className="flex flex-col gap-6" noValidate onSubmit={onSubmit}>
           <div className="segment" role="group" aria-label="Tipo de aviso">
             {kinds.map((option) => (

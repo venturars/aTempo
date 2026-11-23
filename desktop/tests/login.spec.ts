@@ -276,6 +276,20 @@ test('opens the professor panel from the demo login and keeps attendance navigat
   })
 })
 
+test('remembers the theme chosen in Ajustes after reloading', async () => {
+  await withApp(async (window) => {
+    await window.getByLabel('Correo').fill('profesor@atempo.test')
+    await window.getByLabel('Contraseña').fill('Profesor123!')
+    await window.getByRole('button', { name: 'Entrar' }).click()
+    await window.getByRole('button', { name: 'Ajustes' }).click()
+    await window.getByRole('button', { name: 'Claro' }).click()
+    await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-claro')
+
+    await window.reload()
+    await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-claro')
+  })
+})
+
 test('stacks the panel and the form when the window is narrow', async () => {
   await withApp(async (window) => {
     await window.setViewportSize({ width: 390, height: 844 })

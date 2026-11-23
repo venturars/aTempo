@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from 'react'
 import { useSettingsStore } from './settingsStore'
 import { rosterNames, todayEntry } from './roster'
+import { saveTheme } from '../theme'
 
 function Bell(): React.JSX.Element {
   return (
@@ -60,6 +61,7 @@ export function SettingsView(): React.JSX.Element {
   const missing = rosterNames.filter((_, index) => todayEntry[index] === '—')
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
+    saveTheme(theme)
   }, [theme])
   useEffect(() => {
     if (!notice || paused) return
