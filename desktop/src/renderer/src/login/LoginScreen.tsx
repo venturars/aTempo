@@ -1,4 +1,4 @@
-import { FormEvent, useEffect } from 'react'
+import { FormEvent, useEffect, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { dashboardPathForProfile, useSessionStore } from '../session/sessionStore'
 import { isInvitationUsed, useActivateStore } from './activateStore'
@@ -149,14 +149,28 @@ function LoginForm({ notice }: { notice: string }): React.JSX.Element {
   const emailError = useLoginStore((state) => state.emailError)
   const passwordError = useLoginStore((state) => state.passwordError)
   const loginError = useLoginStore((state) => state.loginError)
+  const isSubmitting = useLoginStore((state) => state.isSubmitting)
   const setEmail = useLoginStore((state) => state.setEmail)
   const setPassword = useLoginStore((state) => state.setPassword)
   const submit = useLoginStore((state) => state.submit)
+  const submitWithAuth = useLoginStore((state) => state.submitWithAuth)
+  const setSubmitting = useLoginStore((state) => state.setSubmitting)
+  const showLoginError = useLoginStore((state) => state.showLoginError)
   const navigate = useNavigate()
 
-  function onSubmit(event: FormEvent<HTMLFormElement>): void {
+  async function onSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
-    const isValid = submit()
+    setSubmitting(true)
+    let isValid: boolean
+    try {
+      const isAuthConfigured = await window.api.auth.isConfigured()
+      isValid = isAuthConfigured ? await submitWithAuth() : submit()
+    } catch {
+      showLoginError()
+      return
+    } finally {
+      setSubmitting(false)
+    }
     const profile = useSessionStore.getState().profile
 
     if (isValid && profile !== null) {
@@ -190,8 +204,8 @@ function LoginForm({ notice }: { notice: string }): React.JSX.Element {
           error={passwordError}
           onChange={setPassword}
         />
-        <button className="btn btn-primary" type="submit">
-          Entrar
+        <button className="btn btn-primary" type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Entrando…' : 'Entrar'}
         </button>
         {loginError !== '' ? (
           <div className="alert alert-error" role="alert">
@@ -213,9 +227,21 @@ function ActivateForm({ invitation }: { invitation: Invitation }): React.JSX.Ele
   const setPassword = useActivateStore((state) => state.setPassword)
   const submit = useActivateStore((state) => state.submit)
   const navigate = useNavigate()
+  const [authOnly, setAuthOnly] = useState(false)
 
-  function onSubmit(event: FormEvent<HTMLFormElement>): void {
+  async function onSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
+    // Con Auth0, la cuenta se crea en el servidor (#189). Hasta entonces la invitación solo vale en la demo.
+    let isAuthConfigured = true
+    try {
+      isAuthConfigured = await window.api.auth.isConfigured()
+    } catch {
+      // Sin respuesta del puente no se crea una cuenta local.
+    }
+    if (isAuthConfigured) {
+      setAuthOnly(true)
+      return
+    }
     const isValid = submit(invitation.code)
     const profile = useSessionStore.getState().profile
 
@@ -248,6 +274,14 @@ function ActivateForm({ invitation }: { invitation: Invitation }): React.JSX.Ele
         <button className="btn btn-primary" type="submit">
           Entrar
         </button>
+        {authOnly ? (
+          <div className="alert alert-info" role="alert">
+            <span>
+              Las invitaciones todavía no están disponibles con tu organización. Entra con tu
+              cuenta.
+            </span>
+          </div>
+        ) : null}
       </form>
     </section>
   )
