@@ -18,16 +18,28 @@ aTempo de escritorio es la aplicación del profesor. Sirve para registrar la asi
 - **SQLite** es la base local. Se abre con `node:sqlite` y la clase `DatabaseSync` en el proceso principal.
 - **pnpm** es el gestor de paquetes de `desktop/`. Las versiones van fijas, sin `^`.
 
-## 3. Stack de `api-router/`
+## 3. Stack de `domain/`
+
+`domain/` es la SDK: carpeta en la raíz, hermana de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. Dentro hay un paquete Python. No es un servicio HTTP: sin servidor, sin Swagger y sin Docker Compose.
+
+### `domain/python-domain/`
+
+- **Python** escribe el paquete.
+- **SQLAlchemy Core 2.0.44** abre SQLite (`SQLITE_DATABASE_URL`).
+- Las dependencias van fijadas en `domain/python-domain/pyproject.toml`.
+
+Fija los tipos de `session` y `attendance`, las lecturas, las escrituras y las reglas que copia de SQLite: `end_at > start_at`, `status` `open`/`closing`/`closed`, `closed_at` solo en `closed`, estados de asistencia y `check_in_method`. `start_at`, `end_at`, `closed_at` y `checked_in_at` entran con `Z` o un desfase y se guardan en ISO UTC (`2026-09-01T08:00:00.000Z`). Los UUID se guardan en minúsculas. `present` y `present_late` llevan `check_in_method` y `checked_in_at` dentro de la sesión; `absent` y `notified_absence` van sin fichaje. No comprueba la matrícula: `course_id` y `student_id` son referencias lógicas al core, sin FK. Un delete de sesión quita en la misma transacción las filas de `attendance`. Si un objeto no cumple esos campos o reglas, o si la sesión no existe o la asistencia ya está, lanza y no escribe. `api-sqlite/` queda detrás de este paquete: Flask transforma HTTP y no escribe SQL.
+
+## 4. Stack de `api-router/`
 
 - **NestJS 11** expone REST y transforma las peticiones de los frontends.
 - **@nestjs/swagger** documenta la API y sirve Swagger UI en `/docs` para pruebas manuales.
 - **TypeScript** escribe el servicio.
 - **pnpm** es el gestor de paquetes de `api-router/`. Las versiones van fijas, sin `^`.
 
-La SDK de lógica de negocio vivirá en `sdk/` (carpeta pendiente), al mismo nivel que `desktop/` y `api-router/`. El API-router no implementa reglas de negocio; solo delegará en esa SDK.
+El API-router no implementa reglas de negocio.
 
-## 4. Stack de `api-postgresql/`
+## 5. Stack de `api-postgresql/`
 
 - **NestJS 11** expone la persistencia que usará la SDK para leer y escribir en PostgreSQL.
 - **pg** abre la conexión y comprueba que la base responde.
@@ -37,7 +49,7 @@ La SDK de lógica de negocio vivirá en `sdk/` (carpeta pendiente), al mismo niv
 
 Este servicio no implementa reglas de negocio. El API-router no habla con PostgreSQL. El escritorio no llama a este servicio.
 
-## 5. Stack de `api-rustfs/`
+## 6. Stack de `api-rustfs/`
 
 - **Express 5** expone REST hacia la SDK para persistencia de objetos en RustFS.
 - **Cliente npm `minio` (API S3)** habla con RustFS.
@@ -47,7 +59,7 @@ Este servicio no implementa reglas de negocio. El API-router no habla con Postgr
 
 El API-router no accede a RustFS; la SDK consumirá este servicio cuando exista.
 
-## 6. Stack de `api-sqlite/`
+## 7. Stack de `api-sqlite/`
 
 - **Flask** expone el servicio local de persistencia.
 - **Pydantic** valida los modelos de entrada y salida.
@@ -55,10 +67,10 @@ El API-router no accede a RustFS; la SDK consumirá este servicio cuando exista.
 - **Flasgger** sirve Swagger UI y OpenAPI para comprobar el servicio.
 - **Python** ejecuta el paquete, que tiene sus dependencias fijadas en `api-sqlite/pyproject.toml`.
 
-`api-sqlite/` está detrás de la SDK: el `api-router` delega en la SDK y esta accede a las APIs de persistencia. La SQLite de este servicio es independiente de `desktop/atempo.sqlite`.
+`api-sqlite/` está detrás de `domain/python-domain/`. La SQLite de este servicio es independiente de `desktop/atempo.sqlite`.
 
-## 7. Dónde seguir
+## 8. Dónde seguir
 
 - [STYLE.md](STYLE.md): los dos temas y el enlace a la guía visual.
-- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, flujo de `api-router/` y las APIs de persistencia, y los almacenes; se prevén la SDK y más APIs.
-- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/`, `api-postgresql/`, `api-rustfs/`, `api-sqlite/` y los almacenes; se prevén `sdk/` y más carpetas de APIs.
+- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, flujo Frontend → `api-sqlite` → `domain/python-domain` → SQLite, y los almacenes.
+- [TREE.md](TREE.md): árboles de `desktop/`, `domain/python-domain/`, `api-router/`, `api-postgresql/`, `api-rustfs/`, `api-sqlite/` y los almacenes.

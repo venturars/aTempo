@@ -1,45 +1,43 @@
 # Arquitectura de aTempo
 
-## API-router, SDK y persistencia
+## API, SDK y persistencia
 
-Carpeta del router: `api-router/`. Persistencia relacional: `api-postgresql/` y `api-sqlite/`. Objetos en almacén S3-compatible: `api-rustfs/`.
+Carpeta de la SDK: `domain/`, con `python-domain/` (Python). HTTP de PostgreSQL: `api-postgresql/`. Persistencia SQLite: `api-sqlite/`. Objetos S3-compatible: `api-rustfs/`. `api-router/` sigue en el repositorio.
 
-Los frontends (Electron en `desktop/` y el futuro portal web) hablarán REST con el API-router, un servicio NestJS. El API-router transforma HTTP y delegará en la **SDK (lógica de negocio)**. Esa SDK vivirá en `sdk/`, al mismo nivel que `desktop/` y `api-router/`; la carpeta aún no existe. La SDK hablará con `api-postgresql/` para leer y escribir en PostgreSQL, con `api-sqlite/` para SQLite local y con `api-rustfs/` para objetos en RustFS. Este flujo está previsto: la SDK todavía no existe y los servicios aún no están conectados entre sí. El API-router no habla con la base ni con RustFS. Redis, Postgres y el resto de microservicios del backend quedan fuera del escritorio.
+El flujo de producto con SQLite es Frontend → `api-sqlite` → `domain/python-domain` → SQLite. `api-sqlite` transforma HTTP. `domain/python-domain` valida los tipos y las reglas de fichaje y abre SQLite. Flask no escribe SQL.
 
-Hoy `api-router/` solo expone `GET /health`. `api-postgresql/` expone `GET /health`, los listados `GET /person`, `GET /course`, `GET /organization`, `GET /person-role` y `GET /person-course`, `GET /person/:id` (una fila de `person` por UUID: 200, 404 o 503), `POST /person-course` (una matrícula: 201, 404, 409 o 503) y `DELETE /person-course/:personId/:courseId` (una matrícula: 204, 404 o 503); con `DATABASE_URL` consulta PostgreSQL y sin ella usa un mock de prueba. `api-rustfs/` solo expone `GET /health`, que confirma que el servicio HTTP responde; su conexión S3 se comprueba aparte. `api-sqlite/` solo expone `GET /health`, que ejecuta `SELECT 1`. El login y el registro del renderer no llaman a estas APIs. Compose publica las cuatro APIs en 3000–3003. Las APIs se conectan por la red interna a PostgreSQL (`postgres:5432`) y RustFS (`rustfs:9000`); los mismos servicios también sirven al almacén operativo. PostgreSQL se publica en el host por `5433` y RustFS por `9000`/`9001`. Los volúmenes compartidos `postgres-data` y `rustfs-data`, junto con `api-sqlite-data`, conservan sus datos.
+`domain/` es la carpeta de la SDK, hermana de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. `domain/python-domain/` cubre `session` y `attendance` en SQLite: instantes a ISO UTC, UUID en minúsculas, fichaje coherente con el estado. `api-sqlite/` queda detrás.
 
-La documentación interactiva (OpenAPI y Swagger UI) de cada servicio vive en **`/docs`**. Compose publica `api-router/` en el puerto **3000**, `api-postgresql/` en el **3001**, `api-sqlite/` en el **3002** y `api-rustfs/` en el **3003**.
+Hoy `domain/python-domain/` existe y se prueba con SQLite en memoria. `api-sqlite/` aún no lo importa. `api-postgresql/` expone `GET /health`, los listados `GET /person`, `GET /course`, `GET /organization`, `GET /person-role` y `GET /person-course`, `GET /person/:id` (una fila de `person` por UUID: 200, 404 o 503), `POST /person-course` (una matrícula: 201, 404, 409 o 503) y `DELETE /person-course/:personId/:courseId` (una matrícula: 204, 404 o 503); con `DATABASE_URL` consulta PostgreSQL y sin ella usa un mock de prueba. `api-router/` solo expone `GET /health`. `api-rustfs/` solo expone `GET /health`, que confirma que el servicio HTTP responde; su conexión S3 se comprueba aparte. `api-sqlite/` solo expone `GET /health`, que ejecuta `SELECT 1`. El login y el registro del renderer no llaman a estas APIs. Compose publica las cuatro APIs en 3000–3003. Las APIs se conectan por la red interna a PostgreSQL (`postgres:5432`) y RustFS (`rustfs:9000`); los mismos servicios también sirven al almacén operativo. PostgreSQL se publica en el host por `5433` y RustFS por `9000`/`9001`. Los volúmenes compartidos `postgres-data` y `rustfs-data`, junto con `api-sqlite-data`, conservan sus datos. `domain/` no está en Docker Compose.
+
+La documentación interactiva (OpenAPI y Swagger UI) de cada servicio HTTP vive en **`/docs`**. Compose publica `api-router/` en el puerto **3000**, `api-postgresql/` en el **3001**, `api-sqlite/` en el **3002** y `api-rustfs/` en el **3003**.
 
 ```mermaid
 flowchart LR
   electron[FrontendElectron]
   web[FrontendWeb]
-  router[APIRouterNest]
-  sdk[sdk_logicaDeNegocio_pendiente]
   sqliteApi[api_sqlite_Flask]
+  pythonDomain[pythonDomain]
   serviceSqlite[(SQLite_del_servicio)]
   apiPg[apiPostgresql]
   postgres[(PostgreSQL)]
   objectApi[api_rustfs_Express]
   rustfs[(RustFS)]
-  electron --> router
-  web --> router
-  router --> sdk
-  sdk --> sqliteApi
-  sqliteApi --> serviceSqlite
-  sdk --> apiPg
-  sdk --> objectApi
+  electron --> sqliteApi
+  web --> sqliteApi
+  sqliteApi --> pythonDomain
+  pythonDomain --> serviceSqlite
   apiPg --> postgres
   objectApi --> rustfs
 ```
 
-`sdk/` es el paquete de dominio previsto, hermano de `desktop/`, `api-router/`, `api-postgresql/`, `api-rustfs/` y `api-sqlite/`. Lo consumirá el API-router. Los frontends usarán una SDK frontend distinta para llamar al router público; no consumirán directamente la SDK de dominio ni las APIs de persistencia. `api-postgresql/` ya está y espera a esa SDK de dominio. `api-rustfs/` también: la SDK lo usará para objetos en RustFS.
+El flujo de producto con SQLite es Frontend → `api-sqlite` → `domain/python-domain` → SQLite. Redis y el resto de microservicios del backend quedan fuera del escritorio.
 
 ## api-sqlite
 
 Carpeta: `api-sqlite/`.
 
-Servicio Flask con modelos Pydantic y consultas mediante SQLAlchemy Core. La SDK delegará aquí la persistencia local. Hoy solo expone `GET /health`, que ejecuta `SELECT 1`; responde `200` si SQLite funciona y `503` si falla la conexión. Un cuerpo JSON inválido se rechaza antes de consultar la base. Swagger UI está en `/docs` y OpenAPI en `/docs-json`. Compose sirve en el puerto **3002** y ejecuta Flask escuchando en `0.0.0.0`. `SQLITE_DATABASE_URL` apunta a `sqlite:////var/lib/atempo/api-sqlite.sqlite`; el archivo persiste en el volumen `api-sqlite-data`. El entorno virtual Linux está en `api-sqlite-venv`; ambos son independientes de `.venv` y de la base de Electron.
+Servicio Flask con modelos Pydantic. El flujo de producto es Frontend → `api-sqlite` → `domain/python-domain` → SQLite. Este servicio aún no importa el paquete. Solo expone `GET /health`, que ejecuta `SELECT 1`; responde `200` si SQLite funciona y `503` si falla la conexión. Un cuerpo JSON inválido se rechaza antes de consultar la base. Swagger UI está en `/docs` y OpenAPI en `/docs-json`. Compose sirve en el puerto **3002** y ejecuta Flask escuchando en `0.0.0.0`. `SQLITE_DATABASE_URL` apunta a `sqlite:////var/lib/atempo/api-sqlite.sqlite`; el archivo persiste en el volumen `api-sqlite-data`. El entorno virtual Linux está en `api-sqlite-venv`; ambos son independientes de `.venv` y de la base de Electron.
 
 ## api-rustfs
 
@@ -71,7 +69,7 @@ Son almacenes y cadena, no una capa del escritorio ni del API-router. Cada una t
 
 El modelo y los enlaces están en `docs/POSTGRES.md`, `docs/SQLITE.md`, `docs/RUSTFS.md`, `docs/BLOCKEND.md` y `permanent-data.md`.
 
-`api-postgresql/` comprueba la conexión con `GET /health`, ofrece cinco listados (incluidos `GET /organization` y `GET /person-course`), `GET /person/:id`, `POST /person-course` y `DELETE /person-course/:personId/:courseId`. `api-rustfs/` no abre RustFS en el health. El renderer y el API-router no abren estas bases. La SDK las usará cuando exista.
+`api-postgresql/` comprueba la conexión con `GET /health`, ofrece cinco listados (incluidos `GET /organization` y `GET /person-course`), `GET /person/:id`, `POST /person-course` y `DELETE /person-course/:personId/:courseId`. `api-rustfs/` no abre RustFS en el health. El renderer y el API-router no abren estas bases. `domain/python-domain/` abre SQLite; `api-sqlite/` aún no lo importa.
 
 ## aTempo de escritorio
 

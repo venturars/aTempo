@@ -96,10 +96,49 @@ docs/BLOCKEND.md
 permanent-data.md
 ```
 
-# Árbol de `sdk/` (pendiente)
+# Árbol de `domain/`
 
 ```text
-sdk/                  # lógica de negocio; paquete aún no creado
+domain/
+  README.md
+  python-domain/
+    pyproject.toml
+    README.md
+    python_domain/
+      __init__.py
+      types/
+        assert_values.py
+        session.py
+        attendance.py
+      sqlite/
+        db.py
+        check.py
+      session/
+        columns.py
+        list_sessions.py
+        get_session_by_id.py
+        list_sessions_by_course.py
+        list_sessions_by_professor.py
+        create_session.py
+        update_session.py
+        delete_session.py
+        assert_session_exists.py
+      attendance/
+        columns.py
+        list_attendances.py
+        list_attendances_by_session.py
+        add_attendance.py
+        update_attendance.py
+        remove_attendance.py
+        assert_attendance_available.py
+    tests/
+      helpers.py
+      test_sqlite.py
+      test_types.py
+      test_reads.py
+      test_filters.py
+      test_writes.py
+      test_rules.py
 ```
 
 # Árbol de `api-sqlite/`
