@@ -22,7 +22,7 @@ aTempo de escritorio es la aplicación del profesor. Sirve para registrar la asi
 
 `domain/` es la SDK: carpeta en la raíz, hermana de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. Dentro hay un paquete TypeScript. No es un servicio HTTP: sin servidor, sin Swagger y sin Docker Compose.
 
-### `domain/node-domain/`
+### `domain/node/`
 
 - **TypeScript** escribe el paquete.
 - **pg 8.23.1** abre PostgreSQL (`DATABASE_URL`, timeout 3 s).
@@ -46,17 +46,17 @@ El API-router no implementa reglas de negocio.
 - **TypeScript** escribe el servicio.
 - **pnpm** es el gestor de paquetes de `api-postgresql/`. Las versiones van fijas, sin `^`.
 
-El flujo de producto es Frontend → `api-postgresql` → `domain/node-domain` → PostgreSQL. Nest transforma HTTP y delega en `domain/node-domain`. Ese paquete abre la base. Nest no escribe SQL. El escritorio no llama a este servicio.
+El flujo de producto es Frontend → `api-postgresql` → `domain/node` → PostgreSQL. Nest transforma HTTP y delega en `domain/node`. Ese paquete abre la base. Nest no escribe SQL. El escritorio no llama a este servicio.
 
 ## 6. Stack de `api-rustfs/`
 
-- **Express 5** expone REST hacia `domain/node-domain/` para persistencia de objetos en RustFS.
+- **Express 5** expone REST hacia `domain/node/` para persistencia de objetos en RustFS.
 - **Cliente npm `minio` (API S3)** habla con RustFS.
 - **swagger-ui-express** documenta la API y sirve Swagger UI en `/docs` para pruebas manuales.
 - **TypeScript** escribe el servicio.
 - **pnpm** es el gestor de paquetes de `api-rustfs/`. Las versiones van fijas, sin `^`.
 
-El API-router no accede a RustFS; `domain/node-domain/` lo consumirá cuando exista esa persistencia.
+El API-router no accede a RustFS; `domain/node/` lo consumirá cuando exista esa persistencia.
 
 ## 7. Stack de `api-sqlite/`
 
@@ -71,5 +71,5 @@ El API-router no accede a RustFS; `domain/node-domain/` lo consumirá cuando exi
 ## 8. Dónde seguir
 
 - [STYLE.md](STYLE.md): los dos temas y el enlace a la guía visual.
-- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, flujo Frontend → `api-postgresql` → `domain/node-domain` → PostgreSQL, y los almacenes.
-- [TREE.md](TREE.md): árboles de `desktop/`, `domain/node-domain/`, `api-router/`, `api-postgresql/`, `api-rustfs/`, `api-sqlite/` y los almacenes.
+- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, flujo Frontend → `api-postgresql` → `domain/node` → PostgreSQL, y los almacenes.
+- [TREE.md](TREE.md): árboles de `desktop/`, `domain/node/`, `api-router/`, `api-postgresql/`, `api-rustfs/`, `api-sqlite/` y los almacenes.

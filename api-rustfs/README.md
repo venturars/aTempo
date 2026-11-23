@@ -1,6 +1,6 @@
 # api-rustfs
 
-Servicio Express y TypeScript entre `domain/node-domain/` y **RustFS** (almacén de objetos compatible con S3). `domain/node-domain/` leerá y escribirá objetos a través de este servicio. El `api-router` no habla con RustFS.
+Servicio Express y TypeScript entre `domain/node/` y **RustFS** (almacén de objetos compatible con S3). `domain/node/` leerá y escribirá objetos a través de este servicio. El `api-router` no habla con RustFS.
 
 Hoy solo expone `GET /health`, igual que `api-router/`: confirma que el servicio HTTP responde con `{ "status": "ok" }`. No hay rutas de objetos todavía. El cliente npm `minio` y `checkRustfsWithDefaultClient` permiten comprobar por separado la conexión S3 con RustFS; esa comprobación no cambia la respuesta de `/health`.
 

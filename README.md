@@ -52,10 +52,10 @@ El lector del alumno ofrece lecturas simuladas y no usa cámara. Estos flujos no
 | Carpeta | Qué es |
 | --- | --- |
 | `desktop/` | Prototipo para profesor y alumno con Electron y React; las demos usan datos en memoria. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/sign-up` para el registro. |
-| `domain/` | SDK: `node-domain/` (TypeScript, PostgreSQL). No es un servicio HTTP. |
+| `domain/` | SDK: `node/` (TypeScript, PostgreSQL). No es un servicio HTTP. |
 | `api-router/` | API REST con NestJS. |
-| `api-postgresql/` | API REST con NestJS. El flujo de producto es Frontend → `api-postgresql` → `domain/node-domain` → PostgreSQL. |
-| `api-rustfs/` | API REST con Express entre `domain/node-domain/` y RustFS (persistencia de objetos). |
+| `api-postgresql/` | API REST con NestJS. El flujo de producto es Frontend → `api-postgresql` → `domain/node` → PostgreSQL. |
+| `api-rustfs/` | API REST con Express entre `domain/node/` y RustFS (persistencia de objetos). |
 | `api-sqlite/` | Servicio Flask con Pydantic y SQLAlchemy Core para SQLite. |
 | `postgres/` | Core PostgreSQL y Drizzle Studio para ver sus tablas. No se abre desde el escritorio ni desde el API-router. |
 | `sqlite/` | SQLite operativo de fichaje y Datasette. Distinto del `atempo.sqlite` del escritorio. |

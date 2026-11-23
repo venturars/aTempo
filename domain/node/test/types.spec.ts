@@ -1,0 +1,266 @@
+import { ValidationError } from '../src/errors'
+import { normalizeUuid } from '../src/types/assert'
+import {
+  assertCourse,
+  assertCourseCreate,
+  normalizeContractAddress,
+  type CourseCreate,
+} from '../src/types/course'
+import {
+  assertOrganization,
+  assertOrganizationCreate,
+  type OrganizationCreate,
+} from '../src/types/organization'
+import {
+  assertPerson,
+  assertPersonCreate,
+  normalizeEmail,
+  type Person,
+  type PersonCreate,
+} from '../src/types/person'
+import { assertPersonCourse } from '../src/types/person-course'
+import { assertPersonRole } from '../src/types/person-role'
+import { assertRole, type Role } from '../src/types/role'
+import {
+  validCourse,
+  validOrganization,
+  validPerson,
+  validPersonCourse,
+  validPersonRole,
+} from './helpers'
+
+describe('assert*', () => {
+  it('normalizes email like the desktop login', () => {
+    expect(normalizeEmail('  Ada.Lopez@Clase.TEST ')).toBe(
+      'ada.lopez@clase.test',
+    )
+  })
+
+  it('normalizes uuids to lowercase', () => {
+    expect(normalizeUuid(validPerson.id.toUpperCase())).toBe(validPerson.id)
+  })
+
+  it('lowercases person, organization and course ids without mutating the input', () => {
+    const personInput = { ...validPerson, id: validPerson.id.toUpperCase() }
+    const person = assertPerson(personInput)
+    expect(person.id).toBe(validPerson.id)
+    expect(personInput.id).toBe(validPerson.id.toUpperCase())
+
+    const organizationInput = {
+      ...validOrganization,
+      id: validOrganization.id.toUpperCase(),
+    }
+    const organization = assertOrganization(organizationInput)
+    expect(organization.id).toBe(validOrganization.id)
+    expect(organizationInput.id).toBe(validOrganization.id.toUpperCase())
+
+    const courseInput = {
+      ...validCourse,
+      id: validCourse.id.toUpperCase(),
+      organization_id: validCourse.organization_id.toUpperCase(),
+    }
+    const course = assertCourse(courseInput)
+    expect(course.id).toBe(validCourse.id)
+    expect(course.organization_id).toBe(validCourse.organization_id)
+    expect(courseInput.id).toBe(validCourse.id.toUpperCase())
+    expect(courseInput.organization_id).toBe(
+      validCourse.organization_id.toUpperCase(),
+    )
+  })
+
+  it('normalizes course instants to utc', () => {
+    expect(
+      assertCourseCreate({
+        organization_id: validCourse.organization_id,
+        name: validCourse.name,
+        acronym: validCourse.acronym,
+        start_at: '2026-09-01T08:00:00.000+01:00',
+        end_at: '2026-09-01T10:00:00.000Z',
+        contract_address: validCourse.contract_address,
+      }).start_at,
+    ).toBe('2026-09-01T07:00:00.000Z')
+  })
+
+  it('normalizes contract address to lowercase hex', () => {
+    expect(
+      normalizeContractAddress(
+        '0x5FBDB2315678AFECb367F032D93F642F64180AA3',
+      ),
+    ).toBe('0x5fbdb2315678afecb367f032d93f642f64180aa3')
+  })
+
+  it('accepts a complete person', () => {
+    expect(() => assertPerson(validPerson)).not.toThrow()
+  })
+
+  it('rejects an invalid birth_date', () => {
+    expect(() =>
+      assertPersonCreate({
+        identification_document: validPerson.identification_document,
+        email: validPerson.email,
+        first_name: validPerson.first_name,
+        last_name: validPerson.last_name,
+        birth_date: '2026-02-30',
+        phone: validPerson.phone,
+      }),
+    ).toThrow('person.birth_date debe ser una fecha')
+    expect(() =>
+      assertPersonCreate({
+        identification_document: validPerson.identification_document,
+        email: validPerson.email,
+        first_name: validPerson.first_name,
+        last_name: validPerson.last_name,
+        birth_date: '0000-01-01',
+        phone: validPerson.phone,
+      }),
+    ).toThrow('person.birth_date debe ser una fecha')
+  })
+
+  it('accepts a birth_date in year 0050', () => {
+    expect(() =>
+      assertPerson({ ...validPerson, birth_date: '0050-06-15' }),
+    ).not.toThrow()
+  })
+
+  it('rejects empty names on write and keeps them on read', () => {
+    expect(() =>
+      assertPersonCreate({
+        identification_document: validPerson.identification_document,
+        email: validPerson.email,
+        first_name: '',
+        last_name: validPerson.last_name,
+        birth_date: validPerson.birth_date,
+        phone: validPerson.phone,
+      }),
+    ).toThrow('person.first_name debe ser un string no vacío')
+    expect(() =>
+      assertPersonCreate({
+        identification_document: validPerson.identification_document,
+        email: validPerson.email,
+        first_name: validPerson.first_name,
+        last_name: '',
+        birth_date: validPerson.birth_date,
+        phone: validPerson.phone,
+      }),
+    ).toThrow('person.last_name debe ser un string no vacío')
+    expect(assertPerson({ ...validPerson, first_name: '' }).first_name).toBe('')
+    expect(assertPerson({ ...validPerson, last_name: '' }).last_name).toBe('')
+    expect(assertOrganization({ ...validOrganization, name: '' }).name).toBe('')
+    expect(assertOrganization({ ...validOrganization, tax_id: '' }).tax_id).toBe(
+      '',
+    )
+    expect(assertCourse({ ...validCourse, name: '' }).name).toBe('')
+    expect(assertCourse({ ...validCourse, acronym: '' }).acronym).toBe('')
+    expect(() =>
+      assertOrganizationCreate({ name: '', tax_id: validOrganization.tax_id }),
+    ).toThrow('organization.name debe ser un string no vacío')
+    expect(() =>
+      assertCourseCreate({ ...validCourse, name: '' }),
+    ).toThrow('course.name debe ser un string no vacío')
+  })
+
+  it('rejects a person missing a field', () => {
+    const incomplete = {
+      id: validPerson.id,
+      email: validPerson.email,
+      first_name: validPerson.first_name,
+      last_name: validPerson.last_name,
+      birth_date: validPerson.birth_date,
+      phone: validPerson.phone,
+    } as Person
+    expect(() => assertPerson(incomplete)).toThrow(
+      'person.identification_document debe ser un string no vacío',
+    )
+  })
+
+  it('rejects a create input missing a field', () => {
+    expect(() =>
+      assertOrganizationCreate({ name: 'Acme' } as OrganizationCreate),
+    ).toThrow('organization.tax_id debe ser un string no vacío')
+    expect(() =>
+      assertPersonCreate({
+        email: validPerson.email,
+        first_name: validPerson.first_name,
+        last_name: validPerson.last_name,
+        birth_date: validPerson.birth_date,
+        phone: validPerson.phone,
+      } as PersonCreate),
+    ).toThrow('person.identification_document debe ser un string no vacío')
+    expect(() =>
+      assertCourseCreate({
+        organization_id: validCourse.organization_id,
+        name: validCourse.name,
+        acronym: validCourse.acronym,
+        start_at: validCourse.start_at,
+        end_at: validCourse.end_at,
+      } as CourseCreate),
+    ).toThrow('course.contract_address debe ser un string no vacío')
+  })
+
+  it('rejects a course with a bad contract address or dates', () => {
+    expect(() =>
+      assertCourse({ ...validCourse, contract_address: '0x123' }),
+    ).toThrow('course.contract_address debe ser 0x y 40 hex')
+    expect(() =>
+      assertCourse({
+        ...validCourse,
+        start_at: validCourse.end_at,
+        end_at: validCourse.start_at,
+      }),
+    ).toThrow('course.end_at debe ser posterior a course.start_at')
+    expect(() =>
+      assertCourse({ ...validCourse, start_at: '2026-09-01T08:00' }),
+    ).toThrow('course.start_at debe ser una fecha con zona horaria')
+    expect(() =>
+      assertCourse({
+        ...validCourse,
+        start_at: '2026-02-30T08:00:00.000Z',
+      }),
+    ).toThrow(/^course\.start_at debe ser una fecha$/)
+    expect(() =>
+      assertCourse({
+        ...validCourse,
+        start_at: '0001-01-01T00:30:00.000+01:00',
+        end_at: '0001-01-01T02:00:00.000Z',
+      }),
+    ).toThrow(/^course\.start_at debe ser una fecha$/)
+    expect(() =>
+      assertCourse({
+        ...validCourse,
+        start_at: '2026-01-01T10:00:00.0001Z',
+        end_at: '2026-01-01T10:00:00.0009Z',
+      }),
+    ).toThrow('course.end_at debe ser posterior a course.start_at')
+  })
+
+  it('rejects an invented role name', () => {
+    expect(() => assertRole({ name: 'admin' as Role['name'] })).toThrow(
+      'role.name debe ser organization_admin, teacher o student',
+    )
+  })
+
+  it('throws ValidationError with a code', () => {
+    try {
+      assertPersonCreate({
+        ...validPerson,
+        first_name: '',
+      })
+      throw new Error('expected ValidationError')
+    } catch (error) {
+      expect(error).toBeInstanceOf(ValidationError)
+      expect(error).toMatchObject({
+        code: 'VALIDATION',
+        entity: 'person',
+        field: 'first_name',
+      })
+    }
+  })
+
+  it('accepts organization, course and junctions', () => {
+    expect(() => assertOrganization(validOrganization)).not.toThrow()
+    expect(() => assertCourse(validCourse)).not.toThrow()
+    expect(() => assertPersonCourse(validPersonCourse)).not.toThrow()
+    expect(() => assertPersonRole(validPersonRole)).not.toThrow()
+    expect(() => assertRole({ name: 'teacher' })).not.toThrow()
+  })
+})

@@ -2,11 +2,11 @@
 
 ## API, SDK y persistencia
 
-Carpeta de la SDK: `domain/`, con `node-domain/` (TypeScript). HTTP de PostgreSQL: `api-postgresql/`. Persistencia SQLite: `api-sqlite/`. Objetos S3-compatible: `api-rustfs/`. `api-router/` sigue en el repositorio.
+Carpeta de la SDK: `domain/`, con `node/` (TypeScript). HTTP de PostgreSQL: `api-postgresql/`. Persistencia SQLite: `api-sqlite/`. Objetos S3-compatible: `api-rustfs/`. `api-router/` sigue en el repositorio.
 
-El flujo de producto con PostgreSQL es Frontend → `api-postgresql` → `domain/node-domain` → PostgreSQL. `api-postgresql` transforma HTTP. `domain/node-domain` valida los tipos y las reglas del core y abre PostgreSQL. Nest no escribe SQL.
+El flujo de producto con PostgreSQL es Frontend → `api-postgresql` → `domain/node` → PostgreSQL. `api-postgresql` transforma HTTP. `domain/node` valida los tipos y las reglas del core y abre PostgreSQL. Nest no escribe SQL.
 
-`domain/` es la carpeta de la SDK, hermana de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. `domain/node-domain/` cubre tipos, lecturas, escrituras y reglas de `organization`, `person`, `course`, `person_course`, `role` y `person_role`. `role` no se escribe. Un delete de persona, curso u organización borra las filas hijas en una transacción. `start_at` y `end_at` entran con zona horaria y salen en ISO UTC. Si un objeto no cumple esos campos o reglas, lanza y no escribe en la base. El CHECK y el trigger de PostgreSQL se quedan.
+`domain/` es la carpeta de la SDK, hermana de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. `domain/node/` cubre tipos, lecturas, escrituras y reglas de `organization`, `person`, `course`, `person_course`, `role` y `person_role`. `role` no se escribe. Un delete de persona, curso u organización borra las filas hijas en una transacción. `start_at` y `end_at` entran con zona horaria y salen en ISO UTC. Si un objeto no cumple esos campos o reglas, lanza y no escribe en la base. El CHECK y el trigger de PostgreSQL se quedan.
 
 Hoy `domain/` existe y se prueba con un driver sustituido. `api-postgresql/` aún no lo importa: abre `pg` en `PostgresService`. Expone `GET /health`, los listados `GET /person`, `GET /course`, `GET /organization`, `GET /person-role` y `GET /person-course`, `GET /person/:id` (una fila de `person` por UUID: 200, 404 o 503), `POST /person-course` (una matrícula: 201, 404, 409 o 503) y `DELETE /person-course/:personId/:courseId` (una matrícula: 204, 404 o 503); con `DATABASE_URL` consulta PostgreSQL y sin ella usa un mock de prueba. `api-router/` solo expone `GET /health`. `api-rustfs/` solo expone `GET /health`, que confirma que el servicio HTTP responde; su conexión S3 se comprueba aparte. `api-sqlite/` solo expone `GET /health`, que ejecuta `SELECT 1`. El login y el registro del renderer no llaman a estas APIs. Compose publica las cuatro APIs en 3000–3003. Las APIs se conectan por la red interna a PostgreSQL (`postgres:5432`) y RustFS (`rustfs:9000`); los mismos servicios también sirven al almacén operativo. PostgreSQL se publica en el host por `5433` y RustFS por `9000`/`9001`. Los volúmenes compartidos `postgres-data` y `rustfs-data`, junto con `api-sqlite-data`, conservan sus datos. `domain/` no está en Docker Compose.
 
@@ -32,7 +32,7 @@ flowchart LR
   objectApi --> rustfs
 ```
 
-`domain/node-domain/` hablará con `api-rustfs/` cuando esa persistencia entre en el paquete. Redis y el resto de microservicios del backend quedan fuera del escritorio.
+`domain/node/` hablará con `api-rustfs/` cuando esa persistencia entre en el paquete. Redis y el resto de microservicios del backend quedan fuera del escritorio.
 
 ## api-sqlite
 
@@ -44,11 +44,11 @@ Servicio Flask con modelos Pydantic y consultas mediante SQLAlchemy Core. Hoy so
 
 Carpeta: `api-rustfs/`.
 
-Servicio Express y TypeScript. `domain/node-domain/` delegará en él la lectura y escritura de objetos en RustFS. Hoy solo expone `GET /health`, que confirma que el servicio HTTP responde (igual que `api-router/`). Swagger UI en **`/docs`** y OpenAPI en **`/docs-json`**, igual que en `api-router/`. Compose lo sirve en el puerto **3003** y conecta al servicio interno `rustfs:9000`. `/health` no comprueba RustFS; el workflow valida S3 aparte. El volumen compartido `rustfs-data` conserva los objetos. RustFS publica el puerto S3 `9000` y la consola `9001` en el host.
+Servicio Express y TypeScript. `domain/node/` delegará en él la lectura y escritura de objetos en RustFS. Hoy solo expone `GET /health`, que confirma que el servicio HTTP responde (igual que `api-router/`). Swagger UI en **`/docs`** y OpenAPI en **`/docs-json`**, igual que en `api-router/`. Compose lo sirve en el puerto **3003** y conecta al servicio interno `rustfs:9000`. `/health` no comprueba RustFS; el workflow valida S3 aparte. El volumen compartido `rustfs-data` conserva los objetos. RustFS publica el puerto S3 `9000` y la consola `9001` en el host.
 
 ## api-postgresql
 
-`api-postgresql/` sirve NestJS en el puerto **3001**. Compose inicia PostgreSQL con el servicio interno `postgres` y espera a su healthcheck antes de arrancar la API. `GET /health` confirma la conexión. `ATEMPO_POSTGRES_PASSWORD` es obligatoria y `POSTGRES_PASSWORD` es su alternativa; ambas se leen desde `.env` ignorado por Git. Las APIs no montan el `.env`; Compose pasa solo las variables necesarias. PostgreSQL 17.12 comparte el volumen `postgres-data` y se publica en el host por `5433`; la API usa `postgres:5432`. Un volumen creado con PostgreSQL 16 requiere copia de seguridad y migración explícita antes de usarse con 17. CI usa un valor efímero. Este servicio aún no importa `domain/node-domain/`.
+`api-postgresql/` sirve NestJS en el puerto **3001**. Compose inicia PostgreSQL con el servicio interno `postgres` y espera a su healthcheck antes de arrancar la API. `GET /health` confirma la conexión. `ATEMPO_POSTGRES_PASSWORD` es obligatoria y `POSTGRES_PASSWORD` es su alternativa; ambas se leen desde `.env` ignorado por Git. Las APIs no montan el `.env`; Compose pasa solo las variables necesarias. PostgreSQL 17.12 comparte el volumen `postgres-data` y se publica en el host por `5433`; la API usa `postgres:5432`. Un volumen creado con PostgreSQL 16 requiere copia de seguridad y migración explícita antes de usarse con 17. CI usa un valor efímero. Este servicio aún no importa `domain/node/`.
 
 ## Web y administración
 
@@ -70,7 +70,7 @@ Son almacenes y cadena, no una capa del escritorio ni del API-router. Cada una t
 
 El modelo y los enlaces están en `docs/POSTGRES.md`, `docs/SQLITE.md`, `docs/RUSTFS.md`, `docs/BLOCKEND.md` y `permanent-data.md`.
 
-`api-postgresql/` comprueba la conexión con `GET /health`, ofrece cinco listados (incluidos `GET /organization` y `GET /person-course`), `GET /person/:id`, `POST /person-course` y `DELETE /person-course/:personId/:courseId`. `domain/node-domain/` trae el pool, las lecturas y las escrituras del core; este servicio aún no lo importa. `api-rustfs/` no abre RustFS en el health. El renderer y el API-router no abren estas bases.
+`api-postgresql/` comprueba la conexión con `GET /health`, ofrece cinco listados (incluidos `GET /organization` y `GET /person-course`), `GET /person/:id`, `POST /person-course` y `DELETE /person-course/:personId/:courseId`. `domain/node/` trae el pool, las lecturas y las escrituras del core; este servicio aún no lo importa. `api-rustfs/` no abre RustFS en el health. El renderer y el API-router no abren estas bases.
 
 ## aTempo de escritorio
 
