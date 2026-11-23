@@ -50,7 +50,7 @@ El panel guarda las invitaciones pendientes en la demo web. La activación y la 
 
 ## Probar al alumno
 
-Con el mismo servidor en marcha, abre <http://localhost:5191/>. La cuenta pública de ejemplo es `ada.lopez@clase.test` / `clase-2026`. La sesión, las cuentas, las entradas y los avisos se guardan en `localStorage`, así que siguen al abrir el enlace del QR en una pestaña nueva.
+Con el mismo servidor en marcha, abre <http://localhost:5191/>. La cuenta pública de ejemplo es `ada.lopez@clase.test` / `clase-2026`. No hay registro abierto: la organización invita y el alumno entra la primera vez desde el enlace del correo. Para simularlo, abre <http://localhost:5191/?invitation=264018>: pide una contraseña para Bruno Sanz (`bruno.sanz@clase.test`), abre su inicio y, desde entonces, Bruno entra con el login normal. Un enlace ya usado o desconocido, como `?invitation=000000`, abre el login con un aviso. La sesión, las cuentas, las entradas y los avisos se guardan en `localStorage`, así que siguen al abrir el enlace del QR en una pestaña nueva.
 
 Para registrar asistencia, abre **Hoy → Abrir lista** en [el Electron del PR #130](https://github.com/venturars/aTempo/pull/130). Escanea su QR o escribe en la web las seis cifras que aparecen debajo. Ambos cambian cada 30 segundos. Consulta los pasos para probar con un móvil en [el PR #123](https://github.com/venturars/aTempo/pull/123).
 
