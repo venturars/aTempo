@@ -223,14 +223,25 @@ api-router/
   README.md
   src/
     main.ts
-    configure-app.ts   # CORS, ValidationPipe, Swagger /docs
-    app.module.ts
+    configure-app.ts   # CORS, ValidationPipe, filtro de errores del contrato, Swagger /docs
+    app.module.ts      # carga mock-api/ con API_MOCK=true
+    contract/
+      contract-exception.ts        # errores con el formato del contrato
+      contract-exception.filter.ts # responde con ese formato
     health/
       health.module.ts
       health.controller.ts
       health-response.dto.ts
+    mock-api/
+      mock-api.module.ts
+      sessions.controller.ts # /sessions del contrato API v1
+      courses.controller.ts  # /courses/:courseId/students
+      mock-api.service.ts    # estado en memoria y reglas del contrato
+      dto.ts
+      sample-data.ts         # clase y alumnos de ejemplo
   test/
     health.e2e-spec.ts
+    mock-api.e2e-spec.ts
     swagger.e2e-spec.ts
     jest-e2e.json
 ```
@@ -283,6 +294,7 @@ desktop/
           client.ts        # ApiClient: una función por endpoint y elección del transporte
           contract.ts      # tipos del contrato API v1
           fixtures.ts      # datos y casos del mock (--api-fixture)
+          httpTransport.ts # transporte HTTP con fetch (--api-url)
           isoTime.ts       # fechas ISO 8601 de los datos de ejemplo
           mockTransport.ts # mock en memoria con las reglas del contrato
         login/

@@ -29,6 +29,8 @@ Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alu
 
 La pestaña Hoy usa un cliente de la API con datos simulados. Para ver otro caso, arranca desde `desktop/` con `pnpm exec electron-vite dev -- --api-fixture=<nombre>`: `empty` (sin clases hoy), `denied` (sin acceso), `unauthenticated` (sesión caducada: vuelve al login), `network` (las escrituras no llegan), `timeout` (las escrituras no responden en 10 segundos), `server-error` (las escrituras responden 500), `conflict` (la clase se abrió desde otro sitio) `expired-code` (el primer código del QR llega caducado) o `code-unavailable` (las dos primeras peticiones del código fallan).
 
+Para que la pestaña Hoy hable HTTP con `api-router`, arráncalo con `docker compose up api-router` y la app con `pnpm exec electron-vite dev -- --api-url=http://localhost:3000`. El router responde con datos en memoria; para empezar de cero, reinícialo. Con `--api-url`, «Simular llegada» y «Volver a abrir» quedan desactivados: no están en el contrato.
+
 Para probar al alumno desde el login, sal completamente de la aplicación: en macOS usa **Cmd+Q**; cerrar solo la ventana no termina el proceso. Detén también `pnpm dev` con **Ctrl+C** en su terminal y vuelve a ejecutar `pnpm dev` desde `desktop/`.
 
 Como alumno, pulsa **Registrar asistencia**, **Escanear** y **Llegar a las 08:58**. Debe aparecer el estado **Presente** con la hora **08:58**. Pulsa **Volver** y **Resumen de asistencia** para comprobar la nueva entrada en el historial.
@@ -346,7 +348,7 @@ Ese comando es obligatorio: sin él, el markdown se queda desfasado. No se edita
 docker compose up api-router
 ```
 
-El servicio queda en <http://localhost:3000>. `GET /health` debe devolver `{ "status": "ok" }`. La documentación interactiva está en <http://localhost:3000/docs>. Su contenedor monta solo `api-router/`, sus `node_modules` y la caché pnpm; el `.env` de la raíz no queda disponible dentro del servicio. Para pararlo, `Ctrl+C` o `docker compose stop api-router`.
+El servicio queda en <http://localhost:3000>. `GET /health` debe devolver `{ "status": "ok" }`. Compose lo arranca con `API_MOCK=true`: sirve además, con datos en memoria, los ocho endpoints del contrato API v1 que usa la pestaña Hoy del panel. La documentación interactiva está en <http://localhost:3000/docs>. Su contenedor monta solo `api-router/`, sus `node_modules` y la caché pnpm; el `.env` de la raíz no queda disponible dentro del servicio. Para pararlo, `Ctrl+C` o `docker compose stop api-router`.
 
 Las comprobaciones se lanzan en Docker:
 
