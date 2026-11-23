@@ -1,8 +1,10 @@
+import type { RouterRequest, RouterResponse } from '../../../preload/router'
 import type { ApiClient } from './client'
-import { ApiError, type ErrorCode, type FieldError, type RequestOptions } from './contract'
+import { ApiError, type ErrorCode, type FieldError } from './contract'
+
+export type SendToRouter = (request: RouterRequest) => Promise<RouterResponse>
 
 type ErrorBody = {
-  statusCode?: number
   error?: string
   code?: string
   message?: string
@@ -17,78 +19,58 @@ const codeForStatus: Record<number, ErrorCode> = {
   503: 'SERVICE_UNAVAILABLE'
 }
 
-async function errorFrom(response: Response): Promise<ApiError> {
-  const body = (await response.json().catch(() => null)) as ErrorBody | null
-  const code = (body?.code ?? codeForStatus[response.status] ?? 'INTERNAL_ERROR') as ErrorCode
+function errorFrom(status: number, statusText: string, body: unknown): ApiError {
+  const error = (typeof body === 'object' && body !== null ? body : {}) as ErrorBody
+  const code = (error.code ?? codeForStatus[status] ?? 'INTERNAL_ERROR') as ErrorCode
   return new ApiError(
-    response.status,
-    body?.error ?? response.statusText,
+    status,
+    error.error ?? statusText,
     code,
-    body?.message ?? 'Error inesperado.',
-    body?.details ?? []
+    error.message ?? 'Error inesperado.',
+    error.details ?? []
   )
 }
 
-function connectionError(error: unknown): ApiError {
-  if (error instanceof DOMException && error.name === 'AbortError') {
-    return new ApiError(0, 'Request Cancelled', 'REQUEST_CANCELLED', 'Se canceló la petición.')
-  }
-  return new ApiError(0, 'Network Error', 'NETWORK_ERROR', 'No hay respuesta del servidor.')
+function noResponse(reason: 'timeout' | 'network'): ApiError {
+  return reason === 'timeout'
+    ? new ApiError(0, 'Network Timeout', 'NETWORK_TIMEOUT', 'El servidor no ha respondido.')
+    : new ApiError(0, 'Network Error', 'NETWORK_ERROR', 'No hay respuesta del servidor.')
 }
 
 function segment(value: string): string {
   return encodeURIComponent(value)
 }
 
-export function createHttpTransport(baseUrl: string): ApiClient {
-  const root = baseUrl.replace(/\/+$/, '')
-
+export function createHttpTransport(send: SendToRouter): ApiClient {
   async function call<T>(
-    method: 'GET' | 'POST' | 'PUT',
+    method: RouterRequest['method'],
     path: string,
-    options: RequestOptions = {},
     body?: unknown
   ): Promise<T> {
-    let response: Response
+    let response: RouterResponse
     try {
-      response = await fetch(`${root}${path}`, {
-        method,
-        signal: options.signal,
-        headers:
-          body === undefined
-            ? { Accept: 'application/json' }
-            : { Accept: 'application/json', 'Content-Type': 'application/json' },
-        body: body === undefined ? undefined : JSON.stringify(body)
-      })
-    } catch (error) {
-      throw connectionError(error)
+      response = await send(body === undefined ? { method, path } : { method, path, body })
+    } catch {
+      throw noResponse('network')
     }
-    if (!response.ok) {
-      throw await errorFrom(response)
+    if (response.kind === 'no-response') {
+      throw noResponse(response.reason)
     }
-    return (await response.json()) as T
+    if (response.status < 200 || response.status >= 300) {
+      throw errorFrom(response.status, response.statusText, response.body)
+    }
+    return response.body as T
   }
 
   return {
-    listSessions: (date, options) =>
-      call('GET', `/sessions?date=${encodeURIComponent(date)}`, options),
-    getSession: (sessionId, options) => call('GET', `/sessions/${segment(sessionId)}`, options),
-    listAttendances: (sessionId, options) =>
-      call('GET', `/sessions/${segment(sessionId)}/attendances`, options),
-    openSession: (sessionId, options) =>
-      call('POST', `/sessions/${segment(sessionId)}/open`, options),
-    closeSession: (sessionId, options) =>
-      call('POST', `/sessions/${segment(sessionId)}/close`, options),
-    getCheckInCode: (sessionId, options) =>
-      call('GET', `/sessions/${segment(sessionId)}/check-in-code`, options),
-    correctAttendance: (sessionId, studentId, correction, options) =>
-      call(
-        'PUT',
-        `/sessions/${segment(sessionId)}/attendances/${segment(studentId)}`,
-        options,
-        correction
-      ),
-    listCourseStudents: (courseId, options) =>
-      call('GET', `/courses/${segment(courseId)}/students`, options)
+    listSessions: (date) => call('GET', `/sessions?date=${encodeURIComponent(date)}`),
+    getSession: (sessionId) => call('GET', `/sessions/${segment(sessionId)}`),
+    listAttendances: (sessionId) => call('GET', `/sessions/${segment(sessionId)}/attendances`),
+    openSession: (sessionId) => call('POST', `/sessions/${segment(sessionId)}/open`),
+    closeSession: (sessionId) => call('POST', `/sessions/${segment(sessionId)}/close`),
+    getCheckInCode: (sessionId) => call('GET', `/sessions/${segment(sessionId)}/check-in-code`),
+    correctAttendance: (sessionId, studentId, correction) =>
+      call('PUT', `/sessions/${segment(sessionId)}/attendances/${segment(studentId)}`, correction),
+    listCourseStudents: (courseId) => call('GET', `/courses/${segment(courseId)}/students`)
   }
 }

@@ -3,6 +3,8 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { closeDatabase, openDatabase } from './database'
+import { isContractRequest, sendRouterRequest } from './routerRequest'
+import type { RouterResponse } from '../preload/router'
 
 type LoginCredentials = { email: string; password: string }
 type AuthUser = { sub: string; email: string }
@@ -161,6 +163,26 @@ function registerAuthHandlers(): void {
   })
 }
 
+function registerRouterHandlers(): void {
+  ipcMain.handle('api:request', async (_event, request: unknown): Promise<RouterResponse> => {
+    if (!isContractRequest(request)) throw authError('API_REQUEST_INVALID')
+    let routerUrl: string
+    try {
+      routerUrl = resolveApiRouterUrl()
+    } catch {
+      return { kind: 'no-response', reason: 'network' }
+    }
+    const response = await sendRouterRequest(
+      routerUrl,
+      await readAccessToken(),
+      request,
+      requestTimeout
+    )
+    if (response.kind === 'response' && response.status === 401) clearAuthSession()
+    return response
+  })
+}
+
 function startupHash(): string | undefined {
   if (process.argv.includes('--dashboard')) {
     return '/student/dashboard'
@@ -186,12 +208,12 @@ function flagValue(name: string): string | undefined {
 function apiQuery(): Record<string, string> {
   const query: Record<string, string> = {}
   const fixture = flagValue('api-fixture')
-  const apiUrl = flagValue('api-url')
+  const transport = flagValue('api-transport')
   if (fixture !== undefined) {
     query.apiFixture = fixture
   }
-  if (apiUrl !== undefined) {
-    query.apiUrl = apiUrl
+  if (transport !== undefined) {
+    query.apiTransport = transport
   }
   return query
 }
@@ -257,6 +279,7 @@ app.whenReady().then(() => {
 
   openDatabase()
   registerAuthHandlers()
+  registerRouterHandlers()
   createWindow()
 
   app.on('activate', function () {

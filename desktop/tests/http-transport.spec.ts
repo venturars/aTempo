@@ -2,12 +2,13 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import type { AddressInfo } from 'node:net'
 import { expect, test } from '@playwright/test'
 import { launchHiddenElectron } from './helpers/electron'
-import { createHttpTransport } from '../src/renderer/src/api/httpTransport'
+import { isContractRequest, sendRouterRequest } from '../src/main/routerRequest'
+import { createHttpTransport, type SendToRouter } from '../src/renderer/src/api/httpTransport'
 import { localDay } from '../src/renderer/src/api/isoTime'
 import { sampleSession, sampleStudents } from '../src/renderer/src/api/fixtures'
 
-type Request = { method: string; url: string; body: unknown }
-type Handler = (request: Request) => { status: number; body: unknown }
+type Request = { method: string; url: string; authorization: string | null; body: unknown }
+type Handler = (request: Request) => { status: number; body: unknown; delay?: number }
 
 type Stub = { url: string; requests: Request[]; close: () => Promise<void> }
 
@@ -19,27 +20,19 @@ async function startStub(handle: Handler): Promise<Stub> {
       raw += chunk
     })
     incoming.on('end', () => {
-      if (incoming.method === 'OPTIONS') {
-        outgoing.writeHead(204, {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET,POST,PUT',
-          'Access-Control-Allow-Headers': 'Content-Type, Accept'
-        })
-        outgoing.end()
-        return
-      }
       const request = {
         method: incoming.method ?? '',
         url: incoming.url ?? '',
+        authorization: incoming.headers.authorization ?? null,
         body: raw === '' ? undefined : JSON.parse(raw)
       }
       requests.push(request)
-      const { status, body } = handle(request)
-      outgoing.writeHead(status, {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      })
-      outgoing.end(JSON.stringify(body))
+      const { status, body, delay = 0 } = handle(request)
+      setTimeout(() => {
+        if (outgoing.destroyed) return
+        outgoing.writeHead(status, { 'Content-Type': 'application/json' })
+        outgoing.end(JSON.stringify(body))
+      }, delay)
     })
   })
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
@@ -47,14 +40,22 @@ async function startStub(handle: Handler): Promise<Stub> {
   return {
     url: `http://127.0.0.1:${port}`,
     requests,
-    close: () => new Promise((resolve) => server.close(() => resolve()))
+    close: () =>
+      new Promise((resolve) => {
+        server.closeAllConnections()
+        server.close(() => resolve())
+      })
   }
 }
 
-test('sends each operation to its contract route', async () => {
+function throughMain(url: string, token: string | null = null, timeout = 10_000): SendToRouter {
+  return (request) => sendRouterRequest(url, token, request, timeout)
+}
+
+test('sends each operation to its contract route with the access token', async () => {
   const stub = await startStub(() => ({ status: 200, body: {} }))
   try {
-    const client = createHttpTransport(`${stub.url}/`)
+    const client = createHttpTransport(throughMain(stub.url, 'token-123'))
     await client.listSessions('2026-11-23')
     await client.getSession('session 1')
     await client.listAttendances('s1')
@@ -63,7 +64,7 @@ test('sends each operation to its contract route', async () => {
     await client.getCheckInCode('s1')
     await client.correctAttendance('s1', 'student-ada', { status: 'late', reason: 'Bus' })
     await client.listCourseStudents('course-ai')
-    expect(stub.requests).toEqual([
+    expect(stub.requests.map(({ method, url, body }) => ({ method, url, body }))).toEqual([
       { method: 'GET', url: '/sessions?date=2026-11-23', body: undefined },
       { method: 'GET', url: '/sessions/session%201', body: undefined },
       { method: 'GET', url: '/sessions/s1/attendances', body: undefined },
@@ -77,9 +78,23 @@ test('sends each operation to its contract route', async () => {
       },
       { method: 'GET', url: '/courses/course-ai/students', body: undefined }
     ])
+    expect(stub.requests.every((request) => request.authorization === 'Bearer token-123')).toBe(
+      true
+    )
   } finally {
     await stub.close()
   }
+})
+
+test('main only forwards the contract routes', () => {
+  expect(isContractRequest({ method: 'GET', path: '/sessions?date=2026-11-23' })).toBe(true)
+  expect(isContractRequest({ method: 'PUT', path: '/sessions/s1/attendances/a' })).toBe(true)
+  expect(isContractRequest({ method: 'GET', path: '/auth/me' })).toBe(false)
+  expect(isContractRequest({ method: 'DELETE', path: '/sessions/s1' })).toBe(false)
+  expect(isContractRequest({ method: 'POST', path: '/sessions/s1/attendances' })).toBe(false)
+  expect(isContractRequest({ method: 'GET', path: '/sessions/../auth/me' })).toBe(false)
+  expect(isContractRequest({ method: 'GET', path: '/sessions/..' })).toBe(false)
+  expect(isContractRequest('GET /sessions')).toBe(false)
 })
 
 test('turns a contract error body into an ApiError', async () => {
@@ -95,7 +110,7 @@ test('turns a contract error body into an ApiError', async () => {
   }))
   try {
     await expect(
-      createHttpTransport(stub.url).correctAttendance('s1', 'student-ada', {
+      createHttpTransport(throughMain(stub.url)).correctAttendance('s1', 'student-ada', {
         status: 'present',
         reason: ''
       })
@@ -115,10 +130,9 @@ test('falls back to a code by status when the body has none', async () => {
     body: { statusCode: 404, message: 'Cannot GET /sessions', error: 'Not Found' }
   }))
   try {
-    await expect(createHttpTransport(stub.url).listSessions('2026-11-23')).rejects.toMatchObject({
-      statusCode: 404,
-      code: 'INTERNAL_ERROR'
-    })
+    await expect(
+      createHttpTransport(throughMain(stub.url)).listSessions('2026-11-23')
+    ).rejects.toMatchObject({ statusCode: 404, code: 'INTERNAL_ERROR' })
   } finally {
     await stub.close()
   }
@@ -127,13 +141,23 @@ test('falls back to a code by status when the body has none', async () => {
 test('reports a server that does not answer as NETWORK_ERROR', async () => {
   const stub = await startStub(() => ({ status: 200, body: {} }))
   await stub.close()
-  await expect(createHttpTransport(stub.url).listSessions('2026-11-23')).rejects.toMatchObject({
-    statusCode: 0,
-    code: 'NETWORK_ERROR'
-  })
+  await expect(
+    createHttpTransport(throughMain(stub.url)).listSessions('2026-11-23')
+  ).rejects.toMatchObject({ statusCode: 0, code: 'NETWORK_ERROR' })
 })
 
-test('runs the Today tab against an HTTP server with --api-url', async () => {
+test('reports a slow server as NETWORK_TIMEOUT', async () => {
+  const stub = await startStub(() => ({ status: 200, body: [], delay: 500 }))
+  try {
+    await expect(
+      createHttpTransport(throughMain(stub.url, null, 100)).listSessions('2026-11-23')
+    ).rejects.toMatchObject({ statusCode: 0, code: 'NETWORK_TIMEOUT' })
+  } finally {
+    await stub.close()
+  }
+})
+
+test('runs the Today tab through main with --api-transport=http', async () => {
   const session = sampleSession(localDay())
   const students = sampleStudents()
   const pending = students.map((student) => ({
@@ -161,7 +185,9 @@ test('runs the Today tab against an HTTP server with --api-url', async () => {
       }
     }
   })
-  const app = await launchHiddenElectron([`--api-url=${stub.url}`])
+  const originalUrl = process.env.ATEMPO_API_ROUTER_URL
+  process.env.ATEMPO_API_ROUTER_URL = stub.url
+  const app = await launchHiddenElectron(['--api-transport=http'])
   try {
     const window = await app.firstWindow()
     await expect(window.getByRole('button', { name: 'Entrar' })).toBeVisible()
@@ -178,5 +204,7 @@ test('runs the Today tab against an HTTP server with --api-url', async () => {
   } finally {
     await app.close()
     await stub.close()
+    if (originalUrl === undefined) delete process.env.ATEMPO_API_ROUTER_URL
+    else process.env.ATEMPO_API_ROUTER_URL = originalUrl
   }
 })

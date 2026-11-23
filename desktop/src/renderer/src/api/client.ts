@@ -9,7 +9,7 @@ import {
   type Session
 } from './contract'
 import { isFixtureName, type FixtureName } from './fixtures'
-import { createHttpTransport } from './httpTransport'
+import { createHttpTransport, type SendToRouter } from './httpTransport'
 import { localDay } from './isoTime'
 import { createMockTransport, type DemoControls } from './mockTransport'
 
@@ -130,12 +130,17 @@ function fixtureFromAddress(): FixtureName {
   return isFixtureName(name) ? name : 'success'
 }
 
+function routerFromAddress(): SendToRouter | null {
+  if (addressParam('apiTransport') !== 'http') return null
+  return globalThis.window?.api?.router?.request ?? null
+}
+
 export function resetApiClient(
   fixture: FixtureName = fixtureFromAddress(),
-  apiUrl: string | null = addressParam('apiUrl')
+  sendToRouter: SendToRouter | null = routerFromAddress()
 ): ApiClient {
-  if (apiUrl !== null && apiUrl !== '') {
-    client = withRequestRules(createHttpTransport(apiUrl))
+  if (sendToRouter !== null) {
+    client = withRequestRules(createHttpTransport(sendToRouter))
     demo = null
     return client
   }
