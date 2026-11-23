@@ -89,7 +89,10 @@ describe('reglas de negocio', () => {
     const calls = mockDriver(async () => rowsResult([validOrganization]))
     await expect(
       createOrganization({ organization: organizationCreate }),
-    ).rejects.toThrow('organization.tax_id ya existe')
+    ).rejects.toMatchObject({
+      id: 'organization.tax_id.taken',
+      message: 'organization.tax_id ya existe',
+    })
     await expect(
       createOrganization({ organization: organizationCreate }),
     ).rejects.toBeInstanceOf(ConflictError)
@@ -352,7 +355,10 @@ describe('reglas de negocio', () => {
       addPersonRole({
         personRole: { person_id: PERSON_ID, role: 'student' },
       }),
-    ).rejects.toThrow('un student no puede llevar otro rol')
+    ).rejects.toMatchObject({
+      id: 'person_role.student.exclusive',
+      message: 'un student no puede llevar otro rol',
+    })
     expect(wrote(calls)).toBe(false)
   })
 
@@ -416,7 +422,7 @@ describe('reglas de negocio', () => {
     const calls = mockDriver(async () => emptyResult())
     await expect(
       addPersonCourse({ personCourse: validPersonCourse }),
-    ).rejects.toThrow('person no existe')
+    ).rejects.toMatchObject({ id: 'person.missing' })
     expect(wrote(calls)).toBe(false)
   })
 

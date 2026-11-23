@@ -7,6 +7,7 @@ export type DomainErrorCode =
 
 export type DomainErrorOptions = {
   code: DomainErrorCode
+  id: string
   entity?: string
   field?: string
   cause?: Error
@@ -14,6 +15,7 @@ export type DomainErrorOptions = {
 
 export class DomainError extends Error {
   readonly code: DomainErrorCode
+  readonly id: string
   readonly entity?: string
   readonly field?: string
 
@@ -21,52 +23,38 @@ export class DomainError extends Error {
     super(message, options.cause ? { cause: options.cause } : undefined)
     this.name = new.target.name
     this.code = options.code
+    this.id = options.id
     this.entity = options.entity
     this.field = options.field
   }
 }
 
 export class ValidationError extends DomainError {
-  constructor(
-    message: string,
-    options: Omit<DomainErrorOptions, 'code'> = {},
-  ) {
+  constructor(message: string, options: Omit<DomainErrorOptions, 'code'>) {
     super(message, { ...options, code: 'VALIDATION' })
   }
 }
 
 export class NotFoundError extends DomainError {
-  constructor(
-    message: string,
-    options: Omit<DomainErrorOptions, 'code'> = {},
-  ) {
+  constructor(message: string, options: Omit<DomainErrorOptions, 'code'>) {
     super(message, { ...options, code: 'NOT_FOUND' })
   }
 }
 
 export class ConflictError extends DomainError {
-  constructor(
-    message: string,
-    options: Omit<DomainErrorOptions, 'code'> = {},
-  ) {
+  constructor(message: string, options: Omit<DomainErrorOptions, 'code'>) {
     super(message, { ...options, code: 'CONFLICT' })
   }
 }
 
 export class ConfigurationError extends DomainError {
-  constructor(
-    message: string,
-    options: Omit<DomainErrorOptions, 'code'> = {},
-  ) {
+  constructor(message: string, options: Omit<DomainErrorOptions, 'code'>) {
     super(message, { ...options, code: 'CONFIGURATION' })
   }
 }
 
 export class PersistenceError extends DomainError {
-  constructor(
-    message: string,
-    options: Omit<DomainErrorOptions, 'code'> = {},
-  ) {
+  constructor(message: string, options: Omit<DomainErrorOptions, 'code'>) {
     super(message, { ...options, code: 'PERSISTENCE' })
   }
 }

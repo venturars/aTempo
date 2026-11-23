@@ -1,4 +1,4 @@
-import { ConflictError } from '../errors'
+import { fail } from '../errors'
 import { personRoleExists } from '../postgres/executors/person-role'
 import type { RoleName } from '../types/role'
 
@@ -12,8 +12,6 @@ export async function assertPersonRoleAvailable(
 ): Promise<void> {
   const exists = await personRoleExists(input.personId, input.role)
   if (exists) {
-    throw new ConflictError('person_role ya existe', {
-      entity: 'person_role',
-    })
+    fail('person_role', 'taken')
   }
 }

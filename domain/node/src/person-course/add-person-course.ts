@@ -1,4 +1,4 @@
-import { ConflictError, NotFoundError, PersistenceError } from '../errors'
+import { fail } from '../errors'
 import { withTransaction } from '../postgres/pool'
 import {
   insertPersonCourse,
@@ -25,22 +25,18 @@ export async function addPersonCourse(
   const created = await withTransaction(async (run) => {
     const lookup = await lookupPersonCourse(personCourse, run)
     if (!lookup?.person_exists) {
-      throw new NotFoundError('person no existe', { entity: 'person' })
+      fail('person', 'missing')
     }
     if (!lookup.course_exists) {
-      throw new NotFoundError('course no existe', { entity: 'course' })
+      fail('course', 'missing')
     }
     if (lookup.already) {
-      throw new ConflictError('person_course ya existe', {
-        entity: 'person_course',
-      })
+      fail('person_course', 'taken')
     }
 
     const row = await insertPersonCourse(personCourse, run)
     if (!row) {
-      throw new PersistenceError('person_course no se ha creado', {
-        entity: 'person_course',
-      })
+      fail('person_course', 'not_created')
     }
 
     return assertPersonCourse(row)

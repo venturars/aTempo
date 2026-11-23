@@ -1,4 +1,4 @@
-import { ConflictError } from '../errors'
+import { fail } from '../errors'
 import { findOrganizationIdByTaxId } from '../postgres/executors/organization'
 import { assertNonEmptyString, normalizeUuid } from '../types/assert'
 
@@ -20,9 +20,6 @@ export async function assertTaxIdAvailable(
     input.ignoreId === undefined ||
     normalizeUuid(foundId) !== normalizeUuid(input.ignoreId)
   ) {
-    throw new ConflictError('organization.tax_id ya existe', {
-      entity: 'organization',
-      field: 'tax_id',
-    })
+    fail('organization.tax_id', 'taken')
   }
 }

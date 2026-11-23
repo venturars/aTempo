@@ -1,4 +1,4 @@
-import { ConflictError } from '../errors'
+import { fail } from '../errors'
 import { findCourseIdByContractAddress } from '../postgres/executors/course'
 import { normalizeUuid } from '../types/assert'
 import { normalizeContractAddress } from '../types/course'
@@ -21,9 +21,6 @@ export async function assertContractAddressAvailable(
     input.ignoreId === undefined ||
     normalizeUuid(foundId) !== normalizeUuid(input.ignoreId)
   ) {
-    throw new ConflictError('course.contract_address ya existe', {
-      entity: 'course',
-      field: 'contract_address',
-    })
+    fail('course.contract_address', 'taken')
   }
 }

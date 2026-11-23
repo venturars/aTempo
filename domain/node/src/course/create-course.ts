@@ -1,4 +1,4 @@
-import { PersistenceError } from '../errors'
+import { fail } from '../errors'
 import { assertOrganizationExists } from '../organization/assert-organization-exists'
 import { insertCourse } from '../postgres/executors/course'
 import {
@@ -33,7 +33,7 @@ export async function createCourse(
 
   const row = await insertCourse({ ...course, contract_address: contractAddress })
   if (!row) {
-    throw new PersistenceError('course no se ha creado', { entity: 'course' })
+    fail('course', 'not_created')
   }
 
   return { course: assertCourse(row) }

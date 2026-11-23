@@ -1,4 +1,4 @@
-import { ValidationError } from '../errors'
+import { fail } from '../errors'
 import {
   assertCalendarDate,
   assertNonEmptyString,
@@ -36,10 +36,7 @@ export function assertBirthDate(value: string | null): void {
 
   const match = BIRTH_DATE_RE.exec(value)
   if (!match) {
-    throw new ValidationError('person.birth_date debe ser una fecha', {
-      entity: 'person',
-      field: 'birth_date',
-    })
+    fail('person.birth_date', 'date')
   }
 
   assertCalendarDate(
@@ -82,10 +79,7 @@ function personFields(
   )
   assertNonEmptyString(value.email, 'person.email')
   if (normalizeEmail(value.email).length === 0) {
-    throw new ValidationError('person.email debe ser un string no vacío', {
-      entity: 'person',
-      field: 'email',
-    })
+    fail('person.email', 'empty')
   }
   assertString(value.first_name, 'person.first_name', allowEmptyNames)
   assertString(value.last_name, 'person.last_name', allowEmptyNames)

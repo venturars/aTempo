@@ -1,8 +1,4 @@
-import {
-  ConflictError,
-  NotFoundError,
-  PersistenceError,
-} from '../errors'
+import { DomainError, domainError } from '../errors'
 
 function pgField(
   error: object,
@@ -15,67 +11,46 @@ function pgField(
   return typeof value === 'string' ? value : undefined
 }
 
-export function domainErrorFromPg(error: object): Error | undefined {
+export function domainErrorFromPg(error: object): DomainError | undefined {
   const code = pgField(error, 'code')
   const constraint = pgField(error, 'constraint') ?? ''
 
   if (code === '23505') {
     if (constraint.includes('email')) {
-      return new ConflictError('person.email ya existe', {
-        entity: 'person',
-        field: 'email',
-      })
+      return domainError('person.email', 'taken')
     }
     if (constraint.includes('identification_document')) {
-      return new ConflictError('person.identification_document ya existe', {
-        entity: 'person',
-        field: 'identification_document',
-      })
+      return domainError('person.identification_document', 'taken')
     }
     if (constraint.includes('tax_id')) {
-      return new ConflictError('organization.tax_id ya existe', {
-        entity: 'organization',
-        field: 'tax_id',
-      })
+      return domainError('organization.tax_id', 'taken')
     }
     if (constraint.includes('contract_address')) {
-      return new ConflictError('course.contract_address ya existe', {
-        entity: 'course',
-        field: 'contract_address',
-      })
+      return domainError('course.contract_address', 'taken')
     }
     if (constraint.includes('acronym')) {
-      return new ConflictError(
-        'course.acronym ya existe en la organización',
-        { entity: 'course', field: 'acronym' },
-      )
+      return domainError('course.acronym', 'taken')
     }
     if (constraint === 'person_course_pkey') {
-      return new ConflictError('person_course ya existe', {
-        entity: 'person_course',
-      })
+      return domainError('person_course', 'taken')
     }
     if (constraint === 'person_role_pkey') {
-      return new ConflictError('person_role ya existe', {
-        entity: 'person_role',
-      })
+      return domainError('person_role', 'taken')
     }
   }
 
   if (code === '23503') {
     if (constraint === 'course_organization_id_fkey') {
-      return new NotFoundError('organization no existe', {
-        entity: 'organization',
-      })
+      return domainError('organization', 'missing')
     }
     if (
       constraint === 'person_course_person_id_fkey' ||
       constraint === 'person_role_person_id_fkey'
     ) {
-      return new NotFoundError('person no existe', { entity: 'person' })
+      return domainError('person', 'missing')
     }
     if (constraint === 'person_course_course_id_fkey') {
-      return new NotFoundError('course no existe', { entity: 'course' })
+      return domainError('course', 'missing')
     }
   }
 
@@ -83,15 +58,19 @@ export function domainErrorFromPg(error: object): Error | undefined {
 }
 
 export function rethrowPg(error: unknown): never {
+  if (error instanceof DomainError) {
+    throw error
+  }
+
   if (typeof error === 'object' && error !== null) {
     const mapped = domainErrorFromPg(error)
     if (mapped) {
       throw mapped
     }
-    throw error
+    throw domainError('postgres', 'unmapped', {
+      cause: error instanceof Error ? error : undefined,
+    })
   }
 
-  throw new PersistenceError('error de PostgreSQL', {
-    entity: 'postgres',
-  })
+  throw domainError('postgres', 'unmapped')
 }

@@ -1,4 +1,4 @@
-import { NotFoundError } from '../errors'
+import { fail } from '../errors'
 import { findOrganizationById } from '../postgres/executors/organization'
 
 export type AssertOrganizationExistsInput = {
@@ -10,8 +10,6 @@ export async function assertOrganizationExists(
 ): Promise<void> {
   const organization = await findOrganizationById(input.id)
   if (!organization) {
-    throw new NotFoundError('organization no existe', {
-      entity: 'organization',
-    })
+    fail('organization', 'missing')
   }
 }

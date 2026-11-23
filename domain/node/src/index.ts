@@ -6,6 +6,8 @@ export {
   PersistenceError,
   ValidationError,
   type DomainErrorCode,
+  type DomainErrorId,
+  type DomainErrorReason,
 } from './errors'
 
 export { normalizeUuid } from './types/assert'

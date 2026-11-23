@@ -1,4 +1,9 @@
-import { ConflictError, ConfigurationError, NotFoundError } from '../src/errors'
+import {
+  ConflictError,
+  ConfigurationError,
+  NotFoundError,
+  PersistenceError,
+} from '../src/errors'
 import { check } from '../src/postgres/check'
 import { query } from '../src/postgres/pool'
 import { assertMockSql, mockDriver, resetDriver } from './helpers'
@@ -12,6 +17,9 @@ describe('postgres', () => {
     resetDriver()
     await expect(check()).rejects.toThrow('Falta DATABASE_URL')
     await expect(check()).rejects.toBeInstanceOf(ConfigurationError)
+    await expect(check()).rejects.toMatchObject({
+      id: 'postgres.DATABASE_URL.missing_env',
+    })
   })
 
   it('pings with SELECT 1 when the driver succeeds', async () => {
@@ -24,7 +32,12 @@ describe('postgres', () => {
     mockDriver(async () => {
       throw new Error('connection refused')
     })
-    await expect(check()).rejects.toThrow('connection refused')
+    await expect(check()).rejects.toBeInstanceOf(PersistenceError)
+    await expect(check()).rejects.toMatchObject({
+      id: 'postgres.unmapped',
+      message: 'error de PostgreSQL',
+      cause: expect.objectContaining({ message: 'connection refused' }),
+    })
   })
 
   it('query uses the substituted driver', async () => {
@@ -61,6 +74,9 @@ describe('postgres', () => {
     })
     await expect(query('SELECT 1')).rejects.toThrow('person.email ya existe')
     await expect(query('SELECT 1')).rejects.toBeInstanceOf(ConflictError)
+    await expect(query('SELECT 1')).rejects.toMatchObject({
+      id: 'person.email.taken',
+    })
 
     mockDriver(async () => {
       throw Object.assign(new Error('duplicate key'), {
@@ -80,5 +96,8 @@ describe('postgres', () => {
     })
     await expect(query('SELECT 1')).rejects.toThrow('organization no existe')
     await expect(query('SELECT 1')).rejects.toBeInstanceOf(NotFoundError)
+    await expect(query('SELECT 1')).rejects.toMatchObject({
+      id: 'organization.missing',
+    })
   })
 })

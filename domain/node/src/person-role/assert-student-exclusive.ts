@@ -1,4 +1,4 @@
-import { ConflictError } from '../errors'
+import { fail } from '../errors'
 import { listRolesByPersonId } from '../postgres/executors/role'
 import type { RoleName } from '../types/role'
 
@@ -14,16 +14,10 @@ export async function assertStudentExclusive(
   const names = roles.map((role) => role.name)
 
   if (input.role === 'student' && names.some((name) => name !== 'student')) {
-    throw new ConflictError('un student no puede llevar otro rol', {
-      entity: 'person_role',
-      field: 'role',
-    })
+    fail('person_role.student', 'exclusive')
   }
 
   if (input.role !== 'student' && names.includes('student')) {
-    throw new ConflictError('un student no puede llevar otro rol', {
-      entity: 'person_role',
-      field: 'role',
-    })
+    fail('person_role.student', 'exclusive')
   }
 }

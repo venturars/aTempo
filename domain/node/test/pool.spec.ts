@@ -80,7 +80,10 @@ describe('pool', () => {
       }
       return commandResult(1)
     })
-    await expect(deletePerson({ id: PERSON_ID })).rejects.toThrow('timeout')
+    await expect(deletePerson({ id: PERSON_ID })).rejects.toMatchObject({
+      id: 'postgres.unmapped',
+      cause: expect.objectContaining({ message: 'timeout' }),
+    })
     expect(clientSql()).toEqual([
       'BEGIN',
       expect.stringContaining('DELETE FROM person_role'),

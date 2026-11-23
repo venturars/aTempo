@@ -249,6 +249,7 @@ describe('assert*', () => {
     } catch (error) {
       expect(error).toBeInstanceOf(ValidationError)
       expect(error).toMatchObject({
+        id: 'person.first_name.empty',
         code: 'VALIDATION',
         entity: 'person',
         field: 'first_name',

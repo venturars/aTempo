@@ -1,4 +1,4 @@
-import { ConflictError } from '../errors'
+import { fail } from '../errors'
 import { findPersonIdByEmail } from '../postgres/executors/person'
 import { assertNonEmptyString, normalizeUuid } from '../types/assert'
 import { normalizeEmail } from '../types/person'
@@ -23,9 +23,6 @@ export async function assertEmailAvailable(
     input.ignoreId === undefined ||
     normalizeUuid(foundId) !== normalizeUuid(input.ignoreId)
   ) {
-    throw new ConflictError('person.email ya existe', {
-      entity: 'person',
-      field: 'email',
-    })
+    fail('person.email', 'taken')
   }
 }

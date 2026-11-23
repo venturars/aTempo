@@ -1,4 +1,4 @@
-import { PersistenceError } from '../errors'
+import { fail } from '../errors'
 import { insertPerson } from '../postgres/executors/person'
 import {
   assertPerson,
@@ -30,7 +30,7 @@ export async function createPerson(
 
   const row = await insertPerson({ ...person, email })
   if (!row) {
-    throw new PersistenceError('person no se ha creado', { entity: 'person' })
+    fail('person', 'not_created')
   }
 
   return { person: assertPerson(row) }

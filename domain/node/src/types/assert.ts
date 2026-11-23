@@ -1,31 +1,27 @@
-import { ValidationError, labelParts } from '../errors'
+import { fail, type DomainLabel } from '../errors'
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export function assertString(
   value: string,
-  label: string,
+  label: DomainLabel,
   allowEmpty = false,
 ): string {
   if (typeof value !== 'string' || (!allowEmpty && value.length === 0)) {
-    throw new ValidationError(`${label} debe ser un string no vacío`, {
-      ...labelParts(label),
-    })
+    fail(label, 'empty')
   }
   return value
 }
 
-export function assertNonEmptyString(value: string, label: string): string {
+export function assertNonEmptyString(value: string, label: DomainLabel): string {
   return assertString(value, label)
 }
 
-export function assertUuid(value: string, label: string): string {
+export function assertUuid(value: string, label: DomainLabel): string {
   assertNonEmptyString(value, label)
   if (!UUID_RE.test(value)) {
-    throw new ValidationError(`${label} debe ser un uuid`, {
-      ...labelParts(label),
-    })
+    fail(label, 'uuid')
   }
   return value
 }
@@ -38,12 +34,10 @@ export function assertCalendarDate(
   year: number,
   month: number,
   day: number,
-  label: string,
+  label: DomainLabel,
 ): void {
   if (year < 1 || year > 9999) {
-    throw new ValidationError(`${label} debe ser una fecha`, {
-      ...labelParts(label),
-    })
+    fail(label, 'date')
   }
 
   const date = new Date(Date.UTC(year, month - 1, day))
@@ -53,29 +47,23 @@ export function assertCalendarDate(
     date.getUTCMonth() !== month - 1 ||
     date.getUTCDate() !== day
   ) {
-    throw new ValidationError(`${label} debe ser una fecha`, {
-      ...labelParts(label),
-    })
+    fail(label, 'date')
   }
 }
 
 export function assertNullableString(
   value: string | null,
-  label: string,
+  label: DomainLabel,
 ): string | null {
   if (value !== null && typeof value !== 'string') {
-    throw new ValidationError(`${label} debe ser string o null`, {
-      ...labelParts(label),
-    })
+    fail(label, 'nullable_string')
   }
   return value
 }
 
-export function assertObject<T extends object>(value: T, label: string): T {
+export function assertObject<T extends object>(value: T, label: DomainLabel): T {
   if (value === null || typeof value !== 'object') {
-    throw new ValidationError(`${label} debe ser un objeto`, {
-      entity: label,
-    })
+    fail(label, 'object')
   }
   return value
 }

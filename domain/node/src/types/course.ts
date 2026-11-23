@@ -1,4 +1,4 @@
-import { ValidationError, labelParts } from '../errors'
+import { fail, type DomainLabel } from '../errors'
 import {
   assertCalendarDate,
   assertNonEmptyString,
@@ -40,10 +40,7 @@ export function assertCourseUpdate(value: CourseUpdate): CourseUpdate {
 
 export function assertContractAddress(value: string): void {
   if (!CONTRACT_ADDRESS_RE.test(value)) {
-    throw new ValidationError(
-      'course.contract_address debe ser 0x y 40 hex',
-      { entity: 'course', field: 'contract_address' },
-    )
+    fail('course.contract_address', 'format')
   }
 }
 
@@ -55,13 +52,10 @@ function padUtc(value: number, width = 2): string {
   return String(value).padStart(width, '0')
 }
 
-export function normalizeInstant(value: string, label: string): string {
+export function normalizeInstant(value: string, label: DomainLabel): string {
   const match = INSTANT_RE.exec(value)
   if (match === null) {
-    throw new ValidationError(
-      `${label} debe ser una fecha con zona horaria`,
-      labelParts(label),
-    )
+    fail(label, 'instant')
   }
   assertCalendarDate(
     Number(match[1]),
@@ -71,13 +65,13 @@ export function normalizeInstant(value: string, label: string): string {
   )
   const ms = Date.parse(value)
   if (Number.isNaN(ms)) {
-    throw new ValidationError(`${label} debe ser una fecha`, labelParts(label))
+    fail(label, 'date')
   }
 
   const date = new Date(ms)
   const year = date.getUTCFullYear()
   if (year < 1 || year > 9999) {
-    throw new ValidationError(`${label} debe ser una fecha`, labelParts(label))
+    fail(label, 'date')
   }
 
   return (
@@ -91,10 +85,7 @@ export function assertCourseDates(startAt: string, endAt: string): void {
   const start = normalizeInstant(startAt, 'course.start_at')
   const end = normalizeInstant(endAt, 'course.end_at')
   if (!(end > start)) {
-    throw new ValidationError(
-      'course.end_at debe ser posterior a course.start_at',
-      { entity: 'course', field: 'end_at' },
-    )
+    fail('course.end_at', 'order')
   }
 }
 
@@ -122,10 +113,7 @@ function courseFields(
   const startAt = normalizeInstant(value.start_at, 'course.start_at')
   const endAt = normalizeInstant(value.end_at, 'course.end_at')
   if (!(endAt > startAt)) {
-    throw new ValidationError(
-      'course.end_at debe ser posterior a course.start_at',
-      { entity: 'course', field: 'end_at' },
-    )
+    fail('course.end_at', 'order')
   }
   return {
     organization_id: normalizeUuid(value.organization_id),

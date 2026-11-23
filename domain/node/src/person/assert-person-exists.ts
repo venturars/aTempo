@@ -1,4 +1,4 @@
-import { NotFoundError } from '../errors'
+import { fail } from '../errors'
 import { findPersonById } from '../postgres/executors/person'
 
 export type AssertPersonExistsInput = {
@@ -10,6 +10,6 @@ export async function assertPersonExists(
 ): Promise<void> {
   const person = await findPersonById(input.id)
   if (!person) {
-    throw new NotFoundError('person no existe', { entity: 'person' })
+    fail('person', 'missing')
   }
 }

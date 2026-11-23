@@ -1,4 +1,4 @@
-import { ConflictError } from '../errors'
+import { fail } from '../errors'
 import { findCourseIdByAcronym } from '../postgres/executors/course'
 import { assertUuid, normalizeUuid } from '../types/assert'
 
@@ -24,9 +24,6 @@ export async function assertAcronymAvailable(
     input.ignoreId === undefined ||
     normalizeUuid(foundId) !== normalizeUuid(input.ignoreId)
   ) {
-    throw new ConflictError('course.acronym ya existe en la organización', {
-      entity: 'course',
-      field: 'acronym',
-    })
+    fail('course.acronym', 'taken')
   }
 }

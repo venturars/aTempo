@@ -1,4 +1,4 @@
-import { ConflictError } from '../errors'
+import { fail } from '../errors'
 import { lookupPersonCourse } from '../postgres/executors/person-course'
 import type { PersonCourse } from '../types/person-course'
 
@@ -11,8 +11,6 @@ export async function assertPersonCourseAvailable(
 ): Promise<void> {
   const lookup = await lookupPersonCourse(input.personCourse)
   if (lookup?.already) {
-    throw new ConflictError('person_course ya existe', {
-      entity: 'person_course',
-    })
+    fail('person_course', 'taken')
   }
 }

@@ -1,4 +1,4 @@
-import { PersistenceError } from '../errors'
+import { fail } from '../errors'
 import { assertPersonExists } from '../person/assert-person-exists'
 import { insertPersonRole } from '../postgres/executors/person-role'
 import { assertPersonRole, type PersonRole } from '../types/person-role'
@@ -29,9 +29,7 @@ export async function addPersonRole(
 
   const row = await insertPersonRole(personRole)
   if (!row) {
-    throw new PersistenceError('person_role no se ha creado', {
-      entity: 'person_role',
-    })
+    fail('person_role', 'not_created')
   }
 
   return { personRole: assertPersonRole(row) }

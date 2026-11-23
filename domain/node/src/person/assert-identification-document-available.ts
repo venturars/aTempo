@@ -1,4 +1,4 @@
-import { ConflictError } from '../errors'
+import { fail } from '../errors'
 import { findPersonIdByIdentificationDocument } from '../postgres/executors/person'
 import { assertNonEmptyString, normalizeUuid } from '../types/assert'
 
@@ -25,9 +25,6 @@ export async function assertIdentificationDocumentAvailable(
     input.ignoreId === undefined ||
     normalizeUuid(foundId) !== normalizeUuid(input.ignoreId)
   ) {
-    throw new ConflictError('person.identification_document ya existe', {
-      entity: 'person',
-      field: 'identification_document',
-    })
+    fail('person.identification_document', 'taken')
   }
 }

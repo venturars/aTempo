@@ -1,4 +1,4 @@
-import { PersistenceError } from '../errors'
+import { fail } from '../errors'
 import { insertOrganization } from '../postgres/executors/organization'
 import {
   assertOrganization,
@@ -24,9 +24,7 @@ export async function createOrganization(
 
   const row = await insertOrganization(organization)
   if (!row) {
-    throw new PersistenceError('organization no se ha creado', {
-      entity: 'organization',
-    })
+    fail('organization', 'not_created')
   }
 
   return { organization: assertOrganization(row) }

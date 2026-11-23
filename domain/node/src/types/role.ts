@@ -1,4 +1,4 @@
-import { ValidationError } from '../errors'
+import { fail, type DomainLabel } from '../errors'
 import { assertNonEmptyString, assertObject } from './assert'
 
 export const ROLE_NAMES = [
@@ -19,14 +19,11 @@ export function isRoleName(value: string): value is RoleName {
 
 export function assertRoleName(
   value: string,
-  label = 'role.name',
+  label: DomainLabel = 'role.name',
 ): RoleName {
   assertNonEmptyString(value, label)
   if (!isRoleName(value)) {
-    throw new ValidationError(
-      `${label} debe ser organization_admin, teacher o student`,
-      { entity: 'role', field: 'name' },
-    )
+    fail(label, 'format')
   }
   return value
 }

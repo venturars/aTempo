@@ -280,7 +280,10 @@ describe('escrituras', () => {
       }
       return commandResult(1)
     })
-    await expect(deletePerson({ id: PERSON_ID })).rejects.toThrow('timeout')
+    await expect(deletePerson({ id: PERSON_ID })).rejects.toMatchObject({
+      id: 'postgres.unmapped',
+      cause: expect.objectContaining({ message: 'timeout' }),
+    })
     expect(personCalls.map((call) => call.sql)).toEqual([
       'BEGIN',
       expect.stringContaining('DELETE FROM person_role'),
@@ -295,7 +298,10 @@ describe('escrituras', () => {
       }
       return commandResult(1)
     })
-    await expect(deleteOrganization({ id: ORG_ID })).rejects.toThrow('timeout')
+    await expect(deleteOrganization({ id: ORG_ID })).rejects.toMatchObject({
+      id: 'postgres.unmapped',
+      cause: expect.objectContaining({ message: 'timeout' }),
+    })
     expect(orgCalls.map((call) => call.sql)).toEqual([
       'BEGIN',
       expect.stringContaining('DELETE FROM person_course'),
@@ -315,7 +321,10 @@ describe('escrituras', () => {
       }
       return commandResult(1)
     })
-    await expect(deletePerson({ id: PERSON_ID })).rejects.toThrow('timeout')
+    await expect(deletePerson({ id: PERSON_ID })).rejects.toMatchObject({
+      id: 'postgres.unmapped',
+      cause: expect.objectContaining({ message: 'timeout' }),
+    })
   })
 
   it('deletes by key and reports whether a row was removed', async () => {

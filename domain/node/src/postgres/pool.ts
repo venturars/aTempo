@@ -1,5 +1,5 @@
 import { Pool, type QueryResult, type QueryResultRow } from 'pg'
-import { ConfigurationError } from '../errors'
+import { fail } from '../errors'
 import { rethrowPg } from './map-error'
 
 export type PostgresQueryParam = string | number | boolean | null
@@ -15,10 +15,7 @@ let queryOverride: PostgresQuery | undefined
 function getPool(): Pool {
   const connectionString = process.env.DATABASE_URL
   if (!connectionString) {
-    throw new ConfigurationError('Falta DATABASE_URL', {
-      entity: 'postgres',
-      field: 'DATABASE_URL',
-    })
+    fail('postgres.DATABASE_URL', 'missing_env')
   }
 
   if (!pool) {
