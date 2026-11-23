@@ -9,10 +9,10 @@ La visión, los perfiles y las decisiones de producto están en [principles.md](
 Con el `.env` local configurado para Auth0 y las dependencias nativas de `desktop/` instaladas, ejecuta desde la raíz del checkout en Windows, macOS o Linux:
 
 ```sh
-npm run atempo
+pnpm run atempo
 ```
 
-El comando inicia Docker Desktop si está instalado y hace falta, sirve `api-router` en el puerto 3004 y abre Electron conectado a ese router. En Linux, si usas el motor Docker sin Desktop, arráncalo antes con las herramientas de tu distribución. El puerto 3004 permite mantener otro router en el 3000; puedes cambiarlo con `npm run atempo -- --port 3005`. En un worktree dentro de `.worktrees/`, el script usa el `.env` de la copia principal si no hay uno en el worktree. El router queda arrancado al cerrar Electron. Usa las cuentas y contraseñas configuradas en Auth0 para este modo.
+El comando inicia Docker Desktop si está instalado y hace falta, sirve `api-router` en el puerto 3004 y abre Electron conectado a ese router. En Linux, si usas el motor Docker sin Desktop, arráncalo antes con las herramientas de tu distribución. El puerto 3004 permite mantener otro router en el 3000; puedes cambiarlo con `pnpm run atempo --port 3005`. En un worktree dentro de `.worktrees/`, el script usa el `.env` de la copia principal si no hay uno en el worktree. El router queda arrancado al cerrar Electron. Usa las cuentas y contraseñas configuradas en Auth0 para este modo.
 
 ## Probar las demos de profesor y alumno
 
