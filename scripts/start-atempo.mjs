@@ -7,6 +7,8 @@ import { setTimeout as delay } from 'node:timers/promises'
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const desktopRoot = join(projectRoot, 'desktop')
 const electronVite = join(desktopRoot, 'node_modules', 'electron-vite', 'bin', 'electron-vite.js')
+// El proyecto Compose conserva este nombre aunque cambie el nombre del worktree.
+const composeProjectName = 'auth0-atempo'
 
 function readOptions(args) {
   let port = 3004
@@ -100,10 +102,14 @@ async function main() {
   }
 
   await waitForDocker()
-  runDocker(['compose', '--env-file', envFile, 'up', '-d', 'api-router'], {
+  const composeArgs = ['compose', '--env-file', envFile, '-p', composeProjectName]
+  const composeEnvironment = {
     ...process.env,
     ATEMPO_API_ROUTER_PORT: String(port)
-  })
+  }
+  // El volumen de dependencias es nuevo al cambiar de nombre el proyecto Compose.
+  runDocker([...composeArgs, 'run', '--rm', '--no-deps', 'api-router', 'pnpm', 'install', '--frozen-lockfile'], composeEnvironment)
+  runDocker([...composeArgs, 'up', '-d', 'api-router'], composeEnvironment)
   await waitForRouter(port)
   console.log(`api-router listo en http://localhost:${port}`)
 
