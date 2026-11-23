@@ -1,4 +1,4 @@
-import { findPersonById } from '../postgres/repositories/person'
+import { findPersonById } from '../postgres/executors/person'
 import { assertUuid } from '../types/assert'
 import { assertPerson, type Person } from '../types/person'
 

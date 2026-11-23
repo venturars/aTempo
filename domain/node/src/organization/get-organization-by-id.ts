@@ -1,4 +1,4 @@
-import { findOrganizationById } from '../postgres/repositories/organization'
+import { findOrganizationById } from '../postgres/executors/organization'
 import { assertUuid } from '../types/assert'
 import { assertOrganization, type Organization } from '../types/organization'
 

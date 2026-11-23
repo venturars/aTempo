@@ -1,4 +1,4 @@
-import { updateOrganizationRow } from '../postgres/repositories/organization'
+import { updateOrganizationRow } from '../postgres/executors/organization'
 import {
   assertOrganization,
   assertOrganizationUpdate,

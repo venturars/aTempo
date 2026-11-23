@@ -1,5 +1,5 @@
 import { NotFoundError } from '../errors'
-import { findOrganizationById } from '../postgres/repositories/organization'
+import { findOrganizationById } from '../postgres/executors/organization'
 
 export type AssertOrganizationExistsInput = {
   id: string

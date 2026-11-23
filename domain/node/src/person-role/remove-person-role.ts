@@ -1,4 +1,4 @@
-import { deletePersonRole } from '../postgres/repositories/person-role'
+import { deletePersonRole } from '../postgres/executors/person-role'
 import { assertUuid } from '../types/assert'
 import { assertRoleName, type RoleName } from '../types/role'
 

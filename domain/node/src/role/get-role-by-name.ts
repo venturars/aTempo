@@ -1,4 +1,4 @@
-import { findRoleByName } from '../postgres/repositories/role'
+import { findRoleByName } from '../postgres/executors/role'
 import { assertRole, assertRoleName, type Role, type RoleName } from '../types/role'
 
 export type GetRoleByNameInput = {

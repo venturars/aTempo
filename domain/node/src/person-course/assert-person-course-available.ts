@@ -1,5 +1,5 @@
 import { ConflictError } from '../errors'
-import { lookupPersonCourse } from '../postgres/repositories/person-course'
+import { lookupPersonCourse } from '../postgres/executors/person-course'
 import type { PersonCourse } from '../types/person-course'
 
 export type AssertPersonCourseAvailableInput = {

@@ -1,4 +1,4 @@
-import { listPersonCourses as listPersonCourseRows } from '../postgres/repositories/person-course'
+import { listPersonCourses as listPersonCourseRows } from '../postgres/executors/person-course'
 import { assertPersonCourse, type PersonCourse } from '../types/person-course'
 
 export type ListPersonCoursesOutput = {

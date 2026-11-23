@@ -1,5 +1,5 @@
 import { ConflictError } from '../errors'
-import { personRoleExists } from '../postgres/repositories/person-role'
+import { personRoleExists } from '../postgres/executors/person-role'
 import type { RoleName } from '../types/role'
 
 export type AssertPersonRoleAvailableInput = {

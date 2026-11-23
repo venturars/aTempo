@@ -1,5 +1,5 @@
 import { ConflictError } from '../errors'
-import { findOrganizationIdByTaxId } from '../postgres/repositories/organization'
+import { findOrganizationIdByTaxId } from '../postgres/executors/organization'
 import { assertNonEmptyString, normalizeUuid } from '../types/assert'
 
 export type AssertTaxIdAvailableInput = {

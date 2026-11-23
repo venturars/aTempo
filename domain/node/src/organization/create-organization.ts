@@ -1,5 +1,5 @@
 import { PersistenceError } from '../errors'
-import { insertOrganization } from '../postgres/repositories/organization'
+import { insertOrganization } from '../postgres/executors/organization'
 import {
   assertOrganization,
   assertOrganizationCreate,

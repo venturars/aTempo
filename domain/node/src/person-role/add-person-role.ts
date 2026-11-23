@@ -1,6 +1,6 @@
 import { PersistenceError } from '../errors'
 import { assertPersonExists } from '../person/assert-person-exists'
-import { insertPersonRole } from '../postgres/repositories/person-role'
+import { insertPersonRole } from '../postgres/executors/person-role'
 import { assertPersonRole, type PersonRole } from '../types/person-role'
 import { assertPersonRoleAvailable } from './assert-person-role-available'
 import { assertStudentExclusive } from './assert-student-exclusive'

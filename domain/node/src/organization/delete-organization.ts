@@ -3,7 +3,7 @@ import {
   deleteOrganizationById,
   deleteOrganizationCourses,
   deleteOrganizationEnrollments,
-} from '../postgres/repositories/organization'
+} from '../postgres/executors/organization'
 import { assertUuid } from '../types/assert'
 
 export type DeleteOrganizationInput = {

@@ -1,5 +1,5 @@
 import { assertOrganizationExists } from '../organization/assert-organization-exists'
-import { updateCourseRow } from '../postgres/repositories/course'
+import { updateCourseRow } from '../postgres/executors/course'
 import {
   assertCourse,
   assertCourseUpdate,

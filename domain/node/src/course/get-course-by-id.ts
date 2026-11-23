@@ -1,4 +1,4 @@
-import { findCourseById } from '../postgres/repositories/course'
+import { findCourseById } from '../postgres/executors/course'
 import { assertUuid } from '../types/assert'
 import { assertCourse, type Course } from '../types/course'
 

@@ -1,5 +1,5 @@
 import { NotFoundError } from '../errors'
-import { findCourseById } from '../postgres/repositories/course'
+import { findCourseById } from '../postgres/executors/course'
 
 export type AssertCourseExistsInput = {
   id: string

@@ -1,4 +1,4 @@
-import { listOrganizations as listOrganizationRows } from '../postgres/repositories/organization'
+import { listOrganizations as listOrganizationRows } from '../postgres/executors/organization'
 import { assertOrganization, type Organization } from '../types/organization'
 
 export type ListOrganizationsOutput = {

@@ -2,7 +2,7 @@ import { withTransaction } from '../postgres/pool'
 import {
   deleteCourseById,
   deleteCourseEnrollments,
-} from '../postgres/repositories/course'
+} from '../postgres/executors/course'
 import { assertUuid } from '../types/assert'
 
 export type DeleteCourseInput = {

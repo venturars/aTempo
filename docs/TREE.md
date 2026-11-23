@@ -128,7 +128,7 @@ domain/
         map-error.ts        # 23505/23503 a errores de dominio
         check.ts            # check(): SELECT 1
         queries/            # SQL por entidad
-        repositories/       # Ejecutan las queries
+        executors/          # Ejecutan las queries
       organization/
       person/
       course/

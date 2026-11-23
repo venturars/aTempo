@@ -1,5 +1,5 @@
 import { NotFoundError } from '../errors'
-import { findPersonById } from '../postgres/repositories/person'
+import { findPersonById } from '../postgres/executors/person'
 
 export type AssertPersonExistsInput = {
   id: string

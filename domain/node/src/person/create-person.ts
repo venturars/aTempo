@@ -1,5 +1,5 @@
 import { PersistenceError } from '../errors'
-import { insertPerson } from '../postgres/repositories/person'
+import { insertPerson } from '../postgres/executors/person'
 import {
   assertPerson,
   assertPersonCreate,

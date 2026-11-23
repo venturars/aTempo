@@ -1,5 +1,5 @@
 import { ConflictError } from '../errors'
-import { listRolesByPersonId } from '../postgres/repositories/role'
+import { listRolesByPersonId } from '../postgres/executors/role'
 import type { RoleName } from '../types/role'
 
 export type AssertStudentExclusiveInput = {

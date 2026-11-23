@@ -1,5 +1,5 @@
 import { ConflictError } from '../errors'
-import { findCourseIdByAcronym } from '../postgres/repositories/course'
+import { findCourseIdByAcronym } from '../postgres/executors/course'
 import { assertUuid, normalizeUuid } from '../types/assert'
 
 export type AssertAcronymAvailableInput = {

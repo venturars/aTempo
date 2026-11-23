@@ -53,7 +53,7 @@ export { assertPersonRole, type PersonRole } from './types/person-role'
 
 export { closePool } from './postgres/pool'
 export { check } from './postgres/check'
-export type { PersonCourseLookup } from './postgres/repositories/person-course'
+export type { PersonCourseLookup } from './postgres/executors/person-course'
 
 export {
   listOrganizations,

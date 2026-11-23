@@ -1,4 +1,4 @@
-import { deletePersonCourse } from '../postgres/repositories/person-course'
+import { deletePersonCourse } from '../postgres/executors/person-course'
 import { assertUuid } from '../types/assert'
 
 export type RemovePersonCourseInput = {

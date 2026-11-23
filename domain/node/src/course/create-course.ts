@@ -1,6 +1,6 @@
 import { PersistenceError } from '../errors'
 import { assertOrganizationExists } from '../organization/assert-organization-exists'
-import { insertCourse } from '../postgres/repositories/course'
+import { insertCourse } from '../postgres/executors/course'
 import {
   assertCourse,
   assertCourseCreate,

@@ -1,5 +1,5 @@
 import { ConflictError } from '../errors'
-import { findCourseIdByContractAddress } from '../postgres/repositories/course'
+import { findCourseIdByContractAddress } from '../postgres/executors/course'
 import { normalizeUuid } from '../types/assert'
 import { normalizeContractAddress } from '../types/course'
 

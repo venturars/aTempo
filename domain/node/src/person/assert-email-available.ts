@@ -1,5 +1,5 @@
 import { ConflictError } from '../errors'
-import { findPersonIdByEmail } from '../postgres/repositories/person'
+import { findPersonIdByEmail } from '../postgres/executors/person'
 import { assertNonEmptyString, normalizeUuid } from '../types/assert'
 import { normalizeEmail } from '../types/person'
 

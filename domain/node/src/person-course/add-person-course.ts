@@ -3,7 +3,7 @@ import { withTransaction } from '../postgres/pool'
 import {
   insertPersonCourse,
   lookupPersonCourse,
-} from '../postgres/repositories/person-course'
+} from '../postgres/executors/person-course'
 import {
   assertPersonCourse,
   type PersonCourse,

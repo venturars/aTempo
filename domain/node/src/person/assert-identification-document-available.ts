@@ -1,5 +1,5 @@
 import { ConflictError } from '../errors'
-import { findPersonIdByIdentificationDocument } from '../postgres/repositories/person'
+import { findPersonIdByIdentificationDocument } from '../postgres/executors/person'
 import { assertNonEmptyString, normalizeUuid } from '../types/assert'
 
 export type AssertIdentificationDocumentAvailableInput = {

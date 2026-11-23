@@ -1,4 +1,4 @@
-import { updatePersonRow } from '../postgres/repositories/person'
+import { updatePersonRow } from '../postgres/executors/person'
 import {
   assertPerson,
   assertPersonUpdate,

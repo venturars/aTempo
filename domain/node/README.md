@@ -4,7 +4,7 @@ SDK TypeScript de aTempo. Paquete librería dentro de `domain/`. Tipos del core,
 
 El flujo de producto es Frontend → `api-postgresql` → `domain/node` → PostgreSQL. Este paquete abre la base. Nest no escribe SQL.
 
-Las funciones públicas reciben y devuelven un objeto (RORO). Las queries viven en `src/postgres/queries/`. El pool y los repositorios viven en `src/postgres/`. Los casos de uso validan parámetros, aplican reglas, persisten y sanean la respuesta. Un fallo de tipo o de regla lanza un error de dominio (`ValidationError`, `NotFoundError`, `ConflictError`, `ConfigurationError` o `PersistenceError`).
+Las funciones públicas reciben y devuelven un objeto (RORO). Las queries viven en `src/postgres/queries/`. El pool y los ejecutores viven en `src/postgres/`. Los casos de uso validan parámetros, aplican reglas, persisten y sanean la respuesta. Un fallo de tipo o de regla lanza un error de dominio (`ValidationError`, `NotFoundError`, `ConflictError`, `ConfigurationError` o `PersistenceError`).
 
 ## Instalar y probar
 
