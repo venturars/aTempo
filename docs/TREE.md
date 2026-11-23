@@ -265,9 +265,11 @@ desktop/
     main/
       index.ts
       database.ts       # abre atempo.sqlite con node:sqlite
+      routerRequest.ts  # peticiones del cliente de la API al router, con el token
     preload/
       index.ts
       index.d.ts
+      router.d.ts       # mensajes entre el cliente de la API y main
     renderer/
       index.html
       src/
@@ -294,7 +296,7 @@ desktop/
           client.ts        # ApiClient: una función por endpoint y elección del transporte
           contract.ts      # tipos del contrato API v1
           fixtures.ts      # datos y casos del mock (--api-fixture)
-          httpTransport.ts # transporte HTTP con fetch (--api-url)
+          httpTransport.ts # transporte HTTP a través de main (--api-transport=http)
           isoTime.ts       # fechas ISO 8601 de los datos de ejemplo
           mockTransport.ts # mock en memoria con las reglas del contrato
         login/
