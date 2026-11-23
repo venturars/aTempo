@@ -4,6 +4,16 @@ aTempo registra la asistencia de los alumnos de una clase. Este repositorio tien
 
 La visión, los perfiles y las decisiones de producto están en [principles.md](principles.md).
 
+## Arranque rápido con Auth0 en Windows
+
+Con el `.env` local configurado para Auth0 y las dependencias nativas de `desktop/` instaladas, abre PowerShell en la raíz de este checkout y ejecuta:
+
+```powershell
+.\start-auth0.cmd
+```
+
+El comando inicia Docker Desktop si hace falta, sirve `api-router` en el puerto 3004 y abre Electron conectado a ese router. El puerto 3004 permite mantener otro router en el 3000; puedes cambiarlo con `.\start-auth0.cmd -Port 3005`. En un worktree dentro de `.worktrees/`, el script usa el `.env` de la copia principal si no hay uno en el worktree. El router queda arrancado al cerrar Electron. Usa las cuentas y contraseñas configuradas en Auth0 para este modo.
+
 ## Probar las demos de profesor y alumno
 
 Para abrir Electron en tu ordenador necesitas Node 24 y pnpm 10.33.0. Desde la raíz de la copia que vas a revisar, instala las dependencias nativas y arranca la aplicación:

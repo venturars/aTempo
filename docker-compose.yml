@@ -43,7 +43,7 @@ services:
     working_dir: /work/api-router
     command: pnpm dev
     ports:
-      - "3000:3000"
+      - "${ATEMPO_API_ROUTER_PORT:-3000}:3000"
     environment:
       PORT: "3000"
       CHOKIDAR_USEPOLLING: "true"
