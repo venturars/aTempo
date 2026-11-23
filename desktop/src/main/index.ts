@@ -1,8 +1,165 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, ipcMain, safeStorage, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { closeDatabase, openDatabase } from './database'
+
+type LoginCredentials = { email: string; password: string }
+type AuthUser = { sub: string; email: string }
+
+let encryptedAccessToken: Buffer | null = null
+let authenticatedEmail: string | null = null
+
+const apiRouterUrl = process.env.ATEMPO_API_ROUTER_URL?.replace(/\/$/, '') ?? ''
+const requestTimeout = 10_000
+
+function clearAuthSession(): void {
+  encryptedAccessToken = null
+  authenticatedEmail = null
+}
+
+function authError(code: string): Error {
+  return new Error(code)
+}
+
+function resolveApiRouterUrl(): string {
+  if (apiRouterUrl === '') throw authError('AUTH_NOT_CONFIGURED')
+
+  let url: URL
+  try {
+    url = new URL(apiRouterUrl)
+  } catch {
+    throw authError('AUTH_ROUTER_URL_UNSAFE')
+  }
+
+  const isLoopback = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(url.hostname)
+  const usesSecureTransport = url.protocol === 'https:'
+  const usesDevelopmentLoopback = url.protocol === 'http:' && isLoopback
+  if (
+    url.username !== '' ||
+    url.password !== '' ||
+    url.search !== '' ||
+    url.hash !== '' ||
+    (!usesSecureTransport && !usesDevelopmentLoopback)
+  ) {
+    throw authError('AUTH_ROUTER_URL_UNSAFE')
+  }
+
+  return url.toString().replace(/\/$/, '')
+}
+
+function isSecureStorageReady(): boolean {
+  if (!safeStorage.isEncryptionAvailable()) return false
+  return process.platform !== 'linux' || safeStorage.getSelectedStorageBackend() !== 'basic_text'
+}
+
+async function readAccessToken(): Promise<string | null> {
+  if (encryptedAccessToken === null) return null
+  if (!isSecureStorageReady()) {
+    clearAuthSession()
+    return null
+  }
+
+  return safeStorage.decryptString(encryptedAccessToken)
+}
+
+async function requestCurrentUser(accessToken: string): Promise<{ sub: string } | null> {
+  const response = await fetch(`${resolveApiRouterUrl()}/auth/me`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    signal: AbortSignal.timeout(requestTimeout)
+  })
+
+  if (response.status === 401) {
+    clearAuthSession()
+    return null
+  }
+  if (!response.ok) throw authError('AUTH_SERVICE_UNAVAILABLE')
+
+  const body: unknown = await response.json()
+  if (
+    typeof body !== 'object' ||
+    body === null ||
+    !('sub' in body) ||
+    typeof body.sub !== 'string'
+  ) {
+    throw authError('AUTH_RESPONSE_INVALID')
+  }
+
+  return { sub: body.sub }
+}
+
+function registerAuthHandlers(): void {
+  ipcMain.handle('auth:is-configured', () => apiRouterUrl !== '')
+
+  ipcMain.handle('auth:login', async (_event, credentials: LoginCredentials): Promise<AuthUser> => {
+    const routerUrl = resolveApiRouterUrl()
+    if (!isSecureStorageReady()) throw authError('SECURE_STORAGE_UNAVAILABLE')
+    if (
+      typeof credentials?.email !== 'string' ||
+      typeof credentials.password !== 'string' ||
+      credentials.email.trim() === '' ||
+      credentials.password === ''
+    ) {
+      throw authError('INVALID_CREDENTIALS')
+    }
+    clearAuthSession()
+
+    let response: Response
+    try {
+      response = await fetch(`${routerUrl}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+        signal: AbortSignal.timeout(requestTimeout)
+      })
+    } catch {
+      throw authError('AUTH_SERVICE_UNAVAILABLE')
+    }
+
+    if (response.status === 401) throw authError('INVALID_CREDENTIALS')
+    if (!response.ok) throw authError('AUTH_SERVICE_UNAVAILABLE')
+
+    const body: unknown = await response.json()
+    if (
+      typeof body !== 'object' ||
+      body === null ||
+      !('accessToken' in body) ||
+      typeof body.accessToken !== 'string' ||
+      body.accessToken === ''
+    ) {
+      throw authError('AUTH_RESPONSE_INVALID')
+    }
+
+    // Keep only the encrypted token in the main process between requests.
+    encryptedAccessToken = safeStorage.encryptString(body.accessToken)
+    authenticatedEmail = credentials.email.trim().toLowerCase()
+
+    let user: { sub: string } | null
+    try {
+      user = await requestCurrentUser(body.accessToken)
+    } catch {
+      clearAuthSession()
+      throw authError('AUTH_SERVICE_UNAVAILABLE')
+    }
+    if (user === null) throw authError('INVALID_CREDENTIALS')
+    return { ...user, email: authenticatedEmail }
+  })
+
+  ipcMain.handle('auth:me', async (): Promise<AuthUser | null> => {
+    if (apiRouterUrl === '') return null
+    const accessToken = await readAccessToken()
+    if (accessToken === null) return null
+
+    const user = await requestCurrentUser(accessToken)
+    return user === null || authenticatedEmail === null
+      ? null
+      : { ...user, email: authenticatedEmail }
+  })
+
+  ipcMain.handle('auth:logout', () => {
+    clearAuthSession()
+  })
+}
 
 function startupHash(): string | undefined {
   if (process.argv.includes('--dashboard')) {
@@ -80,6 +237,7 @@ app.whenReady().then(() => {
   })
 
   openDatabase()
+  registerAuthHandlers()
   createWindow()
 
   app.on('activate', function () {
@@ -99,6 +257,7 @@ app.on('window-all-closed', () => {
 })
 
 app.on('will-quit', () => {
+  clearAuthSession()
   closeDatabase()
 })
 
