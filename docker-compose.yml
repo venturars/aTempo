@@ -46,6 +46,7 @@ services:
       - "3000:3000"
     environment:
       PORT: "3000"
+      API_MOCK: "true"
       CHOKIDAR_USEPOLLING: "true"
     volumes:
       - ./api-router:/work/api-router
