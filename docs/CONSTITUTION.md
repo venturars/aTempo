@@ -25,7 +25,7 @@ aTempo de escritorio es la aplicación del profesor. Sirve para registrar la asi
 - **TypeScript** escribe el servicio.
 - **pnpm** es el gestor de paquetes de `api-router/`. Las versiones van fijas, sin `^`.
 
-La SDK de lógica de negocio vivirá en `sdk/` (carpeta pendiente), al mismo nivel que `desktop/` y `api-router/`. El API-router no implementa reglas de negocio; solo delegará en esa SDK.
+La SDK de lógica de negocio vive en `sdk/`, al mismo nivel que `desktop/` y `api-router/`. El API-router no implementa reglas de negocio: autentica con Auth0 y delega en esa SDK. Tras un login o `me` correcto, la SDK identifica al usuario por email y llama a `api-postgresql`.
 
 ## 4. Stack de `api-postgresql/`
 
@@ -61,4 +61,4 @@ El API-router no accede a RustFS; la SDK consumirá este servicio cuando exista.
 
 - [STYLE.md](STYLE.md): los dos temas y el enlace a la guía visual.
 - [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, flujo de `api-router/` y las APIs de persistencia, y los almacenes; se prevén la SDK y más APIs.
-- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/`, `api-postgresql/`, `api-rustfs/`, `api-sqlite/` y los almacenes; se prevén `sdk/` y más carpetas de APIs.
+- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/`, `sdk/`, `api-postgresql/`, `api-rustfs/`, `api-sqlite/` y los almacenes.

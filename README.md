@@ -52,7 +52,8 @@ El lector del alumno ofrece lecturas simuladas y no usa cámara. Estos flujos no
 | Carpeta | Qué es |
 | --- | --- |
 | `desktop/` | Prototipo para profesor y alumno con Electron y React; las demos usan datos en memoria. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/sign-up` para el registro. |
-| `api-router/` | API REST con NestJS entre los frontends y la SDK de lógica de negocio (pendiente). |
+| `api-router/` | API REST con NestJS entre los frontends y Auth0; tras autenticar llama a `sdk/`. |
+| `sdk/` | Lógica de negocio. Tras Auth0, `afterAuth({ email })` llama a `api-postgresql`. |
 | `api-postgresql/` | API REST con NestJS entre la SDK y PostgreSQL. |
 | `api-rustfs/` | API REST con Express entre la SDK y RustFS (persistencia de objetos). |
 | `api-sqlite/` | Servicio Flask con Pydantic y SQLAlchemy Core entre la SDK prevista y SQLite. |
@@ -354,7 +355,7 @@ Ese comando es obligatorio: sin él, el markdown se queda desfasado. No se edita
 docker compose up api-router
 ```
 
-El servicio queda en <http://localhost:3000>. `GET /health` debe devolver `{ "status": "ok" }`. La documentación interactiva está en <http://localhost:3000/docs>. Su contenedor monta solo `api-router/`, sus `node_modules` y la caché pnpm; el `.env` de la raíz no queda disponible dentro del servicio. Para pararlo, `Ctrl+C` o `docker compose stop api-router`.
+El servicio queda en <http://localhost:3000>. `GET /health` debe devolver `{ "status": "ok" }`. La documentación interactiva está en <http://localhost:3000/docs>. Su contenedor monta `api-router/`, `sdk/`, sus `node_modules` y la caché pnpm; el `.env` de la raíz no queda disponible dentro del servicio. Compose le pasa `API_POSTGRESQL_URL=http://api-postgresql:3001`. Para pararlo, `Ctrl+C` o `docker compose stop api-router`.
 
 Las comprobaciones se lanzan en Docker:
 

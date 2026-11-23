@@ -13,6 +13,8 @@ const auth0Config = {
   AUTH0_AUDIENCE: 'https://api.example.test',
 }
 
+const postgresApi = 'http://api-postgresql.test'
+
 const { privateKey, publicKey } = generateKeyPairSync('rsa', {
   modulusLength: 2048,
 })
@@ -48,7 +50,9 @@ describe('Authentication (e2e)', () => {
 
   beforeEach(async () => {
     originalEnvironment = { ...process.env }
-    Object.assign(process.env, auth0Config)
+    Object.assign(process.env, auth0Config, {
+      API_POSTGRESQL_URL: postgresApi,
+    })
     fetchMock = jest.spyOn(global, 'fetch') as unknown as jest.Mock
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -74,9 +78,13 @@ describe('Authentication (e2e)', () => {
   }
 
   it('POST /auth/login exchanges credentials and returns the Access Token', async () => {
-    fetchMock.mockResolvedValueOnce(
-      auth0Response({ access_token: 'issued-token', expires_in: 3600 }),
-    )
+    fetchMock
+      .mockResolvedValueOnce(
+        auth0Response({ access_token: 'issued-token', expires_in: 3600 }),
+      )
+      .mockResolvedValueOnce(
+        auth0Response({ status: 'ok', postgres: 'ok' }),
+      )
 
     await request(app.getHttpServer())
       .post('/auth/login')
@@ -93,6 +101,7 @@ describe('Authentication (e2e)', () => {
       audience: auth0Config.AUTH0_AUDIENCE,
       client_secret: auth0Config.AUTH0_CLIENT_SECRET,
     })
+    expect(fetchMock.mock.calls[1][0]).toBe(`${postgresApi}/health`)
   })
 
   it('POST /auth/login maps rejected credentials to 401 without exposing the provider body', async () => {
@@ -111,6 +120,10 @@ describe('Authentication (e2e)', () => {
         expect(body).toMatchObject({ code: 'INVALID_CREDENTIALS' })
         expect(JSON.stringify(body)).not.toContain('private detail')
       })
+
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
+      'https://tenant.example.test/oauth/token',
+    ])
   })
 
   it('POST /auth/login treats invalid Auth0 client credentials as a provider failure', async () => {
@@ -179,7 +192,55 @@ describe('Authentication (e2e)', () => {
       .expect(({ body }) => expect(body.code).toBe('AUTH_PROVIDER_UNAVAILABLE'))
   })
 
+  it('POST /auth/login returns 503 when api-postgresql health fails', async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        auth0Response({ access_token: 'issued-token', expires_in: 3600 }),
+      )
+      .mockResolvedValueOnce(
+        auth0Response({ status: 'error', postgres: 'error' }, 503),
+      )
+
+    await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: 'profesor@atempo.test', password: 'test-password' })
+      .expect(503)
+      .expect(({ body }) =>
+        expect(body.code).toBe('POSTGRES_API_UNAVAILABLE'),
+      )
+  })
+
   it('GET /auth/me validates a signed Access Token and returns its subject', async () => {
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes('jwks.json')) {
+        return auth0Response({ keys: [signingKey] })
+      }
+      if (url === `${postgresApi}/health`) {
+        return auth0Response({ status: 'ok', postgres: 'ok' })
+      }
+      return auth0Response({}, 500)
+    })
+    const token = createAccessToken({
+      iss: 'https://tenant.example.test/',
+      aud: auth0Config.AUTH0_AUDIENCE,
+      exp: Math.floor(Date.now() / 1000) + 300,
+      sub: 'auth0|test-user',
+      email: 'profesor@atempo.test',
+    })
+
+    await request(app.getHttpServer())
+      .get('/auth/me')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200)
+      .expect({ sub: 'auth0|test-user' })
+
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toContain(
+      `${postgresApi}/health`,
+    )
+  })
+
+  it('GET /auth/me rejects a token without email without calling api-postgresql', async () => {
     mockJwks()
     const token = createAccessToken({
       iss: 'https://tenant.example.test/',
@@ -191,8 +252,12 @@ describe('Authentication (e2e)', () => {
     await request(app.getHttpServer())
       .get('/auth/me')
       .set('Authorization', `Bearer ${token}`)
-      .expect(200)
-      .expect({ sub: 'auth0|test-user' })
+      .expect(401)
+      .expect(({ body }) => expect(body.code).toBe('INVALID_TOKEN'))
+
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).not.toContain(
+      `${postgresApi}/health`,
+    )
   })
 
   it('GET /auth/me rejects a missing Bearer token', async () => {

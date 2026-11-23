@@ -96,10 +96,21 @@ docs/BLOCKEND.md
 permanent-data.md
 ```
 
-# Árbol de `sdk/` (pendiente)
+# Árbol de `sdk/`
 
 ```text
-sdk/                  # lógica de negocio; paquete aún no creado
+sdk/
+  package.json           # atempo-sdk, pnpm 10.33.0
+  pnpm-lock.yaml
+  README.md
+  src/
+    index.ts
+    after-auth.ts        # afterAuth({ email }) → GET /health de api-postgresql
+    errors.ts
+    http.ts              # fetch sustituible en tests
+  test/
+    after-auth.spec.ts
+    jest.json
 ```
 
 # Árbol de `api-sqlite/`

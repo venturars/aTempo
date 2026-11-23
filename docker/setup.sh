@@ -10,7 +10,7 @@ cd /work
 echo "APM: instalando lo que fijan apm.yml y apm.lock.yaml."
 apm install
 
-for folder in desktop docs/storybook api-router api-postgresql api-rustfs blockend postgres; do
+for folder in desktop docs/storybook sdk api-router api-postgresql api-rustfs blockend postgres; do
   echo "pnpm: instalando ${folder}."
   pnpm --dir "$folder" install --frozen-lockfile
 done

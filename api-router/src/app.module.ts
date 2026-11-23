@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common'
 import { HealthModule } from './health/health.module'
 import { AuthModule } from './auth/auth.module'
 
-// La SDK (lógica de negocio) vivirá en sdk/ (paquete hermano; carpeta pendiente).
+// Tras Auth0, AuthService llama a sdk/ (atempo-sdk).
 
 @Module({
   imports: [HealthModule, AuthModule]

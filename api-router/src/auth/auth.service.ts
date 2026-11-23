@@ -8,6 +8,7 @@ import {
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common'
+import { afterAuth, ConfigurationError, PersistenceError } from 'atempo-sdk'
 import { LoginResponseDto } from './login-response.dto'
 import { MeResponseDto } from './me-response.dto'
 
@@ -18,6 +19,7 @@ type JwtPayload = {
   iss: string
   nbf?: number
   sub: string
+  email?: string
 }
 type Auth0RsaKey = CryptoJsonWebKey & {
   kid: string
@@ -114,6 +116,8 @@ export class AuthService {
       })
     }
 
+    await this.callAfterAuth(email)
+
     return {
       accessToken: result.access_token,
       ...(typeof result.expires_in === 'number'
@@ -200,6 +204,12 @@ export class AuthService {
       throw this.invalidToken()
     }
 
+    if (typeof payload.email !== 'string' || payload.email.trim() === '') {
+      throw this.invalidToken()
+    }
+
+    await this.callAfterAuth(payload.email)
+
     return { sub: payload.sub }
   }
 
@@ -276,6 +286,22 @@ export class AuthService {
     this.cachedKeys = rawKeys.filter(isAuth0RsaKey)
     this.cachedKeysUntil = Date.now() + jwksCacheDurationMs
     return this.cachedKeys
+  }
+
+  private async callAfterAuth(email: string): Promise<void> {
+    try {
+      await afterAuth({ email })
+    } catch (error) {
+      if (
+        error instanceof ConfigurationError ||
+        error instanceof PersistenceError
+      ) {
+        throw new ServiceUnavailableException({
+          code: 'POSTGRES_API_UNAVAILABLE',
+        })
+      }
+      throw error
+    }
   }
 
   private invalidToken(): UnauthorizedException {

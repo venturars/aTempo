@@ -1,8 +1,8 @@
 # api-router
 
-Servicio REST con NestJS y TypeScript. Recibe las peticiones de los frontends (Electron y web), las adapta y las delegará en la **SDK (lógica de negocio)**. El router no implementa reglas de negocio.
+Servicio REST con NestJS y TypeScript. Recibe las peticiones de los frontends (Electron y web), las adapta, autentica con Auth0 y delega en la **SDK (lógica de negocio)**. El router no implementa reglas de negocio.
 
-Expone `GET /health`, `POST /auth/login` y `GET /auth/me`. El login solicita a Auth0 un Access Token; `/auth/me` valida el Bearer recibido. La lógica de negocio vivirá en [`sdk/`](../sdk/) (paquete hermano, carpeta pendiente); este servicio la consumirá cuando exista.
+Expone `GET /health`, `POST /auth/login` y `GET /auth/me`. El login solicita a Auth0 un Access Token; `/auth/me` valida el Bearer recibido. Tras un login o `me` correcto, llama a [`sdk/`](../sdk/) con el email; la SDK pide `GET /health` a `api-postgresql`.
 
 ## Arranque
 
@@ -17,9 +17,9 @@ Por defecto escucha en el puerto `3000`. Puedes usar la variable `PORT`.
 
 ## Auth0
 
-Configura `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET` y `AUTH0_AUDIENCE` en el `.env` local de la raíz antes de iniciar Compose. `AUTH0_DOMAIN` es el dominio HTTPS del tenant y `AUTH0_AUDIENCE` es el API Identifier configurado en Auth0. Compose solo pasa estas variables al servicio `api-router`; el secreto no entra en Electron ni se versiona. La Application debe tener Password Grant y acceso a la conexión de usuarios. Las cuentas de prueba ya están creadas; comprueba que la conexión permite su login.
+Configura `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET` y `AUTH0_AUDIENCE` en el `.env` local de la raíz antes de iniciar Compose. `AUTH0_DOMAIN` es el dominio HTTPS del tenant y `AUTH0_AUDIENCE` es el API Identifier configurado en Auth0. Compose pasa estas variables y `API_POSTGRESQL_URL` al servicio `api-router`; el secreto no entra en Electron ni se versiona. La Application debe tener Password Grant y acceso a la conexión de usuarios. Las cuentas de prueba ya están creadas; comprueba que la conexión permite su login.
 
-`POST /auth/login` recibe `{ "email": "...", "password": "..." }` y responde `{ "accessToken": "...", "expiresIn": 3600 }` cuando Auth0 incluye la duración. Credenciales rechazadas devuelven `401` con código `INVALID_CREDENTIALS`. `GET /auth/me` requiere `Authorization: Bearer <accessToken>` y devuelve `{ "sub": "..." }` si el token es válido. `/health` y `/docs` son públicos.
+`POST /auth/login` recibe `{ "email": "...", "password": "..." }` y responde `{ "accessToken": "...", "expiresIn": 3600 }` cuando Auth0 incluye la duración. Credenciales rechazadas devuelven `401` con código `INVALID_CREDENTIALS`. Si Auth0 va bien y `api-postgresql` no responde al health, el código es `POSTGRES_API_UNAVAILABLE`. `GET /auth/me` requiere `Authorization: Bearer <accessToken>` con claim `email` y devuelve `{ "sub": "..." }` si el token es válido. `/health` y `/docs` son públicos.
 
 ## Docker Compose
 

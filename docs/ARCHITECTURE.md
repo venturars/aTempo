@@ -4,7 +4,7 @@
 
 Carpeta del router: `api-router/`. Persistencia relacional: `api-postgresql/` y `api-sqlite/`. Objetos en almacén S3-compatible: `api-rustfs/`.
 
-Los frontends (Electron en `desktop/` y el futuro portal web) hablarán REST con el API-router, un servicio NestJS. El API-router transforma HTTP y delegará en la **SDK (lógica de negocio)**. Esa SDK vivirá en `sdk/`, al mismo nivel que `desktop/` y `api-router/`; la carpeta aún no existe. La SDK hablará con `api-postgresql/` para leer y escribir en PostgreSQL, con `api-sqlite/` para SQLite local y con `api-rustfs/` para objetos en RustFS. Este flujo está previsto: la SDK todavía no existe y los servicios aún no están conectados entre sí. El API-router no habla con la base ni con RustFS. Redis, Postgres y el resto de microservicios del backend quedan fuera del escritorio.
+Los frontends (Electron en `desktop/` y el futuro portal web) hablarán REST con el API-router, un servicio NestJS. El flujo de una petición autenticada es **desktop → api-router → Auth0 → SDK → api-postgresql**. El API-router transforma HTTP y autentica con Auth0; no habla con PostgreSQL. Tras un login o `me` correcto, llama a `sdk/` con el email (no con el `sub`). La SDK pide `GET /health` a `api-postgresql/` como primera acción; más adelante leerá y escribirá a través de esa API, de `api-sqlite/` y de `api-rustfs/`. Redis y el resto de microservicios del backend quedan fuera del escritorio.
 
 `api-router/` expone `GET /health`, `POST /auth/login` y `GET /auth/me`. El login intercambia credenciales con Auth0 mediante Resource Owner Password Grant. `/auth/me` valida el Bearer mediante JWKS, emisor, audiencia y caducidad. El secreto de cliente solo vive en el router. `api-postgresql/` expone `GET /health`, los listados `GET /person`, `GET /course`, `GET /organization`, `GET /person-role` y `GET /person-course`, `GET /person/:id` (una fila de `person` por UUID: 200, 404 o 503), `POST /person-course` (una matrícula: 201, 404, 409 o 503) y `DELETE /person-course/:personId/:courseId` (una matrícula: 204, 404 o 503); con `DATABASE_URL` consulta PostgreSQL y sin ella usa un mock de prueba. `api-rustfs/` solo expone `GET /health`, que confirma que el servicio HTTP responde; su conexión S3 se comprueba aparte. `api-sqlite/` solo expone `GET /health`, que ejecuta `SELECT 1`. El registro no llama a estas APIs; el login real accede solo al router a través del proceso principal de Electron. Compose publica las cuatro APIs en 3000–3003. Las APIs se conectan por la red interna a PostgreSQL (`postgres:5432`) y RustFS (`rustfs:9000`); los mismos servicios también sirven al almacén operativo. PostgreSQL se publica en el host por `5433` y RustFS por `9000`/`9001`. Los volúmenes compartidos `postgres-data` y `rustfs-data`, junto con `api-sqlite-data`, conservan sus datos.
 
@@ -15,7 +15,8 @@ flowchart LR
   electron[FrontendElectron]
   web[FrontendWeb]
   router[APIRouterNest]
-  sdk[sdk_logicaDeNegocio_pendiente]
+  auth0[Auth0]
+  sdk[sdk]
   sqliteApi[api_sqlite_Flask]
   serviceSqlite[(SQLite_del_servicio)]
   apiPg[apiPostgresql]
@@ -24,6 +25,7 @@ flowchart LR
   rustfs[(RustFS)]
   electron --> router
   web --> router
+  router --> auth0
   router --> sdk
   sdk --> sqliteApi
   sqliteApi --> serviceSqlite
@@ -33,7 +35,7 @@ flowchart LR
   objectApi --> rustfs
 ```
 
-`sdk/` es el paquete de dominio previsto, hermano de `desktop/`, `api-router/`, `api-postgresql/`, `api-rustfs/` y `api-sqlite/`. Lo consumirá el API-router. Los frontends usarán una SDK frontend distinta para llamar al router público; no consumirán directamente la SDK de dominio ni las APIs de persistencia. `api-postgresql/` ya está y espera a esa SDK de dominio. `api-rustfs/` también: la SDK lo usará para objetos en RustFS.
+`sdk/` es el paquete de lógica de negocio, hermano de `desktop/`, `api-router/`, `api-postgresql/`, `api-rustfs/` y `api-sqlite/`. Lo consume el API-router después de Auth0. Los frontends usarán una SDK frontend distinta para llamar al router público; no consumirán directamente `sdk/` ni las APIs de persistencia. Hoy `afterAuth` llama a `GET /health` de `api-postgresql/`. `api-rustfs/` y `api-sqlite/` quedan para más adelante.
 
 ## api-sqlite
 
@@ -71,7 +73,7 @@ Son almacenes y cadena, no una capa del escritorio ni del API-router. Cada una t
 
 El modelo y los enlaces están en `docs/POSTGRES.md`, `docs/SQLITE.md`, `docs/RUSTFS.md`, `docs/BLOCKEND.md` y `permanent-data.md`.
 
-`api-postgresql/` comprueba la conexión con `GET /health`, ofrece cinco listados (incluidos `GET /organization` y `GET /person-course`), `GET /person/:id`, `POST /person-course` y `DELETE /person-course/:personId/:courseId`. `api-rustfs/` no abre RustFS en el health. El renderer y el API-router no abren estas bases. La SDK las usará cuando exista.
+`api-postgresql/` comprueba la conexión con `GET /health`, ofrece cinco listados (incluidos `GET /organization` y `GET /person-course`), `GET /person/:id`, `POST /person-course` y `DELETE /person-course/:personId/:courseId`. `api-rustfs/` no abre RustFS en el health. El renderer y el API-router no abren estas bases. Tras Auth0, `sdk/` llama a `GET /health` de `api-postgresql/`.
 
 ## aTempo de escritorio
 

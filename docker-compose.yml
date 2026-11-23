@@ -51,8 +51,10 @@ services:
       AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID:-}
       AUTH0_CLIENT_SECRET: ${AUTH0_CLIENT_SECRET:-}
       AUTH0_AUDIENCE: ${AUTH0_AUDIENCE:-}
+      API_POSTGRESQL_URL: http://api-postgresql:3001
     volumes:
       - ./api-router:/work/api-router
+      - ./sdk:/work/sdk
       - api-router-node-modules:/work/api-router/node_modules
       - pnpm-store:/pnpm-store
 
