@@ -137,7 +137,7 @@ async function expectAbsentCopy(window: Page): Promise<void> {
   }
 }
 
-// Fondo de la casilla y de la tarjeta, y los dos tokens del tema, resueltos por el navegador.
+// Fondo y anillo de la casilla, fondo de la tarjeta y el token base-100, resueltos por el navegador.
 function fieldColors(field: Locator): Promise<string[]> {
   return field.evaluate((input) => {
     const token = (name: string): string => {
@@ -151,8 +151,8 @@ function fieldColors(field: Locator): Promise<string[]> {
     const card = input.closest('section')
     return [
       getComputedStyle(input).backgroundColor,
+      getComputedStyle(input).boxShadow,
       card === null ? '' : getComputedStyle(card).backgroundColor,
-      token('--color-base-200'),
       token('--color-base-100')
     ]
   })
@@ -197,7 +197,7 @@ test('shows the claim panel beside the form', async () => {
   })
 })
 
-test('fills the login fields with base-200 over the base-100 card in both themes', async () => {
+test('marks the login fields with the system ring over the base-100 card in both themes', async () => {
   await withApp(async (window) => {
     for (const theme of ['atempo-oscuro', 'atempo-claro']) {
       await window.evaluate(
@@ -207,8 +207,8 @@ test('fills the login fields with base-200 over the base-100 card in both themes
       for (const label of ['Correo', 'Contraseña']) {
         await expect
           .poll(async () => {
-            const [field, card, base200, base100] = await fieldColors(window.getByLabel(label))
-            return field === base200 && card === base100 && field !== card
+            const [field, ring, card, base100] = await fieldColors(window.getByLabel(label))
+            return field === base100 && card === base100 && ring.endsWith('1px inset')
           }, `${theme} ${label}`)
           .toBe(true)
       }

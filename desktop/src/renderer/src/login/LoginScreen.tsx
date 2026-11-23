@@ -280,9 +280,7 @@ function Field({
       </label>
       <input
         id={id}
-        className={
-          error !== '' ? 'input input-error w-full bg-base-200' : 'input w-full bg-base-200'
-        }
+        className={error !== '' ? 'input input-error w-full' : 'input w-full'}
         type={type}
         name={id}
         autoComplete={autoComplete}

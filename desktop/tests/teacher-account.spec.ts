@@ -121,7 +121,7 @@ async function expectNormalLogin(window: Page): Promise<void> {
   await expect(window.getByRole('heading', { level: 1, name: /^Hola,/ })).toHaveCount(0)
 }
 
-// Fondo de la casilla y de la tarjeta, y los dos tokens del tema, resueltos por el navegador.
+// Fondo y anillo de la casilla, fondo de la tarjeta y el token base-100, resueltos por el navegador.
 function fieldColors(field: Locator): Promise<string[]> {
   return field.evaluate((input) => {
     const token = (name: string): string => {
@@ -135,8 +135,8 @@ function fieldColors(field: Locator): Promise<string[]> {
     const card = input.closest('section')
     return [
       getComputedStyle(input).backgroundColor,
+      getComputedStyle(input).boxShadow,
       card === null ? '' : getComputedStyle(card).backgroundColor,
-      token('--color-base-200'),
       token('--color-base-100')
     ]
   })
@@ -358,7 +358,7 @@ test('teacher can change password, sign out and sign back in with the new passwo
   }
 })
 
-test('fills the invitation field with base-200 over the card in both themes', async () => {
+test('marks the invitation field with the system ring over the card in both themes', async () => {
   const app = await launchHiddenElectron([`--invitation=${teacherInvite.code}`])
   try {
     const window = await app.firstWindow()
@@ -371,8 +371,8 @@ test('fills the invitation field with base-200 over the card in both themes', as
       )
       await expect
         .poll(async () => {
-          const [field, card, base200, base100] = await fieldColors(passwordField)
-          return field === base200 && card === base100 && field !== card
+          const [field, ring, card, base100] = await fieldColors(passwordField)
+          return field === base100 && card === base100 && ring.endsWith('1px inset')
         }, theme)
         .toBe(true)
     }
