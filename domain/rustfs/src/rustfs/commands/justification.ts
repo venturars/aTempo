@@ -1,0 +1,34 @@
+import {
+  GetObjectCommand,
+  HeadObjectCommand,
+  PutObjectCommand,
+} from '@aws-sdk/client-s3'
+
+export const JUSTIFICATIONS_BUCKET = 'justifications'
+
+export function headJustificationCommand(key: string): HeadObjectCommand {
+  return new HeadObjectCommand({
+    Bucket: JUSTIFICATIONS_BUCKET,
+    Key: key,
+  })
+}
+
+export function getJustificationCommand(key: string): GetObjectCommand {
+  return new GetObjectCommand({
+    Bucket: JUSTIFICATIONS_BUCKET,
+    Key: key,
+  })
+}
+
+export function putJustificationCommand(
+  key: string,
+  body: Uint8Array,
+  contentType: string,
+): PutObjectCommand {
+  return new PutObjectCommand({
+    Bucket: JUSTIFICATIONS_BUCKET,
+    Key: key,
+    Body: body,
+    ContentType: contentType,
+  })
+}

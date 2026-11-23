@@ -96,10 +96,55 @@ docs/BLOCKEND.md
 permanent-data.md
 ```
 
+# Árbol de `domain/`
+
+```text
+domain/
+  README.md
+  rustfs/                         # atempo-domain-rustfs; @aws-sdk/client-s3 3.943.0
+    package.json
+    pnpm-lock.yaml
+    .npmrc
+    .gitignore
+    .prettierrc
+    eslint.config.mjs
+    tsconfig.json
+    tsconfig.build.json
+    README.md
+    src/
+      index.ts
+      errors/
+        domain-error.ts
+        index.ts
+      types/
+        assert.ts
+        justification.ts
+      rustfs/
+        client.ts
+        map-error.ts
+        check.ts
+        commands/
+          justification.ts
+        repositories/
+          justification.ts
+      justification/
+        put-justification.ts
+        get-justification.ts
+        justification-exists.ts
+    test/
+      jest.json
+      helpers.ts
+      check.spec.ts
+      client.spec.ts
+      types.spec.ts
+      writes.spec.ts
+      reads.spec.ts
+```
+
 # Árbol de `sdk/` (pendiente)
 
 ```text
-sdk/                  # lógica de negocio; paquete aún no creado
+sdk/                  # lógica de negocio del API-router; paquete aún no creado
 ```
 
 # Árbol de `api-sqlite/`

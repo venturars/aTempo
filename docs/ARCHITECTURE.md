@@ -2,9 +2,9 @@
 
 ## API-router, SDK y persistencia
 
-Carpeta del router: `api-router/`. Persistencia relacional: `api-postgresql/` y `api-sqlite/`. Objetos en almacén S3-compatible: `api-rustfs/`.
+Carpeta del router: `api-router/`. Persistencia relacional: `api-postgresql/` y `api-sqlite/`. Objetos en almacén S3-compatible: `api-rustfs/` y el SDK `domain/rustfs/`.
 
-Los frontends (Electron en `desktop/` y el futuro portal web) hablarán REST con el API-router, un servicio NestJS. El API-router transforma HTTP y delegará en la **SDK (lógica de negocio)**. Esa SDK vivirá en `sdk/`, al mismo nivel que `desktop/` y `api-router/`; la carpeta aún no existe. La SDK hablará con `api-postgresql/` para leer y escribir en PostgreSQL, con `api-sqlite/` para SQLite local y con `api-rustfs/` para objetos en RustFS. Este flujo está previsto: la SDK todavía no existe y los servicios aún no están conectados entre sí. El API-router no habla con la base ni con RustFS. Redis, Postgres y el resto de microservicios del backend quedan fuera del escritorio.
+Los frontends (Electron en `desktop/` y el futuro portal web) hablarán REST con el API-router, un servicio NestJS. El API-router transforma HTTP y delegará en la **SDK (lógica de negocio)**. Esa SDK vivirá en `sdk/`, al mismo nivel que `desktop/` y `api-router/`; la carpeta aún no existe. La SDK hablará con `api-postgresql/` para leer y escribir en PostgreSQL y con `api-sqlite/` para SQLite local. El flujo de objetos es Frontend → `api-rustfs` → `domain/rustfs` → RustFS. `api-rustfs` aún no importa el paquete; Express sigue con `minio`. La SDK de `sdk/` todavía no existe y los servicios del router aún no están conectados entre sí. El API-router no habla con la base ni con RustFS. Redis, Postgres y el resto de microservicios del backend quedan fuera del escritorio.
 
 `api-router/` expone `GET /health`, `POST /auth/login` y `GET /auth/me`. El login intercambia credenciales con Auth0 mediante Resource Owner Password Grant. `/auth/me` valida el Bearer mediante JWKS, emisor, audiencia y caducidad. El secreto de cliente solo vive en el router. `api-postgresql/` expone `GET /health`, los listados `GET /person`, `GET /course`, `GET /organization`, `GET /person-role` y `GET /person-course`, `GET /person/:id` (una fila de `person` por UUID: 200, 404 o 503), `POST /person-course` (una matrícula: 201, 404, 409 o 503) y `DELETE /person-course/:personId/:courseId` (una matrícula: 204, 404 o 503); con `DATABASE_URL` consulta PostgreSQL y sin ella usa un mock de prueba. `api-rustfs/` solo expone `GET /health`, que confirma que el servicio HTTP responde; su conexión S3 se comprueba aparte. `api-sqlite/` solo expone `GET /health`, que ejecuta `SELECT 1`. El registro no llama a estas APIs; el login real accede solo al router a través del proceso principal de Electron. Compose publica las cuatro APIs en 3000–3003. Las APIs se conectan por la red interna a PostgreSQL (`postgres:5432`) y RustFS (`rustfs:9000`); los mismos servicios también sirven al almacén operativo. PostgreSQL se publica en el host por `5433` y RustFS por `9000`/`9001`. Los volúmenes compartidos `postgres-data` y `rustfs-data`, junto con `api-sqlite-data`, conservan sus datos.
 
@@ -21,6 +21,7 @@ flowchart LR
   apiPg[apiPostgresql]
   postgres[(PostgreSQL)]
   objectApi[api_rustfs_Express]
+  domainRustfs[domain_rustfs]
   rustfs[(RustFS)]
   electron --> router
   web --> router
@@ -30,10 +31,11 @@ flowchart LR
   sdk --> apiPg
   sdk --> objectApi
   apiPg --> postgres
-  objectApi --> rustfs
+  objectApi --> domainRustfs
+  domainRustfs --> rustfs
 ```
 
-`sdk/` es el paquete de dominio previsto, hermano de `desktop/`, `api-router/`, `api-postgresql/`, `api-rustfs/` y `api-sqlite/`. Lo consumirá el API-router. Los frontends usarán una SDK frontend distinta para llamar al router público; no consumirán directamente la SDK de dominio ni las APIs de persistencia. `api-postgresql/` ya está y espera a esa SDK de dominio. `api-rustfs/` también: la SDK lo usará para objetos en RustFS.
+`sdk/` es el paquete de dominio previsto, hermano de `desktop/`, `api-router/`, `api-postgresql/`, `api-rustfs/` y `api-sqlite/`. Lo consumirá el API-router. Los frontends usarán una SDK frontend distinta para llamar al router público; no consumirán directamente la SDK de dominio ni las APIs de persistencia. `api-postgresql/` ya está y espera a esa SDK de dominio. `api-rustfs` delegará en `domain/rustfs` para objetos en RustFS.
 
 ## api-sqlite
 
@@ -45,7 +47,15 @@ Servicio Flask con modelos Pydantic y consultas mediante SQLAlchemy Core. La SDK
 
 Carpeta: `api-rustfs/`.
 
-Servicio Express y TypeScript. La SDK delegará en él la lectura y escritura de objetos en RustFS. Hoy solo expone `GET /health`, que confirma que el servicio HTTP responde (igual que el health de `api-router/`). Swagger UI en **`/docs`** y OpenAPI en **`/docs-json`**, igual que en `api-router/`. Compose lo sirve en el puerto **3003** y conecta al servicio interno `rustfs:9000`. `/health` no comprueba RustFS; el workflow valida S3 aparte. El volumen compartido `rustfs-data` conserva los objetos. RustFS publica el puerto S3 `9000` y la consola `9001` en el host.
+Servicio Express y TypeScript. El flujo de producto es Frontend → `api-rustfs` → `domain/rustfs` → RustFS. Hoy solo expone `GET /health`, que confirma que el servicio HTTP responde (igual que el health de `api-router/`). Express sigue con el cliente npm `minio`; aún no importa `domain/rustfs`. Swagger UI en **`/docs`** y OpenAPI en **`/docs-json`**, igual que en `api-router/`. Compose lo sirve en el puerto **3003** y conecta al servicio interno `rustfs:9000`. `/health` no comprueba RustFS; el workflow valida S3 aparte. El volumen compartido `rustfs-data` conserva los objetos. RustFS publica el puerto S3 `9000` y la consola `9001` en el host.
+
+## domain/rustfs
+
+Carpeta: `domain/rustfs/`. Nombre npm: `atempo-domain-rustfs`.
+
+Paquete librería TypeScript. Guarda y lee justificantes en RustFS con `@aws-sdk/client-s3` 3.943.0. No es un servicio HTTP. `api-rustfs` delegará en él; hoy no lo importa. El `S3Client` usa `forcePathStyle: true` y `region: "us-east-1"`. El endpoint se ensambla con `RUSTFS_ENDPOINT` (host), `RUSTFS_PORT`, `RUSTFS_USE_SSL`, `RUSTFS_ACCESS_KEY` y `RUSTFS_SECRET_KEY`. Si falta alguna, lanza `ConfigurationError`. El paquete npm `minio` no entra aquí.
+
+La API pública es RORO: `check()` envía `HeadBucket` al bucket `justifications` y devuelve `{ ok: true }`; `putJustification`, `getJustification` y `justificationExists` operan sobre la clave UUID en minúsculas. Un put sobre una clave existente lanza `ConflictError` y no envía `PutObject`. El SDK no exporta el `S3Client` ni borra objetos. Los tests sustituyen el driver S3: RustFS no tiene que estar en marcha. El paquete se instala y se prueba en el ordenador; no entra en Compose ni en `setup`.
 
 ## api-postgresql
 
@@ -71,7 +81,7 @@ Son almacenes y cadena, no una capa del escritorio ni del API-router. Cada una t
 
 El modelo y los enlaces están en `docs/POSTGRES.md`, `docs/SQLITE.md`, `docs/RUSTFS.md`, `docs/BLOCKEND.md` y `permanent-data.md`.
 
-`api-postgresql/` comprueba la conexión con `GET /health`, ofrece cinco listados (incluidos `GET /organization` y `GET /person-course`), `GET /person/:id`, `POST /person-course` y `DELETE /person-course/:personId/:courseId`. `api-rustfs/` no abre RustFS en el health. El renderer y el API-router no abren estas bases. La SDK las usará cuando exista.
+`api-postgresql/` comprueba la conexión con `GET /health`, ofrece cinco listados (incluidos `GET /organization` y `GET /person-course`), `GET /person/:id`, `POST /person-course` y `DELETE /person-course/:personId/:courseId`. `api-rustfs/` no abre RustFS en el health. El renderer y el API-router no abren estas bases. `domain/rustfs/` abre RustFS con el cliente S3. La SDK de `sdk/` usará PostgreSQL y SQLite cuando exista.
 
 ## aTempo de escritorio
 
@@ -197,7 +207,7 @@ El arnés vive exclusivamente en `desktop/tests/`: el arranque normal y las capa
 Docker instala lo que el proyecto necesita con versiones comunes para el equipo: Node 24.22.3, pnpm 10.33.0 y APM 0.35.0. La imagen también instala Python 3.13 para ejecutar `api-sqlite/`; APM conserva además su propio Python integrado. La instalación se define en `Dockerfile`, `docker-compose.yml` y `docker/setup.sh`.
 
 - La imagen parte de `node:24.22.3-trixie`. El binario oficial de APM se comprueba con su SHA-256. Python 3.13 y su soporte de venv se instalan desde un snapshot Debian fijado.
-- `setup` ejecuta `apm install`, instala con lockfiles los paquetes Node de escritorio, Storybook, las APIs, `blockend/` y `postgres/`, y prepara el venv de `api-sqlite/`.
+- `setup` ejecuta `apm install`, instala con lockfiles los paquetes Node de escritorio, Storybook, las APIs, `blockend/` y `postgres/`, y prepara el venv de `api-sqlite/`. `domain/rustfs/` se instala y se prueba en el ordenador; no entra en Compose ni en `setup`.
 - Las skills y agentes de delivery-workflow quedan en la carpeta del proyecto para Cursor, Codex y Claude Code.
 - Los `node_modules` y el venv Python viven en volúmenes Docker separados por paquete; pnpm comparte su caché. Compose los crea vacíos y de root. `docker/entrypoint.sh` los deja del usuario `node` en cada arranque y el comando sigue con ese usuario. Las dependencias Linux no se mezclan con las del ordenador.
 - Compose sirve Storybook en 6006 y las APIs en 3000–3003. Las APIs alcanzan PostgreSQL y RustFS mediante sus nombres de servicio, y esos almacenes también conservan los puertos host de desarrollo. Los datos de `api-sqlite`, PostgreSQL y RustFS viven en volúmenes independientes.
