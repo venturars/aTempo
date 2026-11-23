@@ -42,6 +42,8 @@ services:
     <<: *base
     working_dir: /work/api-router
     command: pnpm dev
+    depends_on:
+      - api-postgresql
     ports:
       - "${ATEMPO_API_ROUTER_PORT:-3000}:3000"
     environment:

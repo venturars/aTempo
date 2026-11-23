@@ -90,6 +90,10 @@ jobs:
           curl --fail --silent http://127.0.0.1:3002/health | jq -e '.status == "ok"' >/dev/null
           curl --fail --silent http://127.0.0.1:3003/health | jq -e '.status == "ok"' >/dev/null
 
+      - name: Check SDK reaches api-postgresql over the Compose network
+        run: |
+          docker compose exec -T api-router node /work/sdk/scripts/check-live-health.cjs
+
       - name: Check PostgreSQL and RustFS connections and write probe data
         run: |
           docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U atempo -d atempo \

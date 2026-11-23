@@ -108,6 +108,10 @@ sdk/
     after-auth.ts        # afterAuth({ email }) → GET /health de api-postgresql
     errors.ts
     http.ts              # fetch sustituible en tests
+  scripts/
+    load-after-auth.cjs
+    check-live-health.cjs  # afterAuth contra api-postgresql real
+    check-live-login.cjs   # POST /auth/login (Auth0 + health)
   test/
     after-auth.spec.ts
     jest.json

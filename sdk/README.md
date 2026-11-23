@@ -21,3 +21,19 @@ pnpm build
 ## Configuración
 
 `API_POSTGRESQL_URL` es la base de `api-postgresql` (en Compose, `http://api-postgresql:3001`). Si falta, `afterAuth` lanza un error de configuración.
+
+## Comprobar la red de verdad
+
+Con `api-router` y `api-postgresql` en marcha (`docker compose up api-router api-postgresql`):
+
+```sh
+docker compose exec api-router node /work/sdk/scripts/check-live-health.cjs
+```
+
+Eso llama a `afterAuth` dentro del contenedor del router y espera `GET /health` ok en `api-postgresql`. No usa Auth0.
+
+Para el login completo (Auth0 y después el health), con las variables de cuenta en el entorno:
+
+```sh
+ATEMPO_LIVE_EMAIL=… ATEMPO_LIVE_PASSWORD=… API_ROUTER_URL=http://127.0.0.1:3000 node sdk/scripts/check-live-login.cjs
+```

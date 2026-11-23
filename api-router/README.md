@@ -27,6 +27,8 @@ Tras `docker compose run --rm setup`, el servicio ya forma parte del entorno Com
 
 Las pruebas y comprobaciones se ejecutan con el volumen Linux del paquete: `docker compose run --rm api-router pnpm test` (sustituye `test` por `typecheck`, `lint` o `build`).
 
+Con `api-postgresql` en marcha, `docker compose exec api-router node /work/sdk/scripts/check-live-health.cjs` comprueba que la SDK llega a `GET /health` por la red de Compose. Si acabas de añadir `atempo-sdk`, ejecuta `pnpm install` en el contenedor del router y reinícialo. El login completo (Auth0 y el health) se lanza con `sdk/scripts/check-live-login.cjs`.
+
 ## Probar con Swagger
 
 1. Con el servicio en marcha (`pnpm dev`), abre `http://localhost:3000/docs` (o el mismo puerto que uses con `PORT`).
