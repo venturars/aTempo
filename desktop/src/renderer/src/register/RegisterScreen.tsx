@@ -79,10 +79,24 @@ function RegisterForm(): React.JSX.Element {
   const setRepeatPassword = useRegisterStore((state) => state.setRepeatPassword)
   const submit = useRegisterStore((state) => state.submit)
   const [passwordVisible, setPasswordVisible] = useState(false)
+  const [signupBlocked, setSignupBlocked] = useState(false)
   const navigate = useNavigate()
 
-  function onSubmit(event: FormEvent<HTMLFormElement>): void {
+  async function onSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
+    // Authenticated users must receive an invitation before signup exists.
+    let isAuthConfigured: boolean
+    try {
+      isAuthConfigured = await window.api.auth.isConfigured()
+    } catch {
+      setSignupBlocked(true)
+      return
+    }
+    if (isAuthConfigured) {
+      setSignupBlocked(true)
+      return
+    }
+    setSignupBlocked(false)
     if (submit()) {
       navigate({ to: '/student/dashboard' })
     }
@@ -191,6 +205,11 @@ function RegisterForm(): React.JSX.Element {
         <button className="btn btn-primary" type="submit">
           Crear mi cuenta
         </button>
+        {signupBlocked ? (
+          <div className="alert alert-info" role="alert">
+            <span>El registro todavía no está disponible. Solicita una invitación a un administrador.</span>
+          </div>
+        ) : null}
         <p>
           ¿Ya tienes una cuenta?{' '}
           <button className="btn btn-link" type="button" onClick={goToLogin}>
