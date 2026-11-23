@@ -78,13 +78,15 @@ function RegisterForm(): React.JSX.Element {
   const setPassword = useRegisterStore((state) => state.setPassword)
   const setRepeatPassword = useRegisterStore((state) => state.setRepeatPassword)
   const submit = useRegisterStore((state) => state.submit)
+  const submitWithAuth = useRegisterStore((state) => state.submitWithAuth)
+  const registerError = useRegisterStore((state) => state.registerError)
+  const isSubmitting = useRegisterStore((state) => state.isSubmitting)
   const [passwordVisible, setPasswordVisible] = useState(false)
   const [signupBlocked, setSignupBlocked] = useState(false)
   const navigate = useNavigate()
 
   async function onSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
-    // Authenticated users must receive an invitation before signup exists.
     let isAuthConfigured: boolean
     try {
       isAuthConfigured = await window.api.auth.isConfigured()
@@ -93,7 +95,10 @@ function RegisterForm(): React.JSX.Element {
       return
     }
     if (isAuthConfigured) {
-      setSignupBlocked(true)
+      setSignupBlocked(false)
+      if (await submitWithAuth()) {
+        navigate({ to: '/student/dashboard' })
+      }
       return
     }
     setSignupBlocked(false)
@@ -202,12 +207,19 @@ function RegisterForm(): React.JSX.Element {
             </p>
           ) : null}
         </div>
-        <button className="btn btn-primary" type="submit">
+        <button className="btn btn-primary" type="submit" disabled={isSubmitting}>
           Crear mi cuenta
         </button>
+        {registerError !== '' ? (
+          <div className="alert alert-error" role="alert">
+            <span>{registerError}</span>
+          </div>
+        ) : null}
         {signupBlocked ? (
           <div className="alert alert-info" role="alert">
-            <span>El registro todavía no está disponible. Solicita una invitación a un administrador.</span>
+            <span>
+              El registro todavía no está disponible. Solicita una invitación a un administrador.
+            </span>
           </div>
         ) : null}
         <p>

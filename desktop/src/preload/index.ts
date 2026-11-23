@@ -6,6 +6,8 @@ const api = {
     isConfigured: (): Promise<boolean> => ipcRenderer.invoke('auth:is-configured'),
     login: (credentials: { email: string; password: string }) =>
       ipcRenderer.invoke('auth:login', credentials),
+    register: (credentials: { email: string; password: string }) =>
+      ipcRenderer.invoke('auth:register', credentials),
     me: () => ipcRenderer.invoke('auth:me'),
     logout: (): Promise<void> => ipcRenderer.invoke('auth:logout')
   }
