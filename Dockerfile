@@ -11,6 +11,7 @@ ARG APM_VERSION=0.35.0
 ARG APM_SHA256_ARM64=ada8901ce1b29e5d188629eeed64e8499853a8cb5f047630ebedbde24008508e
 ARG APM_SHA256_X86_64=5aa23ce61eebae9411668f507772cdb5d87252c760078dc59b5acdc5188d785b
 # Snapshot de Python para que el runtime Linux del venv sea reproducible.
+# Sus Release de updates y security caducan a los siete días: apt-get update no comprueba la caducidad.
 ARG DEBIAN_SNAPSHOT=20261116T000000Z
 # Lo pone Docker al construir: arm64 en Apple Silicon, amd64 en la mayoría de PCs.
 ARG TARGETARCH
@@ -19,7 +20,7 @@ RUN npm install --global "pnpm@${PNPM_VERSION}"
 
 # Python de Debian solo prepara el venv; las dependencias de la API van dentro de su volumen.
 USER root
-RUN apt-get update --snapshot "$DEBIAN_SNAPSHOT" \
+RUN apt-get -o Acquire::Check-Valid-Until=false update --snapshot "$DEBIAN_SNAPSHOT" \
   && apt-get install -y --no-install-recommends --snapshot "$DEBIAN_SNAPSHOT" \
     python3.13=3.13.5-2+deb13u5 \
     python3.13-venv=3.13.5-2+deb13u5 \
@@ -66,7 +67,7 @@ FROM base AS desktop-gui
 # Los paquetes salen del snapshot compartido con la etapa base; cambia fecha y versiones juntos.
 
 USER root
-RUN apt-get update --snapshot "$DEBIAN_SNAPSHOT" \
+RUN apt-get -o Acquire::Check-Valid-Until=false update --snapshot "$DEBIAN_SNAPSHOT" \
   && apt-get install -y --no-install-recommends --snapshot "$DEBIAN_SNAPSHOT" \
     libgtk-3-0t64=3.24.49-3 \
     libnss3=2:3.110-1+deb13u5 \
