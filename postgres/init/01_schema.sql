@@ -31,6 +31,11 @@ CREATE TABLE course (
   CHECK (contract_address ~ '^0x[0-9a-fA-F]{40}$')
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS person_email_lower_idx ON person (lower(email));
+CREATE UNIQUE INDEX IF NOT EXISTS course_contract_address_lower_idx ON course (lower(contract_address));
+CREATE UNIQUE INDEX IF NOT EXISTS organization_tax_id_lower_idx ON organization (lower(tax_id));
+CREATE UNIQUE INDEX IF NOT EXISTS person_identification_document_lower_idx ON person (lower(identification_document));
+
 CREATE TABLE person_course (
   person_id uuid NOT NULL REFERENCES person (id),
   course_id uuid NOT NULL REFERENCES course (id),

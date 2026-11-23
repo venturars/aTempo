@@ -43,10 +43,14 @@ services:
     working_dir: /work/api-router
     command: pnpm dev
     ports:
-      - "3000:3000"
+      - "${ATEMPO_API_ROUTER_PORT:-3000}:3000"
     environment:
       PORT: "3000"
       CHOKIDAR_USEPOLLING: "true"
+      AUTH0_DOMAIN: ${AUTH0_DOMAIN:-}
+      AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID:-}
+      AUTH0_CLIENT_SECRET: ${AUTH0_CLIENT_SECRET:-}
+      AUTH0_AUDIENCE: ${AUTH0_AUDIENCE:-}
     volumes:
       - ./api-router:/work/api-router
       - api-router-node-modules:/work/api-router/node_modules
@@ -310,6 +314,7 @@ services:
       PGDATABASE: atempo
     volumes:
       - ./postgres/init/01_schema.sql:/schema.sql:ro
+      - ./postgres/init/02_unique_lower.sql:/unique_lower.sql:ro
       - ./postgres/test:/tests:ro
     entrypoint: ["sh", "/tests/run.sh"]
 

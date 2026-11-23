@@ -55,6 +55,7 @@ postgres/
   tsconfig.json
   drizzle.config.ts
   init/01_schema.sql
+  init/02_unique_lower.sql
   test/run.sh
   test/valid.sql
 sqlite/

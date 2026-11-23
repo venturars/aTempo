@@ -3,5 +3,5 @@ INSERT INTO attendance (session_id, student_id, status, check_in_method, checked
   '44444444-4444-4444-4444-444444444444',
   'present',
   'qr',
-  '2026-01-01T10:05:00Z'
+  '2026-01-01T10:05:00.000Z'
 );
