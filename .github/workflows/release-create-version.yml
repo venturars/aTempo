@@ -2,9 +2,8 @@ name: "Release: create version"
 
 # Cuándo se ejecuta: cada vez que se actualiza la rama main.
 # La IA de Groq decide si el cambio es major, minor o patch y escribe el resumen.
-# Si la IA falla, deciden las reglas de los commits:
-#   "!" o "BREAKING CHANGE" -> major, algún "feat" -> minor, el resto -> patch.
-# Necesita el secreto GROQ_API_KEY en el repositorio (sin él, usa solo las reglas).
+# Si la IA falla o falta el secreto GROQ_API_KEY, el workflow falla y no crea ningún tag ni release.
+# Necesita el secreto GROQ_API_KEY en el repositorio.
 on:
   push:
     branches: [main]
@@ -55,8 +54,6 @@ jobs:
             RANGO="HEAD"
             DESDE=$(git hash-object -t tree /dev/null)
           fi
-          git log "$RANGO" --format='%s' --no-merges > asuntos.txt
-          git log "$RANGO" --format='%b' --no-merges > cuerpos.txt
           {
             echo "## Commits"
             git log "$RANGO" --format='- %s%n%b' --no-merges | grep -v '^[[:space:]]*$'
@@ -67,18 +64,19 @@ jobs:
           cat cambios.txt
 
       # 4. Pregunta a la IA qué tipo de cambio es y le pide un resumen.
-      #    Si no hay clave, la IA falla o responde algo raro, deciden las reglas de los commits.
+      #    Si no hay clave, la IA falla o responde algo raro, el paso falla y no se crea ninguna versión.
       - name: Decidir el tipo de cambio
         id: decidir
         if: steps.ultima.outputs.saltar != 'si'
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: |
-          set +e # si algo de la IA falla, el paso sigue y deciden las reglas
-          TIPO=""
-          : > decision.json
-          if [ -n "$GROQ_API_KEY" ]; then
-            INSTRUCCIONES='Eres el responsable de versiones de aTempo, una aplicación de escritorio para que el profesor registre la asistencia de los alumnos de una clase. Sigue el versionado semántico.
+          if [ -z "$GROQ_API_KEY" ]; then
+            echo "::error::Falta el secreto GROQ_API_KEY: no se puede decidir la versión."
+            exit 1
+          fi
+
+          INSTRUCCIONES='Eres el responsable de versiones de aTempo, una aplicación de escritorio para que el profesor registre la asistencia de los alumnos de una clase. Sigue el versionado semántico.
           Decide el tipo de cambio a partir de los commits y los archivos:
           - "major": rompe la compatibilidad (commits con "!" o "BREAKING CHANGE") o cambia por completo cómo se usa la aplicación.
           - "minor": añade funcionalidades nuevas (normalmente commits "feat").
@@ -87,55 +85,36 @@ jobs:
           Responde solo con este JSON, sin texto alrededor:
           {"tipo": "major|minor|patch", "motivo": "una frase", "resumen": "viñetas en Markdown"}'
 
-            jq -n --arg modelo "$MODELO_IA" --arg instrucciones "$INSTRUCCIONES" --rawfile cambios cambios.txt \
-              '{model: $modelo, temperature: 0, messages: [{role: "system", content: $instrucciones}, {role: "user", content: $cambios}]}' \
-              > peticion.json
+          jq -n --arg modelo "$MODELO_IA" --arg instrucciones "$INSTRUCCIONES" --rawfile cambios cambios.txt \
+            '{model: $modelo, temperature: 0, messages: [{role: "system", content: $instrucciones}, {role: "user", content: $cambios}]}' \
+            > peticion.json
 
-            if curl -sS --fail-with-body --max-time 60 "https://api.groq.com/openai/v1/chat/completions" \
-                -H "Authorization: Bearer $GROQ_API_KEY" \
-                -H "Content-Type: application/json" \
-                -d @peticion.json -o respuesta.json; then
-              jq -r '.choices[0].message.content // empty' respuesta.json | sed '/^```/d' > decision.json || true
-            else
-              echo "La IA no ha respondido:"
-              cat respuesta.json || true
-            fi
-            TIPO=$(jq -r '.tipo // empty' decision.json 2>/dev/null || true)
-          else
-            echo "No hay GROQ_API_KEY: se usan las reglas de los commits."
+          if ! curl -sS --fail-with-body --max-time 60 "https://api.groq.com/openai/v1/chat/completions" \
+              -H "Authorization: Bearer $GROQ_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d @peticion.json -o respuesta.json; then
+            echo "::error::La IA no ha respondido: no se crea ninguna versión."
+            cat respuesta.json || true
+            exit 1
           fi
 
+          jq -r '.choices[0].message.content // empty' respuesta.json | sed '/^```/d' > decision.json
+          TIPO=$(jq -r '.tipo // empty' decision.json 2>/dev/null || true)
+
           case "$TIPO" in
-            major|minor|patch)
-              QUIEN="la IA"
-              jq -r '.motivo // ""' decision.json > motivo.txt 2>/dev/null || : > motivo.txt
-              jq -r '.resumen // ""' decision.json > resumen.md 2>/dev/null || : > resumen.md
-              ;;
+            major|minor|patch) ;;
             *)
-              [ -n "$GROQ_API_KEY" ] && echo "Respuesta de la IA no válida: se usan las reglas de los commits."
-              QUIEN="las reglas de los commits"
-              if grep -qE '^[a-z]+(\([^)]*\))?!:' asuntos.txt || grep -q 'BREAKING CHANGE' cuerpos.txt; then
-                TIPO="major"; echo 'Hay commits con "!" o "BREAKING CHANGE": cambios que rompen la compatibilidad.' > motivo.txt
-              elif grep -qE '^feat(\([^)]*\))?:' asuntos.txt; then
-                TIPO="minor"; echo 'Hay commits "feat": funcionalidades nuevas.' > motivo.txt
-              else
-                TIPO="patch"; echo 'Solo hay correcciones, documentación o mantenimiento.' > motivo.txt
-              fi
-              # Resumen: los commits agrupados por tipo.
-              {
-                NOVEDADES=$(grep -E '^feat(\([^)]*\))?!?:' asuntos.txt | sed -E 's/^[a-z]+(\([^)]*\))?!?: */- /')
-                CORRECCIONES=$(grep -E '^fix(\([^)]*\))?!?:' asuntos.txt | sed -E 's/^[a-z]+(\([^)]*\))?!?: */- /')
-                OTROS=$(grep -vE '^(feat|fix)(\([^)]*\))?!?:' asuntos.txt | grep -vE '^chore: open #' | sed -E 's/^[a-z]+(\([^)]*\))?!?: */- /; t; s/^/- /')
-                [ -n "$NOVEDADES" ] && printf '### Novedades\n%s\n\n' "$NOVEDADES"
-                [ -n "$CORRECCIONES" ] && printf '### Correcciones\n%s\n\n' "$CORRECCIONES"
-                [ -n "$OTROS" ] && printf '### Otros cambios\n%s\n\n' "$OTROS"
-              } > resumen.md || true
+              echo "::error::Respuesta de la IA no válida: no se crea ninguna versión."
+              cat decision.json
+              exit 1
               ;;
           esac
 
-          echo "Decide: $QUIEN. Tipo de cambio: $TIPO. Motivo: $(cat motivo.txt)"
+          jq -r '.motivo // ""' decision.json > motivo.txt
+          jq -r '.resumen // ""' decision.json > resumen.md
+
+          echo "Tipo de cambio: $TIPO. Motivo: $(cat motivo.txt)"
           echo "tipo=$TIPO" >> "$GITHUB_OUTPUT"
-          echo "quien=$QUIEN" >> "$GITHUB_OUTPUT"
 
       # 5. Calcula la nueva versión según el tipo de cambio
       - name: Calcular la nueva versión
@@ -167,14 +146,13 @@ jobs:
           NEXT: ${{ steps.version.outputs.next }}
           LAST_TAG: ${{ steps.ultima.outputs.tag }}
           TIPO: ${{ steps.decidir.outputs.tipo }}
-          QUIEN: ${{ steps.decidir.outputs.quien }}
         run: |
           {
             echo "## Resumen"
             echo
             if [ -s resumen.md ]; then cat resumen.md; else echo "Sin resumen automático."; fi
             echo
-            echo "**Tipo de cambio:** $TIPO, decidido por $QUIEN. $(cat motivo.txt)"
+            echo "**Tipo de cambio:** $TIPO, decidido por la IA. $(cat motivo.txt)"
             echo
           } > notas.md
           gh release create "$NEXT" \

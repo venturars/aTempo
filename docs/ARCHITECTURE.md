@@ -197,12 +197,14 @@ El arnés vive exclusivamente en `desktop/tests/`: el arranque normal y las capa
 Docker instala lo que el proyecto necesita con versiones comunes para el equipo: Node 24.22.3, pnpm 10.33.0 y APM 0.35.0. La imagen también instala Python 3.13 para ejecutar `api-sqlite/`; APM conserva además su propio Python integrado. La instalación se define en `Dockerfile`, `docker-compose.yml` y `docker/setup.sh`.
 
 - La imagen parte de `node:24.22.3-trixie`. El binario oficial de APM se comprueba con su SHA-256. Python 3.13 y su soporte de venv se instalan desde un snapshot Debian fijado.
+- `apt-snapshot-install` desactiva la caducidad (`Valid-Until`) solo en su `apt-get update` del snapshot; la firma se sigue comprobando. Los `Release` de `trixie-updates` y `trixie-security` caducan unos siete días después de publicarse: sin eso, la construcción fallaría pocos días después de fijar la fecha, o el mismo día con una fecha antigua.
+- Las correcciones de seguridad de Debian solo llegan al subir `DEBIAN_SNAPSHOT`. El workflow `debian-snapshot.yml` lee el `Dockerfile` de `staging` el día 1 de cada mes y abre una issue `chore` si la fecha tiene más de 30 días.
 - `setup` ejecuta `apm install`, instala con lockfiles los paquetes Node de escritorio, Storybook, las APIs, `blockend/` y `postgres/`, y prepara el venv de `api-sqlite/`.
 - Las skills y agentes de delivery-workflow quedan en la carpeta del proyecto para Cursor, Codex y Claude Code.
 - Los `node_modules` y el venv Python viven en volúmenes Docker separados por paquete; pnpm comparte su caché. Compose los crea vacíos y de root. `docker/entrypoint.sh` los deja del usuario `node` en cada arranque y el comando sigue con ese usuario. Las dependencias Linux no se mezclan con las del ordenador.
 - Compose sirve Storybook en 6006 y las APIs en 3000–3003. Las APIs alcanzan PostgreSQL y RustFS mediante sus nombres de servicio, y esos almacenes también conservan los puertos host de desarrollo. Los datos de `api-sqlite`, PostgreSQL y RustFS viven en volúmenes independientes.
 - Compose también ofrece perfiles para PostgreSQL operativo, SQLite operativo, RustFS de justificantes y blockend, documentados en el README. `desktop` ejecuta las comprobaciones de su paquete y `blockend` las de Hardhat.
-- El workflow `.github/workflows/apis-test-docker.yml` valida la instalación limpia y repetida, las APIs y sus datos persistentes en Ubuntu.
+- El workflow `.github/workflows/workstation-test.yml` valida la instalación limpia y repetida, las APIs y sus datos persistentes en Ubuntu.
 - `desktop-gui`, opcional, usa la etapa gráfica del Dockerfile, con librerías fijadas desde un snapshot Debian. Abre Electron en el servidor X11 del ordenador y se activa con el perfil `gui`.
 - Los hooks de `.githooks/` ejecutan `setup` tras pull, cambio de rama o rebase cuando cambian los manifiestos, lockfiles, scripts de instalación o Dockerfile. Reconstruyen la imagen si hace falta; si Docker no está en marcha, avisan y git continúa.
 
