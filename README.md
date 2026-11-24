@@ -4,6 +4,8 @@ aTempo registra la asistencia de los alumnos de una clase. Este repositorio tien
 
 La visión, los perfiles y las decisiones de producto están en [principles.md](principles.md).
 
+Para enseñar la aplicación entera con datos de ejemplo, sin Docker ni Auth0, sigue [DEMO.md](DEMO.md): `pnpm run demo:install`, `pnpm run demo:web` y `pnpm run demo:desktop`.
+
 ## Arranque rápido con Auth0
 
 Con el `.env` local configurado para Auth0 y las dependencias nativas de `desktop/` instaladas, ejecuta desde la raíz del checkout en Windows, macOS o Linux:
