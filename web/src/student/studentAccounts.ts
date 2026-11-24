@@ -15,10 +15,18 @@ import { formatDay, minutesOfDay } from './studentDate'
 
 const accountsKey = storageKeys.accounts
 
+export type NewStudent = {
+  firstName: string
+  lastName: string
+  identificationDocument: string
+  email: string
+  password: string
+}
+
 type StudentAccountsState = {
   accounts: StudentAccount[]
   findByEmail: (email: string) => StudentAccount | undefined
-  addAccount: (name: string, email: string, password: string) => StudentAccount
+  addAccount: (person: NewStudent) => StudentAccount
   recordEntry: (email: string, entry: ClassEntry) => void
 }
 
@@ -49,12 +57,17 @@ export const useStudentAccountsStore = create<StudentAccountsState>((set, get) =
     const wanted = normalizeEmail(email)
     return get().accounts.find((account) => normalizeEmail(account.email) === wanted)
   },
-  addAccount: (name, email, password) => {
+  addAccount: (person) => {
+    const firstName = person.firstName.trim()
+    const lastName = person.lastName.trim()
     const account: StudentAccount = {
-      name: name.trim(),
-      email: normalizeEmail(email),
-      password,
-      history: []
+      name: `${firstName} ${lastName}`,
+      email: normalizeEmail(person.email),
+      password: person.password,
+      history: [],
+      firstName,
+      lastName,
+      identificationDocument: person.identificationDocument
     }
     const accounts = [...get().accounts, account]
     saveAccounts(accounts)
@@ -127,12 +140,14 @@ export function registerArrival(at: Date): CheckInResult {
   const email = useSessionStore.getState().email
   if (email === null) return { registered: false, message: 'Entra para registrar tu asistencia.' }
   const account = useStudentAccountsStore.getState().findByEmail(email)
+  if (account === undefined)
+    return { registered: false, message: 'Entra para registrar tu asistencia.' }
   const todayLabel = formatDay(at)
-  const previous = account?.history.find((entry) => entry.label === todayLabel)
+  const previous = account.history.find((entry) => entry.label === todayLabel)
   if (previous) {
     return {
       registered: false,
-      message: `Ya estás dentro desde las ${previous.arrival ?? '—'}. ¡Disfruta la clase!`
+      message: `Ya estás dentro desde las ${previous.arrival ?? '—'}. Disfruta la clase.`
     }
   }
 

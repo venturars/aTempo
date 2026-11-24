@@ -49,7 +49,7 @@ function LoginForm({ onSignUp }: { onSignUp: () => void }): React.JSX.Element {
   return (
     <>
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold">Administración</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Administración</h1>
         <p className="text-base-content/65">
           Entra para gestionar personas, cursos y sesiones de tu organización.
         </p>
@@ -142,7 +142,7 @@ function SignUpForm({ onLogin }: { onLogin: () => void }): React.JSX.Element {
   return (
     <>
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold">Crea la cuenta de tu organización</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Crea la cuenta de tu organización</h1>
         <p className="text-base-content/65">
           Serás su administrador. Después invitas a profesores y alumnos.
         </p>

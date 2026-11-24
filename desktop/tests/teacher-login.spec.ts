@@ -1,6 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
 import { useLoginStore } from '../src/renderer/src/login/loginStore'
-import { useRegisterStore } from '../src/renderer/src/register/registerStore'
 import { useStudentAccountsStore } from '../src/renderer/src/student/studentAccounts'
 import { useSessionStore } from '../src/renderer/src/session/sessionStore'
 import { launchHiddenElectron } from './helpers/electron'
@@ -8,7 +7,7 @@ import { launchHiddenElectron } from './helpers/electron'
 // Public fixture specified in #48, deliberately independent of the implementation constant.
 const demoEmail = 'profesor@atempo.test'
 const demoPassword = 'Profesor123!'
-const loginError = 'El correo o la contraseña no coinciden con la cuenta de ejemplo.'
+const loginError = 'El correo o la contraseña no coinciden.'
 
 async function enter(window: Page, email: string, password: string): Promise<void> {
   await window.getByLabel('Correo', { exact: true }).fill(email)
@@ -28,7 +27,6 @@ test.describe('teacher demo session logic', () => {
   test.beforeEach(() => {
     useLoginStore.setState(useLoginStore.getInitialState(), true)
     useSessionStore.setState(useSessionStore.getInitialState(), true)
-    useRegisterStore.setState(useRegisterStore.getInitialState(), true)
     useStudentAccountsStore.setState(useStudentAccountsStore.getInitialState(), true)
   })
 
@@ -105,60 +103,6 @@ test.describe('teacher demo session logic', () => {
       expect(useLoginStore.getState().password).toBe('')
     })
   }
-
-  test('clears the sign-up form after creating the account', () => {
-    const register = useRegisterStore.getState()
-    register.setName('Otra alumna')
-    register.setEmail('otra@clase.test')
-    register.setPassword('secreta12')
-    register.setRepeatPassword('secreta12')
-    expect(register.submit()).toBe(true)
-    expect(useRegisterStore.getState()).toMatchObject({
-      name: '',
-      email: '',
-      password: '',
-      repeatPassword: ''
-    })
-  })
-
-  test('registers a separate student and preserves its identity on subsequent login', () => {
-    const register = useRegisterStore.getState()
-    register.setName(' Nueva alumna ')
-    register.setEmail('nueva@clase.test')
-    register.setPassword('secreta12')
-    register.setRepeatPassword('secreta12')
-    expect(register.submit()).toBe(true)
-    expect(useSessionStore.getState()).toMatchObject({
-      profile: 'student',
-      email: 'nueva@clase.test'
-    })
-    expect(useStudentAccountsStore.getState().findByEmail('nueva@clase.test')?.history).toEqual([])
-    useSessionStore.setState({ profile: null, email: null })
-    useLoginStore.getState().setEmail(' NUEVA@CLASE.TEST ')
-    useLoginStore.getState().setPassword('secreta12')
-    expect(useLoginStore.getState().submit()).toBe(true)
-    expect(useSessionStore.getState()).toMatchObject({
-      profile: 'student',
-      email: 'nueva@clase.test'
-    })
-  })
-
-  test('reserves normalized teacher email without adding or overwriting a student', () => {
-    const before = useStudentAccountsStore.getState().accounts
-    const register = useRegisterStore.getState()
-    register.setName('Otro profesor')
-    register.setEmail(' PROFESOR@ATEMPO.TEST ')
-    register.setPassword('secreta12')
-    register.setRepeatPassword('secreta12')
-    expect(register.submit()).toBe(false)
-    expect(useRegisterStore.getState().emailError).toBe('Ya hay una cuenta con este correo.')
-    expect(useStudentAccountsStore.getState().accounts).toEqual(before)
-    expect(useSessionStore.getState()).toMatchObject({ profile: null, email: null })
-    useLoginStore.getState().setEmail(demoEmail)
-    useLoginStore.getState().setPassword(demoPassword)
-    expect(useLoginStore.getState().submit()).toBe(true)
-    expect(useSessionStore.getState()).toMatchObject({ profile: 'teacher', email: demoEmail })
-  })
 })
 
 test('recovers from a wrong password with one correct submit in the same window', async () => {
@@ -243,29 +187,22 @@ test('does not show or record student data with a teacher session', async () => 
   }
 })
 
-test('empties the login and sign-up forms after leaving them without a successful submit', async () => {
+test('empties the login form after leaving it without a successful submit', async () => {
   const app = await launchHiddenElectron()
   try {
     const window = await app.firstWindow()
     await enter(window, demoEmail, 'clave-incorrecta')
     await expect(window.getByText(loginError)).toBeVisible()
     await window.evaluate(() => {
-      globalThis.location.hash = '#/sign-up'
+      globalThis.location.hash = '#/organization/dashboard'
     })
-    await window.getByLabel('Nombre completo').fill('Otra alumna')
-    await window.getByLabel('Correo electrónico').fill('otra@clase.test')
-    await window.getByLabel('Contraseña', { exact: true }).fill('secreta12')
-    await window.getByLabel('Repetir contraseña').fill('secreta12')
-    await window.getByRole('button', { name: 'Inicia sesión' }).click()
+    await expect(window.getByRole('heading', { name: 'Resumen', level: 1 })).toBeVisible()
+    await window.evaluate(() => {
+      globalThis.location.hash = '#/'
+    })
     await expect(window.getByLabel('Correo', { exact: true })).toHaveValue('')
     await expect(window.getByLabel('Contraseña', { exact: true })).toHaveValue('')
     await expect(window.getByText(loginError)).toHaveCount(0)
-    await window.evaluate(() => {
-      globalThis.location.hash = '#/sign-up'
-    })
-    await expect(window.getByLabel('Correo electrónico')).toHaveValue('')
-    await expect(window.getByLabel('Contraseña', { exact: true })).toHaveValue('')
-    await expect(window.getByLabel('Repetir contraseña')).toHaveValue('')
   } finally {
     await app.close()
   }
@@ -294,26 +231,6 @@ test('normalizes teacher email through the normal form', async () => {
   try {
     const window = await app.firstWindow()
     await enter(window, '  PROFESOR@ATEMPO.TEST  ', demoPassword)
-    await expectHoy(window)
-  } finally {
-    await app.close()
-  }
-})
-
-test('rejects reserved signup then accepts teacher login in the same window', async () => {
-  const app = await launchHiddenElectron(['--sign-up'])
-  try {
-    const window = await app.firstWindow()
-    await window.getByLabel('Nombre completo').fill('Profesor reservado')
-    await window.getByLabel('Correo electrónico').fill(' PROFESOR@ATEMPO.TEST ')
-    await window.getByLabel('Contraseña', { exact: true }).fill('otra-clave12')
-    await window.getByLabel('Repetir contraseña').fill('otra-clave12')
-    await window.getByRole('button', { name: 'Crear mi cuenta' }).click()
-    await expect(window.getByText('Ya hay una cuenta con este correo.')).toBeVisible()
-    await expect(window).toHaveURL(/#\/sign-up$/)
-    await expect(window.getByRole('heading', { name: 'Dashboard alumno' })).toHaveCount(0)
-    await window.getByRole('button', { name: 'Inicia sesión' }).click()
-    await enter(window, demoEmail, demoPassword)
     await expectHoy(window)
   } finally {
     await app.close()

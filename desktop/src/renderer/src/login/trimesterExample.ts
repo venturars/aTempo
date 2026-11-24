@@ -14,7 +14,7 @@ const markClasses: Record<AttendanceMark, string> = {
 
 const markLabels: Record<AttendanceMark, string> = {
   presente: 'Presente',
-  retraso: 'Retraso',
+  retraso: 'Tarde',
   ausencia: 'Ausencia'
 }
 

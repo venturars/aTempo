@@ -3,10 +3,11 @@ import { useSessionStore } from '../session/sessionStore'
 import { normalizeEmail, useStudentAccountsStore } from '../student/studentAccounts'
 import { exampleStudent } from '../student/studentExample'
 import { teacherDemoAccount } from './teacherDemoAccount'
+import { useTeacherAccountsStore } from './teacherAccounts'
 import { validateLogin } from './validateLogin'
 
 // Mismo aviso para cualquier fallo: así no se sabe qué correos tienen cuenta.
-const loginErrorText = 'El correo o la contraseña no coinciden con la cuenta de ejemplo.'
+const loginErrorText = 'El correo o la contraseña no coinciden.'
 const authLoginErrorText = 'El correo o la contraseña no son válidos.'
 const secureStorageErrorText = 'Este dispositivo no puede proteger la sesión de forma segura.'
 
@@ -57,15 +58,16 @@ export const useLoginStore = create<LoginState>((set, get) => ({
       return false
     }
 
-    const normalizedEmail = normalizeEmail(email)
+    // Sin Auth0: la cuenta de ejemplo y las invitaciones activadas durante este arranque.
+    const teacher = useTeacherAccountsStore.getState().findByEmail(email)
 
-    if (normalizedEmail === teacherDemoAccount.email) {
-      if (password !== teacherDemoAccount.password) {
+    if (teacher !== undefined) {
+      if (password !== teacher.password) {
         set({ emailError: '', passwordError: '', loginError: loginErrorText })
         return false
       }
 
-      useSessionStore.setState({ profile: 'teacher', email: normalizedEmail })
+      useSessionStore.getState().startTeacherSession(normalizeEmail(email), teacher.name)
       // El formulario se vacía al entrar. El correo sigue en la sesión.
       set(emptyLoginForm)
       return true
@@ -106,8 +108,11 @@ export const useLoginStore = create<LoginState>((set, get) => ({
     set({ isSubmitting: true, loginError: '' })
     try {
       await window.api.auth.login({ email: normalizedEmail, password })
-      const profile = isTeacher ? 'teacher' : 'student'
-      useSessionStore.getState().startSession(profile, normalizedEmail)
+      if (isTeacher) {
+        useSessionStore.getState().startTeacherSession(normalizedEmail, teacherDemoAccount.name)
+      } else {
+        useSessionStore.getState().startStudentSession(normalizedEmail)
+      }
       set({ ...emptyLoginForm, isSubmitting: false })
       return true
     } catch (error) {
