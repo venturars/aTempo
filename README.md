@@ -465,7 +465,9 @@ Las cuatro APIs pueden iniciarse juntas con `docker compose up api-router api-po
 
 ## Avisos opcionales de PR en Discord
 
-El workflow `.github/workflows/discord-notify-pull-request.yml` activa los avisos desde `main` para las PR dirigidas a `staging` y los comentarios de asociación. Usa la acción compartida fijada a un commit y no ejecuta código de la PR. APM no instala este workflow ni lo incorpora a los pasos de los agentes.
+El workflow `Discord: publish notice` (`.github/workflows/discord-pr-publish.yml`) publica los avisos desde `main`. Se dispara cuando terminan en `success` `PR: check rules` (PR dirigidas a `staging`) o `Discord: capture confirmation` (comentarios de asociación), y usa la acción `.github/actions/discord-pr-notifications`. No ejecuta código de la PR. APM no instala estos workflows ni los incorpora a los pasos de los agentes.
+
+El publicador necesita el artefacto `discord-pr-number`, que contiene solo el número de la PR. `PR: check rules` (`.github/workflows/pr-check-rules.yml`) lo sube al final de su job, después de comprobar la PR; `Discord: capture confirmation` sube el suyo con `/discord-map`. Este repositorio no usa el `discord-pr-trigger.yml` del paquete `delivery-workflow`: su función la cumple `PR: check rules`. No lo copies a `.github/workflows/`, para que el artefacto tenga un solo origen en los eventos de PR.
 
 Al solicitar al menos dos revisores, el bot publica una línea separadora, el repositorio, el título de la PR, los revisores y el enlace. No incluye el cuerpo de la PR. Muestra los logins de GitHub aunque no encuentre sus cuentas de Discord, y menciona únicamente a quienes tengan una asociación verificada.
 
