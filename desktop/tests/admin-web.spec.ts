@@ -857,3 +857,33 @@ test('creates an organization, logs out and switches between both admin accounts
     page.getByLabel('Documento de identidad', { exact: true })
   ).toHaveAccessibleDescription('Ya hay una cuenta con este documento.')
 })
+
+// Las capturas se hacen en macOS, como las de Electron: en Linux cambian las fuentes.
+test('matches the admin entry, sign-up and new organization screens at 1280 px', async ({
+  page
+}) => {
+  test.skip(process.platform !== 'darwin', 'Las capturas de referencia son de macOS.')
+  await page.clock.setFixedTime(new Date('2026-11-11T10:00:00'))
+  await page.setViewportSize({ width: 1280, height: 900 })
+  const screen = async (name: string): Promise<void> => {
+    await page.evaluate(() => document.fonts.ready)
+    await expect(page).toHaveScreenshot(name, { animations: 'disabled', fullPage: true })
+  }
+  await page.goto('/admin')
+  await expect(adminEntry(page)).toBeVisible()
+  await screen('admin-login-1280.png')
+
+  await page.getByRole('button', { name: 'Crear cuenta', exact: true }).click()
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Crea la cuenta de tu organización' })
+  ).toBeVisible()
+  await screen('admin-sign-up-1280.png')
+
+  await page.getByRole('button', { name: 'Crear cuenta', exact: true }).click()
+  await expect(page.getByLabel('CIF', { exact: true })).toHaveAttribute('aria-invalid', 'true')
+  await screen('admin-sign-up-errors-1280.png')
+
+  await fillSignUp(page, newOrganization)
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Hola, Carmen')
+  await screen('admin-new-organization-1280.png')
+})
