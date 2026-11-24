@@ -451,11 +451,13 @@ Las cuatro APIs pueden iniciarse juntas con `docker compose up api-router api-po
 
 ## Avisos opcionales de PR en Discord
 
-El workflow `.github/workflows/discord-notify-pull-request.yml` activa los avisos desde `main` para las PR dirigidas a `staging` y los comentarios de asociación. Usa la acción compartida fijada a un commit y no ejecuta código de la PR. APM no instala este workflow ni lo incorpora a los pasos de los agentes.
+Los workflows `.github/workflows/discord-pr-confirmation-trigger.yml` (captura los comentarios de asociación) y `.github/workflows/discord-pr-publish.yml` (publica el aviso con `workflow_run`) activan los avisos desde `main`. Este último usa la acción local `.github/actions/discord-pr-notifications` y no ejecuta código de la PR. APM no instala estos workflows ni los incorpora a los pasos de los agentes.
 
 Al solicitar al menos dos revisores, el bot publica una línea separadora, el repositorio, el título de la PR, los revisores y el enlace. No incluye el cuerpo de la PR. Muestra los logins de GitHub aunque no encuentre sus cuentas de Discord, y menciona únicamente a quienes tengan una asociación verificada.
 
-Un administrador puede configurar una vez la variable opcional `DISCORD_USER_MAP` en el entorno protegido `Discord-PR-Notifications`, con un JSON como `{"login-github":"ID_DE_DISCORD"}` y un ID numérico real en lugar del marcador. Esta asociación fija tiene prioridad, no caduca y se comprueba contra los miembros del servidor antes de mencionar. Para el resto se conserva la caché cifrada de 48 horas; la búsqueda automática acepta diferencias de mayúsculas en el nombre de usuario de Discord.
+Un administrador puede configurar una vez la variable opcional `DISCORD_USER_MAP` en el entorno protegido `discord-pr-notifications`, con un JSON como `{"login-github":"ID_DE_DISCORD"}` y un ID numérico real en lugar del marcador. Esta asociación fija tiene prioridad, no caduca y se comprueba contra los miembros del servidor antes de mencionar. Para el resto se conserva la caché cifrada de 48 horas; la búsqueda automática acepta diferencias de mayúsculas en el nombre de usuario de Discord.
+
+El log de la acción registra una línea por cada revisor sin mención, con el prefijo `Reviewer without Discord mention:`, su login y el motivo (`no unique exact match` o `confirmation is not a unique guild member`). Cuando varios revisores resuelven al mismo usuario de Discord, registra una sola línea por incidencia con los logins de todos los implicados, separados por coma, y el motivo `multiple reviewers resolve to the same Discord user`. Un login con saltos de línea o caracteres de control se escribe en una sola línea. El log no incluye IDs de Discord ni tokens. Un revisor sin mención no bloquea el aviso: sale con su login en texto plano y «sin mención de Discord».
 
 Para confirmar una asociación que falte, el autor de la PR o un miembro autorizado del repositorio puede dejar este comentario en la PR:
 
