@@ -135,6 +135,15 @@ jobs:
       - run: pnpm exec playwright test --config playwright.admin.config.ts --workers=1 --retries=0 --update-snapshots=none
         working-directory: desktop
 
+      # Si un test falla, se guardan capturas y trazas para diagnosticarlo
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: admin-test-results
+          path: desktop/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
   # La comprobación obligatoria. Pasa si no había paquetes que comprobar.
   ci:
     needs: [plan, check, admin-tests]
