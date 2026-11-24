@@ -1,4 +1,4 @@
-name: review
+name: "PR: check rules"
 
 on:
   pull_request:
@@ -8,6 +8,11 @@ on:
 permissions:
   contents: read
   pull-requests: read
+
+# Un push nuevo a la misma pull request cancela la comprobación anterior
+concurrency:
+  group: review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   review:
