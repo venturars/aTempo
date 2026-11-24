@@ -62,3 +62,18 @@ test('warns about an unknown invitation link', async ({ page }) => {
   await expect(page.getByText('Este enlace de invitación no es válido.')).toBeVisible()
   await expect(page.getByRole('heading', { level: 1, name: 'Hola de nuevo' })).toBeVisible()
 })
+
+// Las capturas se hacen en macOS, como las de Electron: en Linux cambian las fuentes.
+test('matches the invitation screens at 390 px', async ({ page }) => {
+  test.skip(process.platform !== 'darwin', 'Las capturas de referencia son de macOS.')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/?invitation=264018')
+  await expect(page.getByRole('heading', { level: 1, name: 'Hola, Bruno' })).toBeVisible()
+  await page.evaluate(() => document.fonts.ready)
+  await expect(page).toHaveScreenshot('web-invite-390.png', { animations: 'disabled' })
+
+  await page.goto('/?invitation=000000')
+  await expect(page.getByText('Este enlace de invitación no es válido.')).toBeVisible()
+  await page.evaluate(() => document.fonts.ready)
+  await expect(page).toHaveScreenshot('web-invite-unknown-390.png', { animations: 'disabled' })
+})

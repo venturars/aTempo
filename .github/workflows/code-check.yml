@@ -3,12 +3,14 @@
 # typecheck y build-storybook, si el paquete tiene el script.
 # Además, si cambia desktop/ o web/ (o algo compartido), corren los tests de administración
 # de desktop en un navegador sin cabeza (Playwright, sin abrir Electron).
-# La única comprobación obligatoria es «Code: check / ci»: falla si algún paquete o esos tests fallan.
+# La comprobación que resume el resultado es «Code: check / ci»: falla si algún paquete o esos tests fallan.
 name: "Code: check"
 
 on:
   pull_request:
     branches: [staging]
+    # ready_for_review: al sacar la pull request de draft corre la comprobación que se saltó
+    types: [opened, synchronize, reopened, ready_for_review]
 
 # Solo lee el repositorio
 permissions:
@@ -20,7 +22,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # En draft se salta este job y, con él, «check» y «admin-tests»; «ci» da por bueno el resultado
   select-packages:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     outputs:
       packages: ${{ steps.packages.outputs.packages }}
@@ -144,7 +148,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-  # La comprobación obligatoria. Pasa si no había paquetes que comprobar.
+  # El resumen del resultado: falla si algún job falló o se canceló. Pasa si no había paquetes que comprobar.
   ci:
     needs: [select-packages, check, admin-tests]
     if: always()
