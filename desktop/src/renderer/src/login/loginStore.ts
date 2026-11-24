@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { useSessionStore } from '../session/sessionStore'
+import { afterPendingLogout, useSessionStore } from '../session/sessionStore'
 import { normalizeEmail, useStudentAccountsStore } from '../student/studentAccounts'
 import { exampleStudent } from '../student/studentExample'
 import { teacherDemoAccount } from './teacherDemoAccount'
@@ -107,6 +107,7 @@ export const useLoginStore = create<LoginState>((set, get) => ({
 
     set({ isSubmitting: true, loginError: '' })
     try {
+      await afterPendingLogout()
       await window.api.auth.login({ email: normalizedEmail, password })
       if (isTeacher) {
         useSessionStore.getState().startTeacherSession(normalizedEmail, teacherDemoAccount.name)

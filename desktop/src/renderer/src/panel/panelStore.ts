@@ -224,6 +224,9 @@ export const usePanelStore = create<PanelState>((set, get) => ({
     // Un ausente no tiene hora de entrada.
     if (mark === 'ausente') {
       delete times[index]
+    } else if (times[index] === undefined) {
+      // No llegó por el lector: sin esto se vería la hora de ejemplo de rollTime.
+      times[index] = '—'
     }
     set({
       marks: { ...state.marks, [index]: mark },
