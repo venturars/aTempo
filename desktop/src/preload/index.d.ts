@@ -9,6 +9,7 @@ declare global {
       auth: {
         isConfigured: () => Promise<boolean>
         login: (credentials: { email: string; password: string }) => Promise<AuthUser>
+        register: (credentials: { email: string; password: string }) => Promise<AuthUser>
         me: () => Promise<AuthUser | null>
         logout: () => Promise<void>
       }
