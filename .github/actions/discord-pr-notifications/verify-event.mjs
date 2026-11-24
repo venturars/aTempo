@@ -43,7 +43,7 @@ function belongsToTriggerRun(run, pullRequest) {
 
 function validatePullRequest(event, repository, baseBranch, runId, number, pullRequest, minimum) {
   const run = event.workflow_run;
-  const reviewTrigger = run?.event === 'pull_request' && run.name === 'review';
+  const reviewTrigger = run?.event === 'pull_request' && run.name === 'PR: check rules';
   const confirmationTrigger = run?.event === 'issue_comment' && run.name === 'Discord: capture confirmation' &&
     run.head_repository?.full_name === repository && run.head_branch === baseBranch;
   if (event.repository?.full_name !== repository ||
