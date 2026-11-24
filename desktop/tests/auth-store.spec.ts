@@ -71,7 +71,7 @@ test.describe('Auth0 login store', () => {
 
   test('waits for the previous logout before logging in again', async () => {
     let finishLogout = (): void => undefined
-    const auth = (globalThis as unknown as TestWindow).api.auth
+    const auth = (globalThis as unknown as { window: TestWindow }).window.api.auth
     auth.logout = () => new Promise<void>((resolve) => (finishLogout = resolve))
     useSessionStore.getState().endSession()
     useLoginStore.getState().setEmail('profesor@atempo.test')
