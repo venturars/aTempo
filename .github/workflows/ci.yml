@@ -1,7 +1,9 @@
 # Comprueba cada pull request a staging. Cada carpeta con un pnpm-lock.yaml es un paquete:
 # se comprueban los que la pull request cambia (todos si cambia algo compartido) con lint,
 # typecheck y build-storybook, si el paquete tiene el script.
-# La única comprobación obligatoria es «CI / ci»: falla si algún paquete falla.
+# Además, si cambia desktop/ o web/ (o algo compartido), corren los tests de administración
+# de desktop en un navegador sin cabeza (Playwright, sin abrir Electron).
+# La única comprobación obligatoria es «CI / ci»: falla si algún paquete o esos tests fallan.
 name: CI
 
 on:
@@ -22,6 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       packages: ${{ steps.packages.outputs.packages }}
+      admin: ${{ steps.packages.outputs.admin }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -51,6 +54,15 @@ jobs:
 
           packages=$(printf '%s\n' "${selected[@]}" | jq -Rc 'select(length > 0)' | jq -sc .)
           echo "packages=$packages" >> "$GITHUB_OUTPUT"
+
+          # Los tests de administración dependen de desktop/ y de web/: se reutiliza la selección de arriba
+          admin=false
+          for package in "${selected[@]}"; do
+            if [[ $package == "desktop" || $package == "web" ]]; then
+              admin=true
+            fi
+          done
+          echo "admin=$admin" >> "$GITHUB_OUTPUT"
           echo "Paquetes: ${all[*]}. Se comprueban: $packages" >> "$GITHUB_STEP_SUMMARY"
 
   # Sin «name»: GitHub lo llama «check (<paquete>)», y solo «check» si se salta
@@ -87,9 +99,54 @@ jobs:
       - run: pnpm run --if-present typecheck
       - run: pnpm run --if-present build-storybook
 
+  # Tests de administración de desktop (Playwright, sin Electron). Necesitan desktop/ y web/ a la vez,
+  # por eso no caben en la matriz «check». Si «plan» dice admin=false, el job se salta y «ci» lo da por bueno.
+  admin-tests:
+    needs: plan
+    if: needs.plan.outputs.admin == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # pnpm sale de packageManager en el package.json de desktop
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: desktop/package.json
+
+      # Node 24.22.3, el mismo que el Dockerfile
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.22.3
+          cache: pnpm
+          cache-dependency-path: |
+            desktop/pnpm-lock.yaml
+            web/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+        working-directory: desktop
+      - run: pnpm install --frozen-lockfile
+        working-directory: web
+
+      # --with-deps instala también las librerías del sistema que Chromium necesita en Linux
+      - run: pnpm exec playwright install --with-deps chromium
+        working-directory: desktop
+
+      # La config arranca sola el servidor de web/ en el puerto 5193
+      - run: pnpm exec playwright test --config playwright.admin.config.ts --workers=1 --retries=0 --update-snapshots=none
+        working-directory: desktop
+
+      # Si un test falla, se guardan capturas y trazas para diagnosticarlo
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: admin-test-results
+          path: desktop/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
   # La comprobación obligatoria. Pasa si no había paquetes que comprobar.
   ci:
-    needs: [plan, check]
+    needs: [plan, check, admin-tests]
     if: always()
     runs-on: ubuntu-latest
     steps:
