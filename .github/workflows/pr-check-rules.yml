@@ -42,3 +42,18 @@ jobs:
           PR_BODY: ${{ github.event.pull_request.body }}
           PR_ASSIGNEE: ${{ github.event.pull_request.assignee != null && github.event.pull_request.assignee.login || '' }}
         run: node .github/scripts/review-pull-request.mjs
+      # Estos dos pasos cumplen aquí la función del discord-pr-trigger.yml del paquete
+      # delivery-workflow, que este repositorio no usa: «Discord: publish notice» necesita
+      # el artefacto discord-pr-number del run de este workflow. Van después de la comprobación,
+      # así que si esta falla no se sube nada. Solo se guarda el número de la PR.
+      - name: Guardar el número de la pull request
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          mkdir -p pr-event
+          printf '%s' "$PR_NUMBER" > pr-event/pr-number
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: discord-pr-number
+          path: pr-event/pr-number
+          retention-days: 1
