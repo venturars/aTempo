@@ -5,6 +5,8 @@ const fs = require('node:fs')
 const { app, BrowserWindow } = electron
 const audit = { attempts: [], violations: [], windows: 0 }
 globalThis.__hiddenElectronAudit = audit
+// Las capturas no dependen de si macOS muestra las barras de desplazamiento (ratón o trackpad).
+app.commandLine.appendSwitch('hide-scrollbars')
 function record(event, detail) {
   fs.appendFileSync(
     process.env.ATEMPO_NATIVE_AUDIT,
@@ -38,6 +40,8 @@ function block(target, method) {
 try {
   require('./hidden-preflight.cjs').preflight()
   record('bootstrap', process.pid)
+  // Each launch gets its own profile: the saved theme and the local database must not leak between tests or into the real app.
+  app.setPath('userData', path.join(path.dirname(process.env.ATEMPO_NATIVE_AUDIT), 'user-data'))
   // Install before loading the real main, including its ready-to-show handler.
   for (const method of [
     'show',

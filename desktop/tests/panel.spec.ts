@@ -333,9 +333,7 @@ test('rejects an unknown account and still opens the panel through the shared ro
     await window.getByLabel('Contraseña').fill('secreta')
     await window.getByRole('button', { name: 'Entrar' }).click()
 
-    await expect(window.getByRole('alert')).toHaveText(
-      'El correo o la contraseña no coinciden con la cuenta de ejemplo.'
-    )
+    await expect(window.getByRole('alert')).toHaveText('El correo o la contraseña no coinciden.')
     await expect(window.getByRole('status')).toHaveCount(0)
     const text = await window.locator('body').innerText()
     expect(text).not.toContain('ana@clase.test')
@@ -424,12 +422,45 @@ test('matches a student file on desktop with its snapshot', async () => {
     await expect(window.getByRole('heading', { level: 1, name: 'Meghan Martin' })).toBeVisible()
     await expect(window.getByText('Asistencia', { exact: true })).toBeVisible()
     await expect(window.getByRole('heading', { name: 'Historial de asistencia' })).toBeVisible()
-    const breadcrumbs = window.getByRole('navigation', { name: 'Ruta' })
-    await expect(breadcrumbs).toContainText('Hoy')
-    await expect(breadcrumbs).toContainText('Meghan Martin')
-    const fits = await breadcrumbs.evaluate((element) => element.scrollWidth <= element.clientWidth)
+    const back = window.getByRole('button', { name: 'Volver a Hoy', exact: true })
+    await expect(back).toBeVisible()
+    await expect(back).toHaveText('Hoy')
+    const fits = await back.evaluate((element) => element.scrollWidth <= element.clientWidth)
     expect(fits).toBe(true)
     await expectScreen(window, 'panel-ficha.png')
+    await back.click()
+    await expect(window.getByRole('heading', { level: 1, name: 'Hoy' })).toBeVisible()
+    await expect(window.getByRole('button', { name: /^Volver a/ })).toHaveCount(0)
+  })
+})
+
+test('goes back to Estadísticas from a student file', async () => {
+  await withPanel(async (window) => {
+    // Las secciones de la barra lateral no tienen botón de volver.
+    for (const [label, title] of [
+      ['Dashboard', 'Hoy'],
+      ['Sesiones', 'Sesiones'],
+      ['Ajustes', 'Ajustes'],
+      ['Estadísticas', 'Estadísticas']
+    ]) {
+      await openTab(window, label, title)
+      await expect(window.getByRole('button', { name: /^Volver a/ }), title).toHaveCount(0)
+    }
+    await window
+      .getByRole('region', { name: /^Asistencia por fecha/ })
+      .getByRole('button', { name: 'Diego Torres', exact: true })
+      .click()
+    await expect(window.getByRole('heading', { level: 1, name: 'Diego Torres' })).toBeVisible()
+    const back = window.getByRole('button', { name: 'Volver a Estadísticas', exact: true })
+    await expect(back).toHaveText('Estadísticas')
+    await back.click()
+    await expect(window.getByRole('heading', { level: 1, name: 'Estadísticas' })).toBeVisible()
+    await expect(
+      window
+        .getByRole('navigation', { name: 'Secciones' })
+        .getByRole('button', { name: 'Estadísticas' })
+    ).toHaveAttribute('aria-current', 'page')
+    await expect(window.getByRole('button', { name: /^Volver a/ })).toHaveCount(0)
   })
 })
 
@@ -536,7 +567,7 @@ for (const theme of ['atempo-oscuro', 'atempo-claro']) {
         animations: 'disabled'
       })
       await menu.getByRole('button', { name: 'Ausente', exact: true }).click()
-      const reason = window.getByRole('dialog', { name: 'Motivo del cambio' })
+      const reason = window.getByRole('dialog', { name: /^Cambiar / })
       await reason.getByLabel('Motivo', { exact: true }).fill('Corrección en clase')
       await reason.getByRole('button', { name: 'Guardar', exact: true }).click()
       await expect(reason).toHaveCount(0)
@@ -544,12 +575,13 @@ for (const theme of ['atempo-oscuro', 'atempo-claro']) {
         .getByRole('row', { name: /Diego Molero/ })
         .getByRole('button', { name: 'Ausente' })
       await absent.hover()
+      // La nota del estado va en un portal sin hueco con el estado: la tarjeta es su span interior.
       const absenceTip = window
-        .locator('body > .teacher-panel.tip')
+        .locator('body > .teacher-panel[role="tooltip"]')
         .filter({ hasText: 'Sin justificante' })
       await expect(absenceTip).toBeVisible()
       await expectInheritedType(
-        absenceTip.locator(':scope, :scope > span'),
+        absenceTip.locator(':scope, .tip, .tip > span'),
         inherited.tracking,
         inherited.family
       )
@@ -577,8 +609,8 @@ for (const theme of ['atempo-oscuro', 'atempo-claro']) {
       await window.getByRole('button', { name: 'Meghan Martin', exact: true }).click()
       await expect(window.getByRole('heading', { level: 1, name: 'Meghan Martin' })).toBeVisible()
       await expectInheritedType(headings(), inherited.tracking, inherited.family)
-      const crumbs = window.getByRole('navigation', { name: 'Ruta' })
-      expect(await crumbs.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true)
+      const back = window.getByRole('button', { name: 'Volver a Hoy', exact: true })
+      expect(await back.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true)
       await window.screenshot({ path: info.outputPath('student-file.png'), animations: 'disabled' })
     })
   })

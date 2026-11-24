@@ -35,7 +35,7 @@ export function PageHeading({
   return (
     <div className="flex flex-wrap items-start justify-between gap-5">
       <div className="flex min-w-0 flex-col gap-2">
-        <h1 className="text-2xl font-semibold">{title}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
         {description ? <p className="text-base-content/60">{description}</p> : null}
       </div>
       {children}

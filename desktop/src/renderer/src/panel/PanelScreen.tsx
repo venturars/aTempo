@@ -2,20 +2,27 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { checkedInByStudent } from '../api/attendanceRules'
 import { getDemoControls } from '../api/client'
-import { isEditablePhase } from './apiValues'
 import { clockTime } from '../api/isoTime'
+import { teacherDemoAccount } from '../login/teacherDemoAccount'
+import { BackButton } from '../navigation/BackButton'
+import { useSessionStore } from '../session/sessionStore'
+import { isEditablePhase } from './apiValues'
 import {
   todayArrival,
   todayMark,
   todayPhase,
   usePanelStore,
+  type MarkChange,
   type PanelTab,
   type TodayStudent
 } from './panelStore'
+import { AccountMenu } from './AccountMenu'
+import { ChangePasswordDialog } from './ChangePasswordDialog'
 import { Avatar } from './avatar'
 import { CorrectionReasonDialog } from './CorrectionReasonDialog'
 import { JustificationAccess } from './JustificationAccess'
 import { MarkControl } from './markControl'
+import { CorrectionDialog, type CorrectionDraft } from './markCorrection'
 import { SettingsView } from './SettingsView'
 import { SessionQr } from './sessionQr'
 import { StatsView } from './StatsView'
@@ -28,6 +35,7 @@ import {
   dashboardDate,
   dashboardHeading,
   sessionCounts,
+  sessionTitle,
   studentHistory,
   studentSummary,
   type Attendance,
@@ -43,6 +51,19 @@ const tabs: { id: PanelTab; label: string }[] = [
   { id: 3, label: 'Ajustes' }
 ]
 
+// Nombre de la barra lateral. Si se abre la ruta del panel sin entrar, el de la cuenta de ejemplo.
+function useTeacherName(): string {
+  return useSessionStore((state) => state.name) ?? teacherDemoAccount.name
+}
+
+// Quién firma una corrección: solo un profesor con la sesión abierta. Sin sesión no se guarda.
+function useSigner(): string | null {
+  return useSessionStore((state) => (state.profile === 'teacher' ? state.name : null))
+}
+
+const noSignerText = 'Entra con tu cuenta de profesor para guardar el cambio.'
+const notSavedText = 'No se ha podido guardar el cambio.'
+
 export function PanelScreen(): React.JSX.Element {
   const tab = usePanelStore((state) => state.tab)
   const classId = usePanelStore((state) => state.classId)
@@ -50,8 +71,24 @@ export function PanelScreen(): React.JSX.Element {
   const setTab = usePanelStore((state) => state.setTab)
   const goBack = usePanelStore((state) => state.goBack)
   const selected = classSessions.find((session) => session.id === classId) ?? null
-  const title = pageTitle(tab, selected, studentName)
-  const crumbs = crumbTrail(tab, selected, studentName, title)
+  const title = pageTitle(tab, selected)
+  const back = backLabel(tab, selected, studentName)
+  const teacherName = useTeacherName()
+  const signedIn = useSessionStore((state) => state.profile === 'teacher')
+  // Con Auth0 la contraseña vive en Auth0: la de la demo no sirve para entrar.
+  const [authConfigured, setAuthConfigured] = useState(true)
+  useEffect(() => {
+    void window.api.auth.isConfigured().then(setAuthConfigured, () => setAuthConfigured(true))
+  }, [])
+  const [changingPassword, setChangingPassword] = useState(false)
+  const [passwordChanged, setPasswordChanged] = useState(false)
+  const navigate = useNavigate()
+
+  function logOut(): void {
+    useSessionStore.getState().endSession()
+    setTab(0)
+    void navigate({ to: '/', replace: true })
+  }
 
   return (
     <div className="teacher-panel grid min-h-screen grid-cols-1 bg-base-200 md:grid-cols-[15rem_minmax(0,1fr)]">
@@ -83,13 +120,18 @@ export function PanelScreen(): React.JSX.Element {
             ))}
           </ul>
         </nav>
-        <div className="mt-auto flex items-stretch gap-3 border-t border-base-content/4 px-5 py-4">
-          <Avatar name="Ventura Rodriguez" tall />
-          <span className="flex flex-col">
-            <span className="text-sm font-medium">Ventura Rodriguez</span>
-            <span className="text-meta text-base-content/60">Profesor</span>
-          </span>
-        </div>
+        <AccountMenu
+          name={teacherName}
+          onChangePassword={
+            signedIn && !authConfigured
+              ? () => {
+                  setPasswordChanged(false)
+                  setChangingPassword(true)
+                }
+              : undefined
+          }
+          onLogOut={logOut}
+        />
       </aside>
       <main
         className={`mx-auto flex w-full min-w-0 justify-self-center flex-col gap-5 px-8 py-8 ${
@@ -97,28 +139,7 @@ export function PanelScreen(): React.JSX.Element {
         }`}
       >
         <header className="flex flex-col gap-3">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              {studentName !== null ? (
-                <Breadcrumb
-                  crumbs={crumbs}
-                  onBack={goBack}
-                  onRoot={() => setTab(tab)}
-                  plainCurrent
-                />
-              ) : (
-                <div className={tab === 0 ? 'flex items-baseline gap-3' : undefined}>
-                  <Breadcrumb crumbs={crumbs} onBack={goBack} onRoot={() => setTab(tab)} />
-                  {tab === 0 ? (
-                    <p className="text-sm text-base-content/60">{dashboardDate}</p>
-                  ) : null}
-                </div>
-              )}
-            </div>
-            {tab === 1 && selected !== null && studentName === null ? (
-              <JustificationAccess />
-            ) : null}
-          </div>
+          {back !== null ? <BackButton to={back} onClick={goBack} /> : null}
           {studentName !== null ? (
             <div className="flex items-center gap-3">
               <Avatar name={studentName} tall />
@@ -127,8 +148,21 @@ export function PanelScreen(): React.JSX.Element {
                 <p className="text-sm text-base-content/60">{course.name}</p>
               </div>
             </div>
-          ) : null}
+          ) : (
+            <div className="flex items-start justify-between gap-3">
+              <div className={tab === 0 ? 'flex min-w-0 items-baseline gap-3' : 'min-w-0'}>
+                <h1 className="text-xl font-medium">{title}</h1>
+                {tab === 0 ? <p className="text-sm text-base-content/60">{dashboardDate}</p> : null}
+              </div>
+              {tab === 1 && selected !== null ? <JustificationAccess /> : null}
+            </div>
+          )}
         </header>
+        {passwordChanged ? (
+          <p className="text-sm text-success" role="status">
+            Contraseña actualizada.
+          </p>
+        ) : null}
         {studentName !== null ? (
           <StudentFile name={studentName} />
         ) : tab === 0 ? (
@@ -141,22 +175,21 @@ export function PanelScreen(): React.JSX.Element {
           <SettingsView />
         )}
       </main>
+      {changingPassword && signedIn ? (
+        <ChangePasswordDialog
+          onClose={() => setChangingPassword(false)}
+          onSaved={() => setPasswordChanged(true)}
+        />
+      ) : null}
       <CloseDialog />
       <CorrectionReasonDialog />
     </div>
   )
 }
 
-function pageTitle(
-  tab: PanelTab,
-  selected: ClassSession | null,
-  studentName: string | null
-): string {
-  if (studentName !== null) {
-    return studentName
-  }
+function pageTitle(tab: PanelTab, selected: ClassSession | null): string {
   if (tab === 1 && selected !== null) {
-    return `${selected.id} 2026`
+    return sessionTitle(selected.id)
   }
   if (tab === 0) {
     return dashboardHeading()
@@ -164,83 +197,22 @@ function pageTitle(
   return tabs[tab]?.label ?? 'Dashboard'
 }
 
-type Crumb = {
-  label: string
-  action: 'root' | 'back' | 'current'
-}
-
-function crumbTrail(
+// La pantalla a la que vuelve el botón de arriba. Las secciones de la barra lateral no tienen.
+function backLabel(
   tab: PanelTab,
   selected: ClassSession | null,
-  studentName: string | null,
-  title: string
-): Crumb[] {
-  if (studentName !== null && tab === 1 && selected !== null) {
-    return [
-      { label: 'Sesiones', action: 'root' },
-      { label: `${selected.id} 2026`, action: 'back' },
-      { label: studentName, action: 'current' }
-    ]
-  }
+  studentName: string | null
+): string | null {
   if (studentName !== null) {
-    return [
-      { label: tab === 0 ? dashboardHeading() : (tabs[tab]?.label ?? 'Dashboard'), action: 'root' },
-      { label: studentName, action: 'current' }
-    ]
+    if (tab === 1 && selected !== null) {
+      return sessionTitle(selected.id)
+    }
+    return pageTitle(tab, null)
   }
   if (tab === 1 && selected !== null) {
-    return [
-      { label: 'Sesiones', action: 'root' },
-      { label: title, action: 'current' }
-    ]
+    return 'Sesiones'
   }
-  return [{ label: title, action: 'current' }]
-}
-
-function Breadcrumb({
-  crumbs,
-  onBack,
-  onRoot,
-  plainCurrent = false
-}: {
-  crumbs: Crumb[]
-  onBack: () => void
-  onRoot: () => void
-  plainCurrent?: boolean
-}): React.JSX.Element {
-  const trail = crumbs.some((crumb) => crumb.action !== 'current')
-  if (!trail) {
-    return <h1 className="text-xl font-medium">{crumbs[0]?.label}</h1>
-  }
-
-  return (
-    <nav className="breadcrumbs text-sm" aria-label="Ruta">
-      <ul>
-        {crumbs.map((crumb) => (
-          <li
-            key={crumb.label}
-            className={crumb.action === 'current' ? '[&>*]:cursor-default' : ''}
-          >
-            {crumb.action === 'current' ? (
-              plainCurrent ? (
-                <span className="text-sm font-medium">{crumb.label}</span>
-              ) : (
-                <h1 className="text-sm font-medium hover:no-underline">{crumb.label}</h1>
-              )
-            ) : (
-              <button
-                type="button"
-                className="cursor-pointer text-sm text-base-content/55 hover:text-base-content"
-                onClick={crumb.action === 'root' ? onRoot : onBack}
-              >
-                {crumb.label}
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
-    </nav>
-  )
+  return null
 }
 
 function TodayView(): React.JSX.Element {
@@ -325,6 +297,7 @@ function TodayClass(): React.JSX.Element {
   const openStudent = usePanelStore((state) => state.openStudent)
   const requestMark = usePanelStore((state) => state.requestMark)
   const requestTime = usePanelStore((state) => state.requestTime)
+  const changes = usePanelStore((state) => state.changes)
   const phase = todayPhase({ session })
   const roster = students
     .map((student) => ({
@@ -344,75 +317,75 @@ function TodayClass(): React.JSX.Element {
 
   return (
     <section className="card overflow-hidden bg-base-100 shadow-sm">
-      {phase === 'abierta' ? (
-        <div className="card-body flex-row flex-wrap items-center gap-6">
-          <SessionQr
-            code={checkInCode?.code ?? null}
-            expiresAt={checkInCode?.expiresAt ?? null}
-            onExpire={refreshCheckInCode}
-          />
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
+      <div className="card-body gap-5">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-col gap-1">
             <h2 className="text-lg font-medium">{courseName}</h2>
             <p className="text-sm text-base-content/60">{courseTime}</p>
+          </div>
+          {phase === 'programada' ? (
             <button
               type="button"
-              className="btn mt-2 w-fit"
-              disabled={busy || !canSimulateArrival}
-              onClick={() => void simulateArrival()}
+              className="btn btn-primary"
+              disabled={busy}
+              onClick={() => void openSession()}
             >
-              Simular llegada
+              Abrir lista
             </button>
-          </div>
-          <button type="button" className="btn btn-primary" disabled={busy} onClick={askClose}>
-            Cerrar lista
-          </button>
-        </div>
-      ) : (
-        <div className="card-body gap-5">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-col gap-1">
-              <h2 className="text-lg font-medium">{courseName}</h2>
-              <p className="text-sm text-base-content/60">{courseTime}</p>
-            </div>
-            {phase === 'programada' ? (
-              <button
-                type="button"
-                className="btn btn-primary"
-                disabled={busy}
-                onClick={() => void openSession()}
-              >
-                Abrir lista
-              </button>
-            ) : null}
-            {phase === 'cancelada' ? (
-              <span className="badge badge-ghost">Clase cancelada</span>
-            ) : null}
-            {phase === 'cerrada' ? (
+          ) : null}
+          {phase === 'abierta' ? (
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 className="btn"
-                disabled={busy || !canReopen}
-                onClick={() => void reopenSession()}
+                disabled={busy || !canSimulateArrival}
+                onClick={() => void simulateArrival()}
               >
-                Volver a abrir
+                Simular llegada
               </button>
-            ) : null}
-          </div>
-          {phase === 'cerrada' ? (
-            <div className="grid grid-cols-3 gap-3">
-              <StatWell value={String(present)} label="Presentes" />
-              <StatWell value={String(late)} label="Tarde" />
-              <StatWell value={String(absent)} label="Ausentes" />
+              <button type="button" className="btn btn-primary" disabled={busy} onClick={askClose}>
+                Cerrar lista
+              </button>
             </div>
           ) : null}
+          {phase === 'cancelada' ? (
+            <span className="badge badge-ghost">Clase cancelada</span>
+          ) : null}
+          {phase === 'cerrada' ? (
+            <button
+              type="button"
+              className="btn"
+              disabled={busy || !canReopen}
+              onClick={() => void reopenSession()}
+            >
+              Volver a abrir
+            </button>
+          ) : null}
         </div>
-      )}
+        {phase === 'abierta' ? (
+          <div className="flex justify-center py-2">
+            <SessionQr
+              code={checkInCode?.code ?? null}
+              expiresAt={checkInCode?.expiresAt ?? null}
+              onExpire={refreshCheckInCode}
+            />
+          </div>
+        ) : null}
+        {phase === 'cerrada' ? (
+          <div className="grid grid-cols-3 gap-3">
+            <StatWell value={String(present)} label="Presentes" />
+            <StatWell value={String(late)} label="Tarde" />
+            <StatWell value={String(absent)} label="Ausentes" />
+          </div>
+        ) : null}
+      </div>
       <RosterTable
         roster={roster}
         phase={phase}
         openStudent={openStudent}
         requestMark={requestMark}
         requestTime={requestTime}
+        changes={changes.filter((change) => change.sessionId === session?.id)}
         embedded
       />
     </section>
@@ -425,6 +398,7 @@ function RosterTable({
   openStudent,
   requestMark,
   requestTime,
+  changes,
   compact = false,
   embedded = false
 }: {
@@ -433,6 +407,7 @@ function RosterTable({
   openStudent: (name: string) => void
   requestMark: (studentId: string, mark: Attendance) => void
   requestTime: (studentId: string, time: string) => void
+  changes: MarkChange[]
   compact?: boolean
   embedded?: boolean
 }): React.JSX.Element {
@@ -495,9 +470,9 @@ function RosterTable({
                   <MarkControl
                     status={status}
                     arrivalAccepted={checkedIn}
-                    enabled={editable}
                     person={name}
                     when={dashboardDate}
+                    changes={changes.filter((change) => change.student === name)}
                     onPick={(mark) => requestMark(studentId, mark)}
                   />
                 </td>
@@ -514,7 +489,10 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
   const openClass = usePanelStore((state) => state.openClass)
   const openStudent = usePanelStore((state) => state.openStudent)
   const sessionMarks = usePanelStore((state) => state.sessionMarks)
-  const setSessionMark = usePanelStore((state) => state.setSessionMark)
+  const correctSessionMark = usePanelStore((state) => state.correctSessionMark)
+  const changes = usePanelStore((state) => state.changes)
+  const signer = useSigner()
+  const [draft, setDraft] = useState<CorrectionDraft | null>(null)
 
   if (selected === null) {
     return (
@@ -552,7 +530,7 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
                       disabled={!linked}
                       onClick={() => openClass(session.id)}
                     >
-                      <SessionDate label={`${session.id} 2026`} strong />
+                      <SessionDate label={sessionTitle(session.id)} strong />
                     </button>
                   </td>
                   <td className="tabular-nums text-base-content/50">{attendance}</td>
@@ -580,6 +558,23 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
     compareByName(a.name, b.name)
   )
   const counts = sessionCounts(rows)
+  const sessionId = selected.id
+  const when = sessionTitle(sessionId)
+
+  // Una sesión pasada está cerrada: cambiar un estado pide un motivo.
+  function pick(name: string, mark: Attendance): void {
+    if (rows.find((row) => row.name === name)?.mark === mark) {
+      return
+    }
+    setDraft({
+      person: name,
+      when,
+      to: mark,
+      save: (reason) =>
+        signer !== null && correctSessionMark(sessionId, name, mark, reason, signer),
+      failText: signer === null ? noSignerText : notSavedText
+    })
+  }
 
   return (
     <section className="card overflow-hidden bg-base-100 shadow-sm">
@@ -596,10 +591,12 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
       </div>
       <AttendanceTable
         rows={rows}
-        when={`${selected.id} 2026`}
+        when={when}
+        changes={changes.filter((change) => change.sessionId === sessionId)}
         onOpen={openStudent}
-        onMark={(name, mark) => setSessionMark(selected.id, name, mark)}
+        onMark={pick}
       />
+      <CorrectionDialog draft={draft} onDone={() => setDraft(null)} />
     </section>
   )
 }
@@ -690,11 +687,13 @@ function StudentFile({ name }: { name: string }): React.JSX.Element {
 function AttendanceTable({
   rows,
   when,
+  changes,
   onOpen,
   onMark
 }: {
   rows: RosterRow[]
   when: string
+  changes: MarkChange[]
   onOpen: (name: string) => void
   onMark: (name: string, mark: Attendance) => void
 }): React.JSX.Element {
@@ -737,10 +736,10 @@ function AttendanceTable({
               <td>
                 <MarkControl
                   status={row.mark}
-                  enabled
                   person={row.name}
                   when={when}
                   excuse={row.just}
+                  changes={changes.filter((change) => change.student === row.name)}
                   onPick={(mark) => onMark(row.name, mark)}
                 />
               </td>
@@ -958,6 +957,10 @@ function rowsWithMarks(
 ): RosterRow[] {
   return (rows ?? []).map((row) => {
     const mark = saved?.[row.name]
-    return mark === undefined ? row : { ...row, mark }
+    if (mark === undefined) {
+      return row
+    }
+    // Un ausente no tiene hora de entrada.
+    return { ...row, mark, time: mark === 'ausente' ? '—' : row.time }
   })
 }

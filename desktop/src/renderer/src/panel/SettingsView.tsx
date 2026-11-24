@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from 'react'
 import { useSettingsStore } from './settingsStore'
 import { rosterNames, todayEntry } from './roster'
+import { saveTheme } from '../theme'
 
 function Bell(): React.JSX.Element {
   return (
@@ -60,6 +61,7 @@ export function SettingsView(): React.JSX.Element {
   const missing = rosterNames.filter((_, index) => todayEntry[index] === '—')
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
+    saveTheme(theme)
   }, [theme])
   useEffect(() => {
     if (!notice || paused) return
@@ -191,8 +193,8 @@ export function SettingsView(): React.JSX.Element {
             <span className="text-sm font-medium">Apariencia</span>
             <div className="join">
               {[
-                { value: 'atempo-oscuro', label: 'Noche' },
-                { value: 'atempo-claro', label: 'Tinta' }
+                { value: 'atempo-oscuro', label: 'Oscuro' },
+                { value: 'atempo-claro', label: 'Claro' }
               ].map((option) => (
                 <button
                   type="button"

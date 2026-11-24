@@ -1,16 +1,11 @@
 import { expect, test } from '@playwright/test'
 import { useLoginStore } from '../src/renderer/src/login/loginStore'
 import { teacherDemoAccount } from '../src/renderer/src/login/teacherDemoAccount'
-import { useRegisterStore } from '../src/renderer/src/register/registerStore'
 import { useSessionStore } from '../src/renderer/src/session/sessionStore'
 
 type AuthBridge = {
   isConfigured: () => Promise<boolean>
   login: (credentials: { email: string; password: string }) => Promise<{
-    sub: string
-    email: string
-  }>
-  register: (credentials: { email: string; password: string }) => Promise<{
     sub: string
     email: string
   }>
@@ -23,8 +18,6 @@ type TestWindow = { api: { auth: AuthBridge } }
 const originalWindowDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'window')
 let loginRequest: { email: string; password: string } | null = null
 let loginFailure: Error | null = null
-let registerRequest: { email: string; password: string } | null = null
-let registerFailure: Error | null = null
 
 function installAuthBridge(): void {
   const auth: AuthBridge = {
@@ -32,11 +25,6 @@ function installAuthBridge(): void {
     login: async (credentials) => {
       loginRequest = credentials
       if (loginFailure !== null) throw loginFailure
-      return { sub: 'auth0|sample-user', email: credentials.email }
-    },
-    register: async (credentials) => {
-      registerRequest = credentials
-      if (registerFailure !== null) throw registerFailure
       return { sub: 'auth0|sample-user', email: credentials.email }
     },
     me: async () => null,
@@ -57,10 +45,7 @@ test.describe('Auth0 login store', () => {
   test.beforeEach(() => {
     loginRequest = null
     loginFailure = null
-    registerRequest = null
-    registerFailure = null
     useLoginStore.setState(useLoginStore.getInitialState(), true)
-    useRegisterStore.setState(useRegisterStore.getInitialState(), true)
     useSessionStore.setState(useSessionStore.getInitialState(), true)
     installAuthBridge()
   })
@@ -82,6 +67,23 @@ test.describe('Auth0 login store', () => {
       email: 'profesor@atempo.test'
     })
     expect(useLoginStore.getState()).toMatchObject({ email: '', password: '', isSubmitting: false })
+  })
+
+  test('waits for the previous logout before logging in again', async () => {
+    let finishLogout = (): void => undefined
+    const auth = (globalThis as unknown as { window: TestWindow }).window.api.auth
+    auth.logout = () => new Promise<void>((resolve) => (finishLogout = resolve))
+    useSessionStore.getState().endSession()
+    useLoginStore.getState().setEmail('profesor@atempo.test')
+    useLoginStore.getState().setPassword('auth0-test-password')
+
+    const login = useLoginStore.getState().submitWithAuth()
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(loginRequest).toBeNull()
+
+    finishLogout()
+    await expect(login).resolves.toBe(true)
+    expect(loginRequest).not.toBeNull()
   })
 
   test('routes a known student account through the auth bridge', async () => {
@@ -118,37 +120,6 @@ test.describe('Auth0 login store', () => {
     expect(useSessionStore.getState()).toMatchObject({ profile: null, email: null })
     expect(useLoginStore.getState().loginError).not.toBe('')
     expect(useLoginStore.getState().password).toBe('wrong-password')
-  })
-
-  test('sends a new student through the register bridge', async () => {
-    useRegisterStore.getState().setName('Nueva Alumna')
-    useRegisterStore.getState().setEmail(' NUEVA@ATEMPO.TEST ')
-    useRegisterStore.getState().setPassword('SecurePass123!')
-    useRegisterStore.getState().setRepeatPassword('SecurePass123!')
-
-    await expect(useRegisterStore.getState().submitWithAuth()).resolves.toBe(true)
-
-    expect(registerRequest).toEqual({
-      email: 'nueva@atempo.test',
-      password: 'SecurePass123!'
-    })
-    expect(useSessionStore.getState()).toMatchObject({
-      profile: 'student',
-      email: 'nueva@atempo.test'
-    })
-  })
-
-  test('maps a duplicate Auth0 email to the register form', async () => {
-    registerFailure = new Error('USER_EXISTS')
-    useRegisterStore.getState().setName('Nueva Alumna')
-    useRegisterStore.getState().setEmail('existe@atempo.test')
-    useRegisterStore.getState().setPassword('SecurePass123!')
-    useRegisterStore.getState().setRepeatPassword('SecurePass123!')
-
-    await expect(useRegisterStore.getState().submitWithAuth()).resolves.toBe(false)
-
-    expect(useSessionStore.getState()).toMatchObject({ profile: null, email: null })
-    expect(useRegisterStore.getState().emailError).toBe('Ya hay una cuenta con este correo.')
   })
 
   test('preserves the demo login path when no router is configured', () => {

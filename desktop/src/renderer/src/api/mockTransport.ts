@@ -19,6 +19,7 @@ import {
   type FixtureName
 } from './fixtures'
 import { atSessionTime, dayOf } from './isoTime'
+import { backupCode, codePeriod, codePeriodMs } from '../panel/classCode'
 
 export type DemoControls = {
   hasNextArrival: (sessionId: string) => boolean
@@ -32,13 +33,10 @@ export type MockTransport = {
   demo: DemoControls
 }
 
-const codeLifetime = 30_000
-
 type MockState = {
   sessions: Session[]
   students: CourseStudent[]
   records: Record<string, Record<string, AttendanceRecord>>
-  openedAt: Record<string, number>
   arrivals: Record<string, string>
   codesServed: number
 }
@@ -108,7 +106,6 @@ export function createMockTransport(fixture: FixtureName, today: string): MockTr
     sessions: fixture === 'empty' ? [] : [sampleSession(today)],
     students: sampleStudents(),
     records: {},
-    openedAt: {},
     arrivals: sampleArrivals(),
     codesServed: 0
   }
@@ -166,18 +163,15 @@ export function createMockTransport(fixture: FixtureName, today: string): MockTr
 
   function startSession(session: Session): void {
     session.state = 'open'
-    state.openedAt[session.id] = Date.now()
     state.records[session.id] = Object.fromEntries(
       state.students.map((student) => [student.studentId, pendingRecord(student)])
     )
   }
 
-  function currentCode(sessionId: string): CheckInCode {
-    const openedAt = state.openedAt[sessionId] ?? Date.now()
-    const period = Math.floor(Math.max(0, Date.now() - openedAt) / codeLifetime)
-    const code = String(100000 + ((Math.floor(openedAt / 1000) + period * 7919) % 900000))
-    const expiresAt = new Date(openedAt + (period + 1) * codeLifetime).toISOString()
-    return { code, expiresAt }
+  function currentCode(): CheckInCode {
+    const period = codePeriod(Date.now())
+    const expiresAt = new Date((period + 1) * codePeriodMs).toISOString()
+    return { code: backupCode(period), expiresAt }
   }
 
   function nextArrival(sessionId: string): string | null {
@@ -276,7 +270,6 @@ export function createMockTransport(fixture: FixtureName, today: string): MockTr
         }
       }
       session.state = 'closed'
-      delete state.openedAt[sessionId]
       return { ...session }
     },
 
@@ -295,7 +288,7 @@ export function createMockTransport(fixture: FixtureName, today: string): MockTr
           'El servicio no está disponible.'
         )
       }
-      const code = currentCode(sessionId)
+      const code = currentCode()
       if (fixture === 'expired-code' && state.codesServed === 1) {
         return { ...code, expiresAt: new Date(Date.now() - 1000).toISOString() }
       }
@@ -359,7 +352,6 @@ export function createMockTransport(fixture: FixtureName, today: string): MockTr
         throw conflict('SESSION_NOT_OPEN', 'La sesión no está cerrada.')
       }
       session.state = 'open'
-      state.openedAt[sessionId] = Date.now()
       return { ...session }
     }
   }

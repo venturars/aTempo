@@ -7,7 +7,7 @@ import { type ClassEntry } from '../studentExample'
 import { readNoticesFor, type NoticeKind, type StudentNotice } from '../notice/studentNotices'
 
 const noticeLabel: Record<NoticeKind, string> = {
-  retraso: 'Retraso',
+  retraso: 'Tarde',
   ausencia: 'Ausencia'
 }
 
@@ -70,7 +70,7 @@ function HistoryContent({ empty }: { empty: boolean }): React.JSX.Element {
       <TableCard title="Tus clases">
         {history.length === 0 ? (
           <p className="px-5 pb-5 text-sm text-base-content/60">
-            Aún no tienes clases. ¡Nos vemos en la primera!
+            Aún no tienes clases. Nos vemos en la primera.
           </p>
         ) : (
           <table className="table panel-table table-fixed">

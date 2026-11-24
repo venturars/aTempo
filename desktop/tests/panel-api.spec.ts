@@ -436,7 +436,7 @@ async function withPanel(
 }
 
 async function giveReason(window: Page): Promise<void> {
-  const dialog = window.getByRole('dialog', { name: 'Motivo del cambio' })
+  const dialog = window.getByRole('dialog', { name: /^Cambiar / })
   await dialog.getByLabel('Motivo', { exact: true }).fill('Corrección en clase')
   await dialog.getByRole('button', { name: 'Guardar', exact: true }).click()
   await expect(dialog).toHaveCount(0)
@@ -446,8 +446,8 @@ test('opens the roll through the client', async () => {
   await withPanel('success', async (window) => {
     await window.getByRole('button', { name: 'Abrir lista', exact: true }).click()
     await expect(window.getByRole('button', { name: 'Pendiente', exact: true })).toHaveCount(15)
-    await expect(window.getByRole('img', { name: 'QR de ejemplo', exact: true })).toBeVisible()
-    await expect(window.getByText(/^Código \d{6}$/)).toBeVisible()
+    await expect(window.getByRole('img', { name: 'QR de la clase', exact: true })).toBeVisible()
+    await expect(window.getByText(/^\d{6}$/)).toBeVisible()
   })
 })
 
@@ -459,7 +459,8 @@ test('corrects a mark with a reason after closing', async () => {
     const diego = row(window, 'Diego Molero')
     await diego.getByRole('button', { name: 'Ausente', exact: true }).click()
     await window.getByRole('menu').getByRole('button', { name: 'Presente', exact: true }).click()
-    await expect(window.getByRole('dialog')).toContainText('Diego Molero: Presente')
+    const dialog = window.getByRole('dialog', { name: 'Cambiar a Presente' })
+    await expect(dialog).toContainText('Diego Molero ·')
     await giveReason(window)
     await expect(diego.getByRole('button', { name: 'Presente', exact: true })).toBeVisible()
   })
@@ -471,8 +472,9 @@ test('keeps the row when the reason dialog is cancelled', async () => {
     const diego = row(window, 'Diego Molero')
     await diego.getByRole('button', { name: 'Pendiente', exact: true }).click()
     await window.getByRole('menu').getByRole('button', { name: 'Tarde', exact: true }).click()
-    const dialog = window.getByRole('dialog', { name: 'Motivo del cambio' })
-    await expect(dialog.getByRole('button', { name: 'Guardar', exact: true })).toBeDisabled()
+    const dialog = window.getByRole('dialog', { name: 'Cambiar a Tarde' })
+    await dialog.getByRole('button', { name: 'Guardar', exact: true }).click()
+    await expect(dialog.getByText('Escribe el motivo del cambio.')).toBeVisible()
     await dialog.getByRole('button', { name: 'Cancelar', exact: true }).click()
     await expect(dialog).toHaveCount(0)
     await expect(diego.getByRole('button', { name: 'Pendiente', exact: true })).toBeVisible()
@@ -501,7 +503,7 @@ test('recovers from a network failure', async () => {
       'No se ha podido conectar con el servidor. Inténtalo de nuevo.'
     )
     await expect(open).toBeEnabled()
-    await expect(window.getByRole('img', { name: 'QR de ejemplo', exact: true })).toHaveCount(0)
+    await expect(window.getByRole('img', { name: 'QR de la clase', exact: true })).toHaveCount(0)
   })
 })
 
@@ -519,8 +521,8 @@ test('rereads the session after a conflict', async () => {
 test('renews an expired check-in code', async () => {
   await withPanel('expired-code', async (window) => {
     await window.getByRole('button', { name: 'Abrir lista', exact: true }).click()
-    await expect(window.getByText(/^Código \d{6}$/)).toBeVisible()
-    await expect(window.getByText(/^Cambia en (2\d|30) segundos$/)).toBeVisible()
+    await expect(window.getByText(/^\d{6}$/)).toBeVisible()
+    await expect(window.getByText(/^Cambia en \d+ segundos?$/)).toBeVisible()
   })
 })
 
@@ -578,7 +580,7 @@ test('keeps asking for the check-in code after it fails', async () => {
       await window.clock.fastForward(1_000)
       await expect(waiting).toBeVisible()
       await window.clock.fastForward(5_000)
-      await expect(window.getByText(/^Código \d{6}$/)).toBeVisible()
+      await expect(window.getByText(/^\d{6}$/)).toBeVisible()
     },
     { clock: true }
   )

@@ -11,8 +11,10 @@ import {
 } from '../api/contract'
 import { arrivalStatus, checkedInByStudent } from '../api/attendanceRules'
 import { atSessionTime, clockTime, isClockTime, localDay } from '../api/isoTime'
+import { teacherDemoAccount } from '../login/teacherDemoAccount'
+import { useSessionStore } from '../session/sessionStore'
 import { correctedStatusOf, isEditablePhase, markOf, phaseOf } from './apiValues'
-import type { Attendance, Phase, SessionMarkBook } from './roster'
+import { classSessions, type Attendance, type Phase, type SessionMarkBook } from './roster'
 
 export type PanelTab = 0 | 1 | 2 | 3
 export type TodayLoad = 'loading' | 'ready' | 'empty' | 'denied' | 'failed' | 'signedOut'
@@ -20,6 +22,28 @@ export type TodayLoad = 'loading' | 'ready' | 'empty' | 'denied' | 'failed' | 's
 export type TodayStudent = {
   studentId: string
   name: string
+}
+
+// Un cambio de estado con motivo. Se guarda quién, cuándo y por qué
+// (principles.md, sección 11: las correcciones conservan su historial de auditoría).
+export type MarkChange = {
+  // Id de la sesión: el de la API en Hoy, o el de roster.ts en Sesiones.
+  sessionId: string
+  student: string
+  from: Attendance
+  to: Attendance
+  reason: string
+  by: string
+  at: number
+}
+
+// En Sesiones solo se corrige a Presente, Tarde o Ausente, y siempre con motivo.
+function canCorrect(from: Attendance, to: Attendance, reason: string): boolean {
+  return from !== to && to !== 'pendiente' && reason.trim() !== ''
+}
+
+function signerName(): string {
+  return useSessionStore.getState().name ?? teacherDemoAccount.name
 }
 
 export type PendingCorrection = {
@@ -41,6 +65,7 @@ type PanelState = {
   pendingCorrection: PendingCorrection | null
   correctionError: string | null
   sessionMarks: SessionMarkBook
+  changes: MarkChange[]
   classId: string | null
   studentName: string | null
   confirmClose: boolean
@@ -64,7 +89,13 @@ type PanelState = {
   requestTime: (studentId: string, time: string) => void
   saveCorrection: (reason: string) => Promise<void>
   cancelCorrection: () => void
-  setSessionMark: (sessionId: string, name: string, mark: Attendance) => void
+  correctSessionMark: (
+    sessionId: string,
+    name: string,
+    mark: Attendance,
+    reason: string,
+    by: string
+  ) => boolean
   openClass: (id: string) => void
   openStudent: (name: string) => void
   goBack: () => void
@@ -271,6 +302,7 @@ export const usePanelStore = create<PanelState>((set, get) => {
     pendingCorrection: null,
     correctionError: null,
     sessionMarks: {},
+    changes: [],
     classId: null,
     studentName: null,
     confirmClose: false,
@@ -446,9 +478,25 @@ export const usePanelStore = create<PanelState>((set, get) => {
           ...pending.correction,
           reason: reason.trim()
         })
+        const previous = get().records[pending.studentId]
         set((state) => ({
           records: { ...state.records, [record.studentId]: record },
-          pendingCorrection: null
+          pendingCorrection: null,
+          changes:
+            previous === undefined || previous.status === record.status
+              ? state.changes
+              : [
+                  ...state.changes,
+                  {
+                    sessionId: session.id,
+                    student: record.name,
+                    from: markOf(previous.status),
+                    to: markOf(record.status),
+                    reason: reason.trim(),
+                    by: signerName(),
+                    at: Date.now()
+                  }
+                ]
         }))
       } catch (error) {
         if (keepsCorrection(error)) {
@@ -471,14 +519,34 @@ export const usePanelStore = create<PanelState>((set, get) => {
       }
       set({ pendingCorrection: null, correctionError: null })
     },
-    setSessionMark: (sessionId, name, mark) => {
-      const book = get().sessionMarks
+    correctSessionMark: (sessionId, name, mark, reason, by) => {
+      const state = get()
+      const row = classSessions
+        .find((session) => session.id === sessionId && !session.cancel)
+        ?.rows?.find((item) => item.name === name)
+      const from = state.sessionMarks[sessionId]?.[name] ?? row?.mark
+      if (row === undefined || from === undefined || !canCorrect(from, mark, reason)) {
+        return false
+      }
       set({
         sessionMarks: {
-          ...book,
-          [sessionId]: { ...book[sessionId], [name]: mark }
-        }
+          ...state.sessionMarks,
+          [sessionId]: { ...state.sessionMarks[sessionId], [name]: mark }
+        },
+        changes: [
+          ...state.changes,
+          {
+            sessionId,
+            student: name,
+            from,
+            to: mark,
+            reason: reason.trim(),
+            by,
+            at: Date.now()
+          }
+        ]
       })
+      return true
     },
     openClass: (id) => {
       set({ classId: id, studentName: null })
