@@ -9,6 +9,8 @@ name: "Code: check"
 on:
   pull_request:
     branches: [staging]
+    # ready_for_review: al sacar la pull request de draft corre la comprobación que se saltó
+    types: [opened, synchronize, reopened, ready_for_review]
 
 # Solo lee el repositorio
 permissions:
@@ -20,7 +22,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # En draft se salta este job y, con él, «check» y «admin-tests»; «ci» da por bueno el resultado
   select-packages:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     outputs:
       packages: ${{ steps.packages.outputs.packages }}
