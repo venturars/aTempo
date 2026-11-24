@@ -1,6 +1,6 @@
 # Demo de aTempo
 
-El recorrido completo con datos de ejemplo: administración, profesor y alumno, desde la invitación hasta la llegada tarde. Funciona en `staging` sin Docker, Auth0 ni `.env`. Los datos viven en memoria y vuelven al ejemplo al recargar o cerrar cada app.
+El recorrido completo con datos de ejemplo: administración, profesor y alumno, desde la invitación hasta la llegada tarde. Funciona en `staging` sin Docker, Auth0 ni `.env`. La administración y la app del profesor vuelven al ejemplo al recargar o cerrar. La web del alumno guarda en el navegador las cuentas activadas, las entradas y los avisos: para repetir la demo, abre antes <http://localhost:5191/?reiniciar>.
 
 ## Arrancar
 
@@ -49,7 +49,7 @@ Sin invitación, el profesor de ejemplo entra con `profesor@atempo.test` / `Prof
 
 ## 3. Alumno invitado
 
-1. Abre <http://localhost:5191/?invitation=264018>. Es el enlace de invitación de Bruno Sanz.
+1. Abre <http://localhost:5191/?invitation=264018>. Es el enlace de invitación de Bruno Sanz. Si dice que la invitación ya está activada, abre antes <http://localhost:5191/?reiniciar>.
 2. El nombre y los apellidos vienen de la invitación. Completa el documento de identidad (por ejemplo `87654321X`), elige una contraseña de al menos 8 caracteres y pulsa **Entrar**. Se abre su inicio con Tempito.
 
 El alumno de ejemplo entra en <http://localhost:5191/> con `ada.lopez@clase.test` / `clase-2026`.
