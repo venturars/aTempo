@@ -8,6 +8,7 @@ type LoginCredentials = { email: string; password: string }
 type AuthUser = { sub: string; email: string }
 
 let encryptedAccessToken: Buffer | null = null
+let encryptedRefreshToken: Buffer | null = null
 let authenticatedEmail: string | null = null
 
 const apiRouterUrl = process.env.ATEMPO_API_ROUTER_URL?.replace(/\/$/, '') ?? ''
@@ -15,6 +16,7 @@ const requestTimeout = 10_000
 
 function clearAuthSession(): void {
   encryptedAccessToken = null
+  encryptedRefreshToken = null
   authenticatedEmail = null
 }
 
@@ -53,39 +55,108 @@ function isSecureStorageReady(): boolean {
   return process.platform !== 'linux' || safeStorage.getSelectedStorageBackend() !== 'basic_text'
 }
 
-async function readAccessToken(): Promise<string | null> {
-  if (encryptedAccessToken === null) return null
+function readEncryptedToken(encrypted: Buffer | null): string | null {
+  if (encrypted === null) return null
   if (!isSecureStorageReady()) {
     clearAuthSession()
     return null
   }
 
-  return safeStorage.decryptString(encryptedAccessToken)
+  return safeStorage.decryptString(encrypted)
 }
 
-async function requestCurrentUser(accessToken: string): Promise<{ sub: string } | null> {
+function readAccessToken(): string | null {
+  return readEncryptedToken(encryptedAccessToken)
+}
+
+function readRefreshToken(): string | null {
+  return readEncryptedToken(encryptedRefreshToken)
+}
+
+function storeTokens(accessToken: string, refreshToken?: string): void {
+  encryptedAccessToken = safeStorage.encryptString(accessToken)
+  encryptedRefreshToken =
+    typeof refreshToken === 'string' && refreshToken !== ''
+      ? safeStorage.encryptString(refreshToken)
+      : null
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+async function refreshAccessToken(): Promise<string | null> {
+  const refreshToken = readRefreshToken()
+  if (refreshToken === null) return null
+
+  let response: Response
+  try {
+    response = await fetch(`${resolveApiRouterUrl()}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+      signal: AbortSignal.timeout(requestTimeout)
+    })
+  } catch {
+    return null
+  }
+
+  if (!response.ok) return null
+  const body: unknown = await response.json().catch(() => null)
+  if (!isRecord(body) || typeof body.token !== 'string' || body.token === '') return null
+
+  const nextRefresh =
+    typeof body.refreshToken === 'string' && body.refreshToken !== ''
+      ? body.refreshToken
+      : refreshToken
+  storeTokens(body.token, nextRefresh)
+  return body.token
+}
+
+async function requestCurrentUser(
+  accessToken: string,
+  allowRefresh = true
+): Promise<{ sub: string } | null> {
   const response = await fetch(`${resolveApiRouterUrl()}/auth/me`, {
     headers: { Authorization: `Bearer ${accessToken}` },
     signal: AbortSignal.timeout(requestTimeout)
   })
 
   if (response.status === 401) {
+    if (allowRefresh) {
+      const nextAccessToken = await refreshAccessToken()
+      if (nextAccessToken !== null) return requestCurrentUser(nextAccessToken, false)
+    }
     clearAuthSession()
     return null
   }
   if (!response.ok) throw authError('AUTH_SERVICE_UNAVAILABLE')
 
   const body: unknown = await response.json()
-  if (
-    typeof body !== 'object' ||
-    body === null ||
-    !('sub' in body) ||
-    typeof body.sub !== 'string'
-  ) {
+  if (!isRecord(body) || typeof body.sub !== 'string') {
     throw authError('AUTH_RESPONSE_INVALID')
   }
 
   return { sub: body.sub }
+}
+
+async function completeAuthenticatedSession(
+  accessToken: string,
+  email: string,
+  refreshToken?: string
+): Promise<AuthUser> {
+  storeTokens(accessToken, refreshToken)
+  authenticatedEmail = email
+
+  let user: { sub: string } | null
+  try {
+    user = await requestCurrentUser(accessToken)
+  } catch {
+    clearAuthSession()
+    throw authError('AUTH_SERVICE_UNAVAILABLE')
+  }
+  if (user === null) throw authError('INVALID_CREDENTIALS')
+  return { ...user, email }
 }
 
 function registerAuthHandlers(): void {
@@ -120,34 +191,74 @@ function registerAuthHandlers(): void {
     if (!response.ok) throw authError('AUTH_SERVICE_UNAVAILABLE')
 
     const body: unknown = await response.json()
-    if (
-      typeof body !== 'object' ||
-      body === null ||
-      !('accessToken' in body) ||
-      typeof body.accessToken !== 'string' ||
-      body.accessToken === ''
-    ) {
+    if (!isRecord(body) || typeof body.accessToken !== 'string' || body.accessToken === '') {
       throw authError('AUTH_RESPONSE_INVALID')
     }
 
-    // Keep only the encrypted token in the main process between requests.
-    encryptedAccessToken = safeStorage.encryptString(body.accessToken)
-    authenticatedEmail = credentials.email.trim().toLowerCase()
-
-    let user: { sub: string } | null
-    try {
-      user = await requestCurrentUser(body.accessToken)
-    } catch {
-      clearAuthSession()
-      throw authError('AUTH_SERVICE_UNAVAILABLE')
-    }
-    if (user === null) throw authError('INVALID_CREDENTIALS')
-    return { ...user, email: authenticatedEmail }
+    const refreshToken =
+      typeof body.refreshToken === 'string' && body.refreshToken !== ''
+        ? body.refreshToken
+        : undefined
+    return completeAuthenticatedSession(
+      body.accessToken,
+      credentials.email.trim().toLowerCase(),
+      refreshToken
+    )
   })
+
+  ipcMain.handle(
+    'auth:register',
+    async (_event, credentials: LoginCredentials): Promise<AuthUser> => {
+      const routerUrl = resolveApiRouterUrl()
+      if (!isSecureStorageReady()) throw authError('SECURE_STORAGE_UNAVAILABLE')
+      if (
+        typeof credentials?.email !== 'string' ||
+        typeof credentials.password !== 'string' ||
+        credentials.email.trim() === '' ||
+        credentials.password === ''
+      ) {
+        throw authError('INVALID_CREDENTIALS')
+      }
+      clearAuthSession()
+
+      let response: Response
+      try {
+        response = await fetch(`${routerUrl}/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(credentials),
+          signal: AbortSignal.timeout(requestTimeout)
+        })
+      } catch {
+        throw authError('AUTH_SERVICE_UNAVAILABLE')
+      }
+
+      if (response.status === 409) throw authError('USER_EXISTS')
+      if (response.status === 400) throw authError('INVALID_SIGNUP')
+      if (!response.ok) throw authError('AUTH_SERVICE_UNAVAILABLE')
+
+      const body: unknown = await response.json()
+      if (
+        !isRecord(body) ||
+        typeof body.token !== 'string' ||
+        body.token === '' ||
+        typeof body.refreshToken !== 'string' ||
+        body.refreshToken === ''
+      ) {
+        throw authError('AUTH_RESPONSE_INVALID')
+      }
+
+      return completeAuthenticatedSession(
+        body.token,
+        credentials.email.trim().toLowerCase(),
+        body.refreshToken
+      )
+    }
+  )
 
   ipcMain.handle('auth:me', async (): Promise<AuthUser | null> => {
     if (apiRouterUrl === '') return null
-    const accessToken = await readAccessToken()
+    const accessToken = readAccessToken()
     if (accessToken === null) return null
 
     const user = await requestCurrentUser(accessToken)
@@ -156,7 +267,20 @@ function registerAuthHandlers(): void {
       : { ...user, email: authenticatedEmail }
   })
 
-  ipcMain.handle('auth:logout', () => {
+  ipcMain.handle('auth:logout', async () => {
+    const refreshToken = readRefreshToken()
+    if (refreshToken !== null) {
+      try {
+        await fetch(`${resolveApiRouterUrl()}/auth/logout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+          signal: AbortSignal.timeout(requestTimeout)
+        })
+      } catch {
+        // Local session still has to disappear if Auth0 cannot be reached.
+      }
+    }
     clearAuthSession()
   })
 }

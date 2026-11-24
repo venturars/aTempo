@@ -10,11 +10,16 @@ type MockAuthServer = {
 }
 
 const accessToken = 'mock-access-token-that-must-not-reach-the-renderer'
+const refreshToken = 'mock-refresh-token-that-must-not-reach-the-renderer'
 
 type AuthBridge = {
   auth: {
     isConfigured: () => Promise<boolean>
     login: (credentials: { email: string; password: string }) => Promise<{
+      sub: string
+      email: string
+    }>
+    register: (credentials: { email: string; password: string }) => Promise<{
       sub: string
       email: string
     }>
@@ -51,7 +56,30 @@ async function createMockAuthServer(): Promise<MockAuthServer> {
         sendJson(response, 401, { code: 'INVALID_CREDENTIALS' })
         return
       }
-      sendJson(response, 200, { accessToken, expiresIn: 3600 })
+      sendJson(response, 200, { accessToken, refreshToken, expiresIn: 3600 })
+      return
+    }
+
+    if (request.method === 'POST' && request.url === '/auth/register') {
+      if ((body as { email?: string } | undefined)?.email === 'existe@atempo.test') {
+        sendJson(response, 409, { code: 'USER_EXISTS' })
+        return
+      }
+      sendJson(response, 201, {
+        userId: 'auth0|sample-user',
+        token: accessToken,
+        refreshToken
+      })
+      return
+    }
+
+    if (request.method === 'POST' && request.url === '/auth/refresh') {
+      sendJson(response, 401, { code: 'INVALID_REFRESH_TOKEN' })
+      return
+    }
+
+    if (request.method === 'POST' && request.url === '/auth/logout') {
+      sendJson(response, 200, { success: true })
       return
     }
 
@@ -137,8 +165,9 @@ test.describe('Auth0 desktop session bridge', () => {
           return { user, methods: Object.keys((window as unknown as { api: AuthBridge }).api.auth) }
         })
         expect(bridge.user).toEqual({ sub: 'auth0|sample-user', email: 'profesor@atempo.test' })
-        expect(bridge.methods).toEqual(['isConfigured', 'login', 'me', 'logout'])
+        expect(bridge.methods).toEqual(['isConfigured', 'login', 'register', 'me', 'logout'])
         expect(JSON.stringify(bridge)).not.toContain(accessToken)
+        expect(JSON.stringify(bridge)).not.toContain(refreshToken)
       })
     )
   })
@@ -172,7 +201,7 @@ test.describe('Auth0 desktop session bridge', () => {
     )
   })
 
-  test('does not create a local account when the router is configured', async () => {
+  test('registers through the router and keeps tokens out of the renderer', async () => {
     await withRouter(async (router) =>
       withElectron(
         async (_app, page) => {
@@ -232,6 +261,7 @@ test.describe('Auth0 desktop session bridge', () => {
         await expect(page.getByRole('button', { name: 'Cerrar sesión', exact: true })).toHaveCount(
           0
         )
+        expect(router.requests.some((request) => request.path === '/auth/logout')).toBe(true)
         const requestCount = router.requests.length
         await expect(
           page.evaluate(() => (window as unknown as { api: AuthBridge }).api.auth.me())
