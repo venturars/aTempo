@@ -19,13 +19,14 @@ RUN npm install --global "pnpm@${PNPM_VERSION}"
 
 # Python de Debian solo prepara el venv; las dependencias de la API van dentro de su volumen.
 USER root
-# apt-snapshot-install instala desde el snapshot. apt comprueba la caducidad de los Release;
-# el script la desactiva solo en su apt-get update (docs/ARCHITECTURE.md).
-RUN printf '%s\n' \
+# apt-snapshot-install instala desde el snapshot, con la fecha escrita al construir. apt comprueba
+# la caducidad de los Release; el script la desactiva solo en su apt-get update (docs/ARCHITECTURE.md).
+RUN test -n "$DEBIAN_SNAPSHOT" \
+  && printf '%s\n' \
     '#!/bin/sh' \
     'set -eu' \
-    'apt-get -o Acquire::Check-Valid-Until=false update --snapshot "$DEBIAN_SNAPSHOT"' \
-    'apt-get install -y --no-install-recommends --snapshot "$DEBIAN_SNAPSHOT" "$@"' \
+    "apt-get -o Acquire::Check-Valid-Until=false update --snapshot $DEBIAN_SNAPSHOT" \
+    "apt-get install -y --no-install-recommends --snapshot $DEBIAN_SNAPSHOT \"\$@\"" \
     'rm -rf /var/lib/apt/lists/*' \
     > /usr/local/bin/apt-snapshot-install \
   && chmod 755 /usr/local/bin/apt-snapshot-install \
