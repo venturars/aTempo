@@ -1,0 +1,48 @@
+name: Snapshot Debian
+
+# Cuándo se ejecuta: el día 1 de cada mes, o a mano desde Actions
+on:
+  schedule:
+    - cron: "0 7 1 * *"
+  workflow_dispatch:
+
+# Permiso para leer el Dockerfile y abrir la issue
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  comprobar-snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # Abre una issue chore si DEBIAN_SNAPSHOT tiene más de 30 días y no hay otra abierta
+      - name: Comprobar la fecha del snapshot
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: Update the pinned Debian snapshot
+        run: |
+          snapshot="$(sed -n 's/^ARG DEBIAN_SNAPSHOT=\([0-9]\{8\}\)T.*/\1/p' Dockerfile)"
+          if [ -z "$snapshot" ]; then
+            echo "::error file=Dockerfile::No se encuentra ARG DEBIAN_SNAPSHOT=AAAAMMDDThhmmssZ"
+            exit 1
+          fi
+          age=$(( ( $(date -u +%s) - $(date -u -d "$snapshot" +%s) ) / 86400 ))
+          echo "DEBIAN_SNAPSHOT tiene $age días."
+          if [ "$age" -le 30 ]; then
+            exit 0
+          fi
+          open="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$TITLE\" in:title" --json number --jq length)"
+          if [ "$open" -gt 0 ]; then
+            echo "Ya hay una issue abierta."
+            exit 0
+          fi
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --label chore --body "$(printf '%s\n' \
+            "## Qué hay que hacer" \
+            "" \
+            "\`DEBIAN_SNAPSHOT\` del \`Dockerfile\` es del $snapshot y tiene $age días. Las correcciones de seguridad de Debian para Python 3.13 y las librerías de \`desktop-gui\` solo llegan al subir la fecha." \
+            "" \
+            "Subir \`DEBIAN_SNAPSHOT\` a una fecha reciente y actualizar a la vez las versiones fijadas de las dos etapas. Construir \`setup\` y \`desktop-gui\` para comprobarlo.")"
