@@ -390,47 +390,6 @@
   outline-color: color-mix(in oklab, var(--color-base-content) 4%, transparent);
 }
 
-/* Pastel del tema. El matiz se ve, sin el brillo de un color sólido. */
-.avatar-tone-primary,
-.avatar-tone-secondary,
-.avatar-tone-info,
-.avatar-tone-success,
-.avatar-tone-warning,
-.avatar-tone-error {
-  background-color: oklch(from var(--avatar-tone) 0.92 0.055 h);
-  color: oklch(from var(--avatar-tone) 0.42 0.08 h);
-}
-[data-theme='atempo-oscuro']
-  :is(
-    .avatar-tone-primary,
-    .avatar-tone-secondary,
-    .avatar-tone-info,
-    .avatar-tone-success,
-    .avatar-tone-warning,
-    .avatar-tone-error
-  ) {
-  background-color: oklch(from var(--avatar-tone) 0.62 0.1 h);
-  color: oklch(from var(--avatar-tone) 0.22 0.08 h);
-}
-.avatar-tone-primary {
-  --avatar-tone: var(--color-primary);
-}
-.avatar-tone-secondary {
-  --avatar-tone: var(--color-secondary);
-}
-.avatar-tone-info {
-  --avatar-tone: var(--color-info);
-}
-.avatar-tone-success {
-  --avatar-tone: var(--color-success);
-}
-.avatar-tone-warning {
-  --avatar-tone: var(--color-warning);
-}
-.avatar-tone-error {
-  --avatar-tone: var(--color-error);
-}
-
 /* La miga ya trae 8 px arriba y abajo. En Sesiones y en la fecha eso abre un hueco de más. */
 /* daisyUI la corre 4 px a la izquierda con un margen negativo; sin esos 4 px de más, el último tramo se corta y sale una barra de scroll. */
 :where(.teacher-panel) .breadcrumbs {

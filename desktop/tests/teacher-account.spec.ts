@@ -172,7 +172,7 @@ test('the invitation link opens the login to choose a password, then logs out an
     ).toHaveCount(5)
     await expect(
       window.getByRole('list').filter({ hasText: 'Presente' }).getByRole('listitem')
-    ).toHaveText(['Presente', 'Retraso', 'Ausencia'])
+    ).toHaveText(['Presente', 'Tarde', 'Ausencia'])
     await expect(window.getByText('Trimestre de ejemplo')).toHaveCount(0)
 
     // El error sustituye a la pista.
@@ -387,7 +387,7 @@ test('a student logs out from the desktop home', async () => {
     const window = await app.firstWindow()
     await enter(window, 'ada.lopez@clase.test', 'clase-2026')
     await expect(window).toHaveURL(/#\/student\/dashboard$/)
-    await window.getByRole('button', { name: 'Salir', exact: true }).click()
+    await window.getByRole('button', { name: 'Cerrar sesión', exact: true }).click()
     await expect(window).toHaveURL(/#\/$/)
     await expect(window.getByRole('button', { name: 'Entrar', exact: true })).toBeVisible()
   } finally {

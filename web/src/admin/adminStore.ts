@@ -135,7 +135,7 @@ function createSeed(): AdminData {
       {
         id: 'course-web',
         organizationId,
-        name: 'Desarrollo web',
+        name: 'AI Engineering',
         teacherId: adminId,
         studentIds: ['person-student-ana', 'person-student-luis']
       },

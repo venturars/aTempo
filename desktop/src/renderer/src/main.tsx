@@ -11,6 +11,9 @@ import {
 import { routeTree } from './routeTree.gen'
 import { teacherDemoAccount } from './login/teacherDemoAccount'
 import { useSessionStore } from './session/sessionStore'
+import { applySavedTheme } from './theme'
+
+applySavedTheme()
 
 const router = createRouter({ routeTree, history: createHashHistory(), caseSensitive: true })
 
