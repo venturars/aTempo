@@ -198,7 +198,7 @@ Docker instala lo que el proyecto necesita con versiones comunes para el equipo:
 
 - La imagen parte de `node:24.22.3-trixie`. El binario oficial de APM se comprueba con su SHA-256. Python 3.13 y su soporte de venv se instalan desde un snapshot Debian fijado.
 - `apt-snapshot-install` desactiva la caducidad (`Valid-Until`) solo en su `apt-get update` del snapshot; la firma se sigue comprobando. Los `Release` de `trixie-updates` y `trixie-security` caducan unos siete días después de publicarse: sin eso, la construcción fallaría pocos días después de fijar la fecha, o el mismo día con una fecha antigua.
-- Las correcciones de seguridad de Debian solo llegan al subir `DEBIAN_SNAPSHOT`. El workflow `debian-snapshot.yml` lo comprueba el día 1 de cada mes y abre una issue `chore` si la fecha tiene más de 30 días.
+- Las correcciones de seguridad de Debian solo llegan al subir `DEBIAN_SNAPSHOT`. El workflow `debian-snapshot.yml` lee el `Dockerfile` de `staging` el día 1 de cada mes y abre una issue `chore` si la fecha tiene más de 30 días.
 - `setup` ejecuta `apm install`, instala con lockfiles los paquetes Node de escritorio, Storybook, las APIs, `blockend/` y `postgres/`, y prepara el venv de `api-sqlite/`.
 - Las skills y agentes de delivery-workflow quedan en la carpeta del proyecto para Cursor, Codex y Claude Code.
 - Los `node_modules` y el venv Python viven en volúmenes Docker separados por paquete; pnpm comparte su caché. Compose los crea vacíos y de root. `docker/entrypoint.sh` los deja del usuario `node` en cada arranque y el comando sigue con ese usuario. Las dependencias Linux no se mezclan con las del ordenador.

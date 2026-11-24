@@ -15,8 +15,10 @@ jobs:
   comprobar-snapshot:
     runs-on: ubuntu-latest
     steps:
+      # El snapshot se sube en staging; main lo recibe más tarde
       - uses: actions/checkout@v4
         with:
+          ref: staging
           persist-credentials: false
 
       # Abre una issue chore si DEBIAN_SNAPSHOT tiene más de 30 días y no hay otra abierta
@@ -35,7 +37,7 @@ jobs:
           if [ "$age" -le 30 ]; then
             exit 0
           fi
-          open="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$TITLE\" in:title" --json number --jq length)"
+          open="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$TITLE\" in:title" --limit 100 --json title --jq '[.[] | select(.title == env.TITLE)] | length')"
           if [ "$open" -gt 0 ]; then
             echo "Ya hay una issue abierta."
             exit 0
@@ -43,6 +45,14 @@ jobs:
           gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --label chore --body "$(printf '%s\n' \
             "## Qué hay que hacer" \
             "" \
-            "\`DEBIAN_SNAPSHOT\` del \`Dockerfile\` es del $snapshot y tiene $age días. Las correcciones de seguridad de Debian para Python 3.13 y las librerías de \`desktop-gui\` solo llegan al subir la fecha." \
+            "Subir \`DEBIAN_SNAPSHOT\` del \`Dockerfile\`, hoy del $snapshot ($age días), a una fecha reciente, y a la vez las versiones fijadas de las dos etapas. El porqué está en \`docs/ARCHITECTURE.md\` (entorno de instalación)." \
             "" \
-            "Subir \`DEBIAN_SNAPSHOT\` a una fecha reciente y actualizar a la vez las versiones fijadas de las dos etapas. Construir \`setup\` y \`desktop-gui\` para comprobarlo.")"
+            "## Qué sigue igual" \
+            "" \
+            "Los paquetes instalados y los servicios de Compose: solo cambian las versiones de Debian." \
+            "" \
+            "## Cómo probarlo" \
+            "" \
+            "1. \`docker compose build setup\` construye la imagen." \
+            "2. \`docker compose --profile gui build desktop-gui\` construye la imagen gráfica." \
+            "3. \`docker compose run --rm setup\` instala el proyecto.")"
