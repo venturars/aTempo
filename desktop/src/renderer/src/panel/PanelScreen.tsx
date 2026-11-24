@@ -66,6 +66,11 @@ export function PanelScreen(): React.JSX.Element {
   const back = backLabel(tab, selected, studentName)
   const teacherName = useTeacherName()
   const signedIn = useSessionStore((state) => state.profile === 'teacher')
+  // Con Auth0 la contraseña vive en Auth0: la de la demo no sirve para entrar.
+  const [authConfigured, setAuthConfigured] = useState(true)
+  useEffect(() => {
+    void window.api.auth.isConfigured().then(setAuthConfigured, () => setAuthConfigured(true))
+  }, [])
   const [changingPassword, setChangingPassword] = useState(false)
   const [passwordChanged, setPasswordChanged] = useState(false)
   const navigate = useNavigate()
@@ -109,7 +114,7 @@ export function PanelScreen(): React.JSX.Element {
         <AccountMenu
           name={teacherName}
           onChangePassword={
-            signedIn
+            signedIn && !authConfigured
               ? () => {
                   setPasswordChanged(false)
                   setChangingPassword(true)
