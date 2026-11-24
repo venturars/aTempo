@@ -1,8 +1,13 @@
 import './styles/app.css'
 
-import { StrictMode, useEffect } from 'react'
+import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { createHashHistory, createRouter, RouterProvider } from '@tanstack/react-router'
+import {
+  createHashHistory,
+  createRouter,
+  RouterProvider,
+  useRouterState
+} from '@tanstack/react-router'
 import { routeTree } from './routeTree.gen'
 import { teacherDemoAccount } from './login/teacherDemoAccount'
 import { useSessionStore } from './session/sessionStore'
@@ -15,11 +20,19 @@ declare module '@tanstack/react-router' {
   }
 }
 
+// Pantallas con su propio «Cerrar sesión».
+const ownLogout = ['/teacher/panel', '/student/dashboard']
+
 export function AuthSessionBootstrap(): React.JSX.Element {
+  const [authConfigured, setAuthConfigured] = useState(false)
+  const profile = useSessionStore((state) => state.profile)
+  const pathname = useRouterState({ router, select: (state) => state.location.pathname })
+
   useEffect(() => {
     void window.api.auth
       .isConfigured()
       .then(async (isConfigured) => {
+        setAuthConfigured(isConfigured)
         if (!isConfigured) return
         const user = await window.api.auth.me()
         // A pending restore must not clear a session created by a newer login.
@@ -59,8 +72,21 @@ export function AuthSessionBootstrap(): React.JSX.Element {
       })
   }, [])
 
-  // Cada pantalla con sesión tiene su «Cerrar sesión», que llama a endSession y borra el token.
-  return <RouterProvider router={router} />
+  function logOut(): void {
+    useSessionStore.getState().endSession()
+    void router.navigate({ to: '/', replace: true })
+  }
+
+  return (
+    <>
+      <RouterProvider router={router} />
+      {authConfigured && profile !== null && !ownLogout.includes(pathname) ? (
+        <button className="btn btn-ghost fixed right-4 top-4 z-50" type="button" onClick={logOut}>
+          Cerrar sesión
+        </button>
+      ) : null}
+    </>
+  )
 }
 
 createRoot(document.getElementById('root')!).render(
