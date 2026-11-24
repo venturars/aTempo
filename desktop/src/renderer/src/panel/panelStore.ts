@@ -11,7 +11,7 @@ import {
 } from '../api/contract'
 import { arrivalStatus, checkedInByStudent } from '../api/attendanceRules'
 import { atSessionTime, clockTime, isClockTime, localDay } from '../api/isoTime'
-import { correctedStatusOf, markOf, phaseOf } from './apiValues'
+import { correctedStatusOf, isEditablePhase, markOf, phaseOf } from './apiValues'
 import type { Attendance, Phase, SessionMarkBook } from './roster'
 
 export type PanelTab = 0 | 1 | 2 | 3
@@ -34,11 +34,14 @@ type PanelState = {
   session: Session | null
   students: TodayStudent[]
   records: Record<string, AttendanceRecord>
+  scanned: Record<string, true>
+  scannedFor: string | null
   checkInCode: CheckInCode | null
   busy: boolean
   todayError: string | null
   canSimulateArrival: boolean
   pendingCorrection: PendingCorrection | null
+  correctionError: string | null
   sessionMarks: SessionMarkBook
   classId: string | null
   studentName: string | null
@@ -77,7 +80,7 @@ export function todayMark(
   state: Pick<PanelState, 'session' | 'records'>,
   studentId: string
 ): Attendance | 'none' {
-  if (todayPhase(state) === 'programada') {
+  if (!isEditablePhase(todayPhase(state))) {
     return 'none'
   }
   const record = state.records[studentId]
@@ -117,6 +120,23 @@ function hasCode(error: unknown, code: ErrorCode): boolean {
   return error instanceof ApiError && error.code === code
 }
 
+function correctionErrorMessage(error: unknown): string {
+  if (error instanceof ApiError && error.details.length > 0) {
+    return error.details.map((detail) => detail.message).join(' ')
+  }
+  return errorMessage(error)
+}
+
+function keepsCorrection(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    !hasCode(error, 'REQUEST_CANCELLED') &&
+    !hasCode(error, 'UNAUTHENTICATED') &&
+    error.statusCode !== 404 &&
+    error.statusCode !== 409
+  )
+}
+
 function needsReread(error: unknown): boolean {
   return (
     (error instanceof ApiError && (error.statusCode === 409 || error.statusCode === 404)) ||
@@ -127,6 +147,16 @@ function needsReread(error: unknown): boolean {
 type CodeResult = {
   code: CheckInCode | null
   error: unknown
+}
+
+type Scans = Pick<PanelState, 'scanned' | 'scannedFor'>
+
+function scansWith(state: Scans, sessionId: string, records: AttendanceRecord[]): Scans {
+  const scanned = state.scannedFor === sessionId ? { ...state.scanned } : {}
+  for (const record of records) {
+    if (checkedInByStudent(record)) scanned[record.studentId] = true
+  }
+  return { scanned, scannedFor: sessionId }
 }
 
 function recordsById(records: AttendanceRecord[]): Record<string, AttendanceRecord> {
@@ -174,6 +204,8 @@ export const usePanelStore = create<PanelState>((set, get) => {
         session,
         students: students.map(({ studentId, name }) => ({ studentId, name })),
         records: {},
+        scanned: {},
+        scannedFor: session.id,
         checkInCode: null,
         todayLoad: 'ready'
       })
@@ -189,6 +221,7 @@ export const usePanelStore = create<PanelState>((set, get) => {
       session,
       students: records.map(({ studentId, name }) => ({ studentId, name })),
       records: recordsById(records),
+      ...scansWith(get(), session.id, records),
       checkInCode: codeResult.code,
       todayLoad: 'ready'
     })
@@ -221,7 +254,14 @@ export const usePanelStore = create<PanelState>((set, get) => {
       const sessions = await getApiClient().listSessions(localDay())
       const session = sessions[0]
       if (session === undefined) {
-        set({ todayLoad: 'empty', session: null, students: [], records: {} })
+        set({
+          todayLoad: 'empty',
+          session: null,
+          students: [],
+          records: {},
+          scanned: {},
+          scannedFor: null
+        })
         return
       }
       await showSession(session)
@@ -246,11 +286,14 @@ export const usePanelStore = create<PanelState>((set, get) => {
     session: null,
     students: [],
     records: {},
+    scanned: {},
+    scannedFor: null,
     checkInCode: null,
     busy: false,
     todayError: null,
     canSimulateArrival: false,
     pendingCorrection: null,
+    correctionError: null,
     sessionMarks: {},
     classId: null,
     studentName: null,
@@ -276,10 +319,13 @@ export const usePanelStore = create<PanelState>((set, get) => {
         session: null,
         students: [],
         records: {},
+        scanned: {},
+        scannedFor: null,
         checkInCode: null,
         todayError: null,
         canSimulateArrival: false,
-        pendingCorrection: null
+        pendingCorrection: null,
+        correctionError: null
       })
     },
     openSession: async () => {
@@ -357,7 +403,10 @@ export const usePanelStore = create<PanelState>((set, get) => {
       try {
         const record = await demo.simulateNextArrival(session.id)
         if (record !== null) {
-          set((state) => ({ records: { ...state.records, [record.studentId]: record } }))
+          set((state) => ({
+            records: { ...state.records, [record.studentId]: record },
+            ...scansWith(state, session.id, [record])
+          }))
         }
       } catch (error) {
         await showFailure(error, session.id)
@@ -373,16 +422,19 @@ export const usePanelStore = create<PanelState>((set, get) => {
       if (state.busy || state.pendingCorrection !== null) {
         return
       }
-      if (status === null || record === undefined || todayPhase(state) === 'programada') {
+      if (status === null || record === undefined || !isEditablePhase(todayPhase(state))) {
         return
       }
       if (record.status === status) {
         return
       }
-      if (status === 'absent' && checkedInByStudent(record)) {
+      if (status === 'absent' && state.scanned[studentId] === true) {
         return
       }
-      set({ pendingCorrection: { studentId, name: record.name, correction: { status } } })
+      set({
+        pendingCorrection: { studentId, name: record.name, correction: { status } },
+        correctionError: null
+      })
     },
     requestTime: (studentId, time) => {
       const { session, busy, pendingCorrection } = get()
@@ -393,10 +445,14 @@ export const usePanelStore = create<PanelState>((set, get) => {
       if (session === null || record === undefined || !isClockTime(time)) {
         return
       }
+      if (!isEditablePhase(phaseOf(session.state))) {
+        return
+      }
       if (record.status !== 'present' && record.status !== 'late') {
         return
       }
       set({
+        correctionError: null,
         pendingCorrection: {
           studentId,
           name: record.name,
@@ -413,7 +469,7 @@ export const usePanelStore = create<PanelState>((set, get) => {
       if (pending === null || session === null || reason.trim() === '' || get().busy) {
         return
       }
-      set({ busy: true, todayError: null })
+      set({ busy: true, todayError: null, correctionError: null })
       try {
         const record = await getApiClient().correctAttendance(session.id, pending.studentId, {
           ...pending.correction,
@@ -421,11 +477,19 @@ export const usePanelStore = create<PanelState>((set, get) => {
         })
         set((state) => ({
           records: { ...state.records, [record.studentId]: record },
+          ...scansWith(state, session.id, [record]),
           pendingCorrection: null
         }))
       } catch (error) {
-        set({ pendingCorrection: null })
-        await showFailure(error, session.id)
+        if (keepsCorrection(error)) {
+          set({ correctionError: correctionErrorMessage(error) })
+          if (needsReread(error)) {
+            await reloadSession(session.id).catch(() => undefined)
+          }
+        } else {
+          set({ pendingCorrection: null })
+          await showFailure(error, session.id)
+        }
       } finally {
         set({ busy: false })
         updateDemo()
@@ -435,7 +499,7 @@ export const usePanelStore = create<PanelState>((set, get) => {
       if (get().busy) {
         return
       }
-      set({ pendingCorrection: null })
+      set({ pendingCorrection: null, correctionError: null })
     },
     setSessionMark: (sessionId, name, mark) => {
       const book = get().sessionMarks

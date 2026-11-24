@@ -27,9 +27,13 @@ const phaseOfState: Record<SessionState, Phase> = {
   scheduled: 'programada',
   open: 'abierta',
   closed: 'cerrada',
-  cancelled: 'cerrada'
+  cancelled: 'cancelada'
 }
 
 export function phaseOf(state: SessionState): Phase {
   return phaseOfState[state]
+}
+
+export function isEditablePhase(phase: Phase): boolean {
+  return phase === 'abierta' || phase === 'cerrada'
 }

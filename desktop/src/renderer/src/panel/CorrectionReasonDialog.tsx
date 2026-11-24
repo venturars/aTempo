@@ -14,6 +14,7 @@ export function CorrectionReasonDialog(): React.JSX.Element | null {
 
 function ReasonDialog({ pending }: { pending: PendingCorrection }): React.JSX.Element {
   const busy = usePanelStore((state) => state.busy)
+  const error = usePanelStore((state) => state.correctionError)
   const saveCorrection = usePanelStore((state) => state.saveCorrection)
   const cancelCorrection = usePanelStore((state) => state.cancelCorrection)
   const [reason, setReason] = useState('')
@@ -75,6 +76,11 @@ function ReasonDialog({ pending }: { pending: PendingCorrection }): React.JSX.El
             onChange={(event) => setReason(event.target.value)}
           />
         </label>
+        {error === null ? null : (
+          <p role="alert" className="pt-3 text-sm text-error">
+            {error}
+          </p>
+        )}
         <div className="modal-action">
           <button type="button" className="btn" disabled={busy} onClick={cancelCorrection}>
             Cancelar

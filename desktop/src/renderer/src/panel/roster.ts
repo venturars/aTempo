@@ -78,7 +78,7 @@ export const course = {
 export type Attendance = 'presente' | 'retraso' | 'ausente' | 'pendiente'
 export type SessionMarkBook = Record<string, Record<string, Attendance>>
 export type JustKey = 'none' | 'pend' | 'ok' | 'no'
-export type Phase = 'programada' | 'abierta' | 'cerrada'
+export type Phase = 'programada' | 'abierta' | 'cerrada' | 'cancelada'
 
 export type RosterRow = {
   name: string

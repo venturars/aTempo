@@ -9,8 +9,9 @@ import {
 } from '../src/renderer/src/api/client'
 import { ApiError, type AttendanceRecord } from '../src/renderer/src/api/contract'
 import { localDay } from '../src/renderer/src/api/isoTime'
+import type { SendToRouter } from '../src/renderer/src/api/httpTransport'
 import { sampleSession, studentIdOf, type FixtureName } from '../src/renderer/src/api/fixtures'
-import { usePanelStore } from '../src/renderer/src/panel/panelStore'
+import { todayMark, todayPhase, usePanelStore } from '../src/renderer/src/panel/panelStore'
 
 const diegoMolero = studentIdOf('Diego Molero')
 const diegoTorres = studentIdOf('Diego Torres')
@@ -118,6 +119,103 @@ test('keeps the arrival of a student who checked in from becoming absent', async
   store().requestMark(diegoMolero, 'ausente')
   expect(store().pendingCorrection).toBeNull()
   store().requestTime(diegoTorres, '09:10')
+  expect(store().pendingCorrection).toBeNull()
+})
+
+test('keeps a scanned student from becoming absent after a teacher correction', async () => {
+  await freshToday()
+  await store().openSession()
+  await store().simulateArrival()
+  store().requestTime(diegoMolero, '09:15')
+  await store().saveCorrection('Escaneó tarde')
+  expect(store().records[diegoMolero]?.updatedBy).not.toBe(diegoMolero)
+  store().requestMark(diegoMolero, 'ausente')
+  expect(store().pendingCorrection).toBeNull()
+})
+
+function routerWith(
+  session: ReturnType<typeof sampleSession>,
+  records: AttendanceRecord[],
+  write: { status: number; body: unknown }
+): SendToRouter {
+  return async (request) => {
+    if (request.path.startsWith('/sessions?')) {
+      return { kind: 'response', status: 200, statusText: 'OK', body: [session] }
+    }
+    if (request.path === `/sessions/${session.id}`) {
+      return { kind: 'response', status: 200, statusText: 'OK', body: session }
+    }
+    if (request.method === 'GET' && request.path === `/sessions/${session.id}/attendances`) {
+      return { kind: 'response', status: 200, statusText: 'OK', body: records }
+    }
+    if (request.path === `/sessions/${session.id}/check-in-code`) {
+      const body = { code: '123456', expiresAt: new Date(Date.now() + 30_000).toISOString() }
+      return { kind: 'response', status: 200, statusText: 'OK', body }
+    }
+    return { kind: 'response', statusText: 'Error', ...write }
+  }
+}
+
+function presentRecord(studentId: string): AttendanceRecord {
+  return {
+    studentId,
+    name: 'Diego Molero',
+    status: 'present',
+    checkedInAt: today('09:05'),
+    updatedBy: 'teacher-ventura-rodriguez',
+    updatedAt: today('09:06'),
+    reason: 'Manual'
+  }
+}
+
+test('keeps the reason dialog and its error when saving fails', async () => {
+  const session = { ...sampleSession(localDay()), state: 'closed' as const }
+  resetApiClient(
+    'success',
+    routerWith(session, [presentRecord(diegoMolero)], {
+      status: 503,
+      body: { code: 'SERVICE_UNAVAILABLE', message: 'No disponible.' }
+    })
+  )
+  usePanelStore.setState(usePanelStore.getInitialState(), true)
+  await store().loadToday()
+  store().requestMark(diegoMolero, 'retraso')
+  await store().saveCorrection('Llegó tarde')
+  expect(store().pendingCorrection?.studentId).toBe(diegoMolero)
+  expect(store().correctionError).not.toBeNull()
+  expect(store().todayError).toBeNull()
+  store().cancelCorrection()
+  expect(store().correctionError).toBeNull()
+})
+
+test('shows the validation details inside the reason dialog', async () => {
+  const session = { ...sampleSession(localDay()), state: 'closed' as const }
+  resetApiClient(
+    'success',
+    routerWith(session, [presentRecord(diegoMolero)], {
+      status: 400,
+      body: {
+        code: 'VALIDATION_FAILED',
+        details: [{ field: 'reason', message: 'El motivo es obligatorio.' }]
+      }
+    })
+  )
+  usePanelStore.setState(usePanelStore.getInitialState(), true)
+  await store().loadToday()
+  store().requestMark(diegoMolero, 'retraso')
+  await store().saveCorrection('x')
+  expect(store().correctionError).toBe('El motivo es obligatorio.')
+})
+
+test('keeps a cancelled session read-only', async () => {
+  const session = { ...sampleSession(localDay()), state: 'cancelled' as const }
+  resetApiClient('success', routerWith(session, [], { status: 500, body: {} }))
+  usePanelStore.setState(usePanelStore.getInitialState(), true)
+  await store().loadToday()
+  expect(todayPhase(store())).toBe('cancelada')
+  expect(todayMark(store(), diegoMolero)).toBe('none')
+  store().requestMark(diegoMolero, 'presente')
+  store().requestTime(diegoMolero, '09:10')
   expect(store().pendingCorrection).toBeNull()
 })
 
