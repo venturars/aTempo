@@ -2,7 +2,8 @@ import { defineConfig } from '@playwright/test'
 
 export default defineConfig({
   testDir: './tests',
-  testMatch: /admin-(store|web)\.spec\.ts/,
+  testMatch: /(admin-(store|web)|web-invite)\.spec\.ts/,
+  snapshotPathTemplate: '{testDir}/snapshots/{arg}{ext}',
   workers: 1,
   reporter: 'line',
   use: { baseURL: 'http://127.0.0.1:5193', headless: true, trace: 'retain-on-failure' },

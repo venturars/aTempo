@@ -15,10 +15,18 @@ import { formatDay, minutesOfDay } from './studentDate'
 
 const accountsKey = storageKeys.accounts
 
+export type NewStudent = {
+  firstName: string
+  lastName: string
+  identificationDocument: string
+  email: string
+  password: string
+}
+
 type StudentAccountsState = {
   accounts: StudentAccount[]
   findByEmail: (email: string) => StudentAccount | undefined
-  addAccount: (name: string, email: string, password: string) => StudentAccount
+  addAccount: (person: NewStudent) => StudentAccount
   recordEntry: (email: string, entry: ClassEntry) => void
 }
 
@@ -49,12 +57,17 @@ export const useStudentAccountsStore = create<StudentAccountsState>((set, get) =
     const wanted = normalizeEmail(email)
     return get().accounts.find((account) => normalizeEmail(account.email) === wanted)
   },
-  addAccount: (name, email, password) => {
+  addAccount: (person) => {
+    const firstName = person.firstName.trim()
+    const lastName = person.lastName.trim()
     const account: StudentAccount = {
-      name: name.trim(),
-      email: normalizeEmail(email),
-      password,
-      history: []
+      name: `${firstName} ${lastName}`,
+      email: normalizeEmail(person.email),
+      password: person.password,
+      history: [],
+      firstName,
+      lastName,
+      identificationDocument: person.identificationDocument
     }
     const accounts = [...get().accounts, account]
     saveAccounts(accounts)
