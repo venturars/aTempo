@@ -1,4 +1,4 @@
-name: Docker APIs
+name: "APIs: test in Docker"
 
 on:
   pull_request:
