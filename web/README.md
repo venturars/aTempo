@@ -14,7 +14,9 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Abre <http://localhost:5191/admin> y pulsa **Abrir demo de administración**. No hay credenciales que introducir. Aparece el inicio de la organización Neoland, con **Personas**, **Cursos** y **Mis clases**. El administrador de ejemplo también es profesor.
+Abre <http://localhost:5191/admin> y entra con `miguel@neoland.example` / `neoland-2026`. Aparece el inicio de la organización Neoland, con **Personas**, **Cursos** y **Mis clases**. El administrador de ejemplo también es profesor.
+
+Para probar el alta de una organización, pulsa **Crear cuenta** en la misma pantalla. Pide el nombre y el CIF de la organización y el nombre, apellidos, documento de identidad, correo y contraseña del admin, los campos obligatorios de `organization` y `person` en `postgres/init/01_schema.sql`. Al crearla entras en su administración vacía, solo con tu cuenta. Con **Cerrar sesión** puedes volver a entrar con cualquiera de las dos cuentas; cada una abre su organización. El correo, el CIF y el documento no se pueden repetir, y una contraseña errónea da el mismo aviso exista o no el correo, como `POST /auth/register` y `POST /auth/login` del contrato v1 (#90).
 
 1. En **Personas**, pulsa **Invitar persona** y completa el nombre y el correo. Selecciona **Profesor** para ver el interruptor **También es administrador**. Actívalo si necesita ese rol y pulsa **Preparar invitación**. La fila muestra **Administrador y profesor** e **Invitación pendiente**. Puedes quitar y volver a dar ese rol desde **Editar**.
 2. En **Cursos**, pulsa **Crear curso**. Pon un nombre, selecciona profesor y alumnos y guarda. Puedes seleccionar las personas que acabas de invitar, conservando su estado pendiente.
@@ -44,7 +46,7 @@ Las fechas del rango son inclusivas y se calculan sin cambios por zona horaria o
 
 La evidencia histórica de la ampliación CRUD es: batería completa 65/65 y comprobación focal 3/3 tras el último ajuste del texto de confirmación. La secuencia y el alcance de estas comprobaciones están en [admin-prototype.md](../docs/admin-prototype.md#verificación-y-runbook-local).
 
-El tema claro/oscuro se cambia desde la cabecera. **Cerrar sesión** vuelve a la entrada de la demo; los datos continúan en memoria mientras no recargues. Recargar el navegador restaura los datos iniciales y exige abrir de nuevo la demo. Entrar o salir de administración no cambia las cuentas ni la sesión del alumno. Para parar Vite, usa **Ctrl+C** en su terminal.
+El tema claro/oscuro se cambia desde la cabecera. **Cerrar sesión** vuelve a la entrada de administración; los datos y las cuentas creadas continúan en memoria mientras no recargues. Recargar el navegador restaura los datos iniciales, borra las organizaciones creadas y exige volver a entrar. Entrar o salir de administración no cambia las cuentas ni la sesión del alumno. Para parar Vite, usa **Ctrl+C** en su terminal.
 
 El panel guarda las invitaciones pendientes en la demo web. La activación y la creación de contraseña se prueban con una invitación de ejemplo en [el PR #130 de Electron](https://github.com/venturars/aTempo/pull/130). El envío de correo y la conexión entre ambas demos están pendientes. Consulta el alcance en [admin-prototype.md](../docs/admin-prototype.md).
 

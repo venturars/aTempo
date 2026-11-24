@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, Outlet, useNavigate } from '@tanstack/react-router'
 import { applyTheme, readTheme } from '../session/sessionStore'
 import { ThemeToggle } from '../shared/ThemeToggle'
+import { AdminEntry } from './AdminEntry'
 import { useAdminStore } from './adminStore'
 
 const pageWidth = 'mx-auto w-full max-w-5xl px-4 sm:px-6'
@@ -10,7 +11,6 @@ export function AdminLayout(): React.JSX.Element {
   const organization = useAdminStore((state) => state.organization)
   const people = useAdminStore((state) => state.people)
   const currentPersonId = useAdminStore((state) => state.currentPersonId)
-  const enterDemo = useAdminStore((state) => state.enterDemo)
   const exitDemo = useAdminStore((state) => state.exitDemo)
   const navigate = useNavigate()
   const [theme, setTheme] = useState(readTheme)
@@ -32,32 +32,7 @@ export function AdminLayout(): React.JSX.Element {
     currentPerson.organizationId !== organization.id ||
     currentPerson.state !== 'active'
   ) {
-    return (
-      <main className="flex min-h-screen items-center justify-center px-4 py-12">
-        <section className="page-enter panel-card flex w-full max-w-md flex-col gap-7 rounded-box p-6 sm:p-10">
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-lg font-semibold">aTempo</p>
-            <ThemeToggle dark={theme === 'atempo-oscuro'} onToggle={onTheme} />
-          </div>
-          <div className="flex flex-col gap-3">
-            <h1 className="text-2xl font-semibold tracking-tight">Tu organización, preparada para clase</h1>
-            <p className="text-base-content/65">
-              Invita a tu equipo, organiza los cursos y programa las próximas sesiones.
-            </p>
-          </div>
-          <button type="button" className="btn btn-primary" onClick={enterDemo}>
-            Abrir demo de administración
-          </button>
-          <p className="text-sm text-base-content/60">
-            Datos de ejemplo. Los cambios se restablecen al recargar y las invitaciones no envían
-            correos.
-          </p>
-          <Link className="link w-fit text-sm" to="/">
-            Volver al acceso del alumno
-          </Link>
-        </section>
-      </main>
-    )
+    return <AdminEntry dark={theme === 'atempo-oscuro'} onTheme={onTheme} />
   }
 
   return (

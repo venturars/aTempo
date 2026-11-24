@@ -88,7 +88,7 @@ pnpm dev
 ```
 
 - Alumno: <http://localhost:5191/>. La cuenta de ejemplo y `/?reiniciar` están en [web/README.md](web/README.md).
-- Administración: <http://localhost:5191/admin>, botón **Abrir demo de administración**.
+- Administración: <http://localhost:5191/admin>, con `miguel@neoland.example` / `neoland-2026` o **Crear cuenta** para dar de alta otra organización.
 
 ## Qué hay
 
