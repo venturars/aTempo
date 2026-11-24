@@ -34,8 +34,6 @@ type PanelState = {
   session: Session | null
   students: TodayStudent[]
   records: Record<string, AttendanceRecord>
-  scanned: Record<string, true>
-  scannedFor: string | null
   checkInCode: CheckInCode | null
   busy: boolean
   todayError: string | null
@@ -149,16 +147,6 @@ type CodeResult = {
   error: unknown
 }
 
-type Scans = Pick<PanelState, 'scanned' | 'scannedFor'>
-
-function scansWith(state: Scans, sessionId: string, records: AttendanceRecord[]): Scans {
-  const scanned = state.scannedFor === sessionId ? { ...state.scanned } : {}
-  for (const record of records) {
-    if (checkedInByStudent(record)) scanned[record.studentId] = true
-  }
-  return { scanned, scannedFor: sessionId }
-}
-
 function recordsById(records: AttendanceRecord[]): Record<string, AttendanceRecord> {
   return Object.fromEntries(records.map((record) => [record.studentId, record]))
 }
@@ -204,8 +192,6 @@ export const usePanelStore = create<PanelState>((set, get) => {
         session,
         students: students.map(({ studentId, name }) => ({ studentId, name })),
         records: {},
-        scanned: {},
-        scannedFor: session.id,
         checkInCode: null,
         todayLoad: 'ready'
       })
@@ -221,7 +207,6 @@ export const usePanelStore = create<PanelState>((set, get) => {
       session,
       students: records.map(({ studentId, name }) => ({ studentId, name })),
       records: recordsById(records),
-      ...scansWith(get(), session.id, records),
       checkInCode: codeResult.code,
       todayLoad: 'ready'
     })
@@ -254,14 +239,7 @@ export const usePanelStore = create<PanelState>((set, get) => {
       const sessions = await getApiClient().listSessions(localDay())
       const session = sessions[0]
       if (session === undefined) {
-        set({
-          todayLoad: 'empty',
-          session: null,
-          students: [],
-          records: {},
-          scanned: {},
-          scannedFor: null
-        })
+        set({ todayLoad: 'empty', session: null, students: [], records: {} })
         return
       }
       await showSession(session)
@@ -286,8 +264,6 @@ export const usePanelStore = create<PanelState>((set, get) => {
     session: null,
     students: [],
     records: {},
-    scanned: {},
-    scannedFor: null,
     checkInCode: null,
     busy: false,
     todayError: null,
@@ -319,8 +295,6 @@ export const usePanelStore = create<PanelState>((set, get) => {
         session: null,
         students: [],
         records: {},
-        scanned: {},
-        scannedFor: null,
         checkInCode: null,
         todayError: null,
         canSimulateArrival: false,
@@ -403,10 +377,7 @@ export const usePanelStore = create<PanelState>((set, get) => {
       try {
         const record = await demo.simulateNextArrival(session.id)
         if (record !== null) {
-          set((state) => ({
-            records: { ...state.records, [record.studentId]: record },
-            ...scansWith(state, session.id, [record])
-          }))
+          set((state) => ({ records: { ...state.records, [record.studentId]: record } }))
         }
       } catch (error) {
         await showFailure(error, session.id)
@@ -428,7 +399,7 @@ export const usePanelStore = create<PanelState>((set, get) => {
       if (record.status === status) {
         return
       }
-      if (status === 'absent' && state.scanned[studentId] === true) {
+      if (status === 'absent' && checkedInByStudent(record)) {
         return
       }
       set({
@@ -477,7 +448,6 @@ export const usePanelStore = create<PanelState>((set, get) => {
         })
         set((state) => ({
           records: { ...state.records, [record.studentId]: record },
-          ...scansWith(state, session.id, [record]),
           pendingCorrection: null
         }))
       } catch (error) {

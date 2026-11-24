@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import { checkedInByStudent } from '../api/attendanceRules'
 import { getDemoControls } from '../api/client'
 import { isEditablePhase } from './apiValues'
 import { clockTime } from '../api/isoTime'
@@ -312,7 +313,6 @@ function TodayClass(): React.JSX.Element {
   const session = usePanelStore((state) => state.session)
   const students = usePanelStore((state) => state.students)
   const records = usePanelStore((state) => state.records)
-  const scanned = usePanelStore((state) => state.scanned)
   const checkInCode = usePanelStore((state) => state.checkInCode)
   const busy = usePanelStore((state) => state.busy)
   const canSimulateArrival = usePanelStore((state) => state.canSimulateArrival)
@@ -331,7 +331,8 @@ function TodayClass(): React.JSX.Element {
       ...student,
       mark: todayMark({ session, records }, student.studentId),
       time: todayArrival({ records }, student.studentId),
-      checkedIn: scanned[student.studentId] === true
+      checkedIn:
+        records[student.studentId] !== undefined && checkedInByStudent(records[student.studentId])
     }))
     .sort((a, b) => compareByName(a.name, b.name))
   const present = roster.filter((row) => row.mark === 'presente').length

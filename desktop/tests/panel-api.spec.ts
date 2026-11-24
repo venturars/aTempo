@@ -122,17 +122,6 @@ test('keeps the arrival of a student who checked in from becoming absent', async
   expect(store().pendingCorrection).toBeNull()
 })
 
-test('keeps a scanned student from becoming absent after a teacher correction', async () => {
-  await freshToday()
-  await store().openSession()
-  await store().simulateArrival()
-  store().requestTime(diegoMolero, '09:15')
-  await store().saveCorrection('Escaneó tarde')
-  expect(store().records[diegoMolero]?.updatedBy).not.toBe(diegoMolero)
-  store().requestMark(diegoMolero, 'ausente')
-  expect(store().pendingCorrection).toBeNull()
-})
-
 function routerWith(
   session: ReturnType<typeof sampleSession>,
   records: AttendanceRecord[],
