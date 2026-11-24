@@ -31,7 +31,11 @@ test('activates the invitation, signs out and signs back in with the new passwor
   await expect(page.getByText('La contraseña es obligatoria.')).toBeVisible()
 
   await page.getByLabel('Nombre').fill('Bruno')
-  await page.getByLabel('Documento de identidad').fill(' 12345678z ')
+  await page.getByLabel('Documento de identidad').fill('12/34')
+  await page.getByRole('button', { name: 'Entrar' }).click()
+  await expect(page.getByText('Escribe un DNI, NIE o pasaporte válido.')).toBeVisible()
+
+  await page.getByLabel('Documento de identidad').fill(' 12.345.678-z ')
   await page.getByLabel('Contraseña').fill('corta')
   await page.getByRole('button', { name: 'Entrar' }).click()
   await expect(page.getByText('La contraseña tiene que tener al menos 8 caracteres.')).toBeVisible()
