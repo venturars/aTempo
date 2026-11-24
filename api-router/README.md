@@ -17,11 +17,11 @@ Con `API_MOCK=true`, el router sirve con datos en memoria los ocho endpoints del
 - `PUT /sessions/:sessionId/attendances/:studentId`
 - `GET /courses/:courseId/students`
 
-Está en `src/mock-api/` y aplica las mismas reglas que el mock del escritorio: abrir solo una sesión programada y del día, cerrar pasa los pendientes a ausentes, cada corrección exige motivo. Hay una clase de AI Engineering cada día (09:00–18:00, `+01:00`, margen de 10 minutos) con 15 alumnos. El estado se pierde al reiniciar el servicio. No pide token ni implementa `POST /check-ins`.
+Está en `src/mock-api/` y aplica las mismas reglas que el mock del escritorio: abrir solo una sesión programada y del día, cerrar pasa los pendientes a ausentes, cada corrección exige motivo. Hay una clase de AI Engineering cada día (09:00–18:00, `+01:00`, margen de 10 minutos) con 15 alumnos. El estado se pierde al reiniciar el servicio. Cada endpoint pide `Authorization: Bearer` con un token no vacío y responde `401 UNAUTHENTICATED` sin él; no lo valida contra Auth0. No implementa `POST /check-ins`.
 
 Los errores siguen la sección «Errores» del contrato: `statusCode`, `error`, `code`, `message` y, en validación, `details`. Lo hacen `src/contract/` y el `exceptionFactory` del `ValidationPipe`, que valen también para los endpoints reales.
 
-Compose arranca el router con `API_MOCK=true`. Sin la variable, solo sirve `/health` y `/auth`. El mock desaparece cuando la SDK sirva estos endpoints.
+Compose arranca el router con `API_MOCK=true` y solo lo publica en `127.0.0.1`. Sin la variable, solo sirve `/health` y `/auth`. El mock desaparece cuando la SDK sirva estos endpoints.
 
 ## Arranque
 

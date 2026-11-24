@@ -7,8 +7,10 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common'
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger'
+import { BearerGuard } from './bearer.guard'
 import {
   AttendanceCorrectionDto,
   AttendanceRecordDto,
@@ -19,6 +21,8 @@ import {
 import { MockApiService } from './mock-api.service'
 
 @ApiTags('sessions (mock)')
+@ApiBearerAuth()
+@UseGuards(BearerGuard)
 @Controller('sessions')
 export class SessionsController {
   constructor(private readonly mockApi: MockApiService) {}
