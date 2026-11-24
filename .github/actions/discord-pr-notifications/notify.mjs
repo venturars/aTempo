@@ -82,10 +82,21 @@ export async function resolveReviewers(reviewers, relations, search, now = Date.
     const discordId = ids[index];
     return discordId && counts.get(discordId) === 1 ? [{ ...reviewer, discordId }] : [];
   });
-  if ([...counts.values()].some((count) => count > 1)) {
-    problems.push('multiple reviewers resolve to the same Discord user');
+  const duplicatedLogins = reviewers
+    .filter((reviewer, index) => ids[index] && counts.get(ids[index]) > 1)
+    .map(({ login }) => login);
+  if (duplicatedLogins.length > 0) {
+    problems.push(`${duplicatedLogins.join(', ')}: multiple reviewers resolve to the same Discord user`);
   }
   return { relations: updated, ids, resolvedReviewers, problems };
+}
+
+// Escribe una línea por revisor sin mención. Los motivos solo llevan login y texto fijo, nunca IDs ni tokens.
+export function logReviewerProblems(problems, log = console.log) {
+  for (const problem of problems) {
+    const oneLine = String(problem).replace(/[\u0000-\u001f\u007f]+/g, ' ').trim();
+    log(`Reviewer without Discord mention: ${oneLine}`);
+  }
 }
 
 function plainText(value, limit) {
@@ -163,6 +174,7 @@ export async function notifyReviewers(config) {
   const result = await resolveReviewers(reviewers, relations,
     (query) => searchDiscordMembers(guildId, query, botToken), Date.now(), confirmations,
     (id) => getDiscordMember(guildId, id, botToken), userMap);
+  logReviewerProblems(result.problems);
   writeRelations(relationsFile, result.relations, cacheKey);
   const requestedIds = reviewers.map((reviewer) => reviewer.id);
   const resolvedIds = result.resolvedReviewers.map((reviewer) => reviewer.id);
