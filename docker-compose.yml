@@ -43,7 +43,7 @@ services:
     working_dir: /work/api-router
     command: pnpm dev
     ports:
-      - "${ATEMPO_API_ROUTER_PORT:-3000}:3000"
+      - "127.0.0.1:${ATEMPO_API_ROUTER_PORT:-3000}:3000"
     environment:
       PORT: "3000"
       API_MOCK: "true"
