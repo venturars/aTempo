@@ -134,7 +134,7 @@ export function registerArrival(at: Date): CheckInResult {
   if (previous) {
     return {
       registered: false,
-      message: `Ya estás dentro desde las ${previous.arrival ?? '—'}. ¡Disfruta la clase!`
+      message: `Ya estás dentro desde las ${previous.arrival ?? '—'}. Disfruta la clase.`
     }
   }
 

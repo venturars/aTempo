@@ -40,7 +40,7 @@ export function AdminLayout(): React.JSX.Element {
             <ThemeToggle dark={theme === 'atempo-oscuro'} onToggle={onTheme} />
           </div>
           <div className="flex flex-col gap-3">
-            <h1 className="text-2xl font-semibold">Tu organización, preparada para clase</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">Tu organización, preparada para clase</h1>
             <p className="text-base-content/65">
               Invita a tu equipo, organiza los cursos y programa las próximas sesiones.
             </p>

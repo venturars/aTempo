@@ -85,9 +85,9 @@ export function DashboardScreen(): React.JSX.Element {
 
 const inClassPhrases = [
   (name: string) => `Disfruta tu clase, ${name}`,
-  (name: string) => `¡Ya estás dentro, ${name}!`,
+  (name: string) => `Ya estás dentro, ${name}`,
   (name: string) => `Aprovecha la clase, ${name}`,
-  (name: string) => `¡A por ello, ${name}!`
+  (name: string) => `A por ello, ${name}`
 ]
 
 // Ya está en clase: cada alumno ve una frase de ánimo, y cambia de un día a otro.

@@ -35,7 +35,7 @@ function RegisteredView(): React.JSX.Element {
       className={`page-enter flex min-h-screen flex-col items-center justify-center gap-3 p-6 text-center ${flowTopWithoutHeader}`}
     >
       <Tempito mood="happy" className="mb-1 w-44 sm:w-48" />
-      <h1 className="text-2xl font-semibold tracking-tight">¡Disfruta la clase!</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Disfruta la clase</h1>
       <p className="text-base text-base-content/60">
         Has entrado a las{' '}
         <span className="font-medium tabular-nums text-base-content">{arrival}</span>

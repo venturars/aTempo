@@ -29,7 +29,7 @@ export function RegisterScreen(): React.JSX.Element {
     // que ya celebra. Si no, la bienvenida sale en el inicio, salvo que ya haya otro aviso.
     const destination = destinationAfterSignIn()
     if (destination === '/student/dashboard' && useFlashStore.getState().message === null) {
-      showFlash('¡Te damos la bienvenida a aTempo!')
+      showFlash('Te damos la bienvenida a aTempo.')
     }
     void navigate({ to: destination })
   }

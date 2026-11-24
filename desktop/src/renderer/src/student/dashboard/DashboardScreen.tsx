@@ -45,7 +45,7 @@ export function DashboardScreen(): React.JSX.Element {
             <p className="mt-2 text-secondary">Bienvenido {student.name}</p>
           </div>
           <button className="btn btn-ghost btn-sm" type="button" onClick={logOut}>
-            Salir
+            Cerrar sesión
           </button>
         </div>
         <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">

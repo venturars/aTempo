@@ -1,6 +1,6 @@
 # aTempo
 
-aTempo registra la asistencia de los alumnos de una clase. Este repositorio tiene el prototipo de escritorio para profesor y alumno y la guía visual compartida.
+aTempo registra la asistencia de los alumnos de una clase. Este repositorio tiene la app de escritorio del profesor (`desktop/`), la web del alumno y la administración (`web/`) y la guía visual compartida.
 
 La visión, los perfiles y las decisiones de producto están en [principles.md](principles.md).
 
@@ -59,7 +59,7 @@ Las invitaciones activadas y los cambios de contraseña duran hasta que recargas
 
 ### Probar el QR y las correcciones
 
-Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alumnos y pasar lista. El QR y el código de 6 cifras de debajo cambian cada 30 segundos. El QR es un enlace al sitio del alumno, `http://localhost:5191/student/check-in?code=ATEMPO-CLASE-1109-<código>`. Ese sitio es `web/`, que está en otra rama (#122, #137 y PR #123). Desde el móvil, `localhost` es el propio móvil. Para escanear con el móvil en la misma wifi, arranca desde `desktop/` con la IP del ordenador:
+Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alumnos y pasar lista. El QR y el código de 6 cifras de debajo cambian cada 30 segundos. El QR es un enlace al sitio del alumno, `http://localhost:5191/student/check-in?code=ATEMPO-CLASE-1109-<código>`. Ese sitio es `web/`; abajo está cómo arrancarlo. Desde el móvil, `localhost` es el propio móvil. Para escanear con el móvil en la misma wifi, arranca desde `desktop/` con la IP del ordenador:
 
 ```sh
 VITE_STUDENT_SITE_URL=http://<ip-del-ordenador>:5191 pnpm dev
@@ -67,7 +67,7 @@ VITE_STUDENT_SITE_URL=http://<ip-del-ordenador>:5191 pnpm dev
 
 Con la lista cerrada, cambiar un estado pide un motivo. Al pasar el ratón por encima del estado se ve quién lo cambió, cuándo y por qué.
 
-En el escritorio del alumno, pulsa **Salir** en su inicio.
+En el escritorio del alumno, pulsa **Cerrar sesión** en su inicio.
 
 Como alumno, pulsa **Registrar asistencia**, **Escanear** y **Llegar a las 08:58**. Debe aparecer el estado **Presente** con la hora **08:58**. Pulsa **Volver** y **Resumen de asistencia** para comprobar la nueva entrada en el historial.
 
@@ -77,11 +77,25 @@ Las cuentas, las invitaciones activadas, la sesión, la asistencia y los cambios
 
 El lector del alumno ofrece lecturas simuladas y no usa cámara. Estos flujos no se conectan al backend ni a un servicio de autenticación.
 
+## Probar la web del alumno y la administración
+
+Con Node 24 y pnpm 10.33.0:
+
+```sh
+cd web
+pnpm install --frozen-lockfile
+pnpm dev
+```
+
+- Alumno: <http://localhost:5191/>. La cuenta de ejemplo y `/?reiniciar` están en [web/README.md](web/README.md).
+- Administración: <http://localhost:5191/admin>, botón **Abrir demo de administración**.
+
 ## Qué hay
 
 | Carpeta | Qué es |
 | --- | --- |
 | `desktop/` | Prototipo para profesor y alumno con Electron y React; las demos usan datos en memoria. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/student/dashboard` para el dashboard del alumno. |
+| `web/` | Web del alumno y demo de administración con Vite y React, en el puerto 5191. |
 | `api-router/` | API REST con NestJS entre los frontends y la SDK de lógica de negocio (pendiente). |
 | `api-postgresql/` | API REST con NestJS entre la SDK y PostgreSQL. |
 | `api-rustfs/` | API REST con Express entre la SDK y RustFS (persistencia de objetos). |
@@ -451,7 +465,9 @@ Las cuatro APIs pueden iniciarse juntas con `docker compose up api-router api-po
 
 ## Avisos opcionales de PR en Discord
 
-Los workflows `.github/workflows/discord-pr-confirmation-trigger.yml` (captura los comentarios de asociación) y `.github/workflows/discord-pr-publish.yml` (publica el aviso con `workflow_run`) activan los avisos desde `main`. Este último usa la acción local `.github/actions/discord-pr-notifications` y no ejecuta código de la PR. APM no instala estos workflows ni los incorpora a los pasos de los agentes.
+El workflow `Discord: publish notice` (`.github/workflows/discord-pr-publish.yml`) publica los avisos desde `main`. Se dispara cuando terminan en `success` `PR: check rules` (PR dirigidas a `staging`) o `Discord: capture confirmation` (comentarios de asociación), y usa la acción `.github/actions/discord-pr-notifications`. No ejecuta código de la PR. APM no instala estos workflows ni los incorpora a los pasos de los agentes.
+
+El publicador necesita el artefacto `discord-pr-number`, que contiene solo el número de la PR. `PR: check rules` (`.github/workflows/pr-check-rules.yml`) lo sube al final de su job, después de comprobar la PR; `Discord: capture confirmation` sube el suyo con `/discord-map`. Este repositorio no usa el `discord-pr-trigger.yml` del paquete `delivery-workflow`: su función la cumple `PR: check rules`. No lo copies a `.github/workflows/`, para que el artefacto tenga un solo origen en los eventos de PR.
 
 Al solicitar al menos dos revisores, el bot publica una línea separadora, el repositorio, el título de la PR, los revisores y el enlace. No incluye el cuerpo de la PR. Muestra los logins de GitHub aunque no encuentre sus cuentas de Discord, y menciona únicamente a quienes tengan una asociación verificada.
 
