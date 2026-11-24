@@ -108,7 +108,6 @@ async function expectLegend(window: Page): Promise<void> {
 }
 
 async function expectLoginFields(window: Page): Promise<void> {
-  await expect(window.getByText('Entra con tu correo.')).toBeVisible()
   await expect(window.getByLabel('Correo')).toBeVisible()
   await expect(window.getByLabel('Contraseña')).toBeVisible()
   await expect(window.getByRole('button', { name: 'Entrar' })).toBeVisible()
@@ -138,6 +137,27 @@ async function expectAbsentCopy(window: Page): Promise<void> {
   }
 }
 
+// Fondo y anillo de la casilla, fondo de la tarjeta y el token base-100, resueltos por el navegador.
+function fieldColors(field: Locator): Promise<string[]> {
+  return field.evaluate((input) => {
+    const token = (name: string): string => {
+      const probe = document.createElement('span')
+      probe.style.backgroundColor = `var(${name})`
+      document.body.append(probe)
+      const value = getComputedStyle(probe).backgroundColor
+      probe.remove()
+      return value
+    }
+    const card = input.closest('section')
+    return [
+      getComputedStyle(input).backgroundColor,
+      getComputedStyle(input).boxShadow,
+      card === null ? '' : getComputedStyle(card).backgroundColor,
+      token('--color-base-100')
+    ]
+  })
+}
+
 function readBodyStyle(window: Page): Promise<BodyStyle> {
   return window.locator('body').evaluate((body) => {
     const style = getComputedStyle(body)
@@ -157,16 +177,42 @@ test('shows the claim panel beside the form', async () => {
     await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-oscuro')
     await expect(window.getByText('aTempo')).toBeVisible()
     await expect(
-      window.getByRole('heading', { name: 'Tu trimestre, sesión a sesión' })
+      window.getByRole('heading', { level: 2, name: 'Trimestre de ejemplo' })
     ).toBeVisible()
     await expectSingleClaim(window)
     await expectTrimester(window)
     await expectLegend(window)
     await expectLoginFields(window)
+    // Sin aviso de invitación, la tarjeta empieza por «Correo».
+    await expect(window.getByText('Entra con tu correo.')).toHaveCount(0)
+    const firstInCard = await window
+      .locator('section')
+      .filter({ has: window.locator('form') })
+      .evaluate((card) => card.firstElementChild?.querySelector('label')?.textContent ?? '')
+    expect(firstInCard).toBe('Correo')
     await expectPanelLeftOfForm(window)
     await expectNoAlert(window)
     await expectAbsentCopy(window)
     await expect(window).toHaveScreenshot('login-empty.png', { animations: 'disabled' })
+  })
+})
+
+test('marks the login fields with the system ring over the base-100 card in both themes', async () => {
+  await withApp(async (window) => {
+    for (const theme of ['atempo-oscuro', 'atempo-claro']) {
+      await window.evaluate(
+        (value) => document.documentElement.setAttribute('data-theme', value),
+        theme
+      )
+      for (const label of ['Correo', 'Contraseña']) {
+        await expect
+          .poll(async () => {
+            const [field, ring, card, base100] = await fieldColors(window.getByLabel(label))
+            return field === base100 && card === base100 && ring.endsWith('1px inset')
+          }, `${theme} ${label}`)
+          .toBe(true)
+      }
+    }
   })
 })
 
@@ -219,8 +265,7 @@ test('opens the professor panel from the demo login and keeps attendance navigat
     await window.getByRole('button', { name: /Mar 10 nov/ }).click()
     await expect(window.getByRole('heading', { level: 1, name: 'Mar 10 nov 2026' })).toBeVisible()
     await window.getByRole('button', { name: 'Diego Torres' }).click()
-    await expect(window.getByRole('navigation', { name: 'Ruta' })).toBeVisible()
-    await expect(window.getByRole('button', { name: 'Mar 10 nov 2026' })).toBeVisible()
+    await expect(window.getByRole('button', { name: 'Volver a Mar 10 nov 2026' })).toBeVisible()
     await expect(window.getByRole('heading', { level: 1, name: 'Diego Torres' })).toBeVisible()
 
     await window.getByRole('button', { name: 'Ajustes' }).click()

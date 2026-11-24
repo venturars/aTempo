@@ -181,10 +181,7 @@ for (const width of [390, 1280]) {
   for (const theme of ['atempo-oscuro', 'atempo-claro']) {
     test(`admin forms and tables fit ${width}px in ${theme}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 })
-      await page.addInitScript(
-        (name) => localStorage.setItem('atempo-student-theme', name),
-        theme
-      )
+      await page.addInitScript((name) => localStorage.setItem('atempo-student-theme', name), theme)
       await enterAdmin(page)
       await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
       await page.screenshot({
@@ -710,10 +707,7 @@ for (const width of [390, 1280]) {
       page
     }, testInfo) => {
       await page.setViewportSize({ width, height: 900 })
-      await page.addInitScript(
-        (name) => localStorage.setItem('atempo-student-theme', name),
-        theme
-      )
+      await page.addInitScript((name) => localStorage.setItem('atempo-student-theme', name), theme)
       await openSeedCourse(page)
       await openWeeklyForm(page)
       await expect(page.locator('html')).toHaveAttribute('data-theme', theme)

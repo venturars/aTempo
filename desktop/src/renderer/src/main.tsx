@@ -2,8 +2,14 @@ import './styles/app.css'
 
 import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { createHashHistory, createRouter, RouterProvider } from '@tanstack/react-router'
+import {
+  createHashHistory,
+  createRouter,
+  RouterProvider,
+  useRouterState
+} from '@tanstack/react-router'
 import { routeTree } from './routeTree.gen'
+import { teacherDemoAccount } from './login/teacherDemoAccount'
 import { useSessionStore } from './session/sessionStore'
 
 const router = createRouter({ routeTree, history: createHashHistory(), caseSensitive: true })
@@ -14,16 +20,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+// Pantallas con su propio «Cerrar sesión».
+const ownLogout = ['/teacher/panel', '/student/dashboard']
+
 export function AuthSessionBootstrap(): React.JSX.Element {
-  const profile = useSessionStore((state) => state.profile)
   const [authConfigured, setAuthConfigured] = useState(false)
+  const profile = useSessionStore((state) => state.profile)
+  const pathname = useRouterState({ router, select: (state) => state.location.pathname })
 
   useEffect(() => {
     void window.api.auth
       .isConfigured()
       .then(async (isConfigured) => {
+        setAuthConfigured(isConfigured)
         if (!isConfigured) return
-        setAuthConfigured(true)
         const user = await window.api.auth.me()
         // A pending restore must not clear a session created by a newer login.
         if (useSessionStore.getState().profile !== null) return
@@ -43,9 +53,15 @@ export function AuthSessionBootstrap(): React.JSX.Element {
           await router.navigate({ to: '/' })
           return
         }
-        useSessionStore.getState().startSession(profile, normalizedEmail)
+        if (profile === 'teacher') {
+          useSessionStore.getState().startTeacherSession(normalizedEmail, teacherDemoAccount.name)
+        } else {
+          useSessionStore.getState().startSession(profile, normalizedEmail)
+        }
         if (router.state.location.pathname === '/') {
-          await router.navigate({ to: profile === 'teacher' ? '/teacher/panel' : '/student/dashboard' })
+          await router.navigate({
+            to: profile === 'teacher' ? '/teacher/panel' : '/student/dashboard'
+          })
         }
       })
       .catch(() => {
@@ -56,25 +72,16 @@ export function AuthSessionBootstrap(): React.JSX.Element {
       })
   }, [])
 
-  async function logout(): Promise<void> {
-    try {
-      await window.api.auth.logout()
-    } catch {
-      // Clear the local UI session even if IPC cleanup fails.
-    }
-    useSessionStore.getState().clearSession()
-    await router.navigate({ to: '/' })
+  function logOut(): void {
+    useSessionStore.getState().endSession()
+    void router.navigate({ to: '/', replace: true })
   }
 
   return (
     <>
       <RouterProvider router={router} />
-      {authConfigured && profile !== null ? (
-        <button
-          className="btn btn-ghost fixed right-4 top-4 z-50"
-          type="button"
-          onClick={() => void logout()}
-        >
+      {authConfigured && profile !== null && !ownLogout.includes(pathname) ? (
+        <button className="btn btn-ghost fixed right-4 top-4 z-50" type="button" onClick={logOut}>
           Cerrar sesión
         </button>
       ) : null}

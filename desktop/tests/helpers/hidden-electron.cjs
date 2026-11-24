@@ -5,6 +5,8 @@ const fs = require('node:fs')
 const { app, BrowserWindow } = electron
 const audit = { attempts: [], violations: [], windows: 0 }
 globalThis.__hiddenElectronAudit = audit
+// Las capturas no dependen de si macOS muestra las barras de desplazamiento (ratón o trackpad).
+app.commandLine.appendSwitch('hide-scrollbars')
 function record(event, detail) {
   fs.appendFileSync(
     process.env.ATEMPO_NATIVE_AUDIT,
