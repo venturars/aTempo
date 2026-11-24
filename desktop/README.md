@@ -4,9 +4,9 @@ An Electron application with React and TypeScript
 
 ## Login con Auth0
 
-Con `ATEMPO_API_ROUTER_URL=http://localhost:3000` en el entorno del proceso Electron, el formulario llama al router mediante el proceso principal de Electron. El Access Token se cifra con `safeStorage` y solo permanece en memoria del proceso principal hasta salir o cerrar la aplicación. El renderer no recibe el token. Para otros hosts, la URL del router debe usar HTTPS; HTTP solo se admite en loopback para desarrollo. En Linux se rechaza el backend `basic_text` de `safeStorage`. Si la variable no está configurada, el login mantiene las cuentas de ejemplo para la demo y Playwright.
+Con `ATEMPO_API_ROUTER_URL=http://localhost:3000` en el entorno del proceso Electron, el login y el registro llaman al router mediante el proceso principal de Electron. El Access Token y el Refresh Token se cifran con `safeStorage` y solo permanecen en memoria del proceso principal hasta salir o cerrar la aplicación. El renderer no recibe los tokens. Para otros hosts, la URL del router debe usar HTTPS; HTTP solo se admite en loopback para desarrollo. En Linux se rechaza el backend `basic_text` de `safeStorage`. Si la variable no está configurada, el login y el registro mantienen las cuentas de ejemplo para la demo y Playwright.
 
-El proceso principal envía `Authorization: Bearer <accessToken>` a `GET /auth/me`; un `401` descarta la sesión. «Cerrar sesión» limpia el token y vuelve al login. Las cuentas de prueba con los correos `profesor@atempo.test` y `ada.lopez@clase.test` abren sus paneles de demo. Sus contraseñas reales se configuran en Auth0 y no se guardan en el repositorio. El panel web usará cookies en una fase posterior.
+El proceso principal envía `Authorization: Bearer <accessToken>` a `GET /auth/me`; un `401` intenta `POST /auth/refresh` y reintenta `/auth/me` una vez. «Cerrar sesión» llama a `POST /auth/logout`, limpia los tokens y vuelve al login. Las cuentas de prueba con los correos `profesor@atempo.test` y `ada.lopez@clase.test` abren sus paneles de demo. Sus contraseñas reales se configuran en Auth0 y no se guardan en el repositorio. El panel web usará cookies en una fase posterior.
 
 ## Recommended IDE Setup
 

@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import { statusBadgeClass, statusLabel } from '../attendanceStatus'
 import { StudentLayout } from '../StudentLayout'
 import { useCurrentStudent } from '../studentAccounts'
@@ -23,16 +24,42 @@ function attendancePercent(history: ClassEntry[]): string {
   return `${Math.round((attended / history.length) * 100)} %`
 }
 
-export function HistoryScreen(): React.JSX.Element {
+export type HistoryFixture = 'carga' | 'vacio' | 'error'
+
+export function HistoryScreen({ fixture }: { fixture?: HistoryFixture }): React.JSX.Element {
+  return (
+    <StudentLayout>
+      <h1 className="text-2xl font-semibold tracking-tight">Tu asistencia</h1>
+      {fixture === 'carga' ? (
+        <p className="panel-card rounded-box flex items-center gap-3 p-5" role="status">
+          <span className="loading loading-spinner motion-reduce:animate-none" aria-hidden="true" />
+          Cargando tu asistencia…
+        </p>
+      ) : fixture === 'error' ? (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="alert alert-soft alert-error min-w-0 flex-1" role="alert">
+            No hemos podido cargar tu asistencia.
+          </p>
+          <Link className="btn btn-ghost" to="/student/history" search={{}}>
+            Reintentar
+          </Link>
+        </div>
+      ) : (
+        <HistoryContent empty={fixture === 'vacio'} />
+      )}
+    </StudentLayout>
+  )
+}
+
+function HistoryContent({ empty }: { empty: boolean }): React.JSX.Element {
   const student = useCurrentStudent()
-  const history = student.history
-  const notices = readNoticesFor(student.email)
+  const history = empty ? [] : student.history
+  const notices = empty ? [] : readNoticesFor(student.email)
   const late = history.filter((entry) => entry.status === 'tarde').length
   const absent = history.filter((entry) => entry.status === 'ausente').length
 
   return (
-    <StudentLayout>
-      <h1 className="text-2xl font-semibold tracking-tight">Tu asistencia</h1>
+    <>
       <section className="panel-card rounded-box" aria-label="Totales">
         <dl className="grid grid-cols-3 divide-x">
           <Stat label="Asistencia" value={attendancePercent(history)} />
@@ -82,7 +109,7 @@ export function HistoryScreen(): React.JSX.Element {
           </table>
         </TableCard>
       ) : null}
-    </StudentLayout>
+    </>
   )
 }
 

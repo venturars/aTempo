@@ -232,6 +232,19 @@ api-router/
       health.module.ts
       health.controller.ts
       health-response.dto.ts
+    auth/
+      auth.module.ts
+      auth.controller.ts
+      auth.service.ts
+      login-request.dto.ts
+      login-response.dto.ts
+      register-request.dto.ts
+      register-response.dto.ts
+      logout-request.dto.ts
+      logout-response.dto.ts
+      refresh-request.dto.ts
+      refresh-response.dto.ts
+      me-response.dto.ts
     mock-api/
       mock-api.module.ts
       sessions.controller.ts # /sessions del contrato API v1
@@ -243,6 +256,7 @@ api-router/
     health.e2e-spec.ts
     mock-api.e2e-spec.ts
     swagger.e2e-spec.ts
+    auth.e2e-spec.ts
     jest-e2e.json
 ```
 

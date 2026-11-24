@@ -104,11 +104,10 @@ Al parar Anvil se pierde el libro. La próxima sesión la cadena vuelve vacía.
 
 ## Contrato en local
 
-Anvil tiene que estar en `localhost:8545` (chain id 31337), que es lo que usa `hardhat.config.cjs`. Desde esta carpeta:
+Solo el deploy usa la red `anvil`: Anvil tiene que estar en `localhost:8545` (chain id 31337), que es lo que usa `hardhat.config.cjs`. Los tests no lo necesitan: están en [Pruebas](#pruebas). Desde esta carpeta:
 
 ```sh
 pnpm install
-pnpm test
 ```
 
 Copia [`.env.example`](.env.example) a `.env` y pon el UUID del curso y el token. El script de deploy lee ese fichero. Si `COURSE_ID` o `ACCESS_TOKEN` ya están en el entorno, ganan ellas.
