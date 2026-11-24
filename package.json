@@ -1,0 +1,7 @@
+{
+  "name": "atempo",
+  "private": true,
+  "scripts": {
+    "atempo": "node scripts/start-atempo.mjs"
+  }
+}

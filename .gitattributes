@@ -1,0 +1,3 @@
+# Mantiene en LF los scripts que ejecuta Bash dentro de Linux.
+*.sh text eol=lf
+.githooks/* text eol=lf

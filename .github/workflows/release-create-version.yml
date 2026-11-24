@@ -1,4 +1,4 @@
-name: Crear versión y release
+name: "Release: create version"
 
 # Cuándo se ejecuta: cada vez que se actualiza la rama main.
 # La IA de Groq decide si el cambio es major, minor o patch y escribe el resumen.
@@ -14,7 +14,7 @@ permissions:
 
 # Si se actualiza main dos veces seguidas, las ejecuciones van en fila, no a la vez
 concurrency:
-  group: crear-tag-version
+  group: release-create-version
   cancel-in-progress: false
 
 env:

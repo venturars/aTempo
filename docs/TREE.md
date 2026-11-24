@@ -1,3 +1,101 @@
+# Árbol de `web/`
+
+```text
+web/
+  package.json           # Vite, React y TanStack Router; pnpm 10.33.0
+  pnpm-lock.yaml
+  README.md              # entrada y recorrido admin; acceso del alumno
+  src/
+    admin/
+      adminStore.ts      # CRUD mock de organización, personas, cursos y sesiones
+      AdminLayout.tsx    # entrada demo, navegación, tema y salida
+      AdminHome.tsx
+      PeopleScreen.tsx
+      CoursesScreen.tsx
+      CourseDetails.tsx  # detalle reutilizado para gestión y Mis clases
+      SessionDetails.tsx # listado pendiente del curso
+      PersonForm.tsx     # creación y edición de personas
+      CourseForm.tsx     # creación y edición de cursos
+      SessionForm.tsx    # creación y edición de sesiones
+      DeleteConfirmation.tsx # confirmación compartida de borrado
+      adminUi.tsx
+    shared/
+      ThemeToggle.tsx    # control existente compartido con StudentLayout
+    routes/
+      admin.tsx
+      admin/
+        index.tsx
+        people.tsx
+        courses/index.tsx
+        courses/$courseId.tsx
+        sessions/$sessionId.tsx
+        my-classes/index.tsx
+        my-classes/$courseId.tsx
+        my-classes/$courseId.index.tsx
+        my-classes/$courseId.$sessionId.tsx
+      student/           # pantallas del portal del alumno
+    student/             # vistas, datos y layout del alumno
+    session/             # sesión del alumno y preferencias de tema
+    styles/app.css       # importa el sistema visual de Storybook
+    routeTree.gen.ts     # generado por Vite, no se edita a mano
+```
+
+Las pruebas focales de admin están en `desktop/tests/admin-store.spec.ts` y `desktop/tests/admin-web.spec.ts`, con `desktop/playwright.admin.config.ts`.
+
+# Árbol de almacenes
+
+Cada almacén se instala y arranca en el ordenador. Compose orquesta los mismos procesos. No forman parte de `desktop/` ni de `api-router/`.
+
+```text
+postgres/
+  README.md
+  .env.example
+  package.json
+  pnpm-lock.yaml
+  tsconfig.json
+  drizzle.config.ts
+  init/01_schema.sql
+  init/02_unique_lower.sql
+  test/run.sh
+  test/valid.sql
+sqlite/
+  README.md
+  schema.sql
+  test/run.sh
+  test/valid.sql
+rustfs/
+  README.md
+  .env.example
+  .gitignore
+  create-bucket.sh
+  package.json
+  pnpm-lock.yaml
+  scripts/run-start.mjs
+  scripts/start.sh
+  scripts/start.ps1
+  scripts/create-bucket.mjs
+  test/run.sh
+blockend/
+  README.md
+  .env.example
+  package.json
+  hardhat.config.cjs
+  contracts/CourseAttendance.sol
+  abi/CourseAttendance.json
+  sourcify/
+  scripts/load-env.cjs
+  scripts/publish-abi.cjs
+  scripts/serve-abi.cjs
+  scripts/deploy.cjs
+  test/CourseAttendance.cjs
+  test/publish-abi.cjs
+docs/POSTGRES.md
+docs/SQLITE.md
+docs/RUSTFS.md
+docs/BLOCKEND.md
+permanent-data.md
+```
+
 # Árbol de `sdk/` (pendiente)
 
 ```text
@@ -39,13 +137,45 @@ api-postgresql/
     app.module.ts
     postgres/
       postgres.module.ts
-      postgres.service.ts  # Pool de pg; SELECT 1 con DATABASE_URL
+      postgres.service.ts  # pg con DATABASE_URL; mock si no hay URL
+      postgres-mock.ts     # filas de prueba para los listados
     health/
       health.module.ts
       health.controller.ts
       health-response.dto.ts
+    person/
+      person.module.ts
+      person.controller.ts     # GET /person y GET /person/:id
+      person.service.ts
+      person-response.dto.ts
+    course/
+      course.module.ts
+      course.controller.ts
+      course.service.ts
+      course-response.dto.ts
+    person-role/
+      person-role.module.ts
+      person-role.controller.ts
+      person-role.service.ts
+      person-role-response.dto.ts
+    person-course/
+      person-course.module.ts
+      person-course.controller.ts  # GET, POST /person-course y DELETE /person-course/:personId/:courseId
+      person-course.service.ts
+      person-course-response.dto.ts
+      create-person-course.dto.ts
+    organization/
+      organization.module.ts
+      organization.controller.ts
+      organization.service.ts
+      organization-response.dto.ts
   test/
     health.e2e-spec.ts
+    course.e2e-spec.ts
+    person.e2e-spec.ts
+    person-role.e2e-spec.ts
+    person-course.e2e-spec.ts
+    organization.e2e-spec.ts
     swagger.e2e-spec.ts
     jest-e2e.json
 ```
@@ -99,9 +229,23 @@ api-router/
       health.module.ts
       health.controller.ts
       health-response.dto.ts
+    auth/
+      auth.module.ts
+      auth.controller.ts
+      auth.service.ts
+      login-request.dto.ts
+      login-response.dto.ts
+      register-request.dto.ts
+      register-response.dto.ts
+      logout-request.dto.ts
+      logout-response.dto.ts
+      refresh-request.dto.ts
+      refresh-response.dto.ts
+      me-response.dto.ts
   test/
     health.e2e-spec.ts
     swagger.e2e-spec.ts
+    auth.e2e-spec.ts
     jest-e2e.json
 ```
 

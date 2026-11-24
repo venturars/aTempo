@@ -14,7 +14,17 @@ describe('Swagger (e2e)', () => {
       imports: [AppModule],
     })
       .overrideProvider(PostgresService)
-      .useValue({ check: async () => undefined })
+      .useValue({
+        check: async () => undefined,
+        listPersons: async () => [],
+        listCourses: async () => [],
+        listOrganizations: async () => [],
+        listPersonRoles: async () => [],
+        listPersonCourses: async () => [],
+        deletePersonCourse: async () => null,
+        findPersonById: async () => null,
+        usesMock: () => true,
+      })
       .compile()
 
     app = moduleFixture.createNestApplication()
@@ -33,11 +43,64 @@ describe('Swagger (e2e)', () => {
       .expect('content-type', /html/)
   })
 
-  it('GET /docs-json exposes OpenAPI with /health', async () => {
+  it('GET /docs-json exposes OpenAPI with /health, /course, /person-role, /person and /organization', async () => {
     const response = await request(app.getHttpServer())
       .get('/docs-json')
       .expect(200)
 
     expect(response.body.paths).toHaveProperty('/health')
+    expect(response.body.paths).toHaveProperty('/person')
+    expect(response.body.paths).toHaveProperty('/course')
+    expect(response.body.paths).toHaveProperty('/person/{id}')
+    expect(response.body.paths).toHaveProperty('/person-role')
+    expect(response.body.paths).toHaveProperty('/person-course')
+    expect(response.body.paths).toHaveProperty('/organization')
+  })
+
+  it('GET /docs-json exposes GET /person-course with its tag', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/docs-json')
+      .expect(200)
+
+    expect(response.body.paths['/person-course']).toHaveProperty('get')
+    expect(response.body.paths['/person-course'].get.tags).toContain(
+      'person-course',
+    )
+  })
+
+  it('GET /docs-json documents GET /organization and its array response', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/docs-json')
+      .expect(200)
+
+    const organizationRoute = response.body.paths['/organization'].get
+
+    expect(organizationRoute.tags).toContain('organization')
+    expect(organizationRoute.responses['200'].content['application/json'].schema).toEqual({
+      type: 'array',
+      items: { $ref: '#/components/schemas/OrganizationResponseDto' },
+    })
+  })
+
+  it('GET /docs-json exposes POST /person-course with its tag', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/docs-json')
+      .expect(200)
+
+    expect(response.body.paths['/person-course']).toHaveProperty('post')
+    expect(response.body.paths['/person-course'].post.tags).toContain(
+      'person-course',
+    )
+  })
+
+  it('GET /docs-json exposes DELETE /person-course/{personId}/{courseId}', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/docs-json')
+      .expect(200)
+
+    const route = response.body.paths['/person-course/{personId}/{courseId}']
+
+    expect(route).toHaveProperty('delete')
+    expect(route.delete.tags).toContain('person-course')
   })
 })

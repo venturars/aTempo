@@ -37,6 +37,18 @@ export const Gallery: Story = {
           </div>
         </div>
       </Section>
+      <Section title="Panel">
+        <div className="panel-card w-80 rounded-box p-5">
+          <h3 className="text-lg font-medium">Historial</h3>
+          <p className="text-sm text-base-content/60">La línea y la sombra del panel del profesor.</p>
+        </div>
+      </Section>
+      <Section title="Entrada de pantalla">
+        <div className="page-enter panel-card w-80 rounded-box p-5">
+          <h3 className="text-lg font-medium">Resumen</h3>
+          <p className="text-sm text-base-content/60">Sube un poco y aparece al abrir la pantalla.</p>
+        </div>
+      </Section>
     </Frame>
   )
 }
