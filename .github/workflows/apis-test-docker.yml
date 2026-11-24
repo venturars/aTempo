@@ -53,6 +53,9 @@ jobs:
             docker compose run --rm "$service" pnpm build
           done
 
+      - name: Check blockend
+        run: docker compose run --rm blockend pnpm test
+
       - name: Check SQLite API
         run: docker compose run --rm api-sqlite /work/api-sqlite/.venv/bin/python -m unittest discover -s tests -v
 

@@ -6,4 +6,7 @@ export class LoginResponseDto {
 
   @ApiPropertyOptional({ description: 'Duración del token en segundos' })
   expiresIn?: number
+
+  @ApiPropertyOptional({ description: 'Refresh Token emitido por Auth0' })
+  refreshToken?: string
 }
