@@ -7,9 +7,9 @@ export type ActivationForm = {
 
 export type ActivationErrors = Record<keyof ActivationForm, string>
 
-// El documento se guarda sin espacios y en mayúsculas: 12345678z y 12345678Z son el mismo.
+// El documento se guarda sin espacios, puntos ni guiones y en mayúsculas: 12.345.678-z y 12345678Z son el mismo.
 export function normalizeDocument(value: string): string {
-  return value.replace(/\s+/g, '').toUpperCase()
+  return value.replace(/[\s.-]/g, '').toUpperCase()
 }
 
 export function validateActivation(form: ActivationForm): ActivationErrors {
@@ -19,7 +19,9 @@ export function validateActivation(form: ActivationForm): ActivationErrors {
     identificationDocument:
       normalizeDocument(form.identificationDocument) === ''
         ? 'El documento de identidad es obligatorio.'
-        : '',
+        : !/^[A-Z0-9]{5,20}$/.test(normalizeDocument(form.identificationDocument))
+          ? 'Escribe un DNI, NIE o pasaporte válido.'
+          : '',
     password:
       form.password === ''
         ? 'La contraseña es obligatoria.'

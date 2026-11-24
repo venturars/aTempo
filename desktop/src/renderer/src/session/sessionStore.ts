@@ -28,6 +28,13 @@ export function dashboardPathForProfile(profile: Profile): DashboardPath {
   return dashboardPaths[profile]
 }
 
+let pendingLogout: Promise<unknown> = Promise.resolve()
+
+// Un login de Auth0 espera a que termine el logout anterior: si no, ese logout borraría el token nuevo.
+export function afterPendingLogout(): Promise<unknown> {
+  return pendingLogout
+}
+
 export const useSessionStore = create<SessionState>((set) => ({
   profile: null,
   email: null,
@@ -43,7 +50,8 @@ export const useSessionStore = create<SessionState>((set) => ({
   },
   endSession: () => {
     // En modo demo no hay token y el puente no hace nada; si falla, la sesión de la pantalla se cierra igual.
-    void globalThis.window?.api?.auth.logout().catch(() => undefined)
+    pendingLogout =
+      globalThis.window?.api?.auth.logout().catch(() => undefined) ?? Promise.resolve()
     set({ profile: null, email: null, name: null })
   },
   clearSession: () => {

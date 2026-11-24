@@ -37,6 +37,8 @@ test.describe('correction logic', () => {
     const before = Date.now()
     expect(state().correctTodayMark(index, 'retraso', '  Llegó a las 09:20.  ', teacher)).toBe(true)
     expect(state().marks[index]).toBe('retraso')
+    // No pasó por el lector: no se inventa una hora de entrada.
+    expect(rollTime('retraso', index, state().times)).toBe('—')
     expect(state().changes).toHaveLength(1)
     expect(state().changes[0]).toMatchObject({
       sessionId: 'Mié 11 nov',
