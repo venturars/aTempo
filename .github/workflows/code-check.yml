@@ -3,7 +3,7 @@
 # typecheck y build-storybook, si el paquete tiene el script.
 # Además, si cambia desktop/ o web/ (o algo compartido), corren los tests de administración
 # de desktop en un navegador sin cabeza (Playwright, sin abrir Electron).
-# La única comprobación obligatoria es «Code: check / ci»: falla si algún paquete o esos tests fallan.
+# La comprobación que resume el resultado es «Code: check / ci»: falla si algún paquete o esos tests fallan.
 name: "Code: check"
 
 on:
@@ -144,7 +144,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-  # La comprobación obligatoria. Pasa si no había paquetes que comprobar.
+  # El resumen del resultado: falla si algún job falló o se canceló. Pasa si no había paquetes que comprobar.
   ci:
     needs: [select-packages, check, admin-tests]
     if: always()
