@@ -13,13 +13,28 @@ const contractRoutes: Record<RouterRequest['method'], RegExp[]> = {
   PUT: [RegExp(`^/sessions/${segment}/attendances/${segment}$`)]
 }
 
+function decodedSegment(segment: string): string | null {
+  try {
+    return decodeURIComponent(segment)
+  } catch {
+    return null
+  }
+}
+
+function keepsItsPath(path: string): boolean {
+  const url = URL.parse(path, 'http://router.invalid')
+  if (url === null || `${url.pathname}${url.search}` !== path) return false
+  return url.pathname.split('/').every((segment) => {
+    const decoded = decodedSegment(segment)
+    return decoded !== null && decoded !== '.' && decoded !== '..' && !/[/\\]/.test(decoded)
+  })
+}
+
 export function isContractRequest(request: unknown): request is RouterRequest {
   if (typeof request !== 'object' || request === null) return false
   const { method, path } = request as Partial<RouterRequest>
   if (method !== 'GET' && method !== 'POST' && method !== 'PUT') return false
-  if (typeof path !== 'string') return false
-  if (/%2e|%2f|%5c|\\/i.test(path.split('?')[0])) return false
-  if (path.split(/[/?]/).some((part) => part === '.' || part === '..')) return false
+  if (typeof path !== 'string' || !keepsItsPath(path)) return false
   return contractRoutes[method].some((route) => route.test(path))
 }
 
