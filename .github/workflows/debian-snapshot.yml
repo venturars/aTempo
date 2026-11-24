@@ -1,12 +1,10 @@
 name: Snapshot Debian
 
-# Cuándo se ejecuta: el día 1 de cada mes, o a mano desde Actions
 on:
   schedule:
     - cron: "0 7 1 * *"
   workflow_dispatch:
 
-# Permiso para leer el Dockerfile y abrir la issue
 permissions:
   contents: read
   issues: write
@@ -15,13 +13,11 @@ jobs:
   comprobar-snapshot:
     runs-on: ubuntu-latest
     steps:
-      # El snapshot se sube en staging; main lo recibe más tarde
       - uses: actions/checkout@v4
         with:
           ref: staging
           persist-credentials: false
 
-      # Abre una issue chore si DEBIAN_SNAPSHOT tiene más de 30 días y no hay otra abierta
       - name: Comprobar la fecha del snapshot
         env:
           GH_TOKEN: ${{ github.token }}
