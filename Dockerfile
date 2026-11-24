@@ -10,7 +10,7 @@ ARG APM_VERSION=0.35.0
 # Checksums de apm-linux-*.tar.gz en la release de APM. Cambian con APM_VERSION.
 ARG APM_SHA256_ARM64=ada8901ce1b29e5d188629eeed64e8499853a8cb5f047630ebedbde24008508e
 ARG APM_SHA256_X86_64=5aa23ce61eebae9411668f507772cdb5d87252c760078dc59b5acdc5188d785b
-# Snapshot de Python para que el runtime Linux del venv sea reproducible.
+# Snapshot Debian de Python (base) y de las librerías de desktop-gui. Cambia la fecha y todas las versiones fijadas juntas.
 ARG DEBIAN_SNAPSHOT=20261116T000000Z
 # Lo pone Docker al construir: arm64 en Apple Silicon, amd64 en la mayoría de PCs.
 ARG TARGETARCH
@@ -19,14 +19,19 @@ RUN npm install --global "pnpm@${PNPM_VERSION}"
 
 # Python de Debian solo prepara el venv; las dependencias de la API van dentro de su volumen.
 USER root
-# apt comprueba la caducidad de los Release; Check-Valid-Until: no la desactiva solo en las fuentes de Debian (docs/ARCHITECTURE.md).
-RUN sed -i '/^Types: deb$/a Check-Valid-Until: no' /etc/apt/sources.list.d/debian.sources \
-  && test "$(grep -c '^Check-Valid-Until: no$' /etc/apt/sources.list.d/debian.sources)" -eq 2
-RUN apt-get update --snapshot "$DEBIAN_SNAPSHOT" \
-  && apt-get install -y --no-install-recommends --snapshot "$DEBIAN_SNAPSHOT" \
+# apt-snapshot-install instala desde el snapshot. apt comprueba la caducidad de los Release;
+# el script la desactiva solo en su apt-get update (docs/ARCHITECTURE.md).
+RUN printf '%s\n' \
+    '#!/bin/sh' \
+    'set -eu' \
+    'apt-get -o Acquire::Check-Valid-Until=false update --snapshot "$DEBIAN_SNAPSHOT"' \
+    'apt-get install -y --no-install-recommends --snapshot "$DEBIAN_SNAPSHOT" "$@"' \
+    'rm -rf /var/lib/apt/lists/*' \
+    > /usr/local/bin/apt-snapshot-install \
+  && chmod 755 /usr/local/bin/apt-snapshot-install \
+  && apt-snapshot-install \
     python3.13=3.13.5-2+deb13u5 \
     python3.13-venv=3.13.5-2+deb13u5 \
-  && rm -rf /var/lib/apt/lists/* \
   && ln -s /usr/bin/python3.13 /usr/local/bin/python3
 
 # APM usa su Python integrado; Python del sistema ejecuta el servicio Flask.
@@ -66,13 +71,11 @@ WORKDIR /work
 # Con estas cuatro, apt instala el resto como dependencias (atk, cups, drm, las de X11…).
 FROM base AS desktop-gui
 
-# Los paquetes salen del snapshot compartido con la etapa base; cambia fecha y versiones juntos.
+# Los paquetes salen del snapshot de la etapa base.
 
 USER root
-RUN apt-get update --snapshot "$DEBIAN_SNAPSHOT" \
-  && apt-get install -y --no-install-recommends --snapshot "$DEBIAN_SNAPSHOT" \
+RUN apt-snapshot-install \
     libgtk-3-0t64=3.24.49-3 \
     libnss3=2:3.110-1+deb13u5 \
     libasound2t64=1.2.14-1+deb13u1 \
-    libgbm1=25.0.7-2+deb13u1 \
-  && rm -rf /var/lib/apt/lists/*
+    libgbm1=25.0.7-2+deb13u1
