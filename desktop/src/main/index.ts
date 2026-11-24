@@ -3,7 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { closeDatabase, openDatabase } from './database'
-import { isContractRequest, sendRouterRequest } from './routerRequest'
+import { isContractRequest, sendWithRefresh } from './routerRequest'
 import type { RouterResponse } from '../preload/router'
 
 type LoginCredentials = { email: string; password: string }
@@ -15,6 +15,7 @@ let authenticatedEmail: string | null = null
 
 const apiRouterUrl = process.env.ATEMPO_API_ROUTER_URL?.replace(/\/$/, '') ?? ''
 const requestTimeout = 10_000
+const routerBudget = 9_500
 
 function clearAuthSession(): void {
   encryptedAccessToken = null
@@ -87,7 +88,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 
-async function refreshAccessToken(): Promise<string | null> {
+async function refreshAccessToken(timeout = requestTimeout): Promise<string | null> {
   const refreshToken = readRefreshToken()
   if (refreshToken === null) return null
 
@@ -97,7 +98,7 @@ async function refreshAccessToken(): Promise<string | null> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken }),
-      signal: AbortSignal.timeout(requestTimeout)
+      signal: AbortSignal.timeout(timeout)
     })
   } catch {
     return null
@@ -296,14 +297,12 @@ function registerRouterHandlers(): void {
     } catch {
       return { kind: 'no-response', reason: 'network' }
     }
-    const response = await sendRouterRequest(
-      routerUrl,
-      readAccessToken(),
-      request,
-      requestTimeout
-    )
-    if (response.kind === 'response' && response.status === 401) clearAuthSession()
-    return response
+    return sendWithRefresh(routerUrl, request, {
+      accessToken: readAccessToken(),
+      budget: routerBudget,
+      refresh: refreshAccessToken,
+      signOut: clearAuthSession
+    })
   })
 }
 

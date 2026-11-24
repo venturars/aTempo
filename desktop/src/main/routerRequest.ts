@@ -18,6 +18,7 @@ export function isContractRequest(request: unknown): request is RouterRequest {
   const { method, path } = request as Partial<RouterRequest>
   if (method !== 'GET' && method !== 'POST' && method !== 'PUT') return false
   if (typeof path !== 'string') return false
+  if (/%2e|%2f|%5c|\\/i.test(path.split('?')[0])) return false
   if (path.split(/[/?]/).some((part) => part === '.' || part === '..')) return false
   return contractRoutes[method].some((route) => route.test(path))
 }
@@ -47,4 +48,30 @@ export async function sendRouterRequest(
 
   const body: unknown = await response.json().catch(() => null)
   return { kind: 'response', status: response.status, statusText: response.statusText, body }
+}
+
+type RefreshOptions = {
+  accessToken: string | null
+  budget: number
+  refresh: (timeout: number) => Promise<string | null>
+  signOut: () => void
+}
+
+export async function sendWithRefresh(
+  baseUrl: string,
+  request: RouterRequest,
+  { accessToken, budget, refresh, signOut }: RefreshOptions
+): Promise<RouterResponse> {
+  const deadline = Date.now() + budget
+  const remaining = (): number => Math.max(0, deadline - Date.now())
+  const response = await sendRouterRequest(baseUrl, accessToken, request, remaining())
+  if (response.kind !== 'response' || response.status !== 401) return response
+  const nextAccessToken = accessToken === null ? null : await refresh(remaining())
+  if (nextAccessToken === null) {
+    signOut()
+    return response
+  }
+  const retried = await sendRouterRequest(baseUrl, nextAccessToken, request, remaining())
+  if (retried.kind === 'response' && retried.status === 401) signOut()
+  return retried
 }

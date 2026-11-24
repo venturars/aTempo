@@ -2,7 +2,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import type { AddressInfo } from 'node:net'
 import { expect, test } from '@playwright/test'
 import { launchHiddenElectron } from './helpers/electron'
-import { isContractRequest, sendRouterRequest } from '../src/main/routerRequest'
+import { isContractRequest, sendRouterRequest, sendWithRefresh } from '../src/main/routerRequest'
 import { createHttpTransport, type SendToRouter } from '../src/renderer/src/api/httpTransport'
 import { localDay } from '../src/renderer/src/api/isoTime'
 import { sampleSession, sampleStudents } from '../src/renderer/src/api/fixtures'
@@ -94,6 +94,9 @@ test('main only forwards the contract routes', () => {
   expect(isContractRequest({ method: 'POST', path: '/sessions/s1/attendances' })).toBe(false)
   expect(isContractRequest({ method: 'GET', path: '/sessions/../auth/me' })).toBe(false)
   expect(isContractRequest({ method: 'GET', path: '/sessions/..' })).toBe(false)
+  expect(isContractRequest({ method: 'GET', path: '/sessions/%2e%2e/attendances' })).toBe(false)
+  expect(isContractRequest({ method: 'GET', path: '/sessions/%2E%2e' })).toBe(false)
+  expect(isContractRequest({ method: 'GET', path: '/sessions/a%2Fb' })).toBe(false)
   expect(isContractRequest('GET /sessions')).toBe(false)
 })
 
@@ -206,5 +209,79 @@ test('runs the Today tab through main with --api-transport=http', async () => {
     await stub.close()
     if (originalUrl === undefined) delete process.env.ATEMPO_API_ROUTER_URL
     else process.env.ATEMPO_API_ROUTER_URL = originalUrl
+  }
+})
+
+test('refreshes the token once after a 401 and retries the request', async () => {
+  const stub = await startStub((request) =>
+    request.authorization === 'Bearer fresh'
+      ? { status: 200, body: [] }
+      : { status: 401, body: { code: 'UNAUTHENTICATED' } }
+  )
+  let signedOut = 0
+  try {
+    const response = await sendWithRefresh(
+      stub.url,
+      { method: 'GET', path: '/sessions?date=2026-11-24' },
+      {
+        accessToken: 'stale',
+        budget: 5_000,
+        refresh: async () => 'fresh',
+        signOut: () => {
+          signedOut++
+        }
+      }
+    )
+    expect(response).toMatchObject({ kind: 'response', status: 200 })
+    expect(stub.requests.map((request) => request.authorization)).toEqual([
+      'Bearer stale',
+      'Bearer fresh'
+    ])
+    expect(signedOut).toBe(0)
+  } finally {
+    await stub.close()
+  }
+})
+
+test('signs out when the refresh fails or the retry is still rejected', async () => {
+  const stub = await startStub(() => ({ status: 401, body: { code: 'UNAUTHENTICATED' } }))
+  let signedOut = 0
+  const signOut = (): void => {
+    signedOut++
+  }
+  const request = { method: 'GET' as const, path: '/sessions?date=2026-11-24' }
+  try {
+    const failedRefresh = await sendWithRefresh(stub.url, request, {
+      accessToken: 'stale',
+      budget: 5_000,
+      refresh: async () => null,
+      signOut
+    })
+    expect(failedRefresh).toMatchObject({ status: 401 })
+    const rejectedRetry = await sendWithRefresh(stub.url, request, {
+      accessToken: 'stale',
+      budget: 5_000,
+      refresh: async () => 'fresh',
+      signOut
+    })
+    expect(rejectedRetry).toMatchObject({ status: 401 })
+    expect(signedOut).toBe(2)
+    expect(stub.requests).toHaveLength(3)
+  } finally {
+    await stub.close()
+  }
+})
+
+test('keeps the whole exchange inside the budget', async () => {
+  const stub = await startStub(() => ({ status: 200, body: [], delay: 500 }))
+  try {
+    const response = await sendWithRefresh(
+      stub.url,
+      { method: 'GET', path: '/sessions?date=2026-11-24' },
+      { accessToken: null, budget: 100, refresh: async () => null, signOut: () => {} }
+    )
+    expect(response).toEqual({ kind: 'no-response', reason: 'timeout' })
+  } finally {
+    await stub.close()
   }
 })
