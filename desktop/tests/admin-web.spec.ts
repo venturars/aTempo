@@ -705,7 +705,7 @@ for (const width of [390, 1280]) {
   for (const theme of ['atempo-oscuro', 'atempo-claro']) {
     test(`weekly form fits ${width}px in ${theme} with keyboard selection and cancellation`, async ({
       page
-    }) => {
+    }, testInfo) => {
       await page.setViewportSize({ width, height: 900 })
       await page.addInitScript((name) => localStorage.setItem('atempo-student-theme', name), theme)
       await openSeedCourse(page)
@@ -735,7 +735,7 @@ for (const width of [390, 1280]) {
         )
       })
       await page.screenshot({
-        path: `/private/tmp/atempo-recurrence-qa/weekly-${theme}-${width}.png`,
+        path: testInfo.outputPath(`weekly-${theme}-${width}.png`),
         fullPage: true,
         animations: 'disabled'
       })

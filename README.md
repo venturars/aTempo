@@ -340,7 +340,7 @@ pnpm run test:visual --workers=1 --retries=0 --global-timeout=300000 --update-sn
 
 La suite del sistema visual sirve `docs/storybook/storybook-static` en `http://127.0.0.1:6006` y lo cierra al terminar, aunque falle. Necesita las dependencias de `docs/storybook/` instaladas en tu ordenador (`pnpm install` en esa carpeta), no solo en Docker, y el puerto 6006 libre: si tienes Storybook en Docker, páralo antes con `docker compose stop storybook`.
 
-Cada pull request a `staging` pasa lint, typecheck y el build de Storybook en GitHub Actions ([ci.yml](.github/workflows/ci.yml)), en cada paquete que cambia. Un paquete es cualquier carpeta con un `pnpm-lock.yaml`, así que uno nuevo entra solo. Si una comprobación falla, «CI / ci» queda en rojo.
+Cada pull request a `staging` pasa lint, typecheck y el build de Storybook en GitHub Actions ([code-check.yml](.github/workflows/code-check.yml)), en cada paquete que cambia. Un paquete es cualquier carpeta con un `pnpm-lock.yaml`, así que uno nuevo entra solo. Si cambia `desktop/`, `web/` o algo compartido (`.github/`, `Dockerfile`, `docker-compose.yml`), el job `admin-tests` instala Chromium y ejecuta los tests de administración de desktop con Playwright, sin abrir Electron (`playwright.admin.config.ts`, un solo worker, sin reintentos ni snapshots nuevos). Si no cambia ninguno, el job se salta y «Code: check / ci» pasa igual. Si una comprobación o esos tests fallan, «Code: check / ci» queda en rojo.
 
 ### Ventana de Electron desde Docker (experimental)
 
@@ -445,13 +445,13 @@ Desde la raíz, inicia Express y RustFS:
 docker compose up api-rustfs
 ```
 
-La API queda en <http://localhost:3003>; RustFS está disponible en los puertos S3 `9000` y consola `9001` desde el ordenador, y la API se conecta a `rustfs:9000` dentro de Compose. El volumen compartido `rustfs-data` conserva los objetos. `/health` sigue comprobando solo que responde la API HTTP; la conexión S3 se verifica por separado en el workflow `.github/workflows/docker-apis.yml`. Swagger está en `/docs/`. Las pruebas se ejecutan en Docker con `docker compose run --rm api-rustfs pnpm test`; typecheck, lint y build usan el mismo patrón. Más detalle en [api-rustfs/README.md](api-rustfs/README.md).
+La API queda en <http://localhost:3003>; RustFS está disponible en los puertos S3 `9000` y consola `9001` desde el ordenador, y la API se conecta a `rustfs:9000` dentro de Compose. El volumen compartido `rustfs-data` conserva los objetos. `/health` sigue comprobando solo que responde la API HTTP; la conexión S3 se verifica por separado en el workflow `.github/workflows/apis-test-docker.yml`. Swagger está en `/docs/`. Las pruebas se ejecutan en Docker con `docker compose run --rm api-rustfs pnpm test`; typecheck, lint y build usan el mismo patrón. Más detalle en [api-rustfs/README.md](api-rustfs/README.md).
 
-Las cuatro APIs pueden iniciarse juntas con `docker compose up api-router api-postgresql api-sqlite api-rustfs`; Compose inicia PostgreSQL y RustFS como dependencias. El workflow `.github/workflows/docker-apis.yml` valida setup, pruebas, HTTP y persistencia en un runner Ubuntu al abrir o actualizar una pull request hacia `staging`, sin secretos y con permisos de solo lectura.
+Las cuatro APIs pueden iniciarse juntas con `docker compose up api-router api-postgresql api-sqlite api-rustfs`; Compose inicia PostgreSQL y RustFS como dependencias. El workflow `.github/workflows/apis-test-docker.yml` valida setup, pruebas, HTTP y persistencia en un runner Ubuntu al abrir o actualizar una pull request hacia `staging`, sin secretos y con permisos de solo lectura. También ejecuta el paso «Check blockend» (`docker compose run --rm blockend pnpm test`), entre «Check Node APIs» y «Check SQLite API». Esos tests usan la red interna de Hardhat, así que el workflow no arranca Anvil.
 
 ## Avisos opcionales de PR en Discord
 
-El workflow `.github/workflows/discord-pr-notifications.yml` activa los avisos desde `main` para las PR dirigidas a `staging` y los comentarios de asociación. Usa la acción compartida fijada a un commit y no ejecuta código de la PR. APM no instala este workflow ni lo incorpora a los pasos de los agentes.
+El workflow `.github/workflows/discord-notify-pull-request.yml` activa los avisos desde `main` para las PR dirigidas a `staging` y los comentarios de asociación. Usa la acción compartida fijada a un commit y no ejecuta código de la PR. APM no instala este workflow ni lo incorpora a los pasos de los agentes.
 
 Al solicitar al menos dos revisores, el bot publica una línea separadora, el repositorio, el título de la PR, los revisores y el enlace. No incluye el cuerpo de la PR. Muestra los logins de GitHub aunque no encuentre sus cuentas de Discord, y menciona únicamente a quienes tengan una asociación verificada.
 
