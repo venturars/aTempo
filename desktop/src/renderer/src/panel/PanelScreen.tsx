@@ -499,12 +499,18 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
       <section className="card w-full overflow-hidden bg-base-100 shadow-sm">
         <table className="table table-spread">
           <thead>
+            {/* Las tres cifras cuentan alumnos: «3 tarde» son tres alumnos, no el profesor. */}
             <tr>
-              <th>Fecha</th>
-              <th>Asistencia</th>
-              <th>Presentes</th>
-              <th>Tarde</th>
-              <th>Ausentes</th>
+              <th rowSpan={2}>Fecha</th>
+              <th rowSpan={2}>Asistencia</th>
+              <th colSpan={3} scope="colgroup">
+                Alumnos
+              </th>
+            </tr>
+            <tr>
+              <th scope="col">Presentes</th>
+              <th scope="col">Tarde</th>
+              <th scope="col">Ausentes</th>
             </tr>
           </thead>
           <tbody>
@@ -850,7 +856,8 @@ function SessionDate({
   const [weekday, ...rest] = label.split(' ')
   return (
     <>
-      <span className="text-base-content/60">{weekday}</span>{' '}
+      {/* Ancho fijo: «Lun», «Mar» y «Mié» miden distinto y la fecha empezaría en otro sitio. */}
+      <span className="inline-block w-7 text-base-content/60">{weekday}</span>{' '}
       <span className={strong ? 'font-medium' : undefined}>{rest.join(' ')}</span>
     </>
   )

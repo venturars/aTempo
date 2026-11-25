@@ -145,6 +145,15 @@
 :where(.teacher-panel) .table :where(tr > :last-child) {
   width: auto;
 }
+/* En una cabecera de dos filas, la de arriba solo agrupa columnas: más baja que una fila de datos.
+   Los títulos van abajo, para que los que ocupan las dos filas queden a la altura de los demás. */
+:where(.teacher-panel) .table thead:has(tr + tr) :where(th) {
+  vertical-align: bottom;
+}
+:where(.teacher-panel) .table thead tr:not(:last-child) :where(th:not([rowspan])) {
+  height: auto;
+  padding-bottom: 6px;
+}
 /* Las columnas repartidas ocupan el ancho a partes iguales. */
 .table.table-spread {
   table-layout: fixed;

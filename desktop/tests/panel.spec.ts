@@ -184,6 +184,36 @@ test('shows the cancelled session in Sesiones without opening the roll call', as
   })
 })
 
+test('groups the Sesiones counts under Alumnos and lines up the dates', async () => {
+  await withPanel(async (window) => {
+    await window.getByRole('button', { name: 'Sesiones' }).click()
+    await expect(window.getByRole('heading', { level: 1, name: 'Sesiones' })).toBeVisible()
+
+    const group = window.getByRole('columnheader', { name: 'Alumnos', exact: true })
+    await expect(group).toHaveAttribute('colspan', '3')
+    await expect(group).toHaveAttribute('scope', 'colgroup')
+    const groupBox = await group.boundingBox()
+    for (const name of ['Presentes', 'Tarde', 'Ausentes']) {
+      const column = await window.getByRole('columnheader', { name, exact: true }).boundingBox()
+      expect(groupBox).not.toBeNull()
+      expect(column).not.toBeNull()
+      if (groupBox && column) {
+        expect(column.y).toBeGreaterThanOrEqual(groupBox.y + groupBox.height - 1)
+        expect(column.x).toBeGreaterThanOrEqual(groupBox.x - 1)
+        expect(column.x + column.width).toBeLessThanOrEqual(groupBox.x + groupBox.width + 1)
+      }
+    }
+
+    // El día del mes empieza en el mismo sitio, sea cual sea el día de la semana.
+    const days = window.locator('tbody tr td:first-child button > span:nth-child(2)')
+    await expect(days).toHaveCount(7)
+    const starts = await days.evaluateAll((spans) =>
+      spans.map((span) => Math.round(span.getBoundingClientRect().left))
+    )
+    expect(new Set(starts).size).toBe(1)
+  })
+})
+
 test('shows the cancelled session in the grid and leaves it out of the share and the awards', async () => {
   await withPanel(async (window) => {
     await window.getByRole('button', { name: 'Estadísticas' }).click()
