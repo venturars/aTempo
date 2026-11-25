@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import type { RouterRequest, RouterResponse } from './router'
 
 const api = {
   auth: {
@@ -10,6 +11,10 @@ const api = {
       ipcRenderer.invoke('auth:register', credentials),
     me: () => ipcRenderer.invoke('auth:me'),
     logout: (): Promise<void> => ipcRenderer.invoke('auth:logout')
+  },
+  router: {
+    request: (request: RouterRequest): Promise<RouterResponse> =>
+      ipcRenderer.invoke('api:request', request)
   }
 }
 
