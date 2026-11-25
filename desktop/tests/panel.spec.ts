@@ -211,6 +211,19 @@ test('groups the Sesiones counts under Alumnos and lines up the dates', async ()
       spans.map((span) => Math.round(span.getBoundingClientRect().left))
     )
     expect(new Set(starts).size).toBe(1)
+    // También caben los días que no salen en los datos de ejemplo.
+    const overflowing = await days.first().evaluate((day) => {
+      const weekday = day.previousElementSibling as HTMLElement
+      const probe = weekday.cloneNode() as HTMLElement
+      weekday.parentElement?.append(probe)
+      const wide = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].filter((name) => {
+        probe.textContent = name
+        return probe.scrollWidth > probe.clientWidth
+      })
+      probe.remove()
+      return wide
+    })
+    expect(overflowing).toEqual([])
   })
 })
 
