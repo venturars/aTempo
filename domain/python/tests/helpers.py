@@ -41,6 +41,9 @@ def open_memory_db() -> None:
     raw = get_engine().raw_connection()
     raw.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
     raw.commit()
+    # Devuelve la conexión al pool: si no, reset_pool() no la cierra y Windows
+    # no puede borrar el fichero temporal.
+    raw.close()
 
 
 def close_memory_db() -> None:
@@ -56,6 +59,9 @@ def open_file_db() -> str:
     raw = get_engine().raw_connection()
     raw.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
     raw.commit()
+    # Devuelve la conexión al pool: si no, reset_pool() no la cierra y Windows
+    # no puede borrar el fichero temporal.
+    raw.close()
     return path
 
 

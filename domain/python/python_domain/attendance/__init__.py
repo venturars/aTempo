@@ -17,10 +17,10 @@ from python_domain.attendance.remove_attendance import (
     RemoveAttendanceOutput,
     remove_attendance,
 )
-from python_domain.attendance.insert_attendance import (
-    InsertAttendanceInput,
-    InsertAttendanceOutput,
-    insert_attendance,
+from python_domain.attendance.update_attendance import (
+    UpdateAttendanceInput,
+    UpdateAttendanceOutput,
+    update_attendance,
 )
 
 __all__ = [
@@ -31,11 +31,11 @@ __all__ = [
     "RetrieveAllAttendancesOutput",
     "RemoveAttendanceInput",
     "RemoveAttendanceOutput",
-    "InsertAttendanceInput",
-    "InsertAttendanceOutput",
+    "UpdateAttendanceInput",
+    "UpdateAttendanceOutput",
     "add_attendance",
     "retrieve_all_attendances",
     "retrieve_all_attendances_by_session",
     "remove_attendance",
-    "insert_attendance",
+    "update_attendance",
 ]

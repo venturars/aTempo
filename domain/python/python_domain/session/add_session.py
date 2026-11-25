@@ -9,6 +9,7 @@ from python_domain.types.session import (
     assert_session,
     assert_session_create,
 )
+from python_domain.types.assert_values import read_input_field
 
 
 class AddSessionInput(TypedDict):
@@ -20,7 +21,7 @@ class AddSessionOutput(TypedDict):
 
 
 def add_session(input: AddSessionInput) -> AddSessionOutput:
-    body = assert_session_create(input["session"])
+    body = assert_session_create(read_input_field(input, "session", "session"))
     row = add_session_row({"id": str(uuid4()), **body})
     if row is None:
         raise PersistenceError("session no se ha creado", entity="session")

@@ -24,10 +24,10 @@ from python_domain.session.retrieve_all_sessions_by_professor import (
     RetrieveAllSessionsByProfessorOutput,
     retrieve_all_sessions_by_professor,
 )
-from python_domain.session.insert_session import (
-    InsertSessionInput,
-    InsertSessionOutput,
-    insert_session,
+from python_domain.session.update_session import (
+    UpdateSessionInput,
+    UpdateSessionOutput,
+    update_session,
 )
 
 __all__ = [
@@ -42,13 +42,13 @@ __all__ = [
     "RetrieveAllSessionsByProfessorInput",
     "RetrieveAllSessionsByProfessorOutput",
     "RetrieveAllSessionsOutput",
-    "InsertSessionInput",
-    "InsertSessionOutput",
+    "UpdateSessionInput",
+    "UpdateSessionOutput",
     "add_session",
     "remove_session",
     "retrieve_session_by_id",
     "retrieve_all_sessions",
     "retrieve_all_sessions_by_course",
     "retrieve_all_sessions_by_professor",
-    "insert_session",
+    "update_session",
 ]

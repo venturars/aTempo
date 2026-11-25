@@ -45,7 +45,7 @@ def add_attendance(
     return result.rows[0]  # type: ignore[return-value]
 
 
-def insert_attendance_row(
+def update_attendance_row(
     attendance: Attendance,
     run: SqliteQuery = query,
 ) -> Attendance | None:

@@ -1,6 +1,7 @@
 import unittest
 
 from python_domain.errors import ValidationError
+from python_domain.types import UUID_RE
 from python_domain.types.attendance import assert_attendance
 from python_domain.types.session import assert_session, assert_session_create
 
@@ -166,6 +167,26 @@ class TypeTests(unittest.TestCase):
     def test_rejects_session_id_that_is_not_uuid(self) -> None:
         with self.assertRaisesRegex(ValidationError, "session.id debe ser un uuid"):
             assert_session({**valid_session_input, "id": "no-es-uuid"})
+
+    def test_rejects_uuid_with_trailing_newline(self) -> None:
+        student_id = valid_attendance["student_id"] + "\n"
+        with self.assertRaisesRegex(
+            ValidationError, "attendance.student_id debe ser un uuid"
+        ):
+            assert_attendance({**valid_attendance, "student_id": student_id})
+
+    def test_exported_uuid_pattern_matches_only_the_whole_text(self) -> None:
+        uuid = valid_attendance["student_id"]
+        self.assertIsNotNone(UUID_RE.match(uuid))
+        self.assertIsNone(UUID_RE.match(uuid + "\n"))
+        self.assertIsNone(UUID_RE.match(uuid + "XYZ"))
+
+    def test_rejects_instant_with_trailing_newline(self) -> None:
+        start_at = valid_session_input["start_at"] + "\n"
+        with self.assertRaisesRegex(
+            ValidationError, "session.start_at debe ser una fecha con zona horaria"
+        ):
+            assert_session_create({**valid_session_input, "start_at": start_at})
 
     def test_accepts_attendance(self) -> None:
         assert_attendance(valid_attendance)

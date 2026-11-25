@@ -1,7 +1,7 @@
 from typing import TypedDict
 
 from python_domain.sqlite.executors.session import find_session_by_id
-from python_domain.types.assert_values import assert_uuid
+from python_domain.types.assert_values import read_input_uuid
 from python_domain.types.session import Session, assert_session
 
 
@@ -14,7 +14,7 @@ class RetrieveSessionByIdOutput(TypedDict):
 
 
 def retrieve_session_by_id(input: RetrieveSessionByIdInput) -> RetrieveSessionByIdOutput:
-    session_id = assert_uuid(input["id"], "session.id")
+    session_id = read_input_uuid(input, "id", "session.id")
     row = find_session_by_id(session_id)
     if row is None:
         return {"session": None}

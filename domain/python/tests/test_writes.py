@@ -3,13 +3,13 @@ import unittest
 from python_domain.attendance.add_attendance import add_attendance
 from python_domain.attendance.retrieve_all_attendances import retrieve_all_attendances
 from python_domain.attendance.remove_attendance import remove_attendance
-from python_domain.attendance.insert_attendance import insert_attendance
+from python_domain.attendance.update_attendance import update_attendance
 from python_domain.errors import ValidationError
 from python_domain.session.add_session import add_session
 from python_domain.session.remove_session import remove_session
 from python_domain.session.retrieve_session_by_id import retrieve_session_by_id
 from python_domain.session.retrieve_all_sessions import retrieve_all_sessions
-from python_domain.session.insert_session import insert_session
+from python_domain.session.update_session import update_session
 
 from helpers import (
     OTHER_ID,
@@ -63,7 +63,7 @@ class WriteTests(unittest.TestCase):
     def test_creates_and_updates_a_session(self) -> None:
         created = add_session({"session": valid_session_input})["session"]
         self.assertEqual(created["status"], "open")
-        updated = insert_session({
+        updated = update_session({
             "session": {
                 **created,
                 "status": "closed",
@@ -76,7 +76,7 @@ class WriteTests(unittest.TestCase):
         self.assertEqual(updated["closed_at"], "2026-01-01T12:05:00.000Z")
 
     def test_update_returns_none_when_missing(self) -> None:
-        missing = insert_session({
+        missing = update_session({
             "session": {
                 **valid_session_input,
                 "id": OTHER_ID,
@@ -86,9 +86,9 @@ class WriteTests(unittest.TestCase):
         })["session"]
         self.assertIsNone(missing)
 
-    def test_insert_attendance_returns_none_when_missing(self) -> None:
+    def test_update_attendance_returns_none_when_missing(self) -> None:
         session = add_session({"session": valid_session_input})["session"]
-        missing = insert_attendance({
+        missing = update_attendance({
             "attendance": {
                 **valid_attendance,
                 "session_id": session["id"],
@@ -99,7 +99,7 @@ class WriteTests(unittest.TestCase):
 
     def test_updates_when_ids_differ_only_by_case(self) -> None:
         created = add_session({"session": valid_session_input})["session"]
-        updated = insert_session({
+        updated = update_session({
             "session": {
                 **created,
                 "id": created["id"].upper(),
@@ -115,7 +115,7 @@ class WriteTests(unittest.TestCase):
                 "session_id": created["id"],
             },
         })["attendance"]
-        attendance = insert_attendance({
+        attendance = update_attendance({
             "attendance": {
                 **row,
                 "session_id": created["id"].upper(),
@@ -137,7 +137,7 @@ class WriteTests(unittest.TestCase):
             },
         })["attendance"]
         self.assertEqual(created["status"], "present")
-        updated = insert_attendance({
+        updated = update_attendance({
             "attendance": {**created, "status": "present_late"},
         })["attendance"]
         self.assertIsNotNone(updated)

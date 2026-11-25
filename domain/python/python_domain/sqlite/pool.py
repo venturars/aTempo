@@ -1,10 +1,13 @@
 import contextvars
 import os
+import threading
 from collections.abc import Callable
+from contextlib import AbstractContextManager, nullcontext
 from typing import Protocol, TypeVar
 
 from sqlalchemy import create_engine, event, text
-from sqlalchemy.engine import Engine, Result
+from sqlalchemy.engine import URL, Engine, Result, make_url
+from sqlalchemy.exc import ArgumentError
 from sqlalchemy.pool import StaticPool
 
 from python_domain.errors import ConfigurationError
@@ -29,8 +32,26 @@ class SqliteQuery(Protocol):
     ) -> QueryResult:
         ...
 
-_engine: Engine | None = None
+class _Database:
+    """El engine abierto y el lock con el que se usa su conexión.
+
+    En memoria todos los hilos comparten una sola conexión: el lock (un RLock)
+    hace que la usen de uno en uno. Con un fichero cada hilo usa la suya y el
+    lock no hace nada (nullcontext).
+    """
+
+    def __init__(self, engine: Engine, lock: AbstractContextManager[object]) -> None:
+        self.engine = engine
+        self.lock = lock
+
+
+_database: _Database | None = None
+_database_lock = threading.Lock()
 _begin_immediate = contextvars.ContextVar("begin_immediate", default=False)
+# La conexión de la transacción abierta en este contexto, si la hay.
+_transaction_run: contextvars.ContextVar["SqliteQuery | None"] = (
+    contextvars.ContextVar("transaction_run", default=None)
+)
 
 
 def _configure_connection(dbapi_connection: object, _connection_record: object) -> None:
@@ -46,11 +67,51 @@ def _on_begin(connection: object) -> None:
     connection.exec_driver_sql(sql)  # type: ignore[attr-defined]
 
 
-def get_engine() -> Engine:
-    global _engine
-    if _engine is not None:
-        return _engine
+def read_sqlite_url(url: str) -> URL:
+    """Una URL que no se puede leer o que no es de SQLite es un fallo de config."""
+    try:
+        parsed = make_url(url)
+    except ArgumentError as error:
+        raise ConfigurationError(
+            "SQLITE_DATABASE_URL no es una URL válida",
+            entity="sqlite",
+            field="SQLITE_DATABASE_URL",
+        ) from error
+    if parsed.get_backend_name() != "sqlite":
+        raise ConfigurationError(
+            "SQLITE_DATABASE_URL tiene que ser una URL de SQLite",
+            entity="sqlite",
+            field="SQLITE_DATABASE_URL",
+        )
+    return parsed
 
+
+def is_memory_url(url: URL) -> bool:
+    database = url.database or ""
+    if database in ("", ":memory:"):
+        return True
+    # URI de SQLite, por ejemplo sqlite:///file:datos?mode=memory&uri=true
+    return url.query.get("mode") == "memory" or database.startswith("file::memory:")
+
+
+def get_engine() -> Engine:
+    return _get_database().engine
+
+
+def _get_database() -> _Database:
+    database = _database
+    if database is not None:
+        return database
+    # Dos hilos en el primer uso no deben abrir dos bases.
+    with _database_lock:
+        if _database is None:
+            _open_database()
+        assert _database is not None
+        return _database
+
+
+def _open_database() -> None:
+    global _database
     url = os.environ.get("SQLITE_DATABASE_URL")
     if not url:
         raise ConfigurationError(
@@ -58,20 +119,23 @@ def get_engine() -> Engine:
             entity="sqlite",
             field="SQLITE_DATABASE_URL",
         )
+    parsed = read_sqlite_url(url)
 
-    if url in {"sqlite://", "sqlite:///:memory:"}:
+    lock: AbstractContextManager[object]
+    if is_memory_url(parsed):
         engine = create_engine(
-            "sqlite://",
+            parsed,
             connect_args={"check_same_thread": False},
             poolclass=StaticPool,
         )
+        lock = threading.RLock()
     else:
-        engine = create_engine(url)
+        engine = create_engine(parsed)
+        lock = nullcontext()
 
     event.listen(engine, "connect", _configure_connection)
     event.listen(engine, "begin", _on_begin)
-    _engine = engine
-    return engine
+    _database = _Database(engine, lock)
 
 
 def _rowcount(result: Result[object], fallback: int) -> int:
@@ -90,7 +154,14 @@ def _from_result(result: Result[object]) -> QueryResult:
 
 def query(sql: str, params: SqliteParams | None = None) -> QueryResult:
     try:
-        with get_engine().begin() as connection:
+        transaction_run = _transaction_run.get()
+        if transaction_run is not None:
+            # Dentro de with_transaction se usa su conexión: abrir otra
+            # transacción fallaría ("cannot start a transaction within a
+            # transaction").
+            return transaction_run(sql, params)
+        database = _get_database()
+        with database.lock, database.engine.begin() as connection:
             result = connection.execute(text(sql), params or {})
             return _from_result(result)
     except Exception as error:
@@ -98,26 +169,40 @@ def query(sql: str, params: SqliteParams | None = None) -> QueryResult:
 
 
 def with_transaction(fn: Callable[[SqliteQuery], T]) -> T:
-    token = _begin_immediate.set(True)
+    open_run = _transaction_run.get()
+    if open_run is not None:
+        # Ya hay una transacción abierta en este contexto: se suma a ella.
+        return fn(open_run)
+
+    immediate_token = _begin_immediate.set(True)
     try:
-        with get_engine().begin() as connection:
+        database = _get_database()
+        with database.lock, database.engine.begin() as connection:
 
             def run(sql: str, params: SqliteParams | None = None) -> QueryResult:
                 result = connection.execute(text(sql), params or {})
                 return _from_result(result)
 
-            return fn(run)
+            run_token = _transaction_run.set(run)
+            try:
+                return fn(run)
+            finally:
+                _transaction_run.reset(run_token)
     except Exception as error:
         rethrow_sqlite(error)
     finally:
-        _begin_immediate.reset(token)
+        _begin_immediate.reset(immediate_token)
 
 
 def close_pool() -> None:
-    global _engine
-    if _engine is not None:
-        _engine.dispose()
-        _engine = None
+    global _database
+    with _database_lock:
+        database = _database
+        _database = None
+    if database is not None:
+        # En memoria, espera a que ningún hilo esté usando la conexión.
+        with database.lock:
+            database.engine.dispose()
 
 
 def reset_pool() -> None:

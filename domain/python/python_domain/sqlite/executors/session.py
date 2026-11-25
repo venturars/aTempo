@@ -50,7 +50,7 @@ def add_session(
     return result.rows[0]  # type: ignore[return-value]
 
 
-def insert_session_row(
+def update_session_row(
     session: Session,
     run: SqliteQuery = query,
 ) -> Session | None:

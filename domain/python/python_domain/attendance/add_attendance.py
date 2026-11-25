@@ -12,6 +12,7 @@ from python_domain.types.attendance import (
     assert_attendance,
     assert_checked_in_at_in_session,
 )
+from python_domain.types.assert_values import read_input_field
 
 
 class AddAttendanceInput(TypedDict):
@@ -23,7 +24,7 @@ class AddAttendanceOutput(TypedDict):
 
 
 def add_attendance(input: AddAttendanceInput) -> AddAttendanceOutput:
-    body = assert_attendance(input["attendance"])
+    body = assert_attendance(read_input_field(input, "attendance", "attendance"))
 
     def run(tx: SqliteQuery) -> Attendance:
         session = find_session_exists({"id": body["session_id"]}, tx)

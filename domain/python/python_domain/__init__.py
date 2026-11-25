@@ -19,10 +19,10 @@ from python_domain.attendance.remove_attendance import (
     RemoveAttendanceOutput,
     remove_attendance,
 )
-from python_domain.attendance.insert_attendance import (
-    InsertAttendanceInput,
-    InsertAttendanceOutput,
-    insert_attendance,
+from python_domain.attendance.update_attendance import (
+    UpdateAttendanceInput,
+    UpdateAttendanceOutput,
+    update_attendance,
 )
 from python_domain.errors import (
     ConflictError,
@@ -59,10 +59,10 @@ from python_domain.session.retrieve_all_sessions_by_professor import (
     RetrieveAllSessionsByProfessorOutput,
     retrieve_all_sessions_by_professor,
 )
-from python_domain.session.insert_session import (
-    InsertSessionInput,
-    InsertSessionOutput,
-    insert_session,
+from python_domain.session.update_session import (
+    UpdateSessionInput,
+    UpdateSessionOutput,
+    update_session,
 )
 from python_domain.sqlite.check import check
 from python_domain.sqlite.pool import close_pool, reset_pool
@@ -105,10 +105,10 @@ __all__ = [
     "Session",
     "SessionCreate",
     "SessionUpdate",
-    "InsertAttendanceInput",
-    "InsertAttendanceOutput",
-    "InsertSessionInput",
-    "InsertSessionOutput",
+    "UpdateAttendanceInput",
+    "UpdateAttendanceOutput",
+    "UpdateSessionInput",
+    "UpdateSessionOutput",
     "ValidationError",
     "add_attendance",
     "assert_attendance",
@@ -127,6 +127,6 @@ __all__ = [
     "retrieve_all_sessions_by_professor",
     "remove_attendance",
     "reset_pool",
-    "insert_attendance",
-    "insert_session",
+    "update_attendance",
+    "update_session",
 ]

@@ -5,7 +5,7 @@ from python_domain.sqlite.executors.session import (
     remove_session_attendances,
     remove_session_by_id,
 )
-from python_domain.types.assert_values import assert_uuid
+from python_domain.types.assert_values import read_input_uuid
 
 
 class RemoveSessionInput(TypedDict):
@@ -17,7 +17,7 @@ class RemoveSessionOutput(TypedDict):
 
 
 def remove_session(input: RemoveSessionInput) -> RemoveSessionOutput:
-    session_id = assert_uuid(input["id"], "session.id")
+    session_id = read_input_uuid(input, "id", "session.id")
 
     def run(tx: SqliteQuery) -> bool:
         remove_session_attendances(session_id, tx)

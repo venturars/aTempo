@@ -2,17 +2,25 @@ import os
 import threading
 import time
 import unittest
+from types import MappingProxyType
 
 from sqlalchemy import event
+from sqlalchemy.exc import StatementError
 
 from python_domain.attendance.add_attendance import add_attendance
 from python_domain.attendance.retrieve_all_attendances import retrieve_all_attendances
-from python_domain.attendance.insert_attendance import insert_attendance
-from python_domain.errors import ConfigurationError, ConflictError
+from python_domain.attendance.update_attendance import update_attendance
+from python_domain.errors import (
+    ConfigurationError,
+    ConflictError,
+    ValidationError,
+    PersistenceError,
+)
 from python_domain.session.add_session import add_session
 from python_domain.session.retrieve_all_sessions import retrieve_all_sessions
-from python_domain.session.insert_session import insert_session
+from python_domain.session.update_session import update_session
 from python_domain.sqlite.check import check
+from python_domain.sqlite.executors.session import remove_session_by_id
 from python_domain.sqlite.pool import get_engine, query, reset_pool, with_transaction
 
 from helpers import (
@@ -38,6 +46,31 @@ class SqliteTests(unittest.TestCase):
     def test_pings_with_select_1(self) -> None:
         open_memory_db()
         self.assertEqual(check(), {"ok": True})
+
+    def test_unmapped_sqlite_error_is_persistence_error(self) -> None:
+        open_memory_db()
+        with self.assertRaisesRegex(PersistenceError, "error de SQLite") as caught:
+            query("SELECT * FROM no_such_table")
+        self.assertIn("no such table", str(caught.exception.__cause__))
+
+        with self.assertRaises(PersistenceError):
+            with_transaction(lambda run: run("SELECT * FROM no_such_table"))
+
+    def test_missing_bind_parameter_is_not_a_persistence_error(self) -> None:
+        open_memory_db()
+        with self.assertRaises(StatementError) as caught:
+            query("SELECT :missing")
+        self.assertNotIsInstance(caught.exception, PersistenceError)
+
+    def test_url_that_is_not_sqlite_is_a_configuration_error(self) -> None:
+        for url in ("not a url", "mysql://user@host/db"):
+            os.environ["SQLITE_DATABASE_URL"] = url
+            reset_pool()
+            with self.subTest(url=url):
+                with self.assertRaisesRegex(ConfigurationError, "SQLITE_DATABASE_URL"):
+                    query("SELECT 1")
+        os.environ.pop("SQLITE_DATABASE_URL", None)
+        reset_pool()
 
     def test_select_rowcount_is_not_negative(self) -> None:
         open_memory_db()
@@ -67,17 +100,17 @@ class SqliteTests(unittest.TestCase):
         self.assertTrue(in_transaction)
         self.assertTrue(in_transaction[-1])
 
-    def test_insert_session_opens_one_transaction(self) -> None:
+    def test_update_session_opens_one_transaction(self) -> None:
         open_memory_db()
         session = add_session({"session": valid_session_input})["session"]
         begins = count_begins(
-            lambda: insert_session({
+            lambda: update_session({
                 "session": {**session, "expected_count": 21},
             }),
         )
         self.assertEqual(begins, 1)
 
-    def test_add_and_insert_attendance_open_one_transaction(self) -> None:
+    def test_add_and_update_attendance_open_one_transaction(self) -> None:
         open_memory_db()
         session = add_session({"session": valid_session_input})["session"]
         row = {**valid_attendance, "session_id": session["id"]}
@@ -87,7 +120,7 @@ class SqliteTests(unittest.TestCase):
         )
         self.assertEqual(
             count_begins(
-                lambda: insert_attendance({
+                lambda: update_attendance({
                     "attendance": {**row, "status": "present_late"},
                 }),
             ),
@@ -233,6 +266,96 @@ class SqliteTests(unittest.TestCase):
                 os.unlink(path)
             except OSError:
                 pass
+
+    def test_query_inside_a_transaction_uses_its_connection(self) -> None:
+        open_memory_db()
+        rows = with_transaction(lambda run: query("SELECT 1 AS one").rows)
+        self.assertEqual(rows, [{"one": 1}])
+
+    def test_every_memory_url_shares_one_database_across_threads(self) -> None:
+        for url in (
+            "sqlite+pysqlite://",
+            "sqlite:///:memory:",
+            "sqlite:///file:shared?mode=memory&uri=true",
+        ):
+            with self.subTest(url=url):
+                os.environ["SQLITE_DATABASE_URL"] = url
+                reset_pool()
+                query("CREATE TABLE shared (value INTEGER)")
+                errors: list[BaseException] = []
+
+                def read_from_other_thread() -> None:
+                    try:
+                        query("SELECT value FROM shared")
+                    except BaseException as error:
+                        errors.append(error)
+
+                thread = threading.Thread(target=read_from_other_thread)
+                thread.start()
+                thread.join()
+                self.assertEqual(errors, [])
+
+    def test_first_use_from_many_threads_creates_one_engine(self) -> None:
+        open_memory_db()
+        reset_pool()
+        engines: list[object] = []
+        start = threading.Barrier(8)
+
+        def first_use() -> None:
+            start.wait()
+            engines.append(get_engine())
+
+        threads = [threading.Thread(target=first_use) for _ in range(8)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+        self.assertEqual(len({id(engine) for engine in engines}), 1)
+
+    def test_deleting_a_session_with_attendances_is_a_conflict(self) -> None:
+        open_memory_db()
+        session = add_session({"session": valid_session_input})["session"]
+        add_attendance({"attendance": {**valid_attendance, "session_id": session["id"]}})
+        with self.assertRaisesRegex(ConflictError, "session todavía tiene asistencias"):
+            remove_session_by_id(session["id"])
+        with self.assertRaisesRegex(ConflictError, "session todavía tiene asistencias"):
+            with_transaction(lambda run: remove_session_by_id(session["id"], run))
+
+    def test_missing_input_field_is_a_validation_error(self) -> None:
+        open_memory_db()
+        for bad_input in ({}, "session", None):
+            with self.subTest(bad_input=bad_input):
+                with self.assertRaisesRegex(ValidationError, "session es obligatorio"):
+                    add_session(bad_input)  # type: ignore[arg-type]
+
+    def test_transaction_inside_a_transaction_joins_it(self) -> None:
+        open_memory_db()
+        rows = with_transaction(
+            lambda outer: with_transaction(lambda inner: inner("SELECT 1 AS one").rows)
+        )
+        self.assertEqual(rows, [{"one": 1}])
+
+    def test_reset_waits_for_a_memory_transaction_in_another_thread(self) -> None:
+        open_memory_db()
+        inside = threading.Event()
+        results: list[object] = []
+
+        def long_transaction(run) -> None:
+            inside.set()
+            time.sleep(0.2)
+            results.append(run("SELECT 1 AS one").rows)
+
+        worker = threading.Thread(target=lambda: with_transaction(long_transaction))
+        worker.start()
+        inside.wait()
+        reset_pool()
+        worker.join()
+        self.assertEqual(results, [[{"one": 1}]])
+
+    def test_input_can_be_any_mapping(self) -> None:
+        open_memory_db()
+        created = add_session(MappingProxyType({"session": valid_session_input}))  # type: ignore[arg-type]
+        self.assertEqual(created["session"]["course_id"], valid_session_input["course_id"])
 
 
 if __name__ == "__main__":
