@@ -1,4 +1,4 @@
-import type { DomainErrorCode } from './domain-error'
+import type { DomainErrorType } from './domain-error'
 
 export const DOMAIN_ERROR_REASONS = {
   string: {
@@ -67,7 +67,7 @@ export const DOMAIN_ERROR_REASONS = {
   },
 } as const satisfies Record<
   string,
-  { type: DomainErrorCode; message: (label: string) => string }
+  { type: DomainErrorType; message: (label: string) => string }
 >
 
 export type DomainErrorReason = keyof typeof DOMAIN_ERROR_REASONS

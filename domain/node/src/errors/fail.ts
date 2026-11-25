@@ -13,11 +13,11 @@ import {
   ValidationError,
   labelParts,
   type DomainError,
-  type DomainErrorCode,
+  type DomainErrorType,
 } from './domain-error'
 
-const ERROR_BY_CODE: Record<
-  DomainErrorCode,
+const ERROR_BY_TYPE: Record<
+  DomainErrorType,
   new (
     message: string,
     options: { id: DomainErrorId; entity?: string; field?: string; cause?: Error },
@@ -38,7 +38,7 @@ export function domainError(
   const id: DomainErrorId = `${label}.${reason}`
   const spec = DOMAIN_ERROR_REASONS[reason]
   const message = DOMAIN_ERROR_MESSAGES[id] ?? spec.message(label)
-  const ErrorClass = ERROR_BY_CODE[spec.type]
+  const ErrorClass = ERROR_BY_TYPE[spec.type]
   return new ErrorClass(message, {
     id,
     ...labelParts(label),
