@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { destinationAfterSignIn, hasPendingCheckIn } from '../student/checkIn/pendingCheckIn'
+import { LanguagePicker } from '../language/LanguagePicker'
 import { ThemeToggle } from '../shared/ThemeToggle'
 import { applyTheme, readTheme, useSessionStore, type ThemeName } from '../session/sessionStore'
 import { useLoginStore } from './loginStore'
@@ -42,7 +43,10 @@ export function LoginScreen(): React.JSX.Element {
       <section className="page-enter panel-card flex w-full max-w-md flex-col gap-7 rounded-box p-6 md:p-10">
         <div className="flex items-center justify-between">
           <p className="text-lg font-semibold tracking-tight">aTempo</p>
-          <ThemeToggle dark={theme === 'atempo-oscuro'} onToggle={onTheme} />
+          <div className="flex items-center gap-3">
+            <LanguagePicker size="xs" />
+            <ThemeToggle dark={theme === 'atempo-oscuro'} onToggle={onTheme} />
+          </div>
         </div>
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="flex flex-col gap-1">

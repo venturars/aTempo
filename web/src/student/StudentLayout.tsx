@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
+import { LanguagePicker } from '../language/LanguagePicker'
+import { useText } from '../language/useText'
 import { RequireStudent } from '../session/RequireStudent'
 import { ThemeToggle } from '../shared/ThemeToggle'
 import { applyTheme, readTheme, useSessionStore, type ThemeName } from '../session/sessionStore'
@@ -27,6 +29,7 @@ export function StudentLayout({
   children: React.ReactNode
   place?: 'center' | 'start'
 }): React.JSX.Element {
+  const t = useText()
   const student = useCurrentStudent()
   const endStudentSession = useSessionStore((state) => state.endStudentSession)
   const isLoggingOut = useSessionStore((state) => state.isLoggingOut)
@@ -79,7 +82,11 @@ export function StudentLayout({
                   <span className="text-sm font-semibold">{initials(student.name)}</span>
                 </div>
               </summary>
-              <ul className="dropdown-content menu rounded-box top-full z-10 mt-1 w-52 bg-base-100 p-2 shadow-lg">
+              <ul className="dropdown-content menu rounded-box top-full z-10 mt-1 w-72 bg-base-100 p-2 shadow-lg">
+                <li className="menu-title">{t('language.title')}</li>
+                <li className="mb-1 px-2 pb-2">
+                  <LanguagePicker size="xs" />
+                </li>
                 <li>
                   <button
                     type="button"
