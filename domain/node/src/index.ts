@@ -24,6 +24,7 @@ export {
   assertPerson,
   assertPersonCreate,
   assertPersonUpdate,
+  personFromRow,
   normalizeEmail,
   type Person,
   type PersonCreate,
@@ -35,15 +36,13 @@ export {
   assertCourseDates,
   assertCourseUpdate,
   assertContractAddress,
+  courseFromRow,
   normalizeContractAddress,
   type Course,
   type CourseCreate,
   type CourseUpdate,
 } from './types/course'
-export {
-  assertPersonCourse,
-  type PersonCourse,
-} from './types/person-course'
+export { assertPersonCourse, type PersonCourse } from './types/person-course'
 export {
   ROLE_NAMES,
   assertRole,
@@ -72,10 +71,10 @@ export {
   type AddOrganizationOutput,
 } from './organization/add-organization'
 export {
-  insertOrganization,
-  type InsertOrganizationInput,
-  type InsertOrganizationOutput,
-} from './organization/insert-organization'
+  updateOrganization,
+  type UpdateOrganizationInput,
+  type UpdateOrganizationOutput,
+} from './organization/update-organization'
 export {
   removeOrganization,
   type RemoveOrganizationInput,
@@ -106,10 +105,10 @@ export {
   type AddPersonOutput,
 } from './person/add-person'
 export {
-  insertPerson,
-  type InsertPersonInput,
-  type InsertPersonOutput,
-} from './person/insert-person'
+  updatePerson,
+  type UpdatePersonInput,
+  type UpdatePersonOutput,
+} from './person/update-person'
 export {
   removePerson,
   type RemovePersonInput,
@@ -140,10 +139,10 @@ export {
   type AddCourseOutput,
 } from './course/add-course'
 export {
-  insertCourse,
-  type InsertCourseInput,
-  type InsertCourseOutput,
-} from './course/insert-course'
+  updateCourse,
+  type UpdateCourseInput,
+  type UpdateCourseOutput,
+} from './course/update-course'
 export {
   removeCourse,
   type RemoveCourseInput,

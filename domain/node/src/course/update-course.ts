@@ -1,7 +1,7 @@
 import { findOrganizationExists } from '../organization/find-organization-exists'
-import { insertCourseRow } from '../postgres/executors/course'
+import { updateCourseRow } from '../postgres/executors/course'
 import {
-  assertCourse,
+  courseFromRow,
   assertCourseUpdate,
   normalizeContractAddress,
   type Course,
@@ -10,17 +10,17 @@ import {
 import { findAcronymAvailable } from './find-acronym-available'
 import { findContractAddressAvailable } from './find-contract-address-available'
 
-export type InsertCourseInput = {
+export type UpdateCourseInput = {
   course: CourseUpdate
 }
 
-export type InsertCourseOutput = {
+export type UpdateCourseOutput = {
   course: Course | null
 }
 
-export async function insertCourse(
-  input: InsertCourseInput,
-): Promise<InsertCourseOutput> {
+export async function updateCourse(
+  input: UpdateCourseInput,
+): Promise<UpdateCourseOutput> {
   const course = assertCourseUpdate(input.course)
   const contractAddress = normalizeContractAddress(course.contract_address)
   await findOrganizationExists({ id: course.organization_id })
@@ -34,7 +34,7 @@ export async function insertCourse(
     ignoreId: course.id,
   })
 
-  const row = await insertCourseRow({
+  const row = await updateCourseRow({
     ...course,
     contract_address: contractAddress,
   })
@@ -42,5 +42,5 @@ export async function insertCourse(
     return { course: null }
   }
 
-  return { course: assertCourse(row) }
+  return { course: courseFromRow(row) }
 }

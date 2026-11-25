@@ -1,14 +1,14 @@
 import { addCourse } from '../src/course/add-course'
 import { removeCourse } from '../src/course/remove-course'
-import { insertCourse } from '../src/course/insert-course'
+import { updateCourse } from '../src/course/update-course'
 import { addOrganization } from '../src/organization/add-organization'
 import { removeOrganization } from '../src/organization/remove-organization'
-import { insertOrganization } from '../src/organization/insert-organization'
+import { updateOrganization } from '../src/organization/update-organization'
 import { addPersonCourse } from '../src/person-course/add-person-course'
 import { deregisterPersonCourse } from '../src/person-course/deregister-person-course'
 import { addPerson } from '../src/person/add-person'
 import { removePerson } from '../src/person/remove-person'
-import { insertPerson } from '../src/person/insert-person'
+import { updatePerson } from '../src/person/update-person'
 import { addPersonRole } from '../src/person-role/add-person-role'
 import { deregisterPersonRole } from '../src/person-role/deregister-person-role'
 import type { CourseCreate } from '../src/types/course'
@@ -171,7 +171,7 @@ describe('escrituras', () => {
   it('updates a row after assert and returns null when missing', async () => {
     const calls = mockDriver(async () => rowsResult([validOrganization]))
     await expect(
-      insertOrganization({ organization: validOrganization }),
+      updateOrganization({ organization: validOrganization }),
     ).resolves.toEqual({ organization: validOrganization })
     expect(calls.some((call) => call.sql.includes('UPDATE'))).toBe(true)
 
@@ -183,12 +183,12 @@ describe('escrituras', () => {
       return emptyResult()
     })
     await expect(
-      insertOrganization({ organization: validOrganization }),
+      updateOrganization({ organization: validOrganization }),
     ).resolves.toEqual({ organization: null })
-    await expect(insertPerson({ person: validPerson })).resolves.toEqual({
+    await expect(updatePerson({ person: validPerson })).resolves.toEqual({
       person: null,
     })
-    await expect(insertCourse({ course: validCourse })).resolves.toEqual({
+    await expect(updateCourse({ course: validCourse })).resolves.toEqual({
       course: null,
     })
   })
@@ -207,7 +207,7 @@ describe('escrituras', () => {
       }
       return emptyResult()
     })
-    await expect(insertPerson({ person: validPerson })).resolves.toEqual({
+    await expect(updatePerson({ person: validPerson })).resolves.toEqual({
       person: validPerson,
     })
     expect(calls.some((call) => call.sql.includes('UPDATE person'))).toBe(true)
@@ -230,7 +230,7 @@ describe('escrituras', () => {
       }
       return emptyResult()
     })
-    await expect(insertCourse({ course: validCourse })).resolves.toEqual({
+    await expect(updateCourse({ course: validCourse })).resolves.toEqual({
       course: validCourse,
     })
     expect(calls.some((call) => call.sql.includes('UPDATE course'))).toBe(true)

@@ -1,10 +1,10 @@
 import { addCourse } from '../src/course/add-course'
-import { insertCourse } from '../src/course/insert-course'
+import { updateCourse } from '../src/course/update-course'
 import { ConflictError } from '../src/errors'
 import { addOrganization } from '../src/organization/add-organization'
-import { insertOrganization } from '../src/organization/insert-organization'
+import { updateOrganization } from '../src/organization/update-organization'
 import { addPerson } from '../src/person/add-person'
-import { insertPerson } from '../src/person/insert-person'
+import { updatePerson } from '../src/person/update-person'
 import { addPersonRole } from '../src/person-role/add-person-role'
 import { addPersonCourse } from '../src/person-course/add-person-course'
 import {
@@ -113,7 +113,7 @@ describe('reglas de negocio', () => {
   it('allows updating an organization that keeps its tax_id', async () => {
     const calls = mockDriver(async () => rowsResult([validOrganization]))
     await expect(
-      insertOrganization({ organization: validOrganization }),
+      updateOrganization({ organization: validOrganization }),
     ).resolves.toEqual({ organization: validOrganization })
     expect(wrote(calls)).toBe(true)
   })
@@ -133,7 +133,7 @@ describe('reglas de negocio', () => {
       return emptyResult()
     })
     await expect(
-      insertPerson({
+      updatePerson({
         person: { ...validPerson, id: validPerson.id.toUpperCase() },
       }),
     ).resolves.toEqual({ person: validPerson })
@@ -147,7 +147,7 @@ describe('reglas de negocio', () => {
     const other = { ...validOrganization, id: OTHER_ID }
     const calls = mockDriver(async () => rowsResult([other]))
     await expect(
-      insertOrganization({ organization: validOrganization }),
+      updateOrganization({ organization: validOrganization }),
     ).rejects.toThrow('organization.tax_id ya existe')
     expect(wrote(calls)).toBe(false)
   })
@@ -203,7 +203,7 @@ describe('reglas de negocio', () => {
       }
       return rowsResult([other])
     })
-    await expect(insertCourse({ course: validCourse })).rejects.toThrow(
+    await expect(updateCourse({ course: validCourse })).rejects.toThrow(
       'course.acronym ya existe en la organización',
     )
     expect(wrote(calls)).toBe(false)
@@ -263,7 +263,7 @@ describe('reglas de negocio', () => {
       }
       return emptyResult()
     })
-    await expect(insertPerson({ person: validPerson })).rejects.toThrow(
+    await expect(updatePerson({ person: validPerson })).rejects.toThrow(
       'person.email ya existe',
     )
     expect(wrote(calls)).toBe(false)
@@ -276,7 +276,7 @@ describe('reglas de negocio', () => {
       }
       return emptyResult()
     })
-    await expect(insertPerson({ person: validPerson })).rejects.toThrow(
+    await expect(updatePerson({ person: validPerson })).rejects.toThrow(
       'person.identification_document ya existe',
     )
     expect(wrote(calls)).toBe(false)
@@ -296,7 +296,7 @@ describe('reglas de negocio', () => {
       }
       return emptyResult()
     })
-    await expect(insertCourse({ course: validCourse })).rejects.toThrow(
+    await expect(updateCourse({ course: validCourse })).rejects.toThrow(
       'course.contract_address ya existe',
     )
     expect(wrote(calls)).toBe(false)
@@ -455,7 +455,7 @@ describe('reglas de negocio', () => {
   it('does not query when first_name is empty on update', async () => {
     const calls = mockDriver()
     await expect(
-      insertPerson({ person: { ...validPerson, first_name: '' } }),
+      updatePerson({ person: { ...validPerson, first_name: '' } }),
     ).rejects.toThrow('person.first_name debe ser un string no vacío')
     expect(calls).toHaveLength(0)
   })

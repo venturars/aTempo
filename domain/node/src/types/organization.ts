@@ -1,4 +1,5 @@
 import {
+  assertNonEmptyString,
   assertObject,
   assertString,
   assertUuid,
@@ -48,8 +49,9 @@ function organizationFields(
   allowEmpty: boolean,
 ): OrganizationCreate {
   assertObject(value, 'organization')
-  assertString(value.name, 'organization.name', allowEmpty)
-  assertString(value.tax_id, 'organization.tax_id', allowEmpty)
+  const assertText = allowEmpty ? assertString : assertNonEmptyString
+  assertText(value.name, 'organization.name')
+  assertText(value.tax_id, 'organization.tax_id')
   return {
     name: value.name,
     tax_id: value.tax_id,

@@ -15,8 +15,11 @@ import {
 } from '../queries/person'
 import { query, type PostgresQuery } from '../pool'
 import type { IdRow } from './id-row'
+import { runParentDelete } from './run-parent-delete'
 
-export async function retrieveAllPersons(run: PostgresQuery = query): Promise<Person[]> {
+export async function retrieveAllPersons(
+  run: PostgresQuery = query,
+): Promise<Person[]> {
   const result = await run(LIST_PERSONS)
   return result.rows as Person[]
 }
@@ -80,7 +83,7 @@ export async function addPerson(
   return (result.rows[0] as Person | undefined) ?? null
 }
 
-export async function insertPersonRow(
+export async function updatePersonRow(
   person: PersonUpdate,
   run: PostgresQuery = query,
 ): Promise<Person | null> {
@@ -114,6 +117,6 @@ export async function removePersonById(
   id: string,
   run: PostgresQuery = query,
 ): Promise<boolean> {
-  const result = await run(DELETE_PERSON, [id])
+  const result = await runParentDelete(run, DELETE_PERSON, [id], 'person')
   return (result.rowCount ?? 0) > 0
 }

@@ -38,6 +38,32 @@ export function assertCourseUpdate(value: CourseUpdate): CourseUpdate {
   return courseWithId(value, false)
 }
 
+/**
+ * Lee una fila de course que viene de PostgreSQL. El esquema ya garantiza
+ * `end_at > start_at` y `to_char` ya da las fechas en ISO UTC, así que solo se
+ * comprueba la forma. Una fecha que la entrada no aceptaría (un año de cinco
+ * cifras) no rompe el listado entero.
+ */
+export function courseFromRow(row: Course): Course {
+  assertObject(row, 'course')
+  assertUuid(row.id, 'course.id')
+  assertUuid(row.organization_id, 'course.organization_id')
+  assertString(row.name, 'course.name')
+  assertString(row.acronym, 'course.acronym')
+  assertNonEmptyString(row.start_at, 'course.start_at')
+  assertNonEmptyString(row.end_at, 'course.end_at')
+  assertNonEmptyString(row.contract_address, 'course.contract_address')
+  return {
+    id: normalizeUuid(row.id),
+    organization_id: normalizeUuid(row.organization_id),
+    name: row.name,
+    acronym: row.acronym,
+    start_at: row.start_at,
+    end_at: row.end_at,
+    contract_address: row.contract_address,
+  }
+}
+
 export function assertContractAddress(value: string): void {
   if (!CONTRACT_ADDRESS_RE.test(value)) {
     fail('course.contract_address', 'format')
@@ -104,8 +130,9 @@ function courseFields(
 ): CourseCreate {
   assertObject(value, 'course')
   assertUuid(value.organization_id, 'course.organization_id')
-  assertString(value.name, 'course.name', allowEmptyLabels)
-  assertString(value.acronym, 'course.acronym', allowEmptyLabels)
+  const assertLabel = allowEmptyLabels ? assertString : assertNonEmptyString
+  assertLabel(value.name, 'course.name')
+  assertLabel(value.acronym, 'course.acronym')
   assertNonEmptyString(value.start_at, 'course.start_at')
   assertNonEmptyString(value.end_at, 'course.end_at')
   assertNonEmptyString(value.contract_address, 'course.contract_address')

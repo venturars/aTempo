@@ -3,19 +3,23 @@ import { fail, type DomainLabel } from '../errors'
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-export function assertString(
-  value: string,
-  label: DomainLabel,
-  allowEmpty = false,
-): string {
-  if (typeof value !== 'string' || (!allowEmpty && value.length === 0)) {
-    fail(label, 'empty')
+/** Comprueba que es un string. Acepta el string vacío. */
+export function assertString(value: string, label: DomainLabel): string {
+  if (typeof value !== 'string') {
+    fail(label, 'string')
   }
   return value
 }
 
-export function assertNonEmptyString(value: string, label: DomainLabel): string {
-  return assertString(value, label)
+/** Comprueba que es un string con al menos un carácter. */
+export function assertNonEmptyString(
+  value: string,
+  label: DomainLabel,
+): string {
+  if (typeof value !== 'string' || value.length === 0) {
+    fail(label, 'empty')
+  }
+  return value
 }
 
 export function assertUuid(value: string, label: DomainLabel): string {
@@ -61,7 +65,10 @@ export function assertNullableString(
   return value
 }
 
-export function assertObject<T extends object>(value: T, label: DomainLabel): T {
+export function assertObject<T extends object>(
+  value: T,
+  label: DomainLabel,
+): T {
   if (value === null || typeof value !== 'object') {
     fail(label, 'object')
   }

@@ -1,6 +1,10 @@
 import type { DomainErrorCode } from './domain-error'
 
 export const DOMAIN_ERROR_REASONS = {
+  string: {
+    type: 'VALIDATION',
+    message: (label: string) => `${label} debe ser un string`,
+  },
   empty: {
     type: 'VALIDATION',
     message: (label: string) => `${label} debe ser un string no vacío`,
@@ -44,6 +48,10 @@ export const DOMAIN_ERROR_REASONS = {
   missing: {
     type: 'NOT_FOUND',
     message: (label: string) => `${label} no existe`,
+  },
+  referenced: {
+    type: 'CONFLICT',
+    message: (label: string) => `${label} todavía tiene filas que lo usan`,
   },
   not_created: {
     type: 'PERSISTENCE',

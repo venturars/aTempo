@@ -100,4 +100,44 @@ describe('postgres', () => {
       id: 'organization.missing',
     })
   })
+
+  it('translates a missing role (person_role_role_fkey) into role.missing', async () => {
+    mockDriver(async () => {
+      throw Object.assign(new Error('foreign key'), {
+        code: '23503',
+        constraint: 'person_role_role_fkey',
+        table: 'person_role',
+      })
+    })
+    await expect(query('SELECT 1')).rejects.toBeInstanceOf(NotFoundError)
+    await expect(query('SELECT 1')).rejects.toMatchObject({
+      id: 'role.missing',
+    })
+  })
+
+  it('translates the student exclusive trigger (P0001) into a conflict', async () => {
+    mockDriver(async () => {
+      throw Object.assign(new Error('un student no puede llevar otro rol'), {
+        code: 'P0001',
+        where:
+          'PL/pgSQL function person_role_student_is_exclusive() line 10 at RAISE',
+      })
+    })
+    await expect(query('SELECT 1')).rejects.toBeInstanceOf(ConflictError)
+    await expect(query('SELECT 1')).rejects.toMatchObject({
+      id: 'person_role.student.exclusive',
+    })
+  })
+
+  it('keeps other P0001 errors as postgres.unmapped', async () => {
+    mockDriver(async () => {
+      throw Object.assign(new Error('otro trigger'), {
+        code: 'P0001',
+        where: 'PL/pgSQL function another_trigger() line 3 at RAISE',
+      })
+    })
+    await expect(query('SELECT 1')).rejects.toMatchObject({
+      id: 'postgres.unmapped',
+    })
+  })
 })

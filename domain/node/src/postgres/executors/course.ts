@@ -13,8 +13,11 @@ import {
 } from '../queries/course'
 import { query, type PostgresQuery } from '../pool'
 import type { IdRow } from './id-row'
+import { runParentDelete } from './run-parent-delete'
 
-export async function retrieveAllCourses(run: PostgresQuery = query): Promise<Course[]> {
+export async function retrieveAllCourses(
+  run: PostgresQuery = query,
+): Promise<Course[]> {
   const result = await run(LIST_COURSES)
   return result.rows as Course[]
 }
@@ -79,7 +82,7 @@ export async function addCourse(
   return (result.rows[0] as Course | undefined) ?? null
 }
 
-export async function insertCourseRow(
+export async function updateCourseRow(
   course: CourseUpdate,
   run: PostgresQuery = query,
 ): Promise<Course | null> {
@@ -106,6 +109,6 @@ export async function removeCourseById(
   id: string,
   run: PostgresQuery = query,
 ): Promise<boolean> {
-  const result = await run(DELETE_COURSE, [id])
+  const result = await runParentDelete(run, DELETE_COURSE, [id], 'course')
   return (result.rowCount ?? 0) > 0
 }

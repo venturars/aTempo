@@ -2,7 +2,7 @@ import { fail } from '../errors'
 import { findOrganizationExists } from '../organization/find-organization-exists'
 import { addCourse as addCourseRow } from '../postgres/executors/course'
 import {
-  assertCourse,
+  courseFromRow,
   assertCourseCreate,
   normalizeContractAddress,
   type Course,
@@ -31,10 +31,13 @@ export async function addCourse(
     acronym: course.acronym,
   })
 
-  const row = await addCourseRow({ ...course, contract_address: contractAddress })
+  const row = await addCourseRow({
+    ...course,
+    contract_address: contractAddress,
+  })
   if (!row) {
     fail('course', 'not_created')
   }
 
-  return { course: assertCourse(row) }
+  return { course: courseFromRow(row) }
 }

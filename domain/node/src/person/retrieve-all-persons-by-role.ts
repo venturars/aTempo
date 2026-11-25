@@ -1,5 +1,5 @@
 import { retrieveAllPersonsByRoleName } from '../postgres/executors/person'
-import { assertPerson, type Person } from '../types/person'
+import { personFromRow, type Person } from '../types/person'
 import { assertRoleName, type RoleName } from '../types/role'
 
 export type RetrieveAllPersonsByRoleInput = {
@@ -15,5 +15,5 @@ export async function retrieveAllPersonsByRole(
 ): Promise<RetrieveAllPersonsByRoleOutput> {
   const roleName = assertRoleName(input.roleName)
   const rows = await retrieveAllPersonsByRoleName(roleName)
-  return { persons: rows.map((row) => assertPerson(row)) }
+  return { persons: rows.map((row) => personFromRow(row)) }
 }

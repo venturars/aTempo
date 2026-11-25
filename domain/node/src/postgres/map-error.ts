@@ -1,8 +1,24 @@
 import { DomainError, domainError } from '../errors'
 
+/**
+ * Cada clave foránea del esquema y la tabla padre a la que apunta. Un 23503
+ * que llega aquí viene de un INSERT o UPDATE: falta el padre. El DELETE de un
+ * padre con hijos lo traduce `runParentDelete` antes de llegar aquí.
+ */
+const FOREIGN_KEY_PARENTS: Record<
+  string,
+  'organization' | 'person' | 'course' | 'role' | undefined
+> = {
+  course_organization_id_fkey: 'organization',
+  person_course_person_id_fkey: 'person',
+  person_role_person_id_fkey: 'person',
+  person_course_course_id_fkey: 'course',
+  person_role_role_fkey: 'role',
+}
+
 function pgField(
   error: object,
-  field: 'code' | 'constraint',
+  field: 'code' | 'constraint' | 'where',
 ): string | undefined {
   if (!(field in error)) {
     return undefined
@@ -40,17 +56,18 @@ export function domainErrorFromPg(error: object): DomainError | undefined {
   }
 
   if (code === '23503') {
-    if (constraint === 'course_organization_id_fkey') {
-      return domainError('organization', 'missing')
+    const parent = FOREIGN_KEY_PARENTS[constraint]
+    if (parent) {
+      return domainError(parent, 'missing')
     }
-    if (
-      constraint === 'person_course_person_id_fkey' ||
-      constraint === 'person_role_person_id_fkey'
-    ) {
-      return domainError('person', 'missing')
-    }
-    if (constraint === 'person_course_course_id_fkey') {
-      return domainError('course', 'missing')
+  }
+
+  // El trigger lanza un RAISE EXCEPTION genérico (P0001). El campo `where`
+  // nombra la función PL/pgSQL que lo lanzó.
+  if (code === 'P0001') {
+    const where = pgField(error, 'where') ?? ''
+    if (where.includes('person_role_student_is_exclusive')) {
+      return domainError('person_role.student', 'exclusive')
     }
   }
 

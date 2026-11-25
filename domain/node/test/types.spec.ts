@@ -1,8 +1,13 @@
 import { ValidationError } from '../src/errors'
-import { normalizeUuid } from '../src/types/assert'
+import {
+  assertNonEmptyString,
+  assertString,
+  normalizeUuid,
+} from '../src/types/assert'
 import {
   assertCourse,
   assertCourseCreate,
+  courseFromRow,
   normalizeContractAddress,
   type CourseCreate,
 } from '../src/types/course'
@@ -15,6 +20,7 @@ import {
   assertPerson,
   assertPersonCreate,
   normalizeEmail,
+  personFromRow,
   type Person,
   type PersonCreate,
 } from '../src/types/person'
@@ -83,9 +89,7 @@ describe('assert*', () => {
 
   it('normalizes contract address to lowercase hex', () => {
     expect(
-      normalizeContractAddress(
-        '0x5FBDB2315678AFECb367F032D93F642F64180AA3',
-      ),
+      normalizeContractAddress('0x5FBDB2315678AFECb367F032D93F642F64180AA3'),
     ).toBe('0x5fbdb2315678afecb367f032d93f642f64180aa3')
   })
 
@@ -146,17 +150,17 @@ describe('assert*', () => {
     expect(assertPerson({ ...validPerson, first_name: '' }).first_name).toBe('')
     expect(assertPerson({ ...validPerson, last_name: '' }).last_name).toBe('')
     expect(assertOrganization({ ...validOrganization, name: '' }).name).toBe('')
-    expect(assertOrganization({ ...validOrganization, tax_id: '' }).tax_id).toBe(
-      '',
-    )
+    expect(
+      assertOrganization({ ...validOrganization, tax_id: '' }).tax_id,
+    ).toBe('')
     expect(assertCourse({ ...validCourse, name: '' }).name).toBe('')
     expect(assertCourse({ ...validCourse, acronym: '' }).acronym).toBe('')
     expect(() =>
       assertOrganizationCreate({ name: '', tax_id: validOrganization.tax_id }),
     ).toThrow('organization.name debe ser un string no vacío')
-    expect(() =>
-      assertCourseCreate({ ...validCourse, name: '' }),
-    ).toThrow('course.name debe ser un string no vacío')
+    expect(() => assertCourseCreate({ ...validCourse, name: '' })).toThrow(
+      'course.name debe ser un string no vacío',
+    )
   })
 
   it('rejects a person missing a field', () => {
@@ -263,5 +267,65 @@ describe('assert*', () => {
     expect(() => assertPersonCourse(validPersonCourse)).not.toThrow()
     expect(() => assertPersonRole(validPersonRole)).not.toThrow()
     expect(() => assertRole({ name: 'teacher' })).not.toThrow()
+  })
+})
+
+describe('string validators', () => {
+  it('assertString accepts an empty string and rejects other types', () => {
+    expect(assertString('', 'course.name')).toBe('')
+    expect(() => assertString(3 as unknown as string, 'course.name')).toThrow(
+      'course.name debe ser un string',
+    )
+  })
+
+  it('assertNonEmptyString rejects the empty string', () => {
+    expect(() => assertNonEmptyString('', 'course.name')).toThrow(
+      'course.name debe ser un string no vacío',
+    )
+    expect(assertNonEmptyString('Taller', 'course.name')).toBe('Taller')
+  })
+})
+
+describe('courseFromRow', () => {
+  it('reads a stored date that the input would reject', () => {
+    const row = {
+      ...validCourse,
+      id: '11111111-1111-1111-1111-11111111AAAA',
+      end_at: '10000-01-01T00:00:00.000Z',
+    }
+    expect(() => assertCourse(row)).toThrow(ValidationError)
+    expect(courseFromRow(row)).toMatchObject({
+      id: '11111111-1111-1111-1111-11111111aaaa',
+      end_at: '10000-01-01T00:00:00.000Z',
+    })
+  })
+
+  it('still rejects a row with the wrong shape', () => {
+    expect(() => courseFromRow({ ...validCourse, id: 'no-uuid' })).toThrow(
+      ValidationError,
+    )
+  })
+})
+
+describe('personFromRow', () => {
+  it('reads stored values that the input would reject', () => {
+    const row = {
+      ...validPerson,
+      id: '22222222-2222-2222-2222-22222222BBBB',
+      identification_document: '',
+      birth_date: '10000-01-01',
+    }
+    expect(() => assertPerson(row)).toThrow(ValidationError)
+    expect(personFromRow(row)).toMatchObject({
+      id: '22222222-2222-2222-2222-22222222bbbb',
+      identification_document: '',
+      birth_date: '10000-01-01',
+    })
+  })
+
+  it('still rejects a row with the wrong shape', () => {
+    expect(() =>
+      personFromRow({ ...validPerson, phone: 5 as unknown as string }),
+    ).toThrow(ValidationError)
   })
 })

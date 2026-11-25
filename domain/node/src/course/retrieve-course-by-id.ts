@@ -1,6 +1,6 @@
 import { findCourseById } from '../postgres/executors/course'
 import { assertUuid } from '../types/assert'
-import { assertCourse, type Course } from '../types/course'
+import { courseFromRow, type Course } from '../types/course'
 
 export type RetrieveCourseByIdInput = {
   id: string
@@ -19,5 +19,5 @@ export async function retrieveCourseById(
     return { course: null }
   }
 
-  return { course: assertCourse(row) }
+  return { course: courseFromRow(row) }
 }

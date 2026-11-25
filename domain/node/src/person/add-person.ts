@@ -1,7 +1,7 @@
 import { fail } from '../errors'
 import { addPerson as addPersonRow } from '../postgres/executors/person'
 import {
-  assertPerson,
+  personFromRow,
   assertPersonCreate,
   normalizeEmail,
   type Person,
@@ -33,5 +33,5 @@ export async function addPerson(
     fail('person', 'not_created')
   }
 
-  return { person: assertPerson(row) }
+  return { person: personFromRow(row) }
 }

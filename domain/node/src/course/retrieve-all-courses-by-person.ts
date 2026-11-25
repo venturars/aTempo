@@ -1,6 +1,6 @@
 import { retrieveAllCoursesByPersonId } from '../postgres/executors/course'
 import { assertUuid } from '../types/assert'
-import { assertCourse, type Course } from '../types/course'
+import { courseFromRow, type Course } from '../types/course'
 
 export type RetrieveAllCoursesByPersonInput = {
   personId: string
@@ -15,5 +15,5 @@ export async function retrieveAllCoursesByPerson(
 ): Promise<RetrieveAllCoursesByPersonOutput> {
   const personId = assertUuid(input.personId, 'person.id')
   const rows = await retrieveAllCoursesByPersonId(personId)
-  return { courses: rows.map((row) => assertCourse(row)) }
+  return { courses: rows.map((row) => courseFromRow(row)) }
 }

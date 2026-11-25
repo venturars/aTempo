@@ -59,6 +59,31 @@ export function assertPersonUpdate(value: PersonUpdate): PersonUpdate {
   return personWithId(value, false)
 }
 
+/**
+ * Lee una fila de person que viene de PostgreSQL. Solo se comprueba la forma:
+ * un valor guardado que la entrada no aceptaría (un `birth_date` con un año de
+ * cinco cifras, un documento vacío) no rompe el listado entero.
+ */
+export function personFromRow(row: Person): Person {
+  assertObject(row, 'person')
+  assertUuid(row.id, 'person.id')
+  assertString(row.identification_document, 'person.identification_document')
+  assertString(row.email, 'person.email')
+  assertString(row.first_name, 'person.first_name')
+  assertString(row.last_name, 'person.last_name')
+  assertNullableString(row.birth_date, 'person.birth_date')
+  assertNullableString(row.phone, 'person.phone')
+  return {
+    id: normalizeUuid(row.id),
+    identification_document: row.identification_document,
+    email: row.email,
+    first_name: row.first_name,
+    last_name: row.last_name,
+    birth_date: row.birth_date,
+    phone: row.phone,
+  }
+}
+
 function personWithId(value: Person, allowEmptyNames: boolean): Person {
   assertObject(value, 'person')
   assertUuid(value.id, 'person.id')
@@ -81,8 +106,9 @@ function personFields(
   if (normalizeEmail(value.email).length === 0) {
     fail('person.email', 'empty')
   }
-  assertString(value.first_name, 'person.first_name', allowEmptyNames)
-  assertString(value.last_name, 'person.last_name', allowEmptyNames)
+  const assertName = allowEmptyNames ? assertString : assertNonEmptyString
+  assertName(value.first_name, 'person.first_name')
+  assertName(value.last_name, 'person.last_name')
   assertNullableString(value.birth_date, 'person.birth_date')
   assertBirthDate(value.birth_date)
   assertNullableString(value.phone, 'person.phone')

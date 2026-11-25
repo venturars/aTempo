@@ -1,4 +1,4 @@
-import { insertOrganizationRow } from '../postgres/executors/organization'
+import { updateOrganizationRow } from '../postgres/executors/organization'
 import {
   assertOrganization,
   assertOrganizationUpdate,
@@ -7,24 +7,24 @@ import {
 } from '../types/organization'
 import { findTaxIdAvailable } from './find-tax-id-available'
 
-export type InsertOrganizationInput = {
+export type UpdateOrganizationInput = {
   organization: OrganizationUpdate
 }
 
-export type InsertOrganizationOutput = {
+export type UpdateOrganizationOutput = {
   organization: Organization | null
 }
 
-export async function insertOrganization(
-  input: InsertOrganizationInput,
-): Promise<InsertOrganizationOutput> {
+export async function updateOrganization(
+  input: UpdateOrganizationInput,
+): Promise<UpdateOrganizationOutput> {
   const organization = assertOrganizationUpdate(input.organization)
   await findTaxIdAvailable({
     taxId: organization.tax_id,
     ignoreId: organization.id,
   })
 
-  const row = await insertOrganizationRow(organization)
+  const row = await updateOrganizationRow(organization)
   if (!row) {
     return { organization: null }
   }

@@ -15,6 +15,7 @@ import {
 } from '../queries/organization'
 import { query, type PostgresQuery } from '../pool'
 import type { IdRow } from './id-row'
+import { runParentDelete } from './run-parent-delete'
 
 export async function retrieveAllOrganizations(
   run: PostgresQuery = query,
@@ -51,7 +52,7 @@ export async function addOrganization(
   return (result.rows[0] as Organization | undefined) ?? null
 }
 
-export async function insertOrganizationRow(
+export async function updateOrganizationRow(
   organization: OrganizationUpdate,
   run: PostgresQuery = query,
 ): Promise<Organization | null> {
@@ -74,13 +75,18 @@ export async function removeOrganizationCourses(
   id: string,
   run: PostgresQuery = query,
 ): Promise<void> {
-  await run(DELETE_ORGANIZATION_COURSES, [id])
+  await runParentDelete(run, DELETE_ORGANIZATION_COURSES, [id], 'course')
 }
 
 export async function removeOrganizationById(
   id: string,
   run: PostgresQuery = query,
 ): Promise<boolean> {
-  const result = await run(DELETE_ORGANIZATION, [id])
+  const result = await runParentDelete(
+    run,
+    DELETE_ORGANIZATION,
+    [id],
+    'organization',
+  )
   return (result.rowCount ?? 0) > 0
 }

@@ -1,6 +1,6 @@
-import { insertPersonRow } from '../postgres/executors/person'
+import { updatePersonRow } from '../postgres/executors/person'
 import {
-  assertPerson,
+  personFromRow,
   assertPersonUpdate,
   normalizeEmail,
   type Person,
@@ -9,17 +9,17 @@ import {
 import { findEmailAvailable } from './find-email-available'
 import { findIdentificationDocumentAvailable } from './find-identification-document-available'
 
-export type InsertPersonInput = {
+export type UpdatePersonInput = {
   person: PersonUpdate
 }
 
-export type InsertPersonOutput = {
+export type UpdatePersonOutput = {
   person: Person | null
 }
 
-export async function insertPerson(
-  input: InsertPersonInput,
-): Promise<InsertPersonOutput> {
+export async function updatePerson(
+  input: UpdatePersonInput,
+): Promise<UpdatePersonOutput> {
   const person = assertPersonUpdate(input.person)
   const email = normalizeEmail(person.email)
   await findIdentificationDocumentAvailable({
@@ -28,10 +28,10 @@ export async function insertPerson(
   })
   await findEmailAvailable({ email, ignoreId: person.id })
 
-  const row = await insertPersonRow({ ...person, email })
+  const row = await updatePersonRow({ ...person, email })
   if (!row) {
     return { person: null }
   }
 
-  return { person: assertPerson(row) }
+  return { person: personFromRow(row) }
 }

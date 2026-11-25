@@ -1,4 +1,9 @@
-import { Pool, type QueryResult, type QueryResultRow } from 'pg'
+import {
+  Pool,
+  type PoolClient,
+  type QueryResult,
+  type QueryResultRow,
+} from 'pg'
 import { fail } from '../errors'
 import { rethrowPg } from './map-error'
 
@@ -12,6 +17,14 @@ export type PostgresQuery = (
 let pool: Pool | undefined
 let queryOverride: PostgresQuery | undefined
 
+/**
+ * Una conexión puede romperse (PostgreSQL se reinicia o se corta la red).
+ * Sin un listener, el evento `error` de la conexión o del pool tumba Node.
+ */
+function reportConnectionError(error: Error): void {
+  console.error('postgres: se ha roto una conexión', error)
+}
+
 function getPool(): Pool {
   const connectionString = process.env.DATABASE_URL
   if (!connectionString) {
@@ -20,6 +33,9 @@ function getPool(): Pool {
 
   if (!pool) {
     pool = new Pool({ connectionString, connectionTimeoutMillis: 3000 })
+    // Conexiones que esperan en el pool. pg ya saca la rota: la siguiente query
+    // abre otra.
+    pool.on('error', reportConnectionError)
   }
 
   return pool
@@ -40,40 +56,66 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
   }
 }
 
+async function connectClient(): Promise<PoolClient> {
+  try {
+    return await getPool().connect()
+  } catch (error) {
+    rethrowPg(error)
+  }
+}
+
+/**
+ * Deshace la transacción. Si el ROLLBACK también falla, devuelve ese error:
+ * la conexión ya no sirve y no debe volver al pool.
+ */
+async function rollback(run: PostgresQuery): Promise<Error | undefined> {
+  try {
+    await run('ROLLBACK')
+    return undefined
+  } catch (error) {
+    return error instanceof Error ? error : new Error('ROLLBACK fallido')
+  }
+}
+
 export async function withTransaction<T>(
   fn: (query: PostgresQuery) => Promise<T>,
 ): Promise<T> {
   if (queryOverride) {
-    await queryOverride('BEGIN')
+    const run = queryOverride
     try {
-      const value = await fn(queryOverride)
-      await queryOverride('COMMIT')
+      await run('BEGIN')
+      const value = await fn(run)
+      await run('COMMIT')
       return value
     } catch (error) {
-      try {
-        await queryOverride('ROLLBACK')
-      } catch {
-        // El error original importa más que un ROLLBACK que también falle.
-      }
+      // El error original importa más que un ROLLBACK que también falle.
+      await rollback(run)
       rethrowPg(error)
     }
   }
 
-  const client = await getPool().connect()
+  const client = await connectClient()
+  const run: PostgresQuery = (sql, params = []) => client.query(sql, params)
+  let brokenConnection: Error | undefined
+  // Mientras la transacción tiene la conexión, el pool no escucha sus errores.
+  const onClientError = (error: Error): void => {
+    reportConnectionError(error)
+    brokenConnection = error
+  }
+  client.on('error', onClientError)
   try {
-    await client.query('BEGIN')
-    const value = await fn((sql, params = []) => client.query(sql, params))
-    await client.query('COMMIT')
+    await run('BEGIN')
+    const value = await fn(run)
+    await run('COMMIT')
     return value
   } catch (error) {
-    try {
-      await client.query('ROLLBACK')
-    } catch {
-      // El error original importa más que un ROLLBACK que también falle.
-    }
+    const rollbackError = await rollback(run)
+    brokenConnection = brokenConnection ?? rollbackError
     rethrowPg(error)
   } finally {
-    client.release()
+    client.off('error', onClientError)
+    // release(error) destruye la conexión; release() la devuelve al pool.
+    client.release(brokenConnection)
   }
 }
 

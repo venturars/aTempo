@@ -1,6 +1,6 @@
 import { findPersonById } from '../postgres/executors/person'
 import { assertUuid } from '../types/assert'
-import { assertPerson, type Person } from '../types/person'
+import { personFromRow, type Person } from '../types/person'
 
 export type RetrievePersonByIdInput = {
   id: string
@@ -19,5 +19,5 @@ export async function retrievePersonById(
     return { person: null }
   }
 
-  return { person: assertPerson(row) }
+  return { person: personFromRow(row) }
 }
