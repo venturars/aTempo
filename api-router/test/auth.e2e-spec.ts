@@ -195,6 +195,10 @@ describe('Authentication (e2e)', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(200)
       .expect({ email: 'profesor@atempo.test' })
+      .expect(({ body }) => {
+        expect(body).not.toHaveProperty('sub')
+        expect(Object.keys(body as object).sort()).toEqual(['email'])
+      })
   })
 
   it('GET /auth/me rejects a signed token without an email claim', async () => {

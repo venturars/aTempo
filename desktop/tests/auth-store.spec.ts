@@ -49,6 +49,15 @@ test.describe('Auth0 login store', () => {
 
   test.afterEach(restoreWindow)
 
+  test('identifies the user by email only; the bridge does not expose sub', async () => {
+    const user = await (globalThis as unknown as { window: TestWindow }).window.api.auth.login({
+      email: 'profesor@atempo.test',
+      password: 'auth0-test-password'
+    })
+    expect(user).toEqual({ email: 'profesor@atempo.test' })
+    expect(user).not.toHaveProperty('sub')
+  })
+
   test('sends a known teacher account through the auth bridge and clears the form', async () => {
     useLoginStore.getState().setEmail(' PROFESOR@ATEMPO.TEST ')
     useLoginStore.getState().setPassword('auth0-test-password')
