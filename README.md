@@ -37,6 +37,10 @@ Desde un arranque nuevo, usa el formulario **Entrar** con una de estas cuentas p
 | Profesor | `profesor@atempo.test` | `Profesor123!` | Hoy, en el panel del profesor |
 | Alumno | `ada.lopez@clase.test` | `clase-2026` | Dashboard de Ada López |
 
+La pestaña Hoy usa un cliente de la API con datos simulados. Para ver otro caso, arranca desde `desktop/` con `pnpm exec electron-vite dev -- --api-fixture=<nombre>`: `empty` (sin clases hoy), `denied` (sin acceso), `unauthenticated` (sesión caducada: vuelve al login), `network` (las escrituras no llegan), `timeout` (las escrituras no responden en 10 segundos), `server-error` (las escrituras responden 500), `conflict` (la clase se abrió desde otro sitio) `expired-code` (el primer código del QR llega caducado) o `code-unavailable` (las dos primeras peticiones del código fallan).
+
+Para que la pestaña Hoy hable HTTP con `api-router`, arráncalo con `docker compose up api-router` y la app, desde `desktop/`, con `ATEMPO_API_ROUTER_URL=http://localhost:3000 pnpm exec electron-vite dev -- --api-transport=http`. Las peticiones pasan por el proceso principal, que añade el Access Token del login. El mock del router pide ese token: sin login contra el router responde `401` y la pestaña vuelve al login. El router responde con datos en memoria; para empezar de cero, reinícialo. Con el transporte HTTP, «Simular llegada» y «Volver a abrir» quedan desactivados: no están en el contrato.
+
 ### Probar la invitación de profesor
 
 Con las dependencias de `desktop/` instaladas, detén el arranque normal y abre la demo con este comando desde `desktop/`.
@@ -67,7 +71,7 @@ Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alu
 VITE_STUDENT_SITE_URL=http://<ip-del-ordenador>:5191 pnpm dev
 ```
 
-Con la lista cerrada, cambiar un estado pide un motivo. Al pasar el ratón por encima del estado se ve quién lo cambió, cuándo y por qué.
+Con la lista abierta o cerrada, cambiar un estado o una hora pide un motivo. Al pasar el ratón por encima del estado se ve quién lo cambió, cuándo y por qué.
 
 En el escritorio del alumno, pulsa **Cerrar sesión** en su inicio.
 
@@ -400,7 +404,7 @@ Ese comando es obligatorio: sin él, el markdown se queda desfasado. No se edita
 docker compose up api-router
 ```
 
-El servicio queda en <http://localhost:3000>. `GET /health` debe devolver `{ "status": "ok" }`. La documentación interactiva está en <http://localhost:3000/docs>. Su contenedor monta solo `api-router/`, sus `node_modules` y la caché pnpm; el `.env` de la raíz no queda disponible dentro del servicio. Para pararlo, `Ctrl+C` o `docker compose stop api-router`.
+El servicio queda en <http://localhost:3000>. `GET /health` debe devolver `{ "status": "ok" }`. Compose lo arranca con `API_MOCK=true`: sirve además, con datos en memoria, los ocho endpoints del contrato API v1 que usa la pestaña Hoy del panel. La documentación interactiva está en <http://localhost:3000/docs>. Su contenedor monta solo `api-router/`, sus `node_modules` y la caché pnpm; el `.env` de la raíz no queda disponible dentro del servicio. Para pararlo, `Ctrl+C` o `docker compose stop api-router`.
 
 Las comprobaciones se lanzan en Docker:
 

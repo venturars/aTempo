@@ -112,7 +112,7 @@ export function SettingsView(): React.JSX.Element {
                   type="button"
                   className="btn btn-sm btn-square join-item"
                   aria-label="Reducir margen de retraso"
-                  disabled={preferences.lateMinutes === 0}
+                  disabled
                   onClick={() => preferences.update({ lateMinutes: preferences.lateMinutes - 1 })}
                 >
                   −
@@ -121,6 +121,7 @@ export function SettingsView(): React.JSX.Element {
                   <input
                     id="late-minutes"
                     aria-describedby="late-help"
+                    disabled
                     type="number"
                     min="0"
                     max="60"
@@ -139,7 +140,7 @@ export function SettingsView(): React.JSX.Element {
                   type="button"
                   className="btn btn-sm btn-square join-item"
                   aria-label="Aumentar margen de retraso"
-                  disabled={preferences.lateMinutes === 60}
+                  disabled
                   onClick={() => preferences.update({ lateMinutes: preferences.lateMinutes + 1 })}
                 >
                   +
@@ -147,7 +148,7 @@ export function SettingsView(): React.JSX.Element {
               </div>
             </div>
             <p id="late-help" className="mt-2 text-sm text-base-content/60">
-              Llegar en los primeros {preferences.lateMinutes} minutos es puntual.
+              Cada sesión fija su margen de retraso. Este ajuste no se aplica todavía.
             </p>
           </div>
         </div>

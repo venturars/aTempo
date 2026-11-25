@@ -38,6 +38,10 @@ export function checkInCode(period: number): string {
 }
 
 // El enlace que lleva el QR: la cámara del móvil abre el sitio del alumno y registra la entrada.
+export function checkInUrlFor(siteUrl: string, code: string): string {
+  return `${siteUrl.replace(/\/+$/, '')}/student/check-in?code=${classCode}-${code}`
+}
+
 export function checkInUrl(siteUrl: string, period: number): string {
-  return `${siteUrl.replace(/\/+$/, '')}/student/check-in?code=${checkInCode(period)}`
+  return checkInUrlFor(siteUrl, backupCode(period))
 }

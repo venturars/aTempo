@@ -223,8 +223,11 @@ api-router/
   README.md
   src/
     main.ts
-    configure-app.ts   # CORS, ValidationPipe, Swagger /docs
-    app.module.ts
+    configure-app.ts   # CORS, ValidationPipe, filtro de errores del contrato, Swagger /docs
+    app.module.ts      # carga mock-api/ con API_MOCK=true
+    contract/
+      contract-exception.ts        # errores con el formato del contrato
+      contract-exception.filter.ts # responde con ese formato
     health/
       health.module.ts
       health.controller.ts
@@ -242,8 +245,16 @@ api-router/
       refresh-request.dto.ts
       refresh-response.dto.ts
       me-response.dto.ts
+    mock-api/
+      mock-api.module.ts
+      sessions.controller.ts # /sessions del contrato API v1
+      courses.controller.ts  # /courses/:courseId/students
+      mock-api.service.ts    # estado en memoria y reglas del contrato
+      dto.ts
+      sample-data.ts         # clase y alumnos de ejemplo
   test/
     health.e2e-spec.ts
+    mock-api.e2e-spec.ts
     swagger.e2e-spec.ts
     auth.e2e-spec.ts
     jest-e2e.json
@@ -268,9 +279,11 @@ desktop/
     main/
       index.ts
       database.ts       # abre atempo.sqlite con node:sqlite
+      routerRequest.ts  # peticiones del cliente de la API al router, con el token
     preload/
       index.ts
       index.d.ts
+      router.d.ts       # mensajes entre el cliente de la API y main
     renderer/
       index.html
       src/
@@ -291,6 +304,14 @@ desktop/
         styles/
           app.css       # importa docs/storybook/src/system.css
           fonts/        # Geist e Inter, woff2 con licencia OFL
+        api/
+          attendanceRules.ts # regla de puntual o tarde y llegada del propio alumno
+          client.ts        # ApiClient: una función por endpoint y elección del transporte
+          contract.ts      # tipos del contrato API v1
+          fixtures.ts      # datos y casos del mock (--api-fixture)
+          httpTransport.ts # transporte HTTP a través de main (--api-transport=http)
+          isoTime.ts       # fechas ISO 8601 de los datos de ejemplo
+          mockTransport.ts # mock en memoria con las reglas del contrato
         login/
           LoginScreen.tsx       # entrar, o elegir contraseña desde el enlace de una invitación
           loginStore.ts
@@ -307,6 +328,7 @@ desktop/
         panel/
           AccountMenu.tsx    # menú de la cuenta con «Salir», abajo en la barra lateral
           AttendanceStatus.tsx
+          CorrectionReasonDialog.tsx # diálogo provisional del motivo de una corrección
           DateFilter.tsx
           JustificationAccess.tsx
           MobileAttendance.tsx
@@ -316,6 +338,7 @@ desktop/
           SettingsView.tsx
           StatsView.tsx
           StudentHistory.tsx
+          apiValues.ts     # valores del contrato a los de la pantalla
           avatar.tsx
           classCode.ts       # código y enlace del QR de cada periodo de 30 s
           markControl.tsx
@@ -357,6 +380,7 @@ desktop/
     teacher-account.spec.ts # activar invitaciones y salir
     teacher-corrections.spec.ts # cambios con la lista cerrada, motivo, registro y volver
     panel.spec.ts
+    panel-api.spec.ts   # pestaña Hoy con el cliente mock: reglas y fixtures
     teacher-qr.spec.ts  # QR legible, código de 6 cifras, periodos del reloj, llegadas y dos temas a 390/1280 px
     organization-dashboard.spec.ts
     dashboard.spec.ts

@@ -86,7 +86,7 @@ export const course = {
 export type Attendance = 'presente' | 'retraso' | 'ausente' | 'pendiente'
 export type SessionMarkBook = Record<string, Record<string, Attendance>>
 export type JustKey = 'none' | 'pend' | 'ok' | 'no'
-export type Phase = 'programada' | 'abierta' | 'cerrada'
+export type Phase = 'programada' | 'abierta' | 'cerrada' | 'cancelada'
 
 export type RosterRow = {
   name: string
@@ -333,30 +333,4 @@ export function studentSummary(
     late,
     abs
   }
-}
-
-export function rollStatus(
-  phase: Phase,
-  marks: Record<number, Attendance>,
-  index: number
-): Attendance | 'none' {
-  if (phase === 'programada') {
-    return 'none'
-  }
-  return marks[index] ?? 'pendiente'
-}
-
-export function rollTime(
-  status: Attendance | 'none',
-  index: number,
-  times: Record<number, string> = {}
-): string {
-  const saved = times[index]
-  if (saved !== undefined) {
-    return saved
-  }
-  if (status === 'presente' || status === 'retraso') {
-    return todayEntry[index] ?? '—'
-  }
-  return '—'
 }

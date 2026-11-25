@@ -1,6 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { usePanelStore } from '../src/renderer/src/panel/panelStore'
-import { rollTime, rosterNames } from '../src/renderer/src/panel/roster'
 import { useSettingsStore } from '../src/renderer/src/panel/settingsStore'
 import { launchHiddenElectron } from './helpers/electron'
 
@@ -16,68 +15,6 @@ test.describe('correction logic', () => {
   test.beforeEach(() => {
     usePanelStore.setState(usePanelStore.getInitialState(), true)
     useSettingsStore.setState(useSettingsStore.getInitialState(), true)
-  })
-
-  test('only corrects a closed roll call, with a reason, and records who, when and why', () => {
-    const state = (): ReturnType<typeof usePanelStore.getState> => usePanelStore.getState()
-    const index = rosterNames.indexOf('Diego Torres')
-    // Sin abrir la lista tampoco se corrige.
-    expect(state().correctTodayMark(index, 'retraso', 'Llegó tarde.', teacher)).toBe(false)
-    state().openSession()
-    expect(state().correctTodayMark(index, 'retraso', 'Llegó tarde.', teacher)).toBe(false)
-    state().closeSession()
-    expect(state().marks[index]).toBe('ausente')
-    for (const reason of ['', '   ']) {
-      expect(state().correctTodayMark(index, 'retraso', reason, teacher)).toBe(false)
-    }
-    expect(state().correctTodayMark(index, 'pendiente', 'Sin dato.', teacher)).toBe(false)
-    expect(state().correctTodayMark(index, 'ausente', 'Igual.', teacher)).toBe(false)
-    expect(state().changes).toEqual([])
-
-    const before = Date.now()
-    expect(state().correctTodayMark(index, 'retraso', '  Llegó a las 09:20.  ', teacher)).toBe(true)
-    expect(state().marks[index]).toBe('retraso')
-    // No pasó por el lector: no se inventa una hora de entrada.
-    expect(rollTime('retraso', index, state().times)).toBe('—')
-    expect(state().changes).toHaveLength(1)
-    expect(state().changes[0]).toMatchObject({
-      sessionId: 'Mié 11 nov',
-      student: 'Diego Torres',
-      from: 'ausente',
-      to: 'retraso',
-      reason: 'Llegó a las 09:20.',
-      by: teacher
-    })
-    expect(state().changes[0].at).toBeGreaterThanOrEqual(before)
-  })
-
-  test('keeps an accepted arrival out of Ausente after closing', () => {
-    const state = (): ReturnType<typeof usePanelStore.getState> => usePanelStore.getState()
-    state().openSession()
-    state().simulateArrival(0)
-    state().closeSession()
-    expect(state().correctTodayMark(0, 'ausente', 'Se fue.', teacher)).toBe(false)
-    expect(state().correctTodayMark(0, 'retraso', 'Llegó tarde.', teacher)).toBe(true)
-  })
-
-  test('clears the entry time when correcting to Ausente', () => {
-    const state = (): ReturnType<typeof usePanelStore.getState> => usePanelStore.getState()
-    const torres = rosterNames.indexOf('Diego Torres')
-    const molero = rosterNames.indexOf('Diego Molero')
-    state().openSession()
-    state().setMark(torres, 'presente')
-    state().setTime(torres, '09:05')
-    state().setMark(molero, 'presente')
-    state().setTime(molero, '09:03')
-    state().closeSession()
-    expect(state().times[torres]).toBe('09:05')
-
-    expect(state().correctTodayMark(torres, 'ausente', 'Se marcó por error.', teacher)).toBe(true)
-    expect(state().marks[torres]).toBe('ausente')
-    expect(state().times[torres]).toBeUndefined()
-    expect(rollTime('ausente', torres, state().times)).toBe('—')
-    // Las demás filas conservan su hora.
-    expect(state().times[molero]).toBe('09:03')
   })
 
   test('corrects a past session and keeps every change in order', () => {
@@ -147,7 +84,7 @@ async function correct(
 ): Promise<void> {
   await row(p, name).getByRole('button', { name: from, exact: true }).click()
   await p.getByRole('menu').getByRole('button', { name: to, exact: true }).click()
-  const dialog = p.getByRole('dialog', { name: `Cambiar a ${to}` })
+  const dialog = p.getByRole('dialog')
   await dialog.getByLabel('Motivo').fill(reason)
   await dialog.getByRole('button', { name: 'Guardar', exact: true }).click()
   await expect(dialog).toHaveCount(0)

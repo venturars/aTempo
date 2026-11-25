@@ -247,8 +247,11 @@ test('opens the professor panel from the demo login and keeps attendance navigat
     const molero = window.getByRole('row', { name: /Diego Molero/ })
     await molero.getByText('Pendiente').click()
     await window.getByRole('button', { name: 'Presente' }).click()
-    await expect(molero.getByText('Presente')).toBeVisible()
-    await expect(molero.getByText('09:05')).toBeVisible()
+    const reason = window.getByRole('dialog', { name: /^Cambiar / })
+    await reason.getByLabel('Motivo', { exact: true }).fill('Corrección en clase')
+    await reason.getByRole('button', { name: 'Guardar', exact: true }).click()
+    await expect(molero.getByRole('button', { name: 'Presente', exact: true })).toBeVisible()
+    await expect(molero.getByRole('button', { name: '—', exact: true })).toBeVisible()
 
     await window.getByRole('button', { name: 'Cerrar lista' }).click()
     const dialog = window.getByRole('dialog')
@@ -259,7 +262,7 @@ test('opens the professor panel from the demo login and keeps attendance navigat
     await expect(
       window.getByRole('row', { name: /Diego Torres/ }).getByText('Ausente')
     ).toBeVisible()
-    await expect(molero.getByText('Presente')).toBeVisible()
+    await expect(molero.getByRole('button', { name: 'Presente', exact: true })).toBeVisible()
 
     await window.getByRole('button', { name: 'Sesiones' }).click()
     await window.getByRole('button', { name: /Mar 10 nov/ }).click()

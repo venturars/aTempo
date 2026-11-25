@@ -3,6 +3,8 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { closeDatabase, openDatabase } from './database'
+import { isContractRequest, sendWithRefresh } from './routerRequest'
+import type { RouterResponse } from '../preload/router'
 
 type LoginCredentials = { email: string; password: string }
 type AuthUser = { sub: string; email: string }
@@ -13,6 +15,7 @@ let authenticatedEmail: string | null = null
 
 const apiRouterUrl = process.env.ATEMPO_API_ROUTER_URL?.replace(/\/$/, '') ?? ''
 const requestTimeout = 10_000
+const routerBudget = 9_500
 
 function clearAuthSession(): void {
   encryptedAccessToken = null
@@ -85,7 +88,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 
-async function refreshAccessToken(): Promise<string | null> {
+async function refreshAccessToken(timeout = requestTimeout): Promise<string | null> {
   const refreshToken = readRefreshToken()
   if (refreshToken === null) return null
 
@@ -95,7 +98,7 @@ async function refreshAccessToken(): Promise<string | null> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken }),
-      signal: AbortSignal.timeout(requestTimeout)
+      signal: AbortSignal.timeout(timeout)
     })
   } catch {
     return null
@@ -285,6 +288,24 @@ function registerAuthHandlers(): void {
   })
 }
 
+function registerRouterHandlers(): void {
+  ipcMain.handle('api:request', async (_event, request: unknown): Promise<RouterResponse> => {
+    if (!isContractRequest(request)) throw authError('API_REQUEST_INVALID')
+    let routerUrl: string
+    try {
+      routerUrl = resolveApiRouterUrl()
+    } catch {
+      return { kind: 'no-response', reason: 'network' }
+    }
+    return sendWithRefresh(routerUrl, request, {
+      accessToken: readAccessToken(),
+      budget: routerBudget,
+      refresh: refreshAccessToken,
+      signOut: clearAuthSession
+    })
+  })
+}
+
 function startupHash(): string | undefined {
   if (process.argv.includes('--dashboard')) {
     return '/student/dashboard'
@@ -302,6 +323,25 @@ function startupHash(): string | undefined {
   }
 
   return undefined
+}
+
+function flagValue(name: string): string | undefined {
+  const prefix = `--${name}=`
+  const flag = process.argv.find((argument) => argument.startsWith(prefix))
+  return flag?.slice(prefix.length)
+}
+
+function apiQuery(): Record<string, string> {
+  const query: Record<string, string> = {}
+  const fixture = flagValue('api-fixture')
+  const transport = flagValue('api-transport')
+  if (fixture !== undefined) {
+    query.apiFixture = fixture
+  }
+  if (transport !== undefined) {
+    query.apiTransport = transport
+  }
+  return query
 }
 
 function createWindow(): void {
@@ -330,19 +370,22 @@ function createWindow(): void {
   })
 
   const hash = startupHash()
+  const query = apiQuery()
+  const params = Object.entries(query)
+    .map(([name, value]) => `${name}=${encodeURIComponent(value)}`)
+    .join('&')
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    const search = params === '' ? '' : `?${params}`
     const rendererUrl =
       hash === undefined
-        ? process.env['ELECTRON_RENDERER_URL']
-        : `${process.env['ELECTRON_RENDERER_URL']}#${hash}`
+        ? `${process.env['ELECTRON_RENDERER_URL']}${search}`
+        : `${process.env['ELECTRON_RENDERER_URL']}${search}#${hash}`
     mainWindow.loadURL(rendererUrl)
-  } else if (hash === undefined) {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'), { hash })
+    mainWindow.loadFile(join(__dirname, '../renderer/index.html'), { hash, query })
   }
 }
 
@@ -362,6 +405,7 @@ app.whenReady().then(() => {
 
   openDatabase()
   registerAuthHandlers()
+  registerRouterHandlers()
   createWindow()
 
   app.on('activate', function () {

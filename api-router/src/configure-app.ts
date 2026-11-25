@@ -1,14 +1,18 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import { fieldErrors, validationFailed } from './contract/contract-exception'
+import { ContractExceptionFilter } from './contract/contract-exception.filter'
 
 export function configureApp(app: INestApplication): void {
   app.enableCors()
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
-      transform: true
-    })
+      transform: true,
+      exceptionFactory: (errors) => validationFailed(fieldErrors(errors)),
+    }),
   )
+  app.useGlobalFilters(new ContractExceptionFilter(app.getHttpAdapter()))
 
   const documentConfig = new DocumentBuilder()
     .setTitle('aTempo api-router')
