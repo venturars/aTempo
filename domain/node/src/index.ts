@@ -5,7 +5,7 @@ export {
   NotFoundError,
   PersistenceError,
   ValidationError,
-  type DomainErrorType,
+  type DomainErrorKind,
   type DomainErrorId,
   type DomainErrorReason,
 } from './errors'

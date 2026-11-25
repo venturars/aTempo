@@ -1,4 +1,4 @@
-export type DomainErrorType =
+export type DomainErrorKind =
   | 'VALIDATION'
   | 'NOT_FOUND'
   | 'CONFLICT'
@@ -6,7 +6,7 @@ export type DomainErrorType =
   | 'PERSISTENCE'
 
 export type DomainErrorOptions = {
-  type: DomainErrorType
+  kind: DomainErrorKind
   id: string
   entity?: string
   field?: string
@@ -14,7 +14,7 @@ export type DomainErrorOptions = {
 }
 
 export class DomainError extends Error {
-  readonly type: DomainErrorType
+  readonly kind: DomainErrorKind
   readonly id: string
   readonly entity?: string
   readonly field?: string
@@ -22,7 +22,7 @@ export class DomainError extends Error {
   constructor(message: string, options: DomainErrorOptions) {
     super(message, options.cause ? { cause: options.cause } : undefined)
     this.name = new.target.name
-    this.type = options.type
+    this.kind = options.kind
     this.id = options.id
     this.entity = options.entity
     this.field = options.field
@@ -30,32 +30,32 @@ export class DomainError extends Error {
 }
 
 export class ValidationError extends DomainError {
-  constructor(message: string, options: Omit<DomainErrorOptions, 'type'>) {
-    super(message, { ...options, type: 'VALIDATION' })
+  constructor(message: string, options: Omit<DomainErrorOptions, 'kind'>) {
+    super(message, { ...options, kind: 'VALIDATION' })
   }
 }
 
 export class NotFoundError extends DomainError {
-  constructor(message: string, options: Omit<DomainErrorOptions, 'type'>) {
-    super(message, { ...options, type: 'NOT_FOUND' })
+  constructor(message: string, options: Omit<DomainErrorOptions, 'kind'>) {
+    super(message, { ...options, kind: 'NOT_FOUND' })
   }
 }
 
 export class ConflictError extends DomainError {
-  constructor(message: string, options: Omit<DomainErrorOptions, 'type'>) {
-    super(message, { ...options, type: 'CONFLICT' })
+  constructor(message: string, options: Omit<DomainErrorOptions, 'kind'>) {
+    super(message, { ...options, kind: 'CONFLICT' })
   }
 }
 
 export class ConfigurationError extends DomainError {
-  constructor(message: string, options: Omit<DomainErrorOptions, 'type'>) {
-    super(message, { ...options, type: 'CONFIGURATION' })
+  constructor(message: string, options: Omit<DomainErrorOptions, 'kind'>) {
+    super(message, { ...options, kind: 'CONFIGURATION' })
   }
 }
 
 export class PersistenceError extends DomainError {
-  constructor(message: string, options: Omit<DomainErrorOptions, 'type'>) {
-    super(message, { ...options, type: 'PERSISTENCE' })
+  constructor(message: string, options: Omit<DomainErrorOptions, 'kind'>) {
+    super(message, { ...options, kind: 'PERSISTENCE' })
   }
 }
 

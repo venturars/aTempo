@@ -1,73 +1,73 @@
-import type { DomainErrorType } from './domain-error'
+import type { DomainErrorKind } from './domain-error'
 
 export const DOMAIN_ERROR_REASONS = {
   string: {
-    type: 'VALIDATION',
+    kind: 'VALIDATION',
     message: (label: string) => `${label} debe ser un string`,
   },
   empty: {
-    type: 'VALIDATION',
+    kind: 'VALIDATION',
     message: (label: string) => `${label} debe ser un string no vacío`,
   },
   uuid: {
-    type: 'VALIDATION',
+    kind: 'VALIDATION',
     message: (label: string) => `${label} debe ser un uuid`,
   },
   date: {
-    type: 'VALIDATION',
+    kind: 'VALIDATION',
     message: (label: string) => `${label} debe ser una fecha`,
   },
   instant: {
-    type: 'VALIDATION',
+    kind: 'VALIDATION',
     message: (label: string) => `${label} debe ser una fecha con zona horaria`,
   },
   object: {
-    type: 'VALIDATION',
+    kind: 'VALIDATION',
     message: (label: string) => `${label} debe ser un objeto`,
   },
   nullable_string: {
-    type: 'VALIDATION',
+    kind: 'VALIDATION',
     message: (label: string) => `${label} debe ser string o null`,
   },
   format: {
-    type: 'VALIDATION',
+    kind: 'VALIDATION',
     message: (label: string) => `${label} tiene un formato inválido`,
   },
   order: {
-    type: 'VALIDATION',
+    kind: 'VALIDATION',
     message: (label: string) => `${label} debe ser posterior a course.start_at`,
   },
   taken: {
-    type: 'CONFLICT',
+    kind: 'CONFLICT',
     message: (label: string) => `${label} ya existe`,
   },
   exclusive: {
-    type: 'CONFLICT',
+    kind: 'CONFLICT',
     message: () => 'un student no puede llevar otro rol',
   },
   missing: {
-    type: 'NOT_FOUND',
+    kind: 'NOT_FOUND',
     message: (label: string) => `${label} no existe`,
   },
   referenced: {
-    type: 'CONFLICT',
+    kind: 'CONFLICT',
     message: (label: string) => `${label} todavía tiene filas que lo usan`,
   },
   not_created: {
-    type: 'PERSISTENCE',
+    kind: 'PERSISTENCE',
     message: (label: string) => `${label} no se ha creado`,
   },
   unmapped: {
-    type: 'PERSISTENCE',
+    kind: 'PERSISTENCE',
     message: () => 'error de PostgreSQL',
   },
   missing_env: {
-    type: 'CONFIGURATION',
+    kind: 'CONFIGURATION',
     message: (label: string) => `Falta ${label.slice(label.indexOf('.') + 1)}`,
   },
 } as const satisfies Record<
   string,
-  { type: DomainErrorType; message: (label: string) => string }
+  { kind: DomainErrorKind; message: (label: string) => string }
 >
 
 export type DomainErrorReason = keyof typeof DOMAIN_ERROR_REASONS

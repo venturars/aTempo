@@ -18,12 +18,12 @@ describe('catálogo de errores', () => {
     resetDriver()
   })
 
-  it('builds id, type, entity and field from label and reason', () => {
+  it('builds id, kind, entity and field from label and reason', () => {
     const error = domainError('person.email', 'taken')
     expect(error).toBeInstanceOf(ConflictError)
     expect(error).toMatchObject({
       id: 'person.email.taken',
-      type: 'CONFLICT',
+      kind: 'CONFLICT',
       entity: 'person',
       field: 'email',
       message: 'person.email ya existe',
@@ -48,7 +48,7 @@ describe('catálogo de errores', () => {
     expect(error).toBeInstanceOf(PersistenceError)
     expect(error).toMatchObject({
       id: 'postgres.unmapped',
-      type: 'PERSISTENCE',
+      kind: 'PERSISTENCE',
       entity: 'postgres',
       message: 'error de PostgreSQL',
     })
@@ -60,7 +60,7 @@ describe('catálogo de errores', () => {
     try {
       fail('person', 'missing')
     } catch (error) {
-      expect(error).toMatchObject({ id: 'person.missing', type: 'NOT_FOUND' })
+      expect(error).toMatchObject({ id: 'person.missing', kind: 'NOT_FOUND' })
     }
   })
 
@@ -75,7 +75,7 @@ describe('catálogo de errores', () => {
       expect(error).toBeInstanceOf(ValidationError)
       expect(error).toMatchObject({
         id: 'person.first_name.empty',
-        type: 'VALIDATION',
+        kind: 'VALIDATION',
         entity: 'person',
         field: 'first_name',
       })
@@ -89,7 +89,7 @@ describe('catálogo de errores', () => {
     } catch (error) {
       expect(error).toMatchObject({
         id: 'role.name.format',
-        type: 'VALIDATION',
+        kind: 'VALIDATION',
         entity: 'role',
         field: 'name',
       })
@@ -105,7 +105,7 @@ describe('catálogo de errores', () => {
     })
     await expect(query('SELECT 1')).rejects.toMatchObject({
       id: 'person.email.taken',
-      type: 'CONFLICT',
+      kind: 'CONFLICT',
     })
   })
 

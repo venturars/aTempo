@@ -6,7 +6,7 @@ export {
   PersistenceError,
   ValidationError,
   labelParts,
-  type DomainErrorType,
+  type DomainErrorKind,
   type DomainErrorOptions,
 } from './domain-error'
 export {

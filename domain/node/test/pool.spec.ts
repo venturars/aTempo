@@ -162,7 +162,7 @@ describe('pool', () => {
       return commandResult(1)
     })
     await expect(removePerson({ id: PERSON_ID })).rejects.toMatchObject({
-      type: 'CONFLICT',
+      kind: 'CONFLICT',
       id: 'person.referenced',
     })
     expect(clientSql()).toContain('ROLLBACK')

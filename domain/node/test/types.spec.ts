@@ -243,7 +243,7 @@ describe('assert*', () => {
     )
   })
 
-  it('throws ValidationError with a type', () => {
+  it('throws ValidationError with a kind', () => {
     try {
       assertPersonCreate({
         ...validPerson,
@@ -254,7 +254,7 @@ describe('assert*', () => {
       expect(error).toBeInstanceOf(ValidationError)
       expect(error).toMatchObject({
         id: 'person.first_name.empty',
-        type: 'VALIDATION',
+        kind: 'VALIDATION',
         entity: 'person',
         field: 'first_name',
       })
