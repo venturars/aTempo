@@ -148,13 +148,14 @@ test('keeps a pending class QR check-in through Ada login', async ({ page }) => 
   await page.clock.install({ time: scannedAt })
   const period = Math.floor(scannedAt.getTime() / 30_000)
   const code = codeForPeriod('ATEMPO-CLASE-1109', period)
+  const arrival = `${String(scannedAt.getHours()).padStart(2, '0')}:${String(scannedAt.getMinutes()).padStart(2, '0')}`
 
   await page.goto(`/student/check-in?code=ATEMPO-CLASE-1109-${code}`)
   await expect(page.getByText('Entra para registrar tu asistencia.')).toBeVisible()
   await signIn(page, 'ada.lopez@clase.test')
   await expect(page).toHaveURL(/\/student\/registered/)
   await expect(page.getByRole('heading', { level: 1, name: 'Disfruta la clase' })).toBeVisible()
-  await expect(page.getByText('10:00', { exact: true })).toBeVisible()
+  await expect(page.getByText(arrival, { exact: true })).toBeVisible()
 })
 
 test('keeps the authenticated area open when the router cannot complete logout', async ({
