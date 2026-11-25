@@ -24,7 +24,6 @@ function sessionDay(startsAt: string | undefined): string {
 function ReasonDialog({ pending }: { pending: PendingCorrection }): React.JSX.Element {
   const busy = usePanelStore((state) => state.busy)
   const startsAt = usePanelStore((state) => state.session?.startsAt)
-  const [missing, setMissing] = useState(false)
   const error = usePanelStore((state) => state.correctionError)
   const saveCorrection = usePanelStore((state) => state.saveCorrection)
   const cancelCorrection = usePanelStore((state) => state.cancelCorrection)
@@ -35,7 +34,7 @@ function ReasonDialog({ pending }: { pending: PendingCorrection }): React.JSX.El
     checkedInAt === undefined
       ? `Cambiar a ${markLabel[markOf(status)]}`
       : `Cambiar la entrada a las ${clockTime(checkedInAt)}`
-  const message = missing ? 'Escribe el motivo del cambio.' : error
+  const message = error
 
   useEffect(() => {
     const previous = document.activeElement
@@ -71,10 +70,6 @@ function ReasonDialog({ pending }: { pending: PendingCorrection }): React.JSX.El
         noValidate
         onSubmit={(event) => {
           event.preventDefault()
-          if (reason.trim() === '') {
-            setMissing(true)
-            return
-          }
           void saveCorrection(reason)
         }}
       >
@@ -87,7 +82,9 @@ function ReasonDialog({ pending }: { pending: PendingCorrection }): React.JSX.El
           </p>
         </div>
         <div className="flex flex-col gap-2">
-          <label htmlFor="correction-reason">Motivo</label>
+          <label htmlFor="correction-reason">
+            Motivo <span className="field-optional">· recomendado</span>
+          </label>
           <textarea
             id="correction-reason"
             ref={fieldRef}
@@ -96,10 +93,7 @@ function ReasonDialog({ pending }: { pending: PendingCorrection }): React.JSX.El
             value={reason}
             aria-invalid={message !== null}
             aria-describedby={message === null ? undefined : 'correction-reason-error'}
-            onChange={(event) => {
-              setReason(event.target.value)
-              setMissing(false)
-            }}
+            onChange={(event) => setReason(event.target.value)}
           />
           {message === null ? null : (
             <p id="correction-reason-error" role="alert" className="text-sm">

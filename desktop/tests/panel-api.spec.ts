@@ -95,14 +95,15 @@ test('edits the arrival time with a reason', async () => {
   expect(record?.updatedAt).not.toBeNull()
 })
 
-test('does not save a correction without a reason or that changes nothing', async () => {
+test('saves a correction without a reason and skips one that changes nothing', async () => {
   await freshToday()
   await store().openSession()
   store().requestMark(diegoMolero, 'ausente')
   await store().saveCorrection('   ')
-  expect(store().records[diegoMolero]?.status).toBe('pending')
-  expect(store().pendingCorrection).not.toBeNull()
-  store().cancelCorrection()
+  expect(store().records[diegoMolero]).toMatchObject({ status: 'absent', reason: null })
+  expect(store().pendingCorrection).toBeNull()
+  expect(store().changes.at(-1)).toMatchObject({ from: 'pendiente', to: 'ausente', reason: '' })
+  store().requestMark(diegoMolero, 'ausente')
   expect(store().pendingCorrection).toBeNull()
   store().requestMark(diegoMolero, 'pendiente')
   expect(store().pendingCorrection).toBeNull()
@@ -185,7 +186,7 @@ test('shows the validation details inside the reason dialog', async () => {
       status: 400,
       body: {
         code: 'VALIDATION_FAILED',
-        details: [{ field: 'reason', message: 'El motivo es obligatorio.' }]
+        details: [{ field: 'reason', message: 'El motivo tiene que ser texto.' }]
       }
     })
   )
@@ -193,7 +194,7 @@ test('shows the validation details inside the reason dialog', async () => {
   await store().loadToday()
   store().requestMark(diegoMolero, 'retraso')
   await store().saveCorrection('x')
-  expect(store().correctionError).toBe('El motivo es obligatorio.')
+  expect(store().correctionError).toBe('El motivo tiene que ser texto.')
 })
 
 test('keeps a cancelled session read-only', async () => {
@@ -282,11 +283,14 @@ test('applies the contract rules in the mock', async () => {
   const code = await client.getCheckInCode(session.id)
   expect(code.code).toMatch(/^\d{6}$/)
   await expect(
-    client.correctAttendance(session.id, diegoMolero, { status: 'present', reason: ' ' })
+    client.correctAttendance(session.id, diegoMolero, {
+      status: 'present',
+      reason: 42 as unknown as string
+    })
   ).rejects.toMatchObject({
     statusCode: 400,
     code: 'VALIDATION_FAILED',
-    details: [{ field: 'reason', message: 'El motivo es obligatorio.' }]
+    details: [{ field: 'reason', message: 'El motivo tiene que ser texto.' }]
   })
   await expect(
     client.correctAttendance(session.id, diegoMolero, {
@@ -437,7 +441,7 @@ async function withPanel(
 
 async function giveReason(window: Page): Promise<void> {
   const dialog = window.getByRole('dialog', { name: /^Cambiar / })
-  await dialog.getByLabel('Motivo', { exact: true }).fill('Corrección en clase')
+  await dialog.getByLabel('Motivo').fill('Corrección en clase')
   await dialog.getByRole('button', { name: 'Guardar', exact: true }).click()
   await expect(dialog).toHaveCount(0)
 }
@@ -473,8 +477,7 @@ test('keeps the row when the reason dialog is cancelled', async () => {
     await diego.getByRole('button', { name: 'Pendiente', exact: true }).click()
     await window.getByRole('menu').getByRole('button', { name: 'Tarde', exact: true }).click()
     const dialog = window.getByRole('dialog', { name: 'Cambiar a Tarde' })
-    await dialog.getByRole('button', { name: 'Guardar', exact: true }).click()
-    await expect(dialog.getByText('Escribe el motivo del cambio.')).toBeVisible()
+    await dialog.getByLabel('Motivo').fill('Llegó tarde')
     await dialog.getByRole('button', { name: 'Cancelar', exact: true }).click()
     await expect(dialog).toHaveCount(0)
     await expect(diego.getByRole('button', { name: 'Pendiente', exact: true })).toBeVisible()

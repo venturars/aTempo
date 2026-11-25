@@ -38,7 +38,8 @@ export type CheckInCode = {
 
 export type AttendanceCorrection = {
   status: CorrectedStatus
-  reason: string
+  // Opcional: sin motivo, el registro guarda reason: null.
+  reason?: string
   checkedInAt?: string
 }
 

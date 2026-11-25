@@ -80,8 +80,8 @@ function correctionErrors(correction: AttendanceCorrection): FieldError[] {
   if (!correctedStatuses.includes(correction.status)) {
     errors.push({ field: 'status', message: 'La marca tiene que ser present, late o absent.' })
   }
-  if (typeof correction.reason !== 'string' || correction.reason.trim() === '') {
-    errors.push({ field: 'reason', message: 'El motivo es obligatorio.' })
+  if (correction.reason !== undefined && typeof correction.reason !== 'string') {
+    errors.push({ field: 'reason', message: 'El motivo tiene que ser texto.' })
   }
   if (correction.status === 'absent' && correction.checkedInAt !== undefined) {
     errors.push({ field: 'checkedInAt', message: 'Un alumno ausente no tiene hora de entrada.' })
@@ -318,7 +318,7 @@ export function createMockTransport(fixture: FixtureName, today: string): MockTr
       }
       record.updatedBy = sampleTeacherId
       record.updatedAt = new Date().toISOString()
-      record.reason = correction.reason.trim()
+      record.reason = correction.reason?.trim() || null
       return { ...record }
     },
 

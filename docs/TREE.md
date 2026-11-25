@@ -328,7 +328,7 @@ desktop/
         panel/
           AccountMenu.tsx    # menú de la cuenta con «Salir», abajo en la barra lateral
           AttendanceStatus.tsx
-          CorrectionReasonDialog.tsx # diálogo provisional del motivo de una corrección
+          CorrectionReasonDialog.tsx # diálogo provisional de una corrección, con motivo opcional
           DateFilter.tsx
           JustificationAccess.tsx
           MobileAttendance.tsx
@@ -342,7 +342,7 @@ desktop/
           avatar.tsx
           classCode.ts       # código y enlace del QR de cada periodo de 30 s
           markControl.tsx
-          markCorrection.tsx # motivo de un cambio con la lista cerrada
+          markCorrection.tsx # diálogo de un cambio con la lista cerrada, con motivo opcional
           marks.ts
           panelStore.ts
           riskHint.tsx
@@ -378,7 +378,7 @@ desktop/
     login.spec.ts
     teacher-login.spec.ts # acceso con la cuenta pública del profesor
     teacher-account.spec.ts # activar invitaciones y salir
-    teacher-corrections.spec.ts # cambios con la lista cerrada, motivo, registro y volver
+    teacher-corrections.spec.ts # cambios con la lista cerrada, con y sin motivo, registro y volver
     panel.spec.ts
     panel-api.spec.ts   # pestaña Hoy con el cliente mock: reglas y fixtures
     teacher-qr.spec.ts  # QR legible, código de 6 cifras, periodos del reloj, llegadas y dos temas a 390/1280 px

@@ -71,7 +71,7 @@ Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alu
 VITE_STUDENT_SITE_URL=http://<ip-del-ordenador>:5191 pnpm dev
 ```
 
-Con la lista abierta o cerrada, cambiar un estado o una hora pide un motivo. Al pasar el ratón por encima del estado se ve quién lo cambió, cuándo y por qué.
+Con la lista abierta o cerrada, cambiar un estado o una hora deja escribir un motivo, que es opcional. Al pasar el ratón por encima del estado se ve quién lo cambió, cuándo y por qué.
 
 En el escritorio del alumno, pulsa **Cerrar sesión** en su inicio.
 
