@@ -27,11 +27,8 @@ export class WebSessionService {
       throw this.invalidCredentials()
     }
 
-    let authenticatedUser: { sub: string }
     try {
-      authenticatedUser = await this.authService.getAuthenticatedUser(
-        `Bearer ${tokens.accessToken}`,
-      )
+      await this.authService.getAuthenticatedUser(`Bearer ${tokens.accessToken}`)
     } catch (error) {
       await this.revoke(tokens.refreshToken)
       throw error
@@ -39,7 +36,7 @@ export class WebSessionService {
 
     return {
       tokens,
-      user: { sub: authenticatedUser.sub, email, profile },
+      user: { email, profile },
     }
   }
 

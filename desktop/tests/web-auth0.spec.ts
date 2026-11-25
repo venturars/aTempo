@@ -4,7 +4,7 @@ import { codeForPeriod } from '../../web/src/student/classCode'
 const apiPath = /\/api\/auth\/(login|me|refresh|logout)$/
 
 type WebProfile = 'admin' | 'student'
-type WebSession = { sub: string; email: string; profile: WebProfile }
+type WebSession = { email: string; profile: WebProfile }
 type MockSessionState = { session: WebSession | null; logoutFails: boolean }
 
 const mockSessions = new WeakMap<BrowserContext, MockSessionState>()
@@ -27,7 +27,7 @@ async function mockWebSession(context: BrowserContext): Promise<MockSessionState
         await route.fulfill({ status: 401, json: { code: 'INVALID_CREDENTIALS' } })
         return
       }
-      state.session = { sub: `auth0|${profile}-example`, email: email!, profile }
+      state.session = { email: email!, profile }
       await route.fulfill({
         status: 200,
         json: state.session,

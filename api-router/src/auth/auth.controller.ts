@@ -215,11 +215,8 @@ export class AuthController {
       return this.authService.getAuthenticatedUser(authorization)
     }
     response.setHeader('Cache-Control', 'no-store')
-    const user = await this.authService.getAuthenticatedUser(
-      `Bearer ${accessToken}`,
-    )
+    await this.authService.getAuthenticatedUser(`Bearer ${accessToken}`)
     return {
-      sub: user.sub,
       email: identity.email,
       profile: identity.profile,
     }

@@ -23,7 +23,7 @@ async function logInAdmin(
 }
 
 test.beforeEach(async ({ context }) => {
-  let session: { email: string; profile: 'admin' | 'student'; sub: string } | null = null
+  let session: { email: string; profile: 'admin' | 'student' } | null = null
   await context.route(/\/api\/auth\/(login|me|refresh|logout)$/, async (route) => {
     const pathname = new URL(route.request().url()).pathname
     if (pathname.endsWith('/login')) {
@@ -39,7 +39,7 @@ test.beforeEach(async ({ context }) => {
         await route.fulfill({ status: 401, json: { code: 'INVALID_CREDENTIALS' } })
         return
       }
-      session = { email: email!, profile, sub: `auth0|${profile}-demo` }
+      session = { email: email!, profile }
       await route.fulfill({
         status: 200,
         json: session,

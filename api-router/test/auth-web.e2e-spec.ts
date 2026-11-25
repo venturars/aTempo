@@ -73,13 +73,21 @@ describe('Web authentication cookies (e2e)', () => {
     fetchMock.mockResolvedValue(auth0Response({ keys: [signingKey] }))
   }
 
-  function mockSuccessfulLogin(subject = 'auth0|test-user'): string {
-    const accessToken = createAccessToken({
+  function tokenClaims(subject: string, email: string): Record<string, unknown> {
+    return {
       iss: 'https://tenant.example.test/',
       aud: auth0Config.AUTH0_AUDIENCE,
       exp: Math.floor(Date.now() / 1000) + 300,
       sub: subject,
-    })
+      email,
+    }
+  }
+
+  function mockSuccessfulLogin(
+    subject = 'auth0|test-user',
+    email = 'profesor@atempo.test',
+  ): string {
+    const accessToken = createAccessToken(tokenClaims(subject, email))
     mockJwks()
     fetchMock.mockResolvedValueOnce(
       auth0Response({
@@ -97,14 +105,14 @@ describe('Web authentication cookies (e2e)', () => {
   ] as const)(
     'POST /auth/login creates HttpOnly token cookies for %s with profile %s',
     async (email, profile) => {
-      const accessToken = mockSuccessfulLogin()
+      const accessToken = mockSuccessfulLogin('auth0|test-user', email)
 
       const response = await request(app.getHttpServer())
         .post('/auth/login')
         .set('Origin', 'http://localhost:5191')
         .send({ email, password: 'test-password' })
         .expect(200)
-        .expect({ sub: 'auth0|test-user', email, profile })
+        .expect({ email, profile })
 
       const setCookie = String(response.headers['set-cookie'])
       expect(setCookie).toMatch(/atempo_access=/)
@@ -129,12 +137,9 @@ describe('Web authentication cookies (e2e)', () => {
   )
 
   it('POST /auth/login rejects an unknown identity and revokes its refresh token', async () => {
-    const accessToken = createAccessToken({
-      iss: 'https://tenant.example.test/',
-      aud: auth0Config.AUTH0_AUDIENCE,
-      exp: Math.floor(Date.now() / 1000) + 300,
-      sub: 'auth0|unknown-user',
-    })
+    const accessToken = createAccessToken(
+      tokenClaims('auth0|unknown-user', 'other@atempo.test'),
+    )
     mockJwks()
     fetchMock.mockResolvedValueOnce(
       auth0Response({
@@ -205,7 +210,6 @@ describe('Web authentication cookies (e2e)', () => {
       .get('/auth/me')
       .expect(200)
       .expect({
-        sub: 'auth0|test-user',
         email: 'profesor@atempo.test',
         profile: 'admin',
       })
@@ -221,13 +225,10 @@ describe('Web authentication cookies (e2e)', () => {
   })
 
   it('POST /auth/refresh renews cookies without exposing tokens in JSON', async () => {
-    const loginToken = mockSuccessfulLogin()
-    const renewedAccessToken = createAccessToken({
-      iss: 'https://tenant.example.test/',
-      aud: auth0Config.AUTH0_AUDIENCE,
-      exp: Math.floor(Date.now() / 1000) + 300,
-      sub: 'auth0|test-user',
-    })
+    const loginToken = mockSuccessfulLogin('auth0|test-user', 'ada.lopez@clase.test')
+    const renewedAccessToken = createAccessToken(
+      tokenClaims('auth0|test-user', 'ada.lopez@clase.test'),
+    )
     const agent = request.agent(app.getHttpServer())
     await agent
       .post('/auth/login')
@@ -267,25 +268,18 @@ describe('Web authentication cookies (e2e)', () => {
       .get('/auth/me')
       .expect(200)
       .expect({
-        sub: 'auth0|test-user',
         email: 'ada.lopez@clase.test',
         profile: 'student',
       })
   })
 
   it('POST /auth/login replaces and revokes the refresh token of the previous cookies', async () => {
-    const firstAccessToken = createAccessToken({
-      iss: 'https://tenant.example.test/',
-      aud: auth0Config.AUTH0_AUDIENCE,
-      exp: Math.floor(Date.now() / 1000) + 300,
-      sub: 'auth0|student-user',
-    })
-    const secondAccessToken = createAccessToken({
-      iss: 'https://tenant.example.test/',
-      aud: auth0Config.AUTH0_AUDIENCE,
-      exp: Math.floor(Date.now() / 1000) + 300,
-      sub: 'auth0|teacher-user',
-    })
+    const firstAccessToken = createAccessToken(
+      tokenClaims('auth0|student-user', 'ada.lopez@clase.test'),
+    )
+    const secondAccessToken = createAccessToken(
+      tokenClaims('auth0|teacher-user', 'profesor@atempo.test'),
+    )
     const tokenResponses = [
       {
         access_token: firstAccessToken,
@@ -325,7 +319,6 @@ describe('Web authentication cookies (e2e)', () => {
       .send({ email: 'profesor@atempo.test', password: 'test-password' })
       .expect(200)
       .expect({
-        sub: 'auth0|teacher-user',
         email: 'profesor@atempo.test',
         profile: 'admin',
       })
@@ -340,7 +333,7 @@ describe('Web authentication cookies (e2e)', () => {
 
   it('POST /auth/logout rejects a disallowed Origin and keeps the current session', async () => {
     process.env.ATEMPO_WEB_ORIGIN = 'https://web.example.test'
-    mockSuccessfulLogin()
+    mockSuccessfulLogin('auth0|test-user', 'ada.lopez@clase.test')
     const agent = request.agent(app.getHttpServer())
     await agent
       .post('/auth/login')
@@ -363,14 +356,13 @@ describe('Web authentication cookies (e2e)', () => {
       .get('/auth/me')
       .expect(200)
       .expect({
-        sub: 'auth0|test-user',
         email: 'ada.lopez@clase.test',
         profile: 'student',
       })
   })
 
   it('POST /auth/logout clears the cookies and revokes the refresh token', async () => {
-    mockSuccessfulLogin()
+    mockSuccessfulLogin('auth0|test-user', 'ada.lopez@clase.test')
     const agent = request.agent(app.getHttpServer())
     await agent
       .post('/auth/login')

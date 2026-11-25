@@ -1,7 +1,6 @@
 export type WebProfile = 'admin' | 'student'
 
 export type WebSession = {
-  sub: string
   email: string
   profile: WebProfile
 }
