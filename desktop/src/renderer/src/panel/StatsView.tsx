@@ -12,12 +12,15 @@ import {
   compareByName,
   course,
   rosterNames,
+  sessionDate,
+  sessionDateLabel,
+  sessionShortWeekday,
   type RosterRow,
   type ClassSession
 } from './roster'
 
 function dateLabel(session: ClassSession): string {
-  return `${session.id.split(' ')[1]} nov 2026`
+  return sessionDateLabel(session.id)
 }
 
 type Selection = { name: string; session: ClassSession; row: RosterRow | undefined }
@@ -36,9 +39,7 @@ export function StatsView(): React.JSX.Element {
       })
     }
   })
-  const sessionDate = (session: ClassSession): string =>
-    `2026-11-${session.id.split(' ')[1].padStart(2, '0')}`
-  const available = sessions.map(sessionDate)
+  const available = sessions.map((session) => session.id)
   const savedDates = usePanelStore((state) => state.statsDates)
   const setDates = usePanelStore((state) => state.setStatsDates)
   const savedScroll = usePanelStore((state) => state.statsScroll)
@@ -68,7 +69,7 @@ export function StatsView(): React.JSX.Element {
   const [selected, setSelected] = useState<Selection | null>(null)
   const [timeTip, setTimeTip] = useState<{ text: string; top: number; left: number } | null>(null)
   const openStudent = usePanelStore((state) => state.openStudent)
-  const visible = sessions.filter((session) => dates.includes(sessionDate(session)))
+  const visible = sessions.filter((session) => dates.includes(session.id))
   const held = visible.filter((session) => session.rows !== null && !session.cancel)
   const records = [...rosterNames].sort(compareByName).map((name) => {
     const rows = held.flatMap((session) => {
@@ -189,10 +190,10 @@ export function StatsView(): React.JSX.Element {
                           className={`attendance-date ${session.cancel ? 'cancelled-column' : ''}`}
                         >
                           <span className="block font-medium normal-case tracking-normal">
-                            {session.id.split(' ')[0]}
+                            {sessionShortWeekday(session.id)}
                           </span>
                           <span className="block font-medium normal-case tracking-normal tabular-nums text-base-content">
-                            {session.id.split(' ')[1]}
+                            {sessionDate(session.id).getDate()}
                           </span>
                         </th>
                       ))}
