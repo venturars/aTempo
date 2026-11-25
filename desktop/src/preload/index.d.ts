@@ -1,6 +1,6 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 
-export type AuthUser = { sub: string; email: string }
+export type AuthUser = { email: string }
 
 declare global {
   interface Window {

@@ -180,7 +180,24 @@ describe('Authentication (e2e)', () => {
       .expect(({ body }) => expect(body.code).toBe('AUTH_PROVIDER_UNAVAILABLE'))
   })
 
-  it('GET /auth/me validates a signed Access Token and returns its subject', async () => {
+  it('GET /auth/me validates a signed Access Token and returns normalized email', async () => {
+    mockJwks()
+    const token = createAccessToken({
+      iss: 'https://tenant.example.test/',
+      aud: auth0Config.AUTH0_AUDIENCE,
+      exp: Math.floor(Date.now() / 1000) + 300,
+      sub: 'auth0|test-user',
+      email: '  Profesor@ATEMPO.TEST ',
+    })
+
+    await request(app.getHttpServer())
+      .get('/auth/me')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200)
+      .expect({ email: 'profesor@atempo.test' })
+  })
+
+  it('GET /auth/me rejects a signed token without an email claim', async () => {
     mockJwks()
     const token = createAccessToken({
       iss: 'https://tenant.example.test/',
@@ -192,8 +209,8 @@ describe('Authentication (e2e)', () => {
     await request(app.getHttpServer())
       .get('/auth/me')
       .set('Authorization', `Bearer ${token}`)
-      .expect(200)
-      .expect({ sub: 'auth0|test-user' })
+      .expect(401)
+      .expect(({ body }) => expect(body.code).toBe('INVALID_TOKEN'))
   })
 
   it('GET /auth/me rejects a missing Bearer token', async () => {
@@ -228,6 +245,7 @@ describe('Authentication (e2e)', () => {
       aud: auth0Config.AUTH0_AUDIENCE,
       exp: Math.floor(Date.now() / 1000) + 300,
       sub: 'auth0|test-user',
+      email: 'profesor@atempo.test',
       ...claims,
     })
 
@@ -248,6 +266,7 @@ describe('Authentication (e2e)', () => {
         aud: auth0Config.AUTH0_AUDIENCE,
         exp: Math.floor(Date.now() / 1000) + 300,
         sub: 'auth0|test-user',
+        email: 'profesor@atempo.test',
       },
       otherPrivateKey,
     )

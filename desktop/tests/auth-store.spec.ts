@@ -5,11 +5,8 @@ import { useSessionStore } from '../src/renderer/src/session/sessionStore'
 
 type AuthBridge = {
   isConfigured: () => Promise<boolean>
-  login: (credentials: { email: string; password: string }) => Promise<{
-    sub: string
-    email: string
-  }>
-  me: () => Promise<{ sub: string; email: string } | null>
+  login: (credentials: { email: string; password: string }) => Promise<{ email: string }>
+  me: () => Promise<{ email: string } | null>
   logout: () => Promise<void>
 }
 
@@ -25,7 +22,7 @@ function installAuthBridge(): void {
     login: async (credentials) => {
       loginRequest = credentials
       if (loginFailure !== null) throw loginFailure
-      return { sub: 'auth0|sample-user', email: credentials.email }
+      return { email: credentials.email.trim().toLowerCase() }
     },
     me: async () => null,
     logout: async () => {}

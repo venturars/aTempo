@@ -5,11 +5,10 @@ import icon from '../../resources/icon.png?asset'
 import { closeDatabase, openDatabase } from './database'
 
 type LoginCredentials = { email: string; password: string }
-type AuthUser = { sub: string; email: string }
+type AuthUser = { email: string }
 
 let encryptedAccessToken: Buffer | null = null
 let encryptedRefreshToken: Buffer | null = null
-let authenticatedEmail: string | null = null
 
 const apiRouterUrl = process.env.ATEMPO_API_ROUTER_URL?.replace(/\/$/, '') ?? ''
 const requestTimeout = 10_000
@@ -17,7 +16,10 @@ const requestTimeout = 10_000
 function clearAuthSession(): void {
   encryptedAccessToken = null
   encryptedRefreshToken = null
-  authenticatedEmail = null
+}
+
+function normalizeAuthEmail(email: string): string {
+  return email.trim().toLowerCase()
 }
 
 function authError(code: string): Error {
@@ -116,7 +118,7 @@ async function refreshAccessToken(): Promise<string | null> {
 async function requestCurrentUser(
   accessToken: string,
   allowRefresh = true
-): Promise<{ sub: string } | null> {
+): Promise<{ email: string } | null> {
   const response = await fetch(`${resolveApiRouterUrl()}/auth/me`, {
     headers: { Authorization: `Bearer ${accessToken}` },
     signal: AbortSignal.timeout(requestTimeout)
@@ -133,11 +135,11 @@ async function requestCurrentUser(
   if (!response.ok) throw authError('AUTH_SERVICE_UNAVAILABLE')
 
   const body: unknown = await response.json()
-  if (!isRecord(body) || typeof body.sub !== 'string') {
+  if (!isRecord(body) || typeof body.email !== 'string' || body.email === '') {
     throw authError('AUTH_RESPONSE_INVALID')
   }
 
-  return { sub: body.sub }
+  return { email: normalizeAuthEmail(body.email) }
 }
 
 async function completeAuthenticatedSession(
@@ -146,9 +148,8 @@ async function completeAuthenticatedSession(
   refreshToken?: string
 ): Promise<AuthUser> {
   storeTokens(accessToken, refreshToken)
-  authenticatedEmail = email
 
-  let user: { sub: string } | null
+  let user: { email: string } | null
   try {
     user = await requestCurrentUser(accessToken)
   } catch {
@@ -156,7 +157,11 @@ async function completeAuthenticatedSession(
     throw authError('AUTH_SERVICE_UNAVAILABLE')
   }
   if (user === null) throw authError('INVALID_CREDENTIALS')
-  return { ...user, email }
+  if (normalizeAuthEmail(email) !== user.email) {
+    clearAuthSession()
+    throw authError('AUTH_EMAIL_MISMATCH')
+  }
+  return user
 }
 
 function registerAuthHandlers(): void {
@@ -261,10 +266,7 @@ function registerAuthHandlers(): void {
     const accessToken = readAccessToken()
     if (accessToken === null) return null
 
-    const user = await requestCurrentUser(accessToken)
-    return user === null || authenticatedEmail === null
-      ? null
-      : { ...user, email: authenticatedEmail }
+    return requestCurrentUser(accessToken)
   })
 
   ipcMain.handle('auth:logout', async () => {
