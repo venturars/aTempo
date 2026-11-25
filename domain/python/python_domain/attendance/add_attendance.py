@@ -3,7 +3,7 @@ from typing import TypedDict
 from python_domain.attendance.find_attendance_available import (
     find_attendance_available,
 )
-from python_domain.errors import PersistenceError
+from python_domain.errors import fail
 from python_domain.session.find_session_exists import find_session_exists
 from python_domain.sqlite.pool import SqliteQuery, with_transaction
 from python_domain.sqlite.executors.attendance import add_attendance as add_attendance_row
@@ -39,7 +39,7 @@ def add_attendance(input: AddAttendanceInput) -> AddAttendanceOutput:
         )
         row = add_attendance_row(body, tx)
         if row is None:
-            raise PersistenceError("attendance no se ha creado", entity="attendance")
+            fail("attendance", "not_created")
         return assert_attendance(row)
 
     return {"attendance": with_transaction(run)}

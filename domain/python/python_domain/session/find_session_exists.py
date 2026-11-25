@@ -1,6 +1,6 @@
 from typing import TypedDict
 
-from python_domain.errors import NotFoundError
+from python_domain.errors import fail
 from python_domain.sqlite.pool import SqliteQuery
 from python_domain.sqlite.executors.session import find_session_by_id
 from python_domain.types.session import Session
@@ -17,5 +17,5 @@ def find_session_exists(
 ) -> Session:
     session = find_session_by_id(read_input_field(input, "id", "session.id"), run)
     if session is None:
-        raise NotFoundError("session no existe", entity="session")
+        fail("session", "missing")
     return session

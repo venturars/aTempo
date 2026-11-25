@@ -1,6 +1,6 @@
 from typing import Literal, TypedDict, cast
 
-from python_domain.errors import ValidationError
+from python_domain.errors import fail
 from python_domain.types.assert_values import (
     assert_instant,
     assert_non_empty_string,
@@ -38,11 +38,7 @@ class Attendance(TypedDict):
 def assert_attendance_status(value: object) -> AttendanceStatus:
     text = assert_non_empty_string(value, "attendance.status")
     if text not in ATTENDANCE_STATUSES:
-        raise ValidationError(
-            "attendance.status debe ser present, present_late, absent o notified_absence",
-            entity="attendance",
-            field="status",
-        )
+        fail("attendance.status", "format")
     return cast(AttendanceStatus, text)
 
 
@@ -51,17 +47,13 @@ def assert_check_in_method(value: object) -> CheckInMethod | None:
         return None
     text = assert_non_empty_string(value, "attendance.check_in_method")
     if text not in CHECK_IN_METHODS:
-        raise ValidationError(
-            "attendance.check_in_method debe ser button, qr o null",
-            entity="attendance",
-            field="check_in_method",
-        )
+        fail("attendance.check_in_method", "format")
     return cast(CheckInMethod, text)
 
 
 def assert_attendance(value: Attendance) -> Attendance:
     if value is None or not isinstance(value, dict):
-        raise ValidationError("attendance debe ser un objeto", entity="attendance")
+        fail("attendance", "object")
 
     session_id = assert_uuid(value.get("session_id"), "attendance.session_id")
     student_id = assert_uuid(value.get("student_id"), "attendance.student_id")
@@ -94,31 +86,15 @@ def assert_attendance_matches_status(
 ) -> None:
     if status in PRESENT_STATUSES:
         if check_in_method is None:
-            raise ValidationError(
-                "attendance.check_in_method es obligatorio si el estado es present o present_late",
-                entity="attendance",
-                field="check_in_method",
-            )
+            fail("attendance.check_in_method", "required")
         if checked_in_at is None:
-            raise ValidationError(
-                "attendance.checked_in_at es obligatorio si el estado es present o present_late",
-                entity="attendance",
-                field="checked_in_at",
-            )
+            fail("attendance.checked_in_at", "required")
         return
     if status in ABSENT_STATUSES:
         if check_in_method is not None:
-            raise ValidationError(
-                "attendance.check_in_method solo puede ir con present o present_late",
-                entity="attendance",
-                field="check_in_method",
-            )
+            fail("attendance.check_in_method", "forbidden")
         if checked_in_at is not None:
-            raise ValidationError(
-                "attendance.checked_in_at solo puede ir con present o present_late",
-                entity="attendance",
-                field="checked_in_at",
-            )
+            fail("attendance.checked_in_at", "forbidden")
 
 
 def assert_checked_in_at_in_session(
@@ -132,8 +108,4 @@ def assert_checked_in_at_in_session(
     start = assert_instant(start_at, "session.start_at")
     end = assert_instant(end_at, "session.end_at")
     if instant < start or instant > end:
-        raise ValidationError(
-            "attendance.checked_in_at debe estar dentro de la sesión",
-            entity="attendance",
-            field="checked_in_at",
-        )
+        fail("attendance.checked_in_at", "window")

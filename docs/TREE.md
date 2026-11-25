@@ -108,7 +108,10 @@ domain/
       __init__.py
       errors/
         __init__.py
-        domain_error.py     # DomainError y subclases
+        catalog.py          # reasons, labels, mensajes
+        fail.py             # fail(label, reason) y domain_error()
+        domain_error.py     # DomainError, id y subclases
+        map_error.py        # UNIQUE/FK a errores de dominio
       types/
         assert_values.py
         session.py
@@ -116,7 +119,6 @@ domain/
       sqlite/
         columns.py
         pool.py             # SQLITE_DATABASE_URL, BEGIN y BEGIN IMMEDIATE
-        map_error.py        # UNIQUE/FK a errores de dominio
         check.py            # check(): SELECT 1
         queries/            # SQL por entidad
         executors/          # Ejecutan las queries
@@ -125,6 +127,7 @@ domain/
     tests/
       helpers.py
       test_sqlite.py
+      test_errors.py
       test_types.py
       test_reads.py
       test_filters.py

@@ -2,12 +2,8 @@ from typing import Never
 
 from sqlalchemy.exc import DBAPIError, IntegrityError
 
-from python_domain.errors import (
-    ConflictError,
-    DomainError,
-    NotFoundError,
-    PersistenceError,
-)
+from python_domain.errors.domain_error import DomainError
+from python_domain.errors.fail import domain_error
 
 
 def _integrity_message(error: IntegrityError) -> str:
@@ -17,24 +13,24 @@ def _integrity_message(error: IntegrityError) -> str:
     return str(orig)
 
 
-def domain_error_from_sqlite(error: BaseException) -> Exception | None:
+def domain_error_from_sqlite(error: BaseException) -> DomainError | None:
     if not isinstance(error, IntegrityError):
         return None
 
     message = _integrity_message(error)
     if "UNIQUE constraint failed" in message:
         if "attendance" in message:
-            return ConflictError("attendance ya existe", entity="attendance")
+            return domain_error("attendance", "taken")
         if "session" in message:
-            return ConflictError("session ya existe", entity="session")
-        return ConflictError("registro duplicado", entity="sqlite")
+            return domain_error("session", "taken")
+        return domain_error("sqlite", "taken")
     if "FOREIGN KEY constraint failed" in message:
         # La única clave foránea es attendance.session_id. Al borrar una sesión
         # significa que aún tiene asistencias; al escribir una asistencia, que
         # la sesión no existe. SQLite da el mismo mensaje: decide la sentencia.
         if _is_delete(error):
-            return ConflictError("session todavía tiene asistencias", entity="session")
-        return NotFoundError("session no existe", entity="session")
+            return domain_error("session", "has_children")
+        return domain_error("session", "missing")
     return None
 
 
@@ -58,5 +54,5 @@ def rethrow_sqlite(error: BaseException) -> Never:
     if mapped is not None:
         raise mapped from error
     if isinstance(error, DBAPIError):
-        raise PersistenceError("error de SQLite", entity="sqlite") from error
+        raise domain_error("sqlite", "unmapped") from error
     raise error

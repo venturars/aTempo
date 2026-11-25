@@ -1,0 +1,123 @@
+import unittest
+from pathlib import Path
+
+from python_domain.errors import (
+    ConflictError,
+    NotFoundError,
+    PersistenceError,
+    ValidationError,
+    domain_error,
+    fail,
+)
+from python_domain.session.add_session import add_session
+from python_domain.sqlite.pool import query
+from python_domain.types.attendance import assert_attendance
+
+from helpers import (
+    OTHER_ID,
+    close_memory_db,
+    open_memory_db,
+    valid_attendance,
+    valid_session_input,
+)
+
+SRC = Path(__file__).resolve().parents[1] / "python_domain"
+
+
+class CatalogTests(unittest.TestCase):
+    def tearDown(self) -> None:
+        close_memory_db()
+
+    def test_builds_id_code_entity_and_field_from_label_and_reason(self) -> None:
+        error = domain_error("attendance", "taken")
+        self.assertIsInstance(error, ConflictError)
+        self.assertEqual(error.id, "attendance.taken")
+        self.assertEqual(error.code, "CONFLICT")
+        self.assertEqual(error.entity, "attendance")
+        self.assertIsNone(error.field)
+        self.assertEqual(str(error), "attendance ya existe")
+
+    def test_uses_catalog_overrides_for_special_messages(self) -> None:
+        self.assertEqual(
+            str(domain_error("session.status", "format")),
+            "session.status debe ser open, closing o closed",
+        )
+        self.assertEqual(
+            str(domain_error("attendance.check_in_method", "format")),
+            "attendance.check_in_method debe ser button, qr o null",
+        )
+        self.assertEqual(
+            str(domain_error("session.closed_at", "required")),
+            "session.closed_at es obligatorio si el estado es closed",
+        )
+
+    def test_keeps_the_sqlite_cause_on_an_unmapped_error(self) -> None:
+        open_memory_db()
+        with self.assertRaises(PersistenceError) as caught:
+            query("SELECT * FROM no_such_table")
+        error = caught.exception
+        self.assertEqual(error.id, "sqlite.unmapped")
+        self.assertEqual(error.code, "PERSISTENCE")
+        self.assertEqual(error.entity, "sqlite")
+        self.assertEqual(str(error), "error de SQLite")
+        self.assertIn("no such table", str(error.__cause__))
+
+    def test_throws_with_fail(self) -> None:
+        with self.assertRaisesRegex(NotFoundError, "session no existe") as caught:
+            fail("session", "missing")
+        error = caught.exception
+        self.assertEqual(error.id, "session.missing")
+        self.assertEqual(error.code, "NOT_FOUND")
+
+    def test_identifies_a_validation_from_assert_attendance(self) -> None:
+        with self.assertRaises(ValidationError) as caught:
+            assert_attendance({**valid_attendance, "status": "late"})
+        error = caught.exception
+        self.assertEqual(error.id, "attendance.status.format")
+        self.assertEqual(error.code, "VALIDATION")
+        self.assertEqual(error.entity, "attendance")
+        self.assertEqual(error.field, "status")
+
+    def test_maps_a_unique_violation_to_the_same_id_as_the_find(self) -> None:
+        open_memory_db()
+        session = add_session({"session": valid_session_input})["session"]
+        query(
+            """INSERT INTO attendance (
+              session_id, student_id, status, check_in_method, checked_in_at
+            ) VALUES (
+              :session_id, :student_id, 'absent', NULL, NULL
+            )""",
+            {"session_id": session["id"], "student_id": OTHER_ID},
+        )
+        with self.assertRaises(ConflictError) as caught:
+            query(
+                """INSERT INTO attendance (
+                  session_id, student_id, status, check_in_method, checked_in_at
+                ) VALUES (
+                  :session_id, :student_id, 'absent', NULL, NULL
+                )""",
+                {"session_id": session["id"], "student_id": OTHER_ID},
+            )
+        error = caught.exception
+        self.assertEqual(error.id, "attendance.taken")
+        self.assertEqual(error.code, "CONFLICT")
+
+    def test_production_source_raises_with_fail(self) -> None:
+        offenders: list[str] = []
+        allowed = {"errors/fail.py", "errors/map_error.py"}
+        for path in SRC.rglob("*.py"):
+            relative = path.relative_to(SRC).as_posix()
+            if relative in allowed:
+                continue
+            text = path.read_text(encoding="utf-8")
+            if "raise ValidationError" in text or "raise NotFoundError" in text:
+                offenders.append(relative)
+            elif "raise ConflictError" in text or "raise ConfigurationError" in text:
+                offenders.append(relative)
+            elif "raise PersistenceError" in text:
+                offenders.append(relative)
+        self.assertEqual(offenders, [])
+
+
+if __name__ == "__main__":
+    unittest.main()

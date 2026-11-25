@@ -10,8 +10,8 @@ from sqlalchemy.engine import URL, Engine, Result, make_url
 from sqlalchemy.exc import ArgumentError
 from sqlalchemy.pool import StaticPool
 
-from python_domain.errors import ConfigurationError
-from python_domain.sqlite.map_error import rethrow_sqlite
+from python_domain.errors import fail
+from python_domain.errors.map_error import rethrow_sqlite
 
 SqliteScalar = str | int | None
 SqliteParams = dict[str, SqliteScalar]
@@ -72,17 +72,9 @@ def read_sqlite_url(url: str) -> URL:
     try:
         parsed = make_url(url)
     except ArgumentError as error:
-        raise ConfigurationError(
-            "SQLITE_DATABASE_URL no es una URL válida",
-            entity="sqlite",
-            field="SQLITE_DATABASE_URL",
-        ) from error
+        fail("sqlite.SQLITE_DATABASE_URL", "invalid_url", cause=error)
     if parsed.get_backend_name() != "sqlite":
-        raise ConfigurationError(
-            "SQLITE_DATABASE_URL tiene que ser una URL de SQLite",
-            entity="sqlite",
-            field="SQLITE_DATABASE_URL",
-        )
+        fail("sqlite.SQLITE_DATABASE_URL", "not_sqlite")
     return parsed
 
 
@@ -114,11 +106,7 @@ def _open_database() -> None:
     global _database
     url = os.environ.get("SQLITE_DATABASE_URL")
     if not url:
-        raise ConfigurationError(
-            "Falta SQLITE_DATABASE_URL",
-            entity="sqlite",
-            field="SQLITE_DATABASE_URL",
-        )
+        fail("sqlite.SQLITE_DATABASE_URL", "missing_env")
     parsed = read_sqlite_url(url)
 
     lock: AbstractContextManager[object]

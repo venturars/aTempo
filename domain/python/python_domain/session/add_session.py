@@ -1,7 +1,7 @@
 from typing import TypedDict
 from uuid import uuid4
 
-from python_domain.errors import PersistenceError
+from python_domain.errors import fail
 from python_domain.sqlite.executors.session import add_session as add_session_row
 from python_domain.types.session import (
     Session,
@@ -24,5 +24,5 @@ def add_session(input: AddSessionInput) -> AddSessionOutput:
     body = assert_session_create(read_input_field(input, "session", "session"))
     row = add_session_row({"id": str(uuid4()), **body})
     if row is None:
-        raise PersistenceError("session no se ha creado", entity="session")
+        fail("session", "not_created")
     return {"session": assert_session(row)}
