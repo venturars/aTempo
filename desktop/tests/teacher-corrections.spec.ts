@@ -203,7 +203,6 @@ test('changes a mark in a past session without a reason', async () => {
     await dialog.getByRole('button', { name: 'Guardar', exact: true }).click()
     await expect(dialog).toHaveCount(0)
 
-    // La nota enseña el cambio y quién lo hizo, sin línea de motivo.
     const status = torres.getByRole('button', { name: 'Presente', exact: true })
     await status.hover()
     const note = p.getByRole('tooltip')

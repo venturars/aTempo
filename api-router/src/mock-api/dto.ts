@@ -92,7 +92,6 @@ export class AttendanceCorrectionDto {
   })
   status!: CorrectedStatus
 
-  // Opcional: sin motivo, con null o con solo espacios, el registro guarda reason: null.
   @ApiPropertyOptional({
     type: String,
     nullable: true,

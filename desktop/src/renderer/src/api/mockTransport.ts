@@ -80,7 +80,6 @@ function correctionErrors(correction: AttendanceCorrection): FieldError[] {
   if (!correctedStatuses.includes(correction.status)) {
     errors.push({ field: 'status', message: 'La marca tiene que ser present, late o absent.' })
   }
-  // Como el DTO de api-router: sin motivo, o con null, vale; cualquier otra cosa que no sea texto, no.
   if (correction.reason != null && typeof correction.reason !== 'string') {
     errors.push({ field: 'reason', message: 'El motivo tiene que ser texto.' })
   }

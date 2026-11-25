@@ -32,7 +32,6 @@ export type MarkChange = {
   student: string
   from: Attendance
   to: Attendance
-  // Vacío si el profesor no escribió motivo.
   reason: string
   by: string
   at: number
@@ -475,7 +474,6 @@ export const usePanelStore = create<PanelState>((set, get) => {
       }
       set({ busy: true, todayError: null, correctionError: null })
       try {
-        // Sin motivo, la corrección va sin reason.
         const record = await getApiClient().correctAttendance(session.id, pending.studentId, {
           ...pending.correction,
           ...(reason.trim() === '' ? {} : { reason: reason.trim() })
