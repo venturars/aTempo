@@ -232,12 +232,14 @@ api-router/
       health.module.ts
       health.controller.ts
       health-response.dto.ts
+    shared/
+      cookies.ts             # lectura, atributos y borrado de cookies Auth0
     auth/
       auth.module.ts
       auth.controller.ts
       auth.service.ts
       web-session.dto.ts     # perfil web público
-      web-session.service.ts # tokens Auth0 en memoria y cookie opaca
+      web-session.service.ts # allowlist web y perfil; tokens en cookies HttpOnly
       login-request.dto.ts
       login-response.dto.ts
       register-request.dto.ts

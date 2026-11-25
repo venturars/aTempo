@@ -1,6 +1,6 @@
 # Web de aTempo
 
-El portal del alumno y el panel de administración comparten este paquete. Importan `docs/storybook/src/system.css` y usan daisyUI y el control de tema compartido de `src/shared/ThemeToggle.tsx`. La web requiere Auth0 y el router; las sesiones se gestionan en el servidor y se identifican mediante una cookie `HttpOnly`.
+El portal del alumno y el panel de administración comparten este paquete. Importan `docs/storybook/src/system.css` y usan daisyUI y el control de tema compartido de `src/shared/ThemeToggle.tsx`. La web requiere Auth0 y el router; autentica en `/api/auth/login`, `/api/auth/me`, `/api/auth/refresh` y `/api/auth/logout`. Los tokens viven en cookies `HttpOnly`.
 
 ## Iniciar la web
 
@@ -40,7 +40,7 @@ Las fechas del rango son inclusivas y se calculan sin cambios por zona horaria o
 - Editar una sesión permite cambiar fecha, horario y aula. Eliminarla conserva el curso y su alumnado.
 - **Cancelar** conserva los datos. **Mis clases** sigue siendo de lectura.
 
-Los datos administrativos de esta demo vuelven al seed al recargar el navegador. La cookie `atempo_session` es `HttpOnly`, `SameSite=Lax`, tiene `Path=/` y no lleva `Max-Age`. El router conserva la sesión en memoria hasta siete días y la pierde al reiniciarse; al recargar, la web consulta el router para restaurarla. **Cerrar sesión** invalida la sesión y borra la cookie.
+Los datos administrativos de esta demo vuelven al seed al recargar el navegador. Las cookies `atempo_access` y `atempo_refresh` son `HttpOnly`, `SameSite=Lax`, tienen `Path=/` y no llevan `Max-Age`. El JavaScript no las lee; al recargar, la web llama a `/api/auth/me` y, si hace falta, a `/api/auth/refresh`. **Cerrar sesión** revoca el refresh y borra las cookies.
 
 ## Probar al alumno
 

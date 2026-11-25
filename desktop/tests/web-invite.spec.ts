@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test.beforeEach(async ({ context, page }) => {
-  await context.route(/\/api\/auth\/web\/session$/, async (route) => {
+  await context.route(/\/api\/auth\/me$/, async (route) => {
     await route.fulfill({ status: 401, json: {} })
   })
   await page.goto('/')

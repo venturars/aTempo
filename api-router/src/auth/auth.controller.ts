@@ -9,6 +9,7 @@ import {
   Post,
   Req,
   Res,
+  UnauthorizedException,
 } from '@nestjs/common'
 import type { Request, Response } from 'express'
 import {
@@ -32,12 +33,17 @@ import { RefreshRequestDto } from './refresh-request.dto'
 import { RefreshResponseDto } from './refresh-response.dto'
 import { RegisterRequestDto } from './register-request.dto'
 import { RegisterResponseDto } from './register-response.dto'
-import {
-  defaultWebOrigin,
-  webSessionCookieName,
-  WebSessionService,
-} from './web-session.service'
 import { WebSessionDto } from './web-session.dto'
+import { WebSessionService } from './web-session.service'
+import {
+  accessCookieName,
+  clearAuthCookies,
+  configuredWebOrigin,
+  refreshCookieName,
+  identityCookieName,
+  readCookie,
+  setAuthCookies,
+} from '../shared/cookies'
 
 @ApiTags('auth')
 @Controller('auth')
@@ -64,32 +70,90 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Revoca el Refresh Token en Auth0' })
-  @ApiBody({ type: LogoutRequestDto })
+  @ApiOperation({
+    summary: 'Revoca el refresh token (cuerpo Electron o cookie web)',
+  })
+  @ApiBody({ type: LogoutRequestDto, required: false })
   @ApiOkResponse({ type: LogoutResponseDto })
   @ApiUnauthorizedResponse({ description: 'Refresh Token ausente o no válido' })
-  logout(@Body() body: LogoutRequestDto): Promise<LogoutResponseDto> {
-    return this.authService.logout(body.refreshToken)
+  async logout(
+    @Body() body: LogoutRequestDto,
+    @Headers('origin') origin: string | undefined,
+    @Headers('cookie') cookieHeader: string | undefined,
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<LogoutResponseDto> {
+    this.rejectForeignOrigin(origin)
+    if (this.isWebOrigin(origin)) {
+      response.setHeader('Cache-Control', 'no-store')
+      const refreshToken = readCookie(cookieHeader, refreshCookieName)
+      await this.webSessionService.revoke(refreshToken)
+      clearAuthCookies(response, request)
+      return { success: true }
+    }
+    if (typeof body?.refreshToken === 'string' && body.refreshToken.length > 0) {
+      return this.authService.logout(body.refreshToken)
+    }
+    throw new UnauthorizedException({ code: 'INVALID_CREDENTIALS' })
   }
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Renueva el Access Token con el Refresh Token' })
-  @ApiBody({ type: RefreshRequestDto })
+  @ApiOperation({
+    summary: 'Renueva el Access Token con el Refresh Token o la cookie web',
+  })
+  @ApiBody({ type: RefreshRequestDto, required: false })
   @ApiOkResponse({ type: RefreshResponseDto })
   @ApiUnauthorizedResponse({ description: 'Refresh Token inválido o expirado' })
   @ApiResponse({
     status: 503,
     description: 'Auth0 no está configurado o no responde',
   })
-  refresh(@Body() body: RefreshRequestDto): Promise<RefreshResponseDto> {
-    return this.authService.refreshToken(body.refreshToken)
+  async refresh(
+    @Body() body: RefreshRequestDto,
+    @Headers('origin') origin: string | undefined,
+    @Headers('cookie') cookieHeader: string | undefined,
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<RefreshResponseDto | Record<string, never>> {
+    this.rejectForeignOrigin(origin)
+    if (this.isWebOrigin(origin)) {
+      response.setHeader('Cache-Control', 'no-store')
+      const refreshToken = readCookie(cookieHeader, refreshCookieName)
+      const identity = this.webSessionService.parseIdentity(
+        readCookie(cookieHeader, identityCookieName),
+      )
+      if (refreshToken === undefined || identity === undefined) {
+        clearAuthCookies(response, request)
+        throw new UnauthorizedException({ code: 'INVALID_CREDENTIALS' })
+      }
+      try {
+        const tokens = await this.authService.refreshToken(refreshToken)
+        setAuthCookies(response, request, {
+          accessToken: tokens.token,
+          refreshToken: tokens.refreshToken,
+          identity: this.webSessionService.serializeIdentity(
+            identity.email,
+            identity.profile,
+          ),
+        })
+        return {}
+      } catch (error) {
+        clearAuthCookies(response, request)
+        throw error
+      }
+    }
+    if (typeof body?.refreshToken === 'string' && body.refreshToken.length > 0) {
+      return this.authService.refreshToken(body.refreshToken)
+    }
+    throw new UnauthorizedException({ code: 'INVALID_CREDENTIALS' })
   }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Intercambia credenciales por un Access Token de Auth0',
+    summary:
+      'Intercambia credenciales por tokens Auth0 o por cookies HttpOnly en la web',
   })
   @ApiBody({ type: LoginRequestDto })
   @ApiOkResponse({ type: LoginResponseDto })
@@ -98,118 +162,76 @@ export class AuthController {
     status: 503,
     description: 'Auth0 no está configurado o no responde',
   })
-  login(@Body() body: LoginRequestDto): Promise<LoginResponseDto> {
+  async login(
+    @Body() body: LoginRequestDto,
+    @Headers('origin') origin: string | undefined,
+    @Headers('cookie') cookieHeader: string | undefined,
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<LoginResponseDto | WebSessionDto> {
+    this.rejectForeignOrigin(origin)
+    if (this.isWebOrigin(origin)) {
+      response.setHeader('Cache-Control', 'no-store')
+      const previousRefresh = readCookie(cookieHeader, refreshCookieName)
+      await this.webSessionService.revoke(previousRefresh)
+      const result = await this.webSessionService.login(body.email, body.password)
+      setAuthCookies(response, request, {
+        accessToken: result.tokens.accessToken,
+        refreshToken: result.tokens.refreshToken,
+        identity: this.webSessionService.serializeIdentity(
+          result.user.email,
+          result.user.profile,
+        ),
+      })
+      return result.user
+    }
     return this.authService.login(body.email, body.password)
   }
 
   @Get('me')
-  @ApiOperation({ summary: 'Comprueba el Access Token enviado como Bearer' })
-  @ApiHeader({ name: 'Authorization', description: 'Bearer <accessToken>' })
+  @ApiOperation({
+    summary: 'Comprueba el Access Token Bearer o la cookie web',
+  })
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'Bearer <accessToken>',
+    required: false,
+  })
   @ApiOkResponse({ type: MeResponseDto })
   @ApiUnauthorizedResponse({ description: 'Access Token ausente o no válido' })
-  me(@Headers('authorization') authorization?: string): Promise<MeResponseDto> {
-    return this.authService.getAuthenticatedUser(authorization)
-  }
-
-  @Post('web/login')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Abre una sesión web con cookie HttpOnly' })
-  @ApiBody({ type: LoginRequestDto })
-  @ApiOkResponse({ type: WebSessionDto })
-  @ApiUnauthorizedResponse({ description: 'Credenciales no válidas' })
-  async webLogin(
-    @Body() body: LoginRequestDto,
-    @Headers('origin') origin: string | undefined,
-    @Req() request: Request,
-    @Res({ passthrough: true }) response: Response,
-  ): Promise<WebSessionDto> {
-    this.requireWebOrigin(origin)
-    response.setHeader('Cache-Control', 'no-store')
-    const previousSessionId = readCookie(
-      request.headers.cookie,
-      webSessionCookieName,
-    )
-    const result = await this.webSessionService.login(
-      body.email,
-      body.password,
-      previousSessionId,
-    )
-    response.cookie(webSessionCookieName, result.sessionId, {
-      httpOnly: true,
-      sameSite: 'lax',
-      path: '/',
-      secure: isSecureRequest(request),
-    })
-    return result.user
-  }
-
-  @Get('web/session')
-  @ApiOperation({ summary: 'Consulta y renueva la sesión web actual' })
-  @ApiOkResponse({ type: WebSessionDto })
-  @ApiUnauthorizedResponse({ description: 'La sesión web no existe o ha caducado' })
-  async webSession(
+  async me(
+    @Headers('authorization') authorization: string | undefined,
     @Headers('cookie') cookieHeader: string | undefined,
-    @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<WebSessionDto> {
+  ): Promise<MeResponseDto | WebSessionDto> {
+    const accessToken = readCookie(cookieHeader, accessCookieName)
+    const identity = this.webSessionService.parseIdentity(
+      readCookie(cookieHeader, identityCookieName),
+    )
+    if (authorization !== undefined && authorization.length > 0) {
+      return this.authService.getAuthenticatedUser(authorization)
+    }
+    if (accessToken === undefined || identity === undefined) {
+      return this.authService.getAuthenticatedUser(authorization)
+    }
     response.setHeader('Cache-Control', 'no-store')
-    const sessionId = readCookie(cookieHeader, webSessionCookieName)
-    try {
-      return await this.webSessionService.getSession(sessionId)
-    } catch (error) {
-      clearWebSessionCookie(response, request)
-      throw error
+    const user = await this.authService.getAuthenticatedUser(
+      `Bearer ${accessToken}`,
+    )
+    return {
+      sub: user.sub,
+      email: identity.email,
+      profile: identity.profile,
     }
   }
 
-  @Post('web/logout')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Cierra la sesión web y revoca su refresh token' })
-  @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Sesión cerrada' })
-  async webLogout(
-    @Headers('origin') origin: string | undefined,
-    @Headers('cookie') cookieHeader: string | undefined,
-    @Req() request: Request,
-    @Res({ passthrough: true }) response: Response,
-  ): Promise<void> {
-    this.requireWebOrigin(origin)
-    response.setHeader('Cache-Control', 'no-store')
-    const sessionId = readCookie(cookieHeader, webSessionCookieName)
-    await this.webSessionService.logout(sessionId)
-    clearWebSessionCookie(response, request)
+  private isWebOrigin(origin: string | undefined): boolean {
+    return origin === configuredWebOrigin()
   }
 
-  private requireWebOrigin(origin: string | undefined): void {
-    const configuredOrigin = process.env.ATEMPO_WEB_ORIGIN?.trim() || defaultWebOrigin
-    if (origin !== configuredOrigin) {
+  private rejectForeignOrigin(origin: string | undefined): void {
+    if (origin !== undefined && origin !== configuredWebOrigin()) {
       throw new ForbiddenException({ code: 'WEB_ORIGIN_NOT_ALLOWED' })
     }
   }
-}
-
-function readCookie(header: string | undefined, name: string): string | undefined {
-  const cookie = header?.split(';').map((part) => part.trim()).find((part) => {
-    return part.startsWith(`${name}=`)
-  })
-  return cookie?.slice(name.length + 1) || undefined
-}
-
-function clearWebSessionCookie(response: Response, request: Request): void {
-  response.clearCookie(webSessionCookieName, {
-    httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
-    secure: isSecureRequest(request),
-  })
-}
-
-function isSecureRequest(request: Request): boolean {
-  const forwardedProtocol = request.headers['x-forwarded-proto']
-  const protocol = Array.isArray(forwardedProtocol)
-    ? forwardedProtocol[0]
-    : forwardedProtocol
-  return (
-    request.secure ||
-    protocol?.split(',')[0]?.trim() === 'https'
-  )
 }

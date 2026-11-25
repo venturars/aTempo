@@ -41,7 +41,7 @@ function auth0Response(body: unknown, status = 200): Response {
   })
 }
 
-describe('Web authentication session (e2e)', () => {
+describe('Web authentication cookies (e2e)', () => {
   let app: INestApplication<App>
   let fetchMock: jest.Mock
   let originalEnvironment: NodeJS.ProcessEnv
@@ -95,24 +95,24 @@ describe('Web authentication session (e2e)', () => {
     ['profesor@atempo.test', 'admin'],
     ['ada.lopez@clase.test', 'student'],
   ] as const)(
-    'POST /auth/web/login creates a cookie session for %s with profile %s',
+    'POST /auth/login creates HttpOnly token cookies for %s with profile %s',
     async (email, profile) => {
       const accessToken = mockSuccessfulLogin()
 
       const response = await request(app.getHttpServer())
-        .post('/auth/web/login')
+        .post('/auth/login')
         .set('Origin', 'http://localhost:5191')
         .send({ email, password: 'test-password' })
         .expect(200)
         .expect({ sub: 'auth0|test-user', email, profile })
 
       const setCookie = String(response.headers['set-cookie'])
+      expect(setCookie).toMatch(/atempo_access=/)
+      expect(setCookie).toMatch(/atempo_refresh=/)
       expect(setCookie).toMatch(/HttpOnly/i)
       expect(setCookie).toMatch(/SameSite=Lax/i)
       expect(setCookie).toMatch(/Path=\//i)
       expect(setCookie).not.toMatch(/Max-Age/i)
-      expect(setCookie).not.toContain(accessToken)
-      expect(setCookie).not.toContain('private-refresh-token')
       expect(JSON.stringify(response.body)).not.toContain(accessToken)
       expect(JSON.stringify(response.body)).not.toContain('private-refresh-token')
       expect(JSON.stringify(response.body)).not.toContain('test-password')
@@ -128,7 +128,7 @@ describe('Web authentication session (e2e)', () => {
     },
   )
 
-  it('POST /auth/web/login rejects an unknown identity and revokes its refresh token', async () => {
+  it('POST /auth/login rejects an unknown identity and revokes its refresh token', async () => {
     const accessToken = createAccessToken({
       iss: 'https://tenant.example.test/',
       aud: auth0Config.AUTH0_AUDIENCE,
@@ -145,7 +145,7 @@ describe('Web authentication session (e2e)', () => {
     )
 
     await request(app.getHttpServer())
-      .post('/auth/web/login')
+      .post('/auth/login')
       .set('Origin', 'http://localhost:5191')
       .send({ email: 'other@atempo.test', password: 'test-password' })
       .expect(401)
@@ -161,13 +161,13 @@ describe('Web authentication session (e2e)', () => {
     })
   })
 
-  it('POST /auth/web/login maps Auth0 credential rejection to a generic 401', async () => {
+  it('POST /auth/login maps Auth0 credential rejection to a generic 401', async () => {
     fetchMock.mockResolvedValueOnce(
       auth0Response({ error: 'invalid_grant', error_description: 'private detail' }, 403),
     )
 
     await request(app.getHttpServer())
-      .post('/auth/web/login')
+      .post('/auth/login')
       .set('Origin', 'http://localhost:5191')
       .send({ email: 'profesor@atempo.test', password: 'wrong-password' })
       .expect(401)
@@ -177,11 +177,11 @@ describe('Web authentication session (e2e)', () => {
       })
   })
 
-  it('POST /auth/web/login rejects a disallowed Origin before creating a session', async () => {
+  it('POST /auth/login rejects a disallowed Origin before creating a session', async () => {
     process.env.ATEMPO_WEB_ORIGIN = 'https://web.example.test'
 
     const response = await request(app.getHttpServer())
-      .post('/auth/web/login')
+      .post('/auth/login')
       .set('Origin', 'https://attacker.example.test')
       .send({ email: 'profesor@atempo.test', password: 'test-password' })
       .expect(403)
@@ -189,20 +189,20 @@ describe('Web authentication session (e2e)', () => {
 
     expect(response.headers['set-cookie']).toBeUndefined()
     expect(fetchMock).not.toHaveBeenCalled()
-    await request(app.getHttpServer()).get('/auth/web/session').expect(401)
+    await request(app.getHttpServer()).get('/auth/me').expect(401)
   })
 
-  it('GET /auth/web/session restores the session from its HttpOnly cookie', async () => {
+  it('GET /auth/me restores the web profile from HttpOnly cookies', async () => {
     mockSuccessfulLogin()
     const agent = request.agent(app.getHttpServer())
     await agent
-      .post('/auth/web/login')
+      .post('/auth/login')
       .set('Origin', 'http://localhost:5191')
       .send({ email: 'profesor@atempo.test', password: 'test-password' })
       .expect(200)
 
     await agent
-      .get('/auth/web/session')
+      .get('/auth/me')
       .expect(200)
       .expect({
         sub: 'auth0|test-user',
@@ -211,123 +211,69 @@ describe('Web authentication session (e2e)', () => {
       })
   })
 
-  it('GET /auth/web/session rejects a missing or unknown session cookie', async () => {
-    await request(app.getHttpServer())
-      .get('/auth/web/session')
-      .expect(401)
+  it('GET /auth/me rejects a missing or unknown access cookie', async () => {
+    await request(app.getHttpServer()).get('/auth/me').expect(401)
 
     await request(app.getHttpServer())
-      .get('/auth/web/session')
-      .set('Cookie', 'atempo_session=unknown-session-id')
+      .get('/auth/me')
+      .set('Cookie', 'atempo_access=unknown-token')
       .expect(401)
   })
 
-  it('GET /auth/web/session refreshes an expired access token without exposing new tokens', async () => {
-    const expiredToken = createAccessToken({
-      iss: 'https://tenant.example.test/',
-      aud: auth0Config.AUTH0_AUDIENCE,
-      exp: Math.floor(Date.now() / 1000) + 300,
-      sub: 'auth0|test-user',
-    })
+  it('POST /auth/refresh renews cookies without exposing tokens in JSON', async () => {
+    const loginToken = mockSuccessfulLogin()
     const renewedAccessToken = createAccessToken({
       iss: 'https://tenant.example.test/',
       aud: auth0Config.AUTH0_AUDIENCE,
       exp: Math.floor(Date.now() / 1000) + 300,
       sub: 'auth0|test-user',
     })
-    mockJwks()
-    fetchMock
-      .mockResolvedValueOnce(
-        auth0Response({
-          access_token: expiredToken,
-          refresh_token: 'private-refresh-token',
-          expires_in: 0,
-        }),
-      )
-      .mockResolvedValueOnce(auth0Response({ keys: [signingKey] }))
-      .mockResolvedValueOnce(
-        auth0Response({ access_token: renewedAccessToken, expires_in: 300 }),
-      )
-
     const agent = request.agent(app.getHttpServer())
     await agent
-      .post('/auth/web/login')
+      .post('/auth/login')
       .set('Origin', 'http://localhost:5191')
       .send({ email: 'ada.lopez@clase.test', password: 'test-password' })
       .expect(200)
 
-    const response = await agent.get('/auth/web/session').expect(200)
-    expect(response.body).toEqual({
-      sub: 'auth0|test-user',
-      email: 'ada.lopez@clase.test',
-      profile: 'student',
-    })
+    fetchMock.mockResolvedValueOnce(
+      auth0Response({
+        access_token: renewedAccessToken,
+        refresh_token: 'rotated-refresh-token',
+        expires_in: 300,
+      }),
+    )
+
+    const response = await agent
+      .post('/auth/refresh')
+      .set('Origin', 'http://localhost:5191')
+      .send({})
+      .expect(200)
     expect(JSON.stringify(response.body)).not.toContain(renewedAccessToken)
     expect(JSON.stringify(response.body)).not.toContain('private-refresh-token')
-  })
+    expect(JSON.stringify(response.body)).not.toContain(loginToken)
+    expect(String(response.headers['set-cookie'])).toMatch(/atempo_access=/)
 
-  it('GET /auth/web/session refreshes when Auth0 rejects the token before its reported expiry', async () => {
-    const loginTime = Date.now()
-    const accessToken = createAccessToken({
-      iss: 'https://tenant.example.test/',
-      aud: auth0Config.AUTH0_AUDIENCE,
-      exp: Math.floor((loginTime + 60_000) / 1000),
-      sub: 'auth0|test-user',
-    })
-    const renewedAccessToken = createAccessToken({
-      iss: 'https://tenant.example.test/',
-      aud: auth0Config.AUTH0_AUDIENCE,
-      exp: Math.floor((loginTime + 600_000) / 1000),
-      sub: 'auth0|test-user',
-    })
-    mockJwks()
-    fetchMock
-      .mockResolvedValueOnce(
-        auth0Response({
-          access_token: accessToken,
-          refresh_token: 'private-refresh-token',
-          expires_in: 600,
-        }),
-      )
-      .mockResolvedValueOnce(auth0Response({ keys: [signingKey] }))
-      .mockResolvedValueOnce(
-        auth0Response({ access_token: renewedAccessToken, expires_in: 600 }),
-      )
-
-    const agent = request.agent(app.getHttpServer())
-    await agent
-      .post('/auth/web/login')
-      .set('Origin', 'http://localhost:5191')
-      .send({ email: 'ada.lopez@clase.test', password: 'test-password' })
-      .expect(200)
-
-    const mockNow = jest.spyOn(Date, 'now').mockReturnValue(loginTime + 120_000)
-    let response: request.Response
-    try {
-      response = await agent.get('/auth/web/session').expect(200)
-    } finally {
-      mockNow.mockRestore()
-    }
-
-    expect(response!.body).toEqual({
-      sub: 'auth0|test-user',
-      email: 'ada.lopez@clase.test',
-      profile: 'student',
-    })
     const refreshCall = fetchMock.mock.calls.find(([url, options]) => {
       if (!String(url).endsWith('/oauth/token')) return false
-      return (
-        JSON.parse(String(options?.body)).grant_type === 'refresh_token'
-      )
+      return JSON.parse(String(options?.body)).grant_type === 'refresh_token'
     })
     expect(JSON.parse(String(refreshCall?.[1]?.body))).toMatchObject({
       grant_type: 'refresh_token',
       refresh_token: 'private-refresh-token',
     })
-    expect(JSON.stringify(response!.body)).not.toContain(renewedAccessToken)
+
+    mockJwks()
+    await agent
+      .get('/auth/me')
+      .expect(200)
+      .expect({
+        sub: 'auth0|test-user',
+        email: 'ada.lopez@clase.test',
+        profile: 'student',
+      })
   })
 
-  it('POST /auth/web/login replaces and revokes the session identified by the existing cookie', async () => {
+  it('POST /auth/login replaces and revokes the refresh token of the previous cookies', async () => {
     const firstAccessToken = createAccessToken({
       iss: 'https://tenant.example.test/',
       aud: auth0Config.AUTH0_AUDIENCE,
@@ -367,17 +313,14 @@ describe('Web authentication session (e2e)', () => {
     })
 
     const agent = request.agent(app.getHttpServer())
-    const firstLogin = await agent
-      .post('/auth/web/login')
+    await agent
+      .post('/auth/login')
       .set('Origin', 'http://localhost:5191')
       .send({ email: 'ada.lopez@clase.test', password: 'test-password' })
       .expect(200)
-    const previousCookie = String(firstLogin.headers['set-cookie'])
-      .match(/atempo_session=([^;,]+)/)?.[1]
-    expect(previousCookie).toBeDefined()
 
     await agent
-      .post('/auth/web/login')
+      .post('/auth/login')
       .set('Origin', 'http://localhost:5191')
       .send({ email: 'profesor@atempo.test', password: 'test-password' })
       .expect(200)
@@ -393,33 +336,31 @@ describe('Web authentication session (e2e)', () => {
     expect(JSON.parse(String(revokeCall?.[1]?.body))).toMatchObject({
       token: 'previous-refresh-token',
     })
-    await request(app.getHttpServer())
-      .get('/auth/web/session')
-      .set('Cookie', `atempo_session=${previousCookie}`)
-      .expect(401)
   })
 
-  it('POST /auth/web/logout rejects a disallowed Origin and keeps the current session', async () => {
+  it('POST /auth/logout rejects a disallowed Origin and keeps the current session', async () => {
     process.env.ATEMPO_WEB_ORIGIN = 'https://web.example.test'
     mockSuccessfulLogin()
     const agent = request.agent(app.getHttpServer())
     await agent
-      .post('/auth/web/login')
+      .post('/auth/login')
       .set('Origin', 'https://web.example.test')
       .send({ email: 'ada.lopez@clase.test', password: 'test-password' })
       .expect(200)
     const callsBeforeLogout = fetchMock.mock.calls.length
 
     const response = await agent
-      .post('/auth/web/logout')
+      .post('/auth/logout')
       .set('Origin', 'https://attacker.example.test')
+      .send({})
       .expect(403)
       .expect(({ body }) => expect(body.code).toBe('WEB_ORIGIN_NOT_ALLOWED'))
 
     expect(response.headers['set-cookie']).toBeUndefined()
     expect(fetchMock.mock.calls).toHaveLength(callsBeforeLogout)
+    mockJwks()
     await agent
-      .get('/auth/web/session')
+      .get('/auth/me')
       .expect(200)
       .expect({
         sub: 'auth0|test-user',
@@ -428,21 +369,22 @@ describe('Web authentication session (e2e)', () => {
       })
   })
 
-  it('POST /auth/web/logout clears the cookie and revokes the refresh token', async () => {
+  it('POST /auth/logout clears the cookies and revokes the refresh token', async () => {
     mockSuccessfulLogin()
     const agent = request.agent(app.getHttpServer())
     await agent
-      .post('/auth/web/login')
+      .post('/auth/login')
       .set('Origin', 'http://localhost:5191')
       .send({ email: 'ada.lopez@clase.test', password: 'test-password' })
       .expect(200)
 
     const logout = await agent
-      .post('/auth/web/logout')
+      .post('/auth/logout')
       .set('Origin', 'http://localhost:5191')
-      .expect(204)
+      .send({})
+      .expect(200)
     const setCookie = String(logout.headers['set-cookie'])
-    expect(setCookie).toMatch(/atempo_session=;/)
+    expect(setCookie).toMatch(/atempo_access=;/)
     expect(setCookie).toMatch(/HttpOnly/i)
 
     const [url, options] = fetchMock.mock.calls.at(-1) ?? []
@@ -450,23 +392,24 @@ describe('Web authentication session (e2e)', () => {
     expect(JSON.parse(String(options?.body))).toMatchObject({
       token: 'private-refresh-token',
     })
-    await agent.get('/auth/web/session').expect(401)
+    await agent.get('/auth/me').expect(401)
   })
 
-  it('POST /auth/web/logout clears the session when Auth0 revocation fails', async () => {
+  it('POST /auth/logout clears the cookies when Auth0 revocation fails', async () => {
     mockSuccessfulLogin()
     const agent = request.agent(app.getHttpServer())
     await agent
-      .post('/auth/web/login')
+      .post('/auth/login')
       .set('Origin', 'http://localhost:5191')
       .send({ email: 'profesor@atempo.test', password: 'test-password' })
       .expect(200)
     fetchMock.mockRejectedValueOnce(new Error('network unavailable'))
 
     await agent
-      .post('/auth/web/logout')
+      .post('/auth/logout')
       .set('Origin', 'http://localhost:5191')
-      .expect(204)
-    await agent.get('/auth/web/session').expect(401)
+      .send({})
+      .expect(200)
+    await agent.get('/auth/me').expect(401)
   })
 })

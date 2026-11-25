@@ -24,7 +24,7 @@ async function logInAdmin(
 
 test.beforeEach(async ({ context }) => {
   let session: { email: string; profile: 'admin' | 'student'; sub: string } | null = null
-  await context.route(/\/api\/auth\/web\/(login|session|logout)$/, async (route) => {
+  await context.route(/\/api\/auth\/(login|me|refresh|logout)$/, async (route) => {
     const pathname = new URL(route.request().url()).pathname
     if (pathname.endsWith('/login')) {
       const credentials = route.request().postDataJSON() as { email?: string; password?: string }
@@ -43,21 +43,28 @@ test.beforeEach(async ({ context }) => {
       await route.fulfill({
         status: 200,
         json: session,
-        headers: { 'set-cookie': 'atempo_session=test-session; Path=/; HttpOnly; SameSite=Lax' }
+        headers: {
+          'set-cookie':
+            'atempo_access=test-access; Path=/; HttpOnly; SameSite=Lax, atempo_refresh=test-refresh; Path=/; HttpOnly; SameSite=Lax'
+        }
       })
       return
     }
-    if (pathname.endsWith('/session')) {
+    if (pathname.endsWith('/me')) {
       const cookie = route.request().headers().cookie ?? ''
-      const hasCookie = /(?:^|;\s*)atempo_session=test-session(?:;|$)/.test(cookie)
+      const hasCookie = /(?:^|;\s*)atempo_access=test-access(?:;|$)/.test(cookie)
       await route.fulfill({
         status: hasCookie && session !== null ? 200 : 401,
         json: hasCookie && session !== null ? session : {}
       })
       return
     }
+    if (pathname.endsWith('/refresh')) {
+      await route.fulfill({ status: 200, json: {} })
+      return
+    }
     session = null
-    await route.fulfill({ status: 204 })
+    await route.fulfill({ status: 200, json: { success: true } })
   })
 })
 
@@ -161,7 +168,7 @@ test('invitation to course to session produces the exact pending roster without 
     page.getByRole('table', { name: 'Sesiones del curso' }).getByRole('row')
   ).toHaveCount(2)
   await expect(page.getByRole('row').filter({ hasText: 'Aula nueva' })).toContainText('Programada')
-  expect(writes.filter((write) => !write.includes('/api/auth/web/'))).toEqual([])
+  expect(writes.filter((write) => !write.includes('/api/auth/'))).toEqual([])
 })
 
 test('validates and cancels course and session forms', async ({ page }) => {

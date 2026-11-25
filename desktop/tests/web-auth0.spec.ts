@@ -1,7 +1,7 @@
 import { expect, test, type BrowserContext, type Page, type Route } from '@playwright/test'
 import { codeForPeriod } from '../../web/src/student/classCode'
 
-const apiPath = /\/api\/auth\/web\/(login|session|logout)$/
+const apiPath = /\/api\/auth\/(login|me|refresh|logout)$/
 
 type WebProfile = 'admin' | 'student'
 type WebSession = { sub: string; email: string; profile: WebProfile }
@@ -31,16 +31,32 @@ async function mockWebSession(context: BrowserContext): Promise<MockSessionState
       await route.fulfill({
         status: 200,
         json: state.session,
-        headers: { 'set-cookie': 'atempo_session=test-session; Path=/; HttpOnly; SameSite=Lax' }
+        headers: {
+          'set-cookie':
+            'atempo_access=test-access; Path=/; HttpOnly; SameSite=Lax, atempo_refresh=test-refresh; Path=/; HttpOnly; SameSite=Lax, atempo_identity=test-identity; Path=/; HttpOnly; SameSite=Lax'
+        }
       })
       return
     }
-    if (pathname.endsWith('/session')) {
+    if (pathname.endsWith('/me')) {
       const cookie = route.request().headers().cookie ?? ''
-      const hasSessionCookie = /(?:^|;\s*)atempo_session=test-session(?:;|$)/.test(cookie)
+      const hasSessionCookie = /(?:^|;\s*)atempo_access=test-access(?:;|$)/.test(cookie)
       await route.fulfill({
         status: state.session === null || !hasSessionCookie ? 401 : 200,
         json: state.session === null || !hasSessionCookie ? {} : state.session
+      })
+      return
+    }
+    if (pathname.endsWith('/refresh')) {
+      const cookie = route.request().headers().cookie ?? ''
+      const hasRefresh = /(?:^|;\s*)atempo_refresh=test-refresh(?:;|$)/.test(cookie)
+      await route.fulfill({
+        status: state.session === null || !hasRefresh ? 401 : 200,
+        json: {},
+        headers: {
+          'set-cookie':
+            'atempo_access=test-access; Path=/; HttpOnly; SameSite=Lax, atempo_refresh=test-refresh; Path=/; HttpOnly; SameSite=Lax'
+        }
       })
       return
     }
@@ -49,7 +65,7 @@ async function mockWebSession(context: BrowserContext): Promise<MockSessionState
       return
     }
     state.session = null
-    await route.fulfill({ status: 204 })
+    await route.fulfill({ status: 200, json: { success: true } })
   })
   return state
 }
@@ -113,7 +129,7 @@ test('restores the server session after reload and logs out across protected rou
     session: JSON.stringify(sessionStorage),
     cookies: document.cookie
   }))
-  expect(JSON.stringify(browserState)).not.toMatch(/test-session|accessToken|refreshToken/)
+  expect(JSON.stringify(browserState)).not.toMatch(/test-access|test-refresh|accessToken|refreshToken/)
   expect(JSON.stringify(browserState)).not.toContain('auth0-password')
   await page.reload()
   await expect(page.getByRole('navigation', { name: 'Administración' })).toBeVisible()
