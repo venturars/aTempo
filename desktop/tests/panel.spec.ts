@@ -567,6 +567,10 @@ for (const theme of ['atempo-oscuro', 'atempo-claro']) {
         animations: 'disabled'
       })
       await menu.getByRole('button', { name: 'Ausente', exact: true }).click()
+      const reason = window.getByRole('dialog', { name: /^Cambiar / })
+      await reason.getByLabel('Motivo', { exact: true }).fill('Corrección en clase')
+      await reason.getByRole('button', { name: 'Guardar', exact: true }).click()
+      await expect(reason).toHaveCount(0)
       const absent = window
         .getByRole('row', { name: /Diego Molero/ })
         .getByRole('button', { name: 'Ausente' })

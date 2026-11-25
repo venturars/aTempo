@@ -4,6 +4,25 @@ Servicio REST con NestJS y TypeScript. Recibe las peticiones de los frontends (E
 
 Expone `GET /health`, `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout` y `GET /auth/me`. El login y el alta solicitan tokens a Auth0; `/auth/refresh` los renueva y `/auth/logout` revoca el refresh token. `/auth/me` valida el Bearer recibido. La lógica de negocio vivirá en [`sdk/`](../sdk/) (paquete hermano, carpeta pendiente); este servicio la consumirá cuando exista.
 
+## Mock del contrato API v1
+
+Con `API_MOCK=true`, el router sirve con datos en memoria los ocho endpoints del [contrato API v1](https://github.com/venturars/aTempo/issues/90#issuecomment-6977966757) que usa la pestaña Hoy del panel del profesor:
+
+- `GET /sessions?date=YYYY-MM-DD`
+- `GET /sessions/:sessionId`
+- `GET /sessions/:sessionId/attendances`
+- `POST /sessions/:sessionId/open`
+- `POST /sessions/:sessionId/close`
+- `GET /sessions/:sessionId/check-in-code`
+- `PUT /sessions/:sessionId/attendances/:studentId`
+- `GET /courses/:courseId/students`
+
+Está en `src/mock-api/` y aplica las mismas reglas que el mock del escritorio: abrir solo una sesión programada y del día, cerrar pasa los pendientes a ausentes, cada corrección exige motivo. Hay una clase de AI Engineering cada día (09:00–18:00, `+01:00`, margen de 10 minutos) con 15 alumnos. El estado se pierde al reiniciar el servicio. Cada endpoint pide `Authorization: Bearer` con un token no vacío y responde `401 UNAUTHENTICATED` sin él; no lo valida contra Auth0. No implementa `POST /check-ins`.
+
+Los errores siguen la sección «Errores» del contrato: `statusCode`, `error`, `code`, `message` y, en validación, `details`. Lo hacen `src/contract/` y el `exceptionFactory` del `ValidationPipe`, que valen también para los endpoints reales.
+
+Compose arranca el router con `API_MOCK=true` y solo lo publica en `127.0.0.1`. Sin la variable, solo sirve `/health` y `/auth`. El mock desaparece cuando la SDK sirva estos endpoints.
+
 ## Arranque
 
 Desde `api-router/`:
@@ -46,5 +65,5 @@ pnpm build
 
 - `pnpm typecheck` — comprobación de tipos.
 - `pnpm lint` — ESLint sobre `src/` y `test/`.
-- `pnpm test` — prueba e2e de `/health` y Swagger.
+- `pnpm test` — pruebas e2e de `/health`, Swagger y el mock del contrato.
 - `pnpm build` — compilación a `dist/`.
