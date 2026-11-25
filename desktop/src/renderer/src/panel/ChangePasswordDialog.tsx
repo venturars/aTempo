@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import type { TextKey } from '../language/messages'
+import { useText } from '../language/useText'
 import { useTeacherAccountsStore } from '../login/teacherAccounts'
 
 export function ChangePasswordDialog({
@@ -8,8 +10,9 @@ export function ChangePasswordDialog({
   onClose: () => void
   onSaved: () => void
 }): React.JSX.Element {
+  const t = useText()
   const dialog = useRef<HTMLDialogElement>(null)
-  const [error, setError] = useState('')
+  const [error, setError] = useState<TextKey | ''>('')
 
   useEffect(() => {
     dialog.current?.showModal()
@@ -37,10 +40,10 @@ export function ChangePasswordDialog({
     <dialog ref={dialog} className="modal" aria-labelledby="password-title" onClose={onClose}>
       <form className="modal-box flex flex-col gap-4" onSubmit={save} onChange={() => setError('')}>
         <h2 id="password-title" className="text-lg font-medium">
-          Cambiar contraseña
+          {t('panel.password.title')}
         </h2>
         <label className="flex flex-col gap-2">
-          Contraseña actual
+          {t('panel.password.current')}
           <input
             className="input w-full"
             type="password"
@@ -51,7 +54,7 @@ export function ChangePasswordDialog({
           />
         </label>
         <label className="flex flex-col gap-2">
-          Nueva contraseña
+          {t('panel.password.next')}
           <input
             className="input w-full"
             type="password"
@@ -61,11 +64,11 @@ export function ChangePasswordDialog({
             required
           />
           <span id="new-password-hint" className="text-sm text-base-content/60">
-            Al menos 8 caracteres.
+            {t('panel.password.hint')}
           </span>
         </label>
         <label className="flex flex-col gap-2">
-          Repite la nueva contraseña
+          {t('panel.password.confirmation')}
           <input
             className="input w-full"
             type="password"
@@ -76,15 +79,15 @@ export function ChangePasswordDialog({
         </label>
         {error ? (
           <p className="text-sm text-error" role="alert">
-            {error}
+            {t(error)}
           </p>
         ) : null}
         <div className="modal-action mt-0">
           <button type="button" className="btn" onClick={() => dialog.current?.close()}>
-            Cancelar
+            {t('common.cancel')}
           </button>
           <button type="submit" className="btn btn-primary">
-            Guardar contraseña
+            {t('panel.password.save')}
           </button>
         </div>
       </form>

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useText } from '../language/useText'
 import { Avatar } from './avatar'
 
 // El menú de la cuenta, abajo en la barra lateral: un <details> que se abre al pulsar el nombre y
@@ -12,6 +13,7 @@ export function AccountMenu({
   onChangePassword?: () => void
   onLogOut: () => void
 }): React.JSX.Element {
+  const t = useText()
   const menu = useRef<HTMLDetailsElement>(null)
   useCloseOnOutsideOrEscape(menu)
 
@@ -31,7 +33,7 @@ export function AccountMenu({
           <Avatar name={name} />
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="text-sm font-medium">{name}</span>
-            <span className="text-meta text-base-content/60">Profesor</span>
+            <span className="text-meta text-base-content/60">{t('panel.account.role')}</span>
           </span>
           <span aria-hidden="true" className="text-base-content/60 group-open:rotate-180">
             ▾
@@ -42,13 +44,13 @@ export function AccountMenu({
         {onChangePassword ? (
           <li>
             <button type="button" onClick={() => select(onChangePassword)}>
-              Cambiar contraseña
+              {t('panel.account.changePassword')}
             </button>
           </li>
         ) : null}
         <li>
           <button type="button" onClick={() => select(onLogOut)}>
-            Cerrar sesión
+            {t('common.logOut')}
           </button>
         </li>
       </ul>

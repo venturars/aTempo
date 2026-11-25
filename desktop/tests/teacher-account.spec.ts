@@ -31,11 +31,9 @@ test.describe('invitation logic', () => {
 
   test('asks for a new password of 8 characters or more', () => {
     expect(activate(teacherInvite.code, '')).toBe(false)
-    expect(useActivateStore.getState().passwordError).toBe('La contraseña es obligatoria.')
+    expect(useActivateStore.getState().passwordError).toBe('login.errors.passwordRequired')
     expect(activate(teacherInvite.code, 'corta')).toBe(false)
-    expect(useActivateStore.getState().passwordError).toBe(
-      'La contraseña tiene que tener al menos 8 caracteres.'
-    )
+    expect(useActivateStore.getState().passwordError).toBe('login.errors.passwordTooShort')
     expect(useSessionStore.getState().profile).toBeNull()
   })
 

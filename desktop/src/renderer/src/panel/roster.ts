@@ -1,3 +1,6 @@
+import { compareText, formatDate, formatTime } from '../language/format'
+import { text } from '../language/useText'
+
 export const rosterNames = [
   'Diego Molero',
   'Diego Torres',
@@ -74,37 +77,54 @@ function capitalized(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
-// Día corto de la semana: «Mar».
+// Día corto de la semana: «Mar», «Tue». Intl lo escribe en minúscula en español.
 export function sessionShortWeekday(id: string): string {
-  return capitalized(sessionDate(id).toLocaleDateString('es', { weekday: 'short' }))
+  return capitalized(formatDate(sessionDate(id), { weekday: 'short' }))
 }
 
-// Día de la semana: «Martes».
+// Día de la semana: «Martes», «Tuesday».
 export function sessionWeekday(id: string): string {
-  return capitalized(sessionDate(id).toLocaleDateString('es', { weekday: 'long' }))
+  return capitalized(formatDate(sessionDate(id), { weekday: 'long' }))
 }
 
-// Fecha de una sesión: «10 nov 2026».
+// Fecha de una sesión: «10 nov 2026», «Nov 10, 2026».
 export function sessionDateLabel(id: string): string {
-  return sessionDate(id).toLocaleDateString('es', {
+  return formatDate(sessionDate(id), {
     day: 'numeric',
     month: 'short',
     year: 'numeric'
   })
 }
 
-// Título de una sesión: «Mar 10 nov 2026».
+// Título de una sesión: «Mar 10 nov 2026», «Tue Nov 10, 2026».
 export function sessionTitle(id: string): string {
-  return `${sessionShortWeekday(id)} ${sessionDateLabel(id)}`
+  return text('roster.sessionTitle', {
+    weekday: sessionShortWeekday(id),
+    date: sessionDateLabel(id)
+  })
 }
 
-export const todayLabel = sessionTitle(todaySessionId)
+// Un horario guardado como «09:00–18:00», con las horas en el formato de la región.
+export function timeRangeLabel(range: string): string {
+  const [start, end] = range.split('–')
+  return `${formatTime(start)}–${formatTime(end)}`
+}
 
-// La clase del Dashboard. Si cae en todayLabel, el título es Hoy. Si no, es la próxima.
-export const dashboardDate = todayLabel
+// Un porcentaje ya redondeado: «83 %» en español, «83%» en inglés.
+export function percentLabel(value: number): string {
+  return text('roster.percent', { value })
+}
+
+// La clase del Dashboard. Si es la de hoy, el título es Hoy. Si no, es la próxima.
+const dashboardSessionId = todaySessionId
+
+// Fecha de la clase del Dashboard: «Mié 11 nov 2026».
+export function dashboardDate(): string {
+  return sessionTitle(dashboardSessionId)
+}
 
 export function dashboardHeading(): string {
-  return dashboardDate === todayLabel ? 'Hoy' : 'Próxima clase'
+  return dashboardSessionId === todaySessionId ? text('roster.today') : text('roster.nextClass')
 }
 
 export const course = {
@@ -128,7 +148,6 @@ export type RosterRow = {
 
 export type ClassSession = {
   id: string
-  dow: string
   time: string
   room: string
   state: 'Cerrada' | 'Cancelada'
@@ -138,7 +157,6 @@ export type ClassSession = {
 
 export type HistoryEntry = RosterRow & {
   sessionId: string
-  dow: string
   sessionTime: string
 }
 
@@ -156,12 +174,12 @@ function surnameOf(name: string): string {
 }
 
 export function compareByName(a: string, b: string): number {
-  return a.localeCompare(b, 'es')
+  return compareText(a, b)
 }
 
 export function compareStudentNames(a: string, b: string): number {
   const surname = (name: string): string => name.split(' ').slice(1).join(' ')
-  return surname(a).localeCompare(surname(b), 'es') || a.localeCompare(b, 'es')
+  return compareText(surname(a), surname(b)) || compareText(a, b)
 }
 
 export function compareStudents(
@@ -172,11 +190,11 @@ export function compareStudents(
   if (byMark !== 0) {
     return byMark
   }
-  const bySurname = surnameOf(a.name).localeCompare(surnameOf(b.name), 'es')
+  const bySurname = compareText(surnameOf(a.name), surnameOf(b.name))
   if (bySurname !== 0) {
     return bySurname
   }
-  return a.name.localeCompare(b.name, 'es')
+  return compareText(a.name, b.name)
 }
 
 function buildSession(
@@ -202,7 +220,6 @@ function buildSession(
 
   return {
     id,
-    dow: sessionWeekday(id),
     time: course.time,
     room: course.room,
     state: 'Cerrada',
@@ -263,6 +280,7 @@ export function sessionCounts(rows: RosterRow[]): { p: number; r: number; a: num
   }
 }
 
+// Los textos se traducen al pedir el aviso, durante el pintado: no se guardan.
 export type RiskNotice = {
   tone: 'warning' | 'info'
   label: string
@@ -279,9 +297,9 @@ export function absenceRisk(name: string, book: SessionMarkBook = {}): RiskNotic
   }
   return {
     tone: 'warning',
-    label: 'Puede faltar',
-    header: 'Puede faltar hoy',
-    explanation: `Ha faltado ${missed.length} veces en las últimas 4 clases.`
+    label: text('roster.risk.absenceLabel'),
+    header: text('roster.risk.absenceHeader'),
+    explanation: text('roster.risk.absenceExplanation', { count: missed.length })
   }
 }
 
@@ -294,9 +312,9 @@ export function lateRisk(name: string, book: SessionMarkBook = {}): RiskNotice |
   }
   return {
     tone: 'info',
-    label: 'Puede llegar tarde',
-    header: 'Puede llegar tarde',
-    explanation: `Ha llegado tarde ${late.length} veces en las últimas 4 clases.`
+    label: text('roster.risk.lateLabel'),
+    header: text('roster.risk.lateHeader'),
+    explanation: text('roster.risk.lateExplanation', { count: late.length })
   }
 }
 
@@ -318,7 +336,6 @@ export function studentHistory(name: string, book: SessionMarkBook = {}): Histor
         ...row,
         mark: book[session.id]?.[name] ?? row.mark,
         sessionId: session.id,
-        dow: session.dow,
         sessionTime: session.time
       }
     ]
@@ -337,7 +354,9 @@ export function studentSummary(
   const late = history.filter((item) => item.mark === 'retraso').length
   const abs = history.filter((item) => item.mark === 'ausente').length
   const pct =
-    history.length === 0 ? '—' : `${Math.round(((history.length - abs) / history.length) * 100)} %`
+    history.length === 0
+      ? '—'
+      : percentLabel(Math.round(((history.length - abs) / history.length) * 100))
 
   return {
     pct,

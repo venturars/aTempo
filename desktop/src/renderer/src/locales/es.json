@@ -3,5 +3,441 @@
     "name": "Español",
     "title": "Idioma",
     "device": "Del dispositivo"
+  },
+  "common": {
+    "back": "Volver",
+    "close": "Cerrar",
+    "logOut": "Cerrar sesión",
+    "cancel": "Cancelar",
+    "save": "Guardar"
+  },
+  "app": {
+    "backTo": "Volver a {screen}",
+    "underConstruction": "En construcción"
+  },
+  "login": {
+    "claim": "Pasar lista ya no es parte de la clase.",
+    "exampleTrimester": "Trimestre de ejemplo",
+    "invite": {
+      "qr": "Los alumnos se registran con el QR.",
+      "exampleWeek": "Semana de ejemplo",
+      "weekPresence": "{value} % presentes"
+    },
+    "marks": {
+      "present": "Presente",
+      "late": "Tarde",
+      "absence": "Ausencia"
+    },
+    "notices": {
+      "unknownLink": "Este enlace de invitación no es válido.",
+      "usedLink": "Esta invitación ya está activada. Entra con tu contraseña."
+    },
+    "form": {
+      "email": "Correo",
+      "password": "Contraseña",
+      "submit": "Entrar",
+      "submitting": "Entrando…"
+    },
+    "activate": {
+      "greeting": "Hola, {name}",
+      "intro": "Te han invitado a aTempo. Elige una contraseña para entrar con {email}.",
+      "passwordHint": "Al menos 8 caracteres.",
+      "authOnly": "Las invitaciones todavía no están disponibles con tu organización. Entra con tu cuenta."
+    },
+    "errors": {
+      "emailRequired": "El correo es obligatorio.",
+      "emailInvalid": "El correo no tiene una forma válida.",
+      "passwordRequired": "La contraseña es obligatoria.",
+      "passwordTooShort": "La contraseña tiene que tener al menos 8 caracteres.",
+      "noMatch": "El correo o la contraseña no coinciden.",
+      "invalid": "El correo o la contraseña no son válidos.",
+      "secureStorage": "Este dispositivo no puede proteger la sesión de forma segura."
+    },
+    "changePassword": {
+      "notTeacher": "Entra con tu cuenta de profesor para cambiar la contraseña.",
+      "currentMismatch": "La contraseña actual no coincide.",
+      "sameAsCurrent": "Elige una contraseña distinta de la actual.",
+      "confirmationMismatch": "Las contraseñas nuevas no coinciden."
+    }
+  },
+  "student": {
+    "status": {
+      "present": "Presente",
+      "late": "Tarde",
+      "absent": "Ausente"
+    },
+    "noSession": {
+      "title": "No hay una sesión de alumno",
+      "body": "Esta pantalla es para alumnos. Entra con una cuenta de alumno.",
+      "goToLogin": "Ir al login"
+    },
+    "dashboard": {
+      "title": "Dashboard alumno",
+      "welcome": "Bienvenido {name}",
+      "actions": {
+        "register": "Registrar asistencia",
+        "nextClass": "Próxima clase",
+        "reportLine1": "Avisar de retrasos",
+        "reportLine2": "o ausencias",
+        "summary": "Resumen de asistencia"
+      }
+    },
+    "history": {
+      "title": "Historial",
+      "empty": "Todavía no tienes clases."
+    },
+    "scan": {
+      "title": "Registrar asistencia",
+      "todayClass": "Clase de hoy: {day}, {start}",
+      "scan": "Escanear",
+      "otherClass": "Este código no es de esta clase.",
+      "alreadyRegistered": "Ya registraste tu entrada a las {time}.",
+      "confirmed": "{status} · {time}",
+      "reader": {
+        "title": "Lector",
+        "arriveAt": "Llegar a las {time}",
+        "otherClass": "Código de otra clase"
+      }
+    }
+  },
+  "organization": {
+    "summary": "Resumen",
+    "prototypeBadge": "Prototipo · Datos ficticios",
+    "provisionalNotice": "Los resultados pueden cambiar: hay justificantes y correcciones pendientes.",
+    "footnote": "Vista informativa. Los avisos no aplican sanciones.",
+    "pendingConfirmation": "Datos pendientes de confirmar",
+    "navigation": {
+      "yourOrganization": "Tu organización",
+      "label": "Administración de la organización",
+      "comingSoon": "Próximamente",
+      "moreAreasSoon": "Las demás áreas estarán disponibles próximamente.",
+      "areas": {
+        "coursesAndCalendar": "Cursos y calendario",
+        "students": "Alumnos",
+        "teachers": "Profesores",
+        "games": "Juegos",
+        "settings": "Configuración"
+      }
+    },
+    "header": {
+      "pendingNotices": "Avisos pendientes"
+    },
+    "roles": {
+      "administration": "Administración"
+    },
+    "review": {
+      "heading": "Estudiantes a revisar",
+      "countedOnce": "Cada estudiante cuenta una sola vez.",
+      "patternsHeading": "Patrones que merecen atención",
+      "recurringAbsences": "Ausencias recurrentes",
+      "recurringAbsencesRule": "Al menos 3 no justificadas en las últimas 5 sesiones.",
+      "recurringDelays": "Retrasos recurrentes",
+      "recurringDelaysRule": "Al menos 4 en las últimas 6 sesiones.",
+      "excusedExcluded": "Los justificantes aprobados se excluyen del patrón."
+    },
+    "metric": {
+      "noData": "Sin datos",
+      "percentage": "{value} %",
+      "countOfBase": "{count} de {base}"
+    },
+    "courses": {
+      "heading": "Asistencia por curso",
+      "empty": "Sin datos de cursos en este periodo.",
+      "caption": "Ausencias y retrasos por curso en el periodo visible",
+      "columns": {
+        "course": "Curso",
+        "absences": "Ausencias",
+        "delays": "Retrasos"
+      },
+      "justified": {
+        "one": "{count} justificada",
+        "other": "{count} justificadas"
+      },
+      "absencesNote": "Ausencias sobre registros alumno-sesión esperados. Las justificadas se incluyen en la tabla.",
+      "delaysNote": "Retrasos sobre asistencias con entrada: desde el minuto 11, con 10 minutos de tolerancia. Se usa el inicio efectivo si el profesor avisó."
+    },
+    "students": {
+      "heading": "Estudiantes a acompañar",
+      "empty": "No hay estudiantes a revisar en este periodo.",
+      "absencePattern": {
+        "one": "{count} ausencia en {sessions} sesiones",
+        "other": "{count} ausencias en {sessions} sesiones"
+      },
+      "delayPattern": {
+        "one": "{count} retraso en {sessions} sesiones",
+        "other": "{count} retrasos en {sessions} sesiones"
+      }
+    },
+    "pending": {
+      "heading": "Pendientes de la organización",
+      "justifications": {
+        "label": "Justificantes",
+        "description": "Pendientes de revisión"
+      },
+      "corrections": {
+        "label": "Correcciones",
+        "description": "Registros por confirmar"
+      },
+      "openSessions": {
+        "label": "Sesiones sin cerrar",
+        "description": "Fuera de las métricas"
+      }
+    },
+    "quality": {
+      "heading": "Calidad de los datos",
+      "closedSessionsOnly": {
+        "one": "Solo se incluyen sesiones cerradas y no canceladas. La sesión abierta no entra en las métricas.",
+        "other": "Solo se incluyen sesiones cerradas y no canceladas. Las {count} sesiones abiertas no entran en las métricas."
+      },
+      "noClosedSessions": "Sin sesiones cerradas en este periodo. Todavía no hay datos de asistencia.",
+      "missingRecords": "Faltan registros para completar las métricas del curso.",
+      "unknownBase": "Una base desconocida o sin registros se muestra como Sin datos. Las sesiones abiertas no entran en las métricas."
+    }
+  },
+  "panel": {
+    "nav": {
+      "sections": "Secciones",
+      "dashboard": "Dashboard",
+      "sessions": "Sesiones",
+      "stats": "Estadísticas",
+      "settings": "Ajustes"
+    },
+    "account": {
+      "role": "Profesor",
+      "changePassword": "Cambiar contraseña"
+    },
+    "password": {
+      "title": "Cambiar contraseña",
+      "current": "Contraseña actual",
+      "next": "Nueva contraseña",
+      "hint": "Al menos 8 caracteres.",
+      "confirmation": "Repite la nueva contraseña",
+      "save": "Guardar contraseña",
+      "changed": "Contraseña actualizada."
+    },
+    "today": {
+      "loading": "Cargando la clase de hoy",
+      "retry": "Reintentar",
+      "noClasses": "No tienes clases hoy.",
+      "openList": "Abrir lista",
+      "simulateArrival": "Simular llegada",
+      "closeList": "Cerrar lista",
+      "cancelled": "Clase cancelada",
+      "reopen": "Volver a abrir"
+    },
+    "close": {
+      "title": "Cerrar la lista",
+      "body": "Los pendientes pasarán a ausentes."
+    },
+    "counts": {
+      "present": "Presentes",
+      "late": "Tarde",
+      "absent": "Ausentes"
+    },
+    "table": {
+      "student": "Alumno",
+      "arrival": "Entrada",
+      "status": "Estado"
+    },
+    "sessions": {
+      "date": "Fecha",
+      "attendance": "Asistencia",
+      "cancelled": "Cancelada"
+    },
+    "student": {
+      "attendance": "Asistencia",
+      "absences": "Ausencias"
+    },
+    "marks": {
+      "present": "Presente",
+      "late": "Tarde",
+      "absent": "Ausente",
+      "pending": "Pendiente",
+      "cancelled": "Cancelada",
+      "noRecord": "Sin registro",
+      "change": "De {from} a {to}",
+      "withNote": "Con justificante",
+      "toReview": "Por revisar",
+      "withoutNote": "Sin justificante",
+      "download": "Descargar",
+      "noDocument": "No hay documento.",
+      "sampleNoteTitle": "Justificante de muestra",
+      "sampleNoteWarning": "No es un documento real.",
+      "sampleNoteFile": "justificante-{slug}.txt"
+    },
+    "correction": {
+      "changeTo": "Cambiar a {mark}",
+      "changeArrival": "Cambiar la entrada a las {time}",
+      "reason": "Motivo",
+      "reasonRequired": "Escribe el motivo del cambio.",
+      "noSigner": "Entra con tu cuenta de profesor para guardar el cambio.",
+      "notSaved": "No se ha podido guardar el cambio.",
+      "sessionDay": "{weekday} {day} {month} {year}"
+    },
+    "qr": {
+      "label": "QR de la clase",
+      "requesting": "Pidiendo el código…",
+      "changesIn": {
+        "one": "Cambia en {count} segundo",
+        "other": "Cambia en {count} segundos"
+      }
+    },
+    "recognition": {
+      "nobody": "Nadie en estas fechas"
+    },
+    "errors": {
+      "network": "No se ha podido conectar con el servidor. Inténtalo de nuevo.",
+      "timeout": "El servidor tarda demasiado en responder. Inténtalo de nuevo.",
+      "forbidden": "No tienes acceso a esta clase.",
+      "sessionNotFound": "Esta clase ya no existe.",
+      "courseNotFound": "Este curso ya no existe.",
+      "studentNotEnrolled": "Este alumno ya no está en la clase.",
+      "sessionNotScheduled": "La lista ya se abrió desde otro sitio. Ya ves cómo está ahora.",
+      "sessionNotToday": "Esta lista solo se puede abrir el día de la clase.",
+      "sessionNotOpen": "La lista ya no está abierta. Ya ves cómo está ahora.",
+      "sessionNotEditable": "Esta lista no se puede corregir ahora.",
+      "validationFailed": "El cambio no es válido. Revisa la marca, la hora y el motivo.",
+      "tooManyRequests": "Demasiados intentos. Espera un momento y vuelve a probar.",
+      "generic": "No se ha podido completar. Inténtalo de nuevo."
+    }
+  },
+  "roster": {
+    "sessionTitle": "{weekday} {date}",
+    "today": "Hoy",
+    "nextClass": "Próxima clase",
+    "percent": "{value} %",
+    "risk": {
+      "absenceLabel": "Puede faltar",
+      "absenceHeader": "Puede faltar hoy",
+      "absenceExplanation": {
+        "one": "Ha faltado {count} vez en las últimas 4 clases.",
+        "other": "Ha faltado {count} veces en las últimas 4 clases."
+      },
+      "lateLabel": "Puede llegar tarde",
+      "lateHeader": "Puede llegar tarde",
+      "lateExplanation": {
+        "one": "Ha llegado tarde {count} vez en las últimas 4 clases.",
+        "other": "Ha llegado tarde {count} veces en las últimas 4 clases."
+      }
+    }
+  },
+  "stats": {
+    "cancelled": "Cancelada",
+    "noRecord": "Sin registro",
+    "noEntry": "Sin entrada",
+    "entry": "Entrada {time}",
+    "noSessions": "No hay clases celebradas en estas fechas. Elige otro intervalo.",
+    "grid": {
+      "label": "Asistencia por fecha. Desplázate en vertical para ver más alumnos y en horizontal para ver más sesiones.",
+      "caption": "Asistencia de todos los alumnos por sesión. Los retrasos cuentan como asistencia; las sesiones canceladas no cuentan. Usa las flechas para recorrer los estados y Enter para ver el detalle.",
+      "student": "Alumno",
+      "attendance": "Asistencia",
+      "cellLabel": "{name} · {date} · {status}",
+      "cellLabelWithTime": "{name} · {date} · {status} · {time}",
+      "previousSessions": "Ver sesiones anteriores",
+      "nextSessions": "Ver sesiones siguientes"
+    },
+    "awards": {
+      "title": "Reconocimientos",
+      "neverAbsent": {
+        "title": "Nunca falta",
+        "description": "Asistencia completa"
+      },
+      "alwaysOnTime": {
+        "title": "Siempre a tiempo",
+        "description": "Siempre puntual"
+      }
+    }
+  },
+  "dateFilter": {
+    "range": "{start} – {end}",
+    "triggerLabel": "{dates}. Elegir fechas",
+    "chooseDates": "Elegir fechas",
+    "allHistory": "Todo el historial",
+    "lastThreeSessions": "Últimas 3 sesiones",
+    "apply": "Aplicar"
+  },
+  "history": {
+    "title": "Historial de asistencia",
+    "justificationApproved": "Justificante aprobado",
+    "justificationPending": "Justificante pendiente",
+    "noJustification": "Sin justificante",
+    "documentTitle": "Justificante de {name}",
+    "approved": "Aprobado",
+    "pendingReview": "Pendiente de revisión",
+    "sampleNotice": "Vista de ejemplo. El prototipo no incluye un archivo adjunto.",
+    "justifications": {
+      "title": "Justificantes",
+      "buttonWithPending": "Justificantes · {pending}",
+      "pending": "Pendiente",
+      "approved": "Aprobado",
+      "empty": "No hay justificantes."
+    },
+    "mobile": {
+      "attendanceByStudent": "Asistencia por alumno",
+      "noAbsences": "Sin ausencias",
+      "absences": {
+        "one": "{count} ausencia",
+        "other": "{count} ausencias"
+      },
+      "lates": {
+        "one": "{count} retraso",
+        "other": "{count} retrasos"
+      },
+      "sessionsOf": "Sesiones de {name}",
+      "viewProfile": "Ver ficha"
+    }
+  },
+  "settings": {
+    "attendance": {
+      "title": "Registro de asistencia",
+      "lateMargin": "Margen de retraso",
+      "decreaseMargin": "Reducir margen de retraso",
+      "increaseMargin": "Aumentar margen de retraso",
+      "minutes": "min",
+      "lateHelp": "Cada sesión fija su margen de retraso. Este ajuste no se aplica todavía."
+    },
+    "notifications": {
+      "title": "Notificaciones",
+      "test": "Probar notificación",
+      "arrival": {
+        "label": "Llegada de alumnos",
+        "description": "Cuando un alumno registra su asistencia."
+      },
+      "beforeStart": {
+        "label": "Antes de empezar la clase",
+        "description": "Recibe un recordatorio 5 minutos antes del inicio."
+      },
+      "beforeLate": {
+        "label": "Alumnos que faltan por llegar",
+        "description": "Recibe la lista 1 minuto antes de que empiecen a contar los retrasos."
+      },
+      "lateSummary": {
+        "label": "Resumen de retrasos",
+        "description": "Recibe el resumen de retrasos y ausencias al terminar el margen."
+      },
+      "beforeEnd": {
+        "label": "Alumnos que no han asistido",
+        "description": "Recibe sus nombres 1 minuto antes del final de la clase."
+      }
+    },
+    "theme": {
+      "title": "Tema",
+      "appearance": "Apariencia",
+      "dark": "Oscuro",
+      "light": "Claro"
+    },
+    "language": {
+      "title": "Idioma",
+      "label": "Idioma de la aplicación"
+    },
+    "notice": {
+      "title": "La clase termina en un minuto",
+      "missing": {
+        "one": "{count} alumno no ha asistido: {names}.",
+        "other": "{count} alumnos no han asistido: {names}."
+      },
+      "close": "Cerrar notificación"
+    }
   }
 }

@@ -3,5 +3,441 @@
     "name": "English",
     "title": "Language",
     "device": "Device"
+  },
+  "common": {
+    "back": "Back",
+    "close": "Close",
+    "logOut": "Log out",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "app": {
+    "backTo": "Back to {screen}",
+    "underConstruction": "Under construction"
+  },
+  "login": {
+    "claim": "Taking attendance is no longer part of class.",
+    "exampleTrimester": "Example term",
+    "invite": {
+      "qr": "Students check in with the QR code.",
+      "exampleWeek": "Example week",
+      "weekPresence": "{value}% present"
+    },
+    "marks": {
+      "present": "Present",
+      "late": "Late",
+      "absence": "Absent"
+    },
+    "notices": {
+      "unknownLink": "This invitation link isn't valid.",
+      "usedLink": "This invitation is already activated. Log in with your password."
+    },
+    "form": {
+      "email": "Email",
+      "password": "Password",
+      "submit": "Log in",
+      "submitting": "Logging in…"
+    },
+    "activate": {
+      "greeting": "Hi, {name}",
+      "intro": "You've been invited to aTempo. Choose a password to log in with {email}.",
+      "passwordHint": "At least 8 characters.",
+      "authOnly": "Invitations aren't available for your organization yet. Log in with your account."
+    },
+    "errors": {
+      "emailRequired": "Email is required.",
+      "emailInvalid": "This email doesn't look valid.",
+      "passwordRequired": "Password is required.",
+      "passwordTooShort": "Your password must be at least 8 characters.",
+      "noMatch": "The email or password doesn't match.",
+      "invalid": "The email or password isn't valid.",
+      "secureStorage": "This device can't keep your session secure."
+    },
+    "changePassword": {
+      "notTeacher": "Log in with your teacher account to change your password.",
+      "currentMismatch": "Your current password doesn't match.",
+      "sameAsCurrent": "Choose a password different from your current one.",
+      "confirmationMismatch": "The new passwords don't match."
+    }
+  },
+  "student": {
+    "status": {
+      "present": "Present",
+      "late": "Late",
+      "absent": "Absent"
+    },
+    "noSession": {
+      "title": "No student session",
+      "body": "This screen is for students. Log in with a student account.",
+      "goToLogin": "Go to login"
+    },
+    "dashboard": {
+      "title": "Student dashboard",
+      "welcome": "Welcome, {name}",
+      "actions": {
+        "register": "Check in",
+        "nextClass": "Next class",
+        "reportLine1": "Report lateness",
+        "reportLine2": "or absences",
+        "summary": "Attendance summary"
+      }
+    },
+    "history": {
+      "title": "History",
+      "empty": "You don't have any classes yet."
+    },
+    "scan": {
+      "title": "Check in",
+      "todayClass": "Today's class: {day}, {start}",
+      "scan": "Scan",
+      "otherClass": "This code isn't for this class.",
+      "alreadyRegistered": "You already checked in at {time}.",
+      "confirmed": "{status} · {time}",
+      "reader": {
+        "title": "Reader",
+        "arriveAt": "Arrive at {time}",
+        "otherClass": "Code from another class"
+      }
+    }
+  },
+  "organization": {
+    "summary": "Overview",
+    "prototypeBadge": "Prototype · Sample data",
+    "provisionalNotice": "Results may change: some absence notes and corrections are still pending.",
+    "footnote": "For information only. Alerts don't lead to any penalties.",
+    "pendingConfirmation": "Data still to be confirmed",
+    "navigation": {
+      "yourOrganization": "Your organization",
+      "label": "Organization administration",
+      "comingSoon": "Coming soon",
+      "moreAreasSoon": "The other areas will be available soon.",
+      "areas": {
+        "coursesAndCalendar": "Courses and calendar",
+        "students": "Students",
+        "teachers": "Teachers",
+        "games": "Games",
+        "settings": "Settings"
+      }
+    },
+    "header": {
+      "pendingNotices": "Pending alerts"
+    },
+    "roles": {
+      "administration": "Administration"
+    },
+    "review": {
+      "heading": "Students to review",
+      "countedOnce": "Each student is counted only once.",
+      "patternsHeading": "Patterns worth a look",
+      "recurringAbsences": "Recurring absences",
+      "recurringAbsencesRule": "At least 3 unexcused in the last 5 sessions.",
+      "recurringDelays": "Recurring late arrivals",
+      "recurringDelaysRule": "At least 4 in the last 6 sessions.",
+      "excusedExcluded": "Approved absence notes don't count toward the pattern."
+    },
+    "metric": {
+      "noData": "No data",
+      "percentage": "{value}%",
+      "countOfBase": "{count} of {base}"
+    },
+    "courses": {
+      "heading": "Attendance by course",
+      "empty": "No course data for this period.",
+      "caption": "Absences and late arrivals by course in the period shown",
+      "columns": {
+        "course": "Course",
+        "absences": "Absences",
+        "delays": "Late arrivals"
+      },
+      "justified": {
+        "one": "{count} excused",
+        "other": "{count} excused"
+      },
+      "absencesNote": "Absences out of the expected student-session records. Excused absences are included in the table.",
+      "delaysNote": "Late arrivals out of attendances with a check-in: from minute 11, with a 10-minute grace period. The actual start time is used if the teacher gave notice."
+    },
+    "students": {
+      "heading": "Students to support",
+      "empty": "No students to review in this period.",
+      "absencePattern": {
+        "one": "{count} absence in {sessions} sessions",
+        "other": "{count} absences in {sessions} sessions"
+      },
+      "delayPattern": {
+        "one": "{count} late arrival in {sessions} sessions",
+        "other": "{count} late arrivals in {sessions} sessions"
+      }
+    },
+    "pending": {
+      "heading": "Organization to-dos",
+      "justifications": {
+        "label": "Absence notes",
+        "description": "Awaiting review"
+      },
+      "corrections": {
+        "label": "Corrections",
+        "description": "Records to confirm"
+      },
+      "openSessions": {
+        "label": "Unclosed sessions",
+        "description": "Not in the metrics"
+      }
+    },
+    "quality": {
+      "heading": "Data quality",
+      "closedSessionsOnly": {
+        "one": "Only closed, non-cancelled sessions are included. The open session isn't in the metrics.",
+        "other": "Only closed, non-cancelled sessions are included. The {count} open sessions aren't in the metrics."
+      },
+      "noClosedSessions": "No closed sessions in this period. There's no attendance data yet.",
+      "missingRecords": "Some records are missing, so the course metrics are incomplete.",
+      "unknownBase": "An unknown base or one with no records shows as No data. Open sessions aren't in the metrics."
+    }
+  },
+  "panel": {
+    "nav": {
+      "sections": "Sections",
+      "dashboard": "Dashboard",
+      "sessions": "Sessions",
+      "stats": "Statistics",
+      "settings": "Settings"
+    },
+    "account": {
+      "role": "Teacher",
+      "changePassword": "Change password"
+    },
+    "password": {
+      "title": "Change password",
+      "current": "Current password",
+      "next": "New password",
+      "hint": "At least 8 characters.",
+      "confirmation": "Repeat the new password",
+      "save": "Save password",
+      "changed": "Password updated."
+    },
+    "today": {
+      "loading": "Loading today's class",
+      "retry": "Try again",
+      "noClasses": "You have no classes today.",
+      "openList": "Open register",
+      "simulateArrival": "Simulate arrival",
+      "closeList": "Close register",
+      "cancelled": "Class cancelled",
+      "reopen": "Reopen"
+    },
+    "close": {
+      "title": "Close the register",
+      "body": "Pending students will be marked absent."
+    },
+    "counts": {
+      "present": "Present",
+      "late": "Late",
+      "absent": "Absent"
+    },
+    "table": {
+      "student": "Student",
+      "arrival": "Arrival",
+      "status": "Status"
+    },
+    "sessions": {
+      "date": "Date",
+      "attendance": "Attendance",
+      "cancelled": "Cancelled"
+    },
+    "student": {
+      "attendance": "Attendance",
+      "absences": "Absences"
+    },
+    "marks": {
+      "present": "Present",
+      "late": "Late",
+      "absent": "Absent",
+      "pending": "Pending",
+      "cancelled": "Cancelled",
+      "noRecord": "No record",
+      "change": "From {from} to {to}",
+      "withNote": "With absence note",
+      "toReview": "To review",
+      "withoutNote": "No absence note",
+      "download": "Download",
+      "noDocument": "No document.",
+      "sampleNoteTitle": "Sample absence note",
+      "sampleNoteWarning": "This is not a real document.",
+      "sampleNoteFile": "absence-note-{slug}.txt"
+    },
+    "correction": {
+      "changeTo": "Change to {mark}",
+      "changeArrival": "Change arrival to {time}",
+      "reason": "Reason",
+      "reasonRequired": "Write the reason for the change.",
+      "noSigner": "Sign in with your teacher account to save the change.",
+      "notSaved": "The change could not be saved.",
+      "sessionDay": "{weekday} {day} {month} {year}"
+    },
+    "qr": {
+      "label": "Class QR code",
+      "requesting": "Requesting the code…",
+      "changesIn": {
+        "one": "Changes in {count} second",
+        "other": "Changes in {count} seconds"
+      }
+    },
+    "recognition": {
+      "nobody": "No one on these dates"
+    },
+    "errors": {
+      "network": "Couldn't connect to the server. Try again.",
+      "timeout": "The server is taking too long to respond. Try again.",
+      "forbidden": "You don't have access to this class.",
+      "sessionNotFound": "This class no longer exists.",
+      "courseNotFound": "This course no longer exists.",
+      "studentNotEnrolled": "This student is no longer in the class.",
+      "sessionNotScheduled": "The register was already opened elsewhere. You now see its current state.",
+      "sessionNotToday": "This register can only be opened on the day of the class.",
+      "sessionNotOpen": "The register is no longer open. You now see its current state.",
+      "sessionNotEditable": "This register can't be corrected right now.",
+      "validationFailed": "The change isn't valid. Check the mark, the time and the reason.",
+      "tooManyRequests": "Too many attempts. Wait a moment and try again.",
+      "generic": "Couldn't complete that. Try again."
+    }
+  },
+  "roster": {
+    "sessionTitle": "{weekday} {date}",
+    "today": "Today",
+    "nextClass": "Next class",
+    "percent": "{value}%",
+    "risk": {
+      "absenceLabel": "May be absent",
+      "absenceHeader": "May be absent today",
+      "absenceExplanation": {
+        "one": "Absent {count} time in the last 4 classes.",
+        "other": "Absent {count} times in the last 4 classes."
+      },
+      "lateLabel": "May be late",
+      "lateHeader": "May be late",
+      "lateExplanation": {
+        "one": "Late {count} time in the last 4 classes.",
+        "other": "Late {count} times in the last 4 classes."
+      }
+    }
+  },
+  "stats": {
+    "cancelled": "Cancelled",
+    "noRecord": "No record",
+    "noEntry": "No check-in",
+    "entry": "Checked in {time}",
+    "noSessions": "No classes were held on these dates. Choose another range.",
+    "grid": {
+      "label": "Attendance by date. Scroll vertically to see more students and horizontally to see more sessions.",
+      "caption": "Attendance of every student by session. Late arrivals count as attendance; cancelled sessions don't count. Use the arrow keys to move between statuses and Enter to see the details.",
+      "student": "Student",
+      "attendance": "Attendance",
+      "cellLabel": "{name} · {date} · {status}",
+      "cellLabelWithTime": "{name} · {date} · {status} · {time}",
+      "previousSessions": "Show earlier sessions",
+      "nextSessions": "Show later sessions"
+    },
+    "awards": {
+      "title": "Recognitions",
+      "neverAbsent": {
+        "title": "Never absent",
+        "description": "Perfect attendance"
+      },
+      "alwaysOnTime": {
+        "title": "Always on time",
+        "description": "Always punctual"
+      }
+    }
+  },
+  "dateFilter": {
+    "range": "{start} – {end}",
+    "triggerLabel": "{dates}. Choose dates",
+    "chooseDates": "Choose dates",
+    "allHistory": "All history",
+    "lastThreeSessions": "Last 3 sessions",
+    "apply": "Apply"
+  },
+  "history": {
+    "title": "Attendance history",
+    "justificationApproved": "Absence note approved",
+    "justificationPending": "Absence note pending",
+    "noJustification": "No absence note",
+    "documentTitle": "Absence note from {name}",
+    "approved": "Approved",
+    "pendingReview": "Pending review",
+    "sampleNotice": "Sample view. The prototype doesn't include an attached file.",
+    "justifications": {
+      "title": "Absence notes",
+      "buttonWithPending": "Absence notes · {pending}",
+      "pending": "Pending",
+      "approved": "Approved",
+      "empty": "There are no absence notes."
+    },
+    "mobile": {
+      "attendanceByStudent": "Attendance by student",
+      "noAbsences": "No absences",
+      "absences": {
+        "one": "{count} absence",
+        "other": "{count} absences"
+      },
+      "lates": {
+        "one": "{count} late arrival",
+        "other": "{count} late arrivals"
+      },
+      "sessionsOf": "Sessions for {name}",
+      "viewProfile": "View profile"
+    }
+  },
+  "settings": {
+    "attendance": {
+      "title": "Attendance tracking",
+      "lateMargin": "Late margin",
+      "decreaseMargin": "Decrease late margin",
+      "increaseMargin": "Increase late margin",
+      "minutes": "min",
+      "lateHelp": "Each session sets its own late margin. This setting doesn't apply yet."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "test": "Test notification",
+      "arrival": {
+        "label": "Student arrivals",
+        "description": "When a student checks in."
+      },
+      "beforeStart": {
+        "label": "Before class starts",
+        "description": "Get a reminder 5 minutes before the start."
+      },
+      "beforeLate": {
+        "label": "Students yet to arrive",
+        "description": "Get the list 1 minute before late arrivals start to count."
+      },
+      "lateSummary": {
+        "label": "Late arrivals summary",
+        "description": "Get a summary of late arrivals and absences when the margin ends."
+      },
+      "beforeEnd": {
+        "label": "Students who haven't attended",
+        "description": "Get their names 1 minute before class ends."
+      }
+    },
+    "theme": {
+      "title": "Theme",
+      "appearance": "Appearance",
+      "dark": "Dark",
+      "light": "Light"
+    },
+    "language": {
+      "title": "Language",
+      "label": "App language"
+    },
+    "notice": {
+      "title": "Class ends in one minute",
+      "missing": {
+        "one": "{count} student hasn't attended: {names}.",
+        "other": "{count} students haven't attended: {names}."
+      },
+      "close": "Close notification"
+    }
   }
 }

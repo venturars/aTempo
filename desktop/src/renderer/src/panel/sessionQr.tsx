@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { encode } from 'uqr'
+import { useText } from '../language/useText'
 import { checkInUrlFor } from './classCode'
 import { studentSiteUrl } from './studentSite'
 
@@ -19,6 +20,7 @@ export function SessionQr({
   expiresAt: string | null
   onExpire: () => Promise<boolean>
 }): React.JSX.Element {
+  const t = useText()
   const [now, setNow] = useState(() => Date.now())
   const renewing = useRef(false)
   const lastRenewal = useRef(0)
@@ -68,18 +70,18 @@ export function SessionQr({
           className="class-qr aspect-square w-full rounded-box"
           shapeRendering="crispEdges"
           role="img"
-          aria-label="QR de la clase"
+          aria-label={t('panel.qr.label')}
         >
           <path d={modulesPath(qr.data)} fill="currentColor" />
         </svg>
       )}
       {code === null ? (
-        <p className="text-sm">Pidiendo el código…</p>
+        <p className="text-sm">{t('panel.qr.requesting')}</p>
       ) : (
         <>
           <p className="pl-[0.3em] text-3xl font-semibold tracking-[0.3em] tabular-nums">{code}</p>
           <p className="text-sm text-base-content/60">
-            Cambia en {seconds} {seconds === 1 ? 'segundo' : 'segundos'}
+            {t('panel.qr.changesIn', { count: seconds })}
           </p>
         </>
       )}

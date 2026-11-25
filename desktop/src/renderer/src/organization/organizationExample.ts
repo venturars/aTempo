@@ -1,7 +1,11 @@
+import type { TextKey } from '../language/messages'
+import type { TextValues } from '../language/useText'
+
+// El porcentaje es un número («7.7»); la pantalla lo escribe en el idioma elegido.
 export type CourseMetric = {
   count: number | null
   base: number | null
-  percentage: string | null
+  percentage: number | null
 }
 
 export type OrganizationCourse = {
@@ -19,26 +23,32 @@ export type ReviewStudent = {
   name: string
   initials: string
   course: string
-  patterns: { kind: 'absence' | 'delay'; label: string }[]
+  patterns: { kind: 'absence' | 'delay'; count: number; sessions: number }[]
   provisional: boolean
 }
 
+export type PendingKind = 'justifications' | 'corrections' | 'openSessions'
+
+// Un aviso de calidad: la clave de su texto y los valores que lo completan.
+export type QualityNote = { key: TextKey; values?: TextValues }
+
 export type OrganizationDashboard = {
   organization: string
-  period: string
-  profile: { name: string; initials: string; role: string }
+  // Días «AAAA-MM-DD» del primero y el último del periodo.
+  period: { from: string; to: string }
+  profile: { name: string; initials: string; role: TextKey }
   reviewStudentCount: number
   provisional: boolean
   courses: OrganizationCourse[]
   students: ReviewStudent[]
-  pending: { label: string; count: number; description: string }[]
-  quality: string[]
+  pending: { kind: PendingKind; count: number }[]
+  quality: QualityNote[]
 }
 
 export const organizationExample: OrganizationDashboard = {
   organization: 'Academia Horizonte',
-  period: '1–30 de noviembre de 2026',
-  profile: { name: 'María Torres', initials: 'MT', role: 'Administración' },
+  period: { from: '2026-11-01', to: '2026-11-30' },
+  profile: { name: 'María Torres', initials: 'MT', role: 'organization.roles.administration' },
   reviewStudentCount: 4,
   provisional: true,
   courses: [
@@ -46,27 +56,27 @@ export const organizationExample: OrganizationDashboard = {
       id: 'english-b1',
       name: 'Inglés · B1',
       teacher: 'Laura Méndez',
-      absences: { count: 18, base: 200, percentage: '9 %' },
+      absences: { count: 18, base: 200, percentage: 9 },
       justifiedAbsences: 5,
-      delays: { count: 14, base: 182, percentage: '7,7 %' },
+      delays: { count: 14, base: 182, percentage: 7.7 },
       provisional: true
     },
     {
       id: 'english-b2',
       name: 'Inglés · B2',
       teacher: 'Carlos Ruiz',
-      absences: { count: 8, base: 160, percentage: '5 %' },
+      absences: { count: 8, base: 160, percentage: 5 },
       justifiedAbsences: 3,
-      delays: { count: 6, base: 152, percentage: '3,9 %' },
+      delays: { count: 6, base: 152, percentage: 3.9 },
       provisional: false
     },
     {
       id: 'french-a2',
       name: 'Francés · A2',
       teacher: 'Elena Vidal',
-      absences: { count: 12, base: 150, percentage: '8 %' },
+      absences: { count: 12, base: 150, percentage: 8 },
       justifiedAbsences: 4,
-      delays: { count: 9, base: 138, percentage: '6,5 %' },
+      delays: { count: 9, base: 138, percentage: 6.5 },
       provisional: true
     }
   ],
@@ -76,7 +86,7 @@ export const organizationExample: OrganizationDashboard = {
       name: 'Ana López',
       initials: 'AL',
       course: 'Inglés · B1',
-      patterns: [{ kind: 'absence', label: '3 ausencias en 5 sesiones' }],
+      patterns: [{ kind: 'absence', count: 3, sessions: 5 }],
       provisional: true
     },
     {
@@ -84,7 +94,7 @@ export const organizationExample: OrganizationDashboard = {
       name: 'Diego Martín',
       initials: 'DM',
       course: 'Inglés · B1',
-      patterns: [{ kind: 'delay', label: '4 retrasos en 6 sesiones' }],
+      patterns: [{ kind: 'delay', count: 4, sessions: 6 }],
       provisional: false
     },
     {
@@ -93,8 +103,8 @@ export const organizationExample: OrganizationDashboard = {
       initials: 'SG',
       course: 'Francés · A2',
       patterns: [
-        { kind: 'absence', label: '3 ausencias en 5 sesiones' },
-        { kind: 'delay', label: '4 retrasos en 6 sesiones' }
+        { kind: 'absence', count: 3, sessions: 5 },
+        { kind: 'delay', count: 4, sessions: 6 }
       ],
       provisional: true
     },
@@ -103,18 +113,16 @@ export const organizationExample: OrganizationDashboard = {
       name: 'Lucas Pérez',
       initials: 'LP',
       course: 'Inglés · B2',
-      patterns: [{ kind: 'delay', label: '4 retrasos en 6 sesiones' }],
+      patterns: [{ kind: 'delay', count: 4, sessions: 6 }],
       provisional: false
     }
   ],
   pending: [
-    { label: 'Justificantes', count: 3, description: 'Pendientes de revisión' },
-    { label: 'Correcciones', count: 2, description: 'Registros por confirmar' },
-    { label: 'Sesiones sin cerrar', count: 2, description: 'Fuera de las métricas' }
+    { kind: 'justifications', count: 3 },
+    { kind: 'corrections', count: 2 },
+    { kind: 'openSessions', count: 2 }
   ],
-  quality: [
-    'Solo se incluyen sesiones cerradas y no canceladas. Las 2 sesiones abiertas no entran en las métricas.'
-  ]
+  quality: [{ key: 'organization.quality.closedSessionsOnly', values: { count: 2 } }]
 }
 
 export const emptyOrganizationExample: OrganizationDashboard = {
@@ -124,7 +132,7 @@ export const emptyOrganizationExample: OrganizationDashboard = {
   courses: [],
   students: [],
   pending: organizationExample.pending.map((item) => ({ ...item, count: 0 })),
-  quality: ['Sin sesiones cerradas en este periodo. Todavía no hay datos de asistencia.']
+  quality: [{ key: 'organization.quality.noClosedSessions' }]
 }
 
 export const incompleteOrganizationExample: OrganizationDashboard = {
@@ -137,7 +145,7 @@ export const incompleteOrganizationExample: OrganizationDashboard = {
     }
   ],
   quality: [
-    'Faltan registros para completar las métricas del curso.',
-    'Una base desconocida o sin registros se muestra como Sin datos. Las sesiones abiertas no entran en las métricas.'
+    { key: 'organization.quality.missingRecords' },
+    { key: 'organization.quality.unknownBase' }
   ]
 }

@@ -5,34 +5,37 @@ import { isInvitationUsed, useActivateStore } from './activateStore'
 import { findInvitation, type Invitation } from './invitations'
 import { useLoginStore } from './loginStore'
 import {
+  dayInitial,
+  dayName,
   markClass,
-  markLabel,
+  markLabelKey,
   trimesterDays,
   type AttendanceMark,
   type TrimesterDay
 } from './trimesterExample'
-import { weekDays, weekPresence } from './weekExample'
+import { weekDays, weekPresencePercent } from './weekExample'
 import { LanguagePicker } from '../language/LanguagePicker'
+import { formatNumber } from '../language/format'
+import type { TextKey } from '../language/messages'
+import { useText } from '../language/useText'
 
 const legendMarks: AttendanceMark[] = ['presente', 'retraso', 'ausencia']
 
-const unknownLinkText = 'Este enlace de invitación no es válido.'
-const usedLinkText = 'Esta invitación ya está activada. Entra con tu contraseña.'
-
 // El aviso del login normal cuando se llega con un enlace de invitación que no sirve.
+// Devuelve la clave del aviso, o '' si no hay aviso.
 function linkNotice(
   code: string | undefined,
   invitation: Invitation | undefined,
   pending: Invitation | null
-): string {
+): TextKey | '' {
   if (code === undefined) {
     return ''
   }
   if (invitation === undefined) {
-    return unknownLinkText
+    return 'login.notices.unknownLink'
   }
   if (pending === null) {
-    return usedLinkText
+    return 'login.notices.usedLink'
   }
   return ''
 }
@@ -65,6 +68,7 @@ export function LoginScreen(): React.JSX.Element {
 
 // El panel de la invitación: qué hace aTempo y una semana marcada como ejemplo.
 function InvitePanel(): React.JSX.Element {
+  const t = useText()
   return (
     <section
       className="flex flex-1 flex-col gap-8 rounded-box bg-base-300 p-4 md:p-8"
@@ -73,14 +77,16 @@ function InvitePanel(): React.JSX.Element {
       <div className="flex flex-col gap-2">
         <p>aTempo</p>
         <h2 id="invite-claim" className="text-2xl font-medium">
-          Pasar lista ya no es parte de la clase.
+          {t('login.claim')}
         </h2>
-        <p className="text-base-content/70">Los alumnos se registran con el QR.</p>
+        <p className="text-base-content/70">{t('login.invite.qr')}</p>
       </div>
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
-          <h3 className="font-medium">Semana de ejemplo</h3>
-          <p className="text-sm text-base-content/70">{weekPresence}</p>
+          <h3 className="font-medium">{t('login.invite.exampleWeek')}</h3>
+          <p className="text-sm text-base-content/70">
+            {t('login.invite.weekPresence', { value: formatNumber(weekPresencePercent) })}
+          </p>
         </div>
         <MarkChart days={weekDays} />
       </div>
@@ -90,19 +96,20 @@ function InvitePanel(): React.JSX.Element {
 
 // Una fila de puntos por día y la leyenda debajo.
 function MarkChart({ days }: { days: TrimesterDay[] }): React.JSX.Element {
+  const t = useText()
   return (
     <>
       <ul className="flex flex-col gap-2">
         {days.map((day) => (
-          <li key={day.name} className="flex items-center gap-3" aria-label={day.name}>
-            <span className="w-6 shrink-0">{day.label}</span>
+          <li key={day.date} className="flex items-center gap-3" aria-label={dayName(day)}>
+            <span className="w-6 shrink-0">{dayInitial(day)}</span>
             <span className="flex flex-wrap items-center gap-1">
               {day.marks.map((mark, index) => (
                 <span
-                  key={`${day.name}-${index}`}
+                  key={`${day.date}-${index}`}
                   role="img"
                   className={`${markClass(mark)} shrink-0`}
-                  aria-label={markLabel(mark)}
+                  aria-label={t(markLabelKey(mark))}
                 />
               ))}
             </span>
@@ -113,7 +120,7 @@ function MarkChart({ days }: { days: TrimesterDay[] }): React.JSX.Element {
         {legendMarks.map((mark) => (
           <li key={mark} className="flex items-center gap-2">
             <span className={`${markClass(mark)} shrink-0`} aria-hidden="true" />
-            {markLabel(mark)}
+            {t(markLabelKey(mark))}
           </li>
         ))}
       </ul>
@@ -122,6 +129,7 @@ function MarkChart({ days }: { days: TrimesterDay[] }): React.JSX.Element {
 }
 
 function ClaimPanel(): React.JSX.Element {
+  const t = useText()
   return (
     <section
       className="flex flex-1 flex-col gap-8 rounded-box bg-base-300 p-4 md:p-8"
@@ -130,18 +138,19 @@ function ClaimPanel(): React.JSX.Element {
       <div className="flex flex-col gap-2">
         <p>aTempo</p>
         <h1 id="claim" className="text-2xl font-medium">
-          Pasar lista ya no es parte de la clase.
+          {t('login.claim')}
         </h1>
       </div>
       <div className="flex flex-col gap-4">
-        <h2 className="font-medium">Trimestre de ejemplo</h2>
+        <h2 className="font-medium">{t('login.exampleTrimester')}</h2>
         <MarkChart days={trimesterDays} />
       </div>
     </section>
   )
 }
 
-function LoginForm({ notice }: { notice: string }): React.JSX.Element {
+function LoginForm({ notice }: { notice: TextKey | '' }): React.JSX.Element {
+  const t = useText()
   const reset = useLoginStore((state) => state.reset)
   // Al salir de la pantalla se vacía el formulario: no queda nada escrito para la próxima vez.
   useEffect(() => reset, [reset])
@@ -186,13 +195,13 @@ function LoginForm({ notice }: { notice: string }): React.JSX.Element {
       </div>
       {notice !== '' ? (
         <div className="alert" role="status">
-          <span>{notice}</span>
+          <span>{t(notice)}</span>
         </div>
       ) : null}
       <form className="flex flex-col gap-5" noValidate onSubmit={onSubmit}>
         <Field
           id="email"
-          label="Correo"
+          label={t('login.form.email')}
           type="email"
           autoComplete="username"
           value={email}
@@ -201,7 +210,7 @@ function LoginForm({ notice }: { notice: string }): React.JSX.Element {
         />
         <Field
           id="password"
-          label="Contraseña"
+          label={t('login.form.password')}
           type="password"
           autoComplete="current-password"
           value={password}
@@ -209,11 +218,11 @@ function LoginForm({ notice }: { notice: string }): React.JSX.Element {
           onChange={setPassword}
         />
         <button className="btn btn-primary" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Entrando…' : 'Entrar'}
+          {isSubmitting ? t('login.form.submitting') : t('login.form.submit')}
         </button>
         {loginError !== '' ? (
           <div className="alert alert-error" role="alert">
-            <span>{loginError}</span>
+            <span>{t(loginError)}</span>
           </div>
         ) : null}
       </form>
@@ -223,6 +232,7 @@ function LoginForm({ notice }: { notice: string }): React.JSX.Element {
 
 // La tarjeta del login cuando se llega desde el enlace de una invitación pendiente.
 function ActivateForm({ invitation }: { invitation: Invitation }): React.JSX.Element {
+  const t = useText()
   const reset = useActivateStore((state) => state.reset)
   // Al salir de la pantalla se vacía el formulario, como en el login.
   useEffect(() => reset, [reset])
@@ -262,16 +272,18 @@ function ActivateForm({ invitation }: { invitation: Invitation }): React.JSX.Ele
         <LanguagePicker size="xs" />
       </div>
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-medium">Hola, {firstName}</h1>
+        <h1 className="text-2xl font-medium">
+          {t('login.activate.greeting', { name: firstName })}
+        </h1>
         <p className="text-base-content/70">
-          Te han invitado a aTempo. Elige una contraseña para entrar con {invitation.email}.
+          {t('login.activate.intro', { email: invitation.email })}
         </p>
       </div>
       <form className="flex flex-col gap-5" noValidate onSubmit={onSubmit}>
         <Field
           id="password"
-          label="Contraseña"
-          hint="Al menos 8 caracteres."
+          label={t('login.form.password')}
+          hint={t('login.activate.passwordHint')}
           type="password"
           autoComplete="new-password"
           value={password}
@@ -279,14 +291,11 @@ function ActivateForm({ invitation }: { invitation: Invitation }): React.JSX.Ele
           onChange={setPassword}
         />
         <button className="btn btn-primary" type="submit">
-          Entrar
+          {t('login.form.submit')}
         </button>
         {authOnly ? (
           <div className="alert alert-info" role="alert">
-            <span>
-              Las invitaciones todavía no están disponibles con tu organización. Entra con tu
-              cuenta.
-            </span>
+            <span>{t('login.activate.authOnly')}</span>
           </div>
         ) : null}
       </form>
@@ -311,9 +320,11 @@ function Field({
   type: 'email' | 'password'
   autoComplete: string
   value: string
-  error: string
+  // La clave del error, o '' si no hay.
+  error: TextKey | ''
   onChange: (value: string) => void
 }): React.JSX.Element {
+  const t = useText()
   return (
     <div className="flex flex-col gap-2">
       <label className="text-base-content" htmlFor={id}>
@@ -332,7 +343,7 @@ function Field({
       />
       {error !== '' ? (
         <p id={`${id}-error`} className="text-sm text-base-content">
-          {error}
+          {t(error)}
         </p>
       ) : hint !== '' ? (
         <p id={`${id}-hint`} className="text-sm text-base-content/60">

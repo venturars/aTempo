@@ -11,6 +11,8 @@ import {
 } from '../api/contract'
 import { arrivalStatus, checkedInByStudent } from '../api/attendanceRules'
 import { atSessionTime, clockTime, isClockTime, localDay } from '../api/isoTime'
+import type { TextKey } from '../language/messages'
+import { text } from '../language/useText'
 import { teacherDemoAccount } from '../login/teacherDemoAccount'
 import { useSessionStore } from '../session/sessionStore'
 import { correctedStatusOf, isEditablePhase, markOf, phaseOf } from './apiValues'
@@ -46,6 +48,15 @@ function signerName(): string {
   return useSessionStore.getState().name ?? teacherDemoAccount.name
 }
 
+// El error de una corrección: la clave de su texto o, si la API explica qué campo falla,
+// esa explicación tal cual.
+export type CorrectionError = { key: TextKey } | { apiText: string }
+
+// Se llama al pintar, desde un componente con useText().
+export function correctionErrorText(error: CorrectionError): string {
+  return 'key' in error ? text(error.key) : error.apiText
+}
+
 export type PendingCorrection = {
   studentId: string
   name: string
@@ -60,10 +71,10 @@ type PanelState = {
   records: Record<string, AttendanceRecord>
   checkInCode: CheckInCode | null
   busy: boolean
-  todayError: string | null
+  todayError: TextKey | null
   canSimulateArrival: boolean
   pendingCorrection: PendingCorrection | null
-  correctionError: string | null
+  correctionError: CorrectionError | null
   sessionMarks: SessionMarkBook
   changes: MarkChange[]
   classId: string | null
@@ -121,24 +132,24 @@ export function todayArrival(state: Pick<PanelState, 'records'>, studentId: stri
   return checkedInAt === null || checkedInAt === undefined ? '—' : clockTime(checkedInAt)
 }
 
-const errorMessages: Partial<Record<ErrorCode, string>> = {
-  NETWORK_ERROR: 'No se ha podido conectar con el servidor. Inténtalo de nuevo.',
-  NETWORK_TIMEOUT: 'El servidor tarda demasiado en responder. Inténtalo de nuevo.',
-  FORBIDDEN: 'No tienes acceso a esta clase.',
-  SESSION_NOT_FOUND: 'Esta clase ya no existe.',
-  COURSE_NOT_FOUND: 'Este curso ya no existe.',
-  STUDENT_NOT_ENROLLED: 'Este alumno ya no está en la clase.',
-  SESSION_NOT_SCHEDULED: 'La lista ya se abrió desde otro sitio. Ya ves cómo está ahora.',
-  SESSION_NOT_TODAY: 'Esta lista solo se puede abrir el día de la clase.',
-  SESSION_NOT_OPEN: 'La lista ya no está abierta. Ya ves cómo está ahora.',
-  SESSION_NOT_EDITABLE: 'Esta lista no se puede corregir ahora.',
-  VALIDATION_FAILED: 'El cambio no es válido. Revisa la marca, la hora y el motivo.',
-  TOO_MANY_REQUESTS: 'Demasiados intentos. Espera un momento y vuelve a probar.'
+const errorMessages: Partial<Record<ErrorCode, TextKey>> = {
+  NETWORK_ERROR: 'panel.errors.network',
+  NETWORK_TIMEOUT: 'panel.errors.timeout',
+  FORBIDDEN: 'panel.errors.forbidden',
+  SESSION_NOT_FOUND: 'panel.errors.sessionNotFound',
+  COURSE_NOT_FOUND: 'panel.errors.courseNotFound',
+  STUDENT_NOT_ENROLLED: 'panel.errors.studentNotEnrolled',
+  SESSION_NOT_SCHEDULED: 'panel.errors.sessionNotScheduled',
+  SESSION_NOT_TODAY: 'panel.errors.sessionNotToday',
+  SESSION_NOT_OPEN: 'panel.errors.sessionNotOpen',
+  SESSION_NOT_EDITABLE: 'panel.errors.sessionNotEditable',
+  VALIDATION_FAILED: 'panel.errors.validationFailed',
+  TOO_MANY_REQUESTS: 'panel.errors.tooManyRequests'
 }
 
-const genericMessage = 'No se ha podido completar. Inténtalo de nuevo.'
+const genericMessage: TextKey = 'panel.errors.generic'
 
-function errorMessage(error: unknown): string {
+function errorMessage(error: unknown): TextKey {
   if (error instanceof ApiError) {
     return errorMessages[error.code] ?? genericMessage
   }
@@ -149,11 +160,11 @@ function hasCode(error: unknown, code: ErrorCode): boolean {
   return error instanceof ApiError && error.code === code
 }
 
-function correctionErrorMessage(error: unknown): string {
+function correctionErrorMessage(error: unknown): CorrectionError {
   if (error instanceof ApiError && error.details.length > 0) {
-    return error.details.map((detail) => detail.message).join(' ')
+    return { apiText: error.details.map((detail) => detail.message).join(' ') }
   }
-  return errorMessage(error)
+  return { key: errorMessage(error) }
 }
 
 function keepsCorrection(error: unknown): boolean {

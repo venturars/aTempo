@@ -193,7 +193,7 @@ test('shows the validation details inside the reason dialog', async () => {
   await store().loadToday()
   store().requestMark(diegoMolero, 'retraso')
   await store().saveCorrection('x')
-  expect(store().correctionError).toBe('El motivo es obligatorio.')
+  expect(store().correctionError).toEqual({ apiText: 'El motivo es obligatorio.' })
 })
 
 test('keeps a cancelled session read-only', async () => {

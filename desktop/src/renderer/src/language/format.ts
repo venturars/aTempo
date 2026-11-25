@@ -22,6 +22,11 @@ export function formatTime(time: string): string {
   })
 }
 
+// Un periodo: «1–30 de noviembre de 2026», «November 1 – 30, 2026».
+export function formatDateRange(from: Date, to: Date, options: Intl.DateTimeFormatOptions): string {
+  return new Intl.DateTimeFormat(region(), options).formatRange(from, to)
+}
+
 // Fecha y hora de un instante, por ejemplo cuándo se corrigió una marca.
 export function formatDateTime(date: Date, options: Intl.DateTimeFormatOptions): string {
   return date.toLocaleString(region(), options)

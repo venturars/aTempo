@@ -1,6 +1,9 @@
+import type { TextKey } from '../language/messages'
+
+// La clave del error de cada campo, o '' si el campo vale.
 export type LoginErrors = {
-  email: string
-  password: string
+  email: TextKey | ''
+  password: TextKey | ''
 }
 
 const emailShape = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -14,13 +17,13 @@ export function validateLogin(email: string, password: string): LoginErrors {
   const trimmedEmail = email.trim()
 
   if (trimmedEmail === '') {
-    errors.email = 'El correo es obligatorio.'
+    errors.email = 'login.errors.emailRequired'
   } else if (!emailShape.test(trimmedEmail)) {
-    errors.email = 'El correo no tiene una forma válida.'
+    errors.email = 'login.errors.emailInvalid'
   }
 
   if (password === '') {
-    errors.password = 'La contraseña es obligatoria.'
+    errors.password = 'login.errors.passwordRequired'
   }
 
   return errors

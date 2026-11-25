@@ -1,10 +1,13 @@
+import type { TextKey } from '../language/messages'
+
 // La contraseña nueva de una invitación tiene que tener 8 caracteres o más.
-export function validateActivation(password: string): string {
+// Devuelve la clave del error, o '' si la contraseña vale.
+export function validateActivation(password: string): TextKey | '' {
   if (password === '') {
-    return 'La contraseña es obligatoria.'
+    return 'login.errors.passwordRequired'
   }
   if (password.length < 8) {
-    return 'La contraseña tiene que tener al menos 8 caracteres.'
+    return 'login.errors.passwordTooShort'
   }
   return ''
 }

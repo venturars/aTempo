@@ -3,6 +3,7 @@ import { useSettingsStore } from './settingsStore'
 import { rosterNames, todayEntry } from './roster'
 import { saveTheme } from '../theme'
 import { LanguagePicker } from '../language/LanguagePicker'
+import { useText } from '../language/useText'
 
 function Bell(): React.JSX.Element {
   return (
@@ -53,6 +54,7 @@ function Toggle({
 }
 
 export function SettingsView(): React.JSX.Element {
+  const t = useText()
   const preferences = useSettingsStore()
   const [theme, setTheme] = useState(
     () => document.documentElement.dataset.theme ?? 'atempo-oscuro'
@@ -72,28 +74,28 @@ export function SettingsView(): React.JSX.Element {
   const notifications = [
     {
       key: 'arrival',
-      label: 'Llegada de alumnos',
-      description: 'Cuando un alumno registra su asistencia.'
+      label: t('settings.notifications.arrival.label'),
+      description: t('settings.notifications.arrival.description')
     },
     {
       key: 'beforeStart',
-      label: 'Antes de empezar la clase',
-      description: 'Recibe un recordatorio 5 minutos antes del inicio.'
+      label: t('settings.notifications.beforeStart.label'),
+      description: t('settings.notifications.beforeStart.description')
     },
     {
       key: 'beforeLate',
-      label: 'Alumnos que faltan por llegar',
-      description: 'Recibe la lista 1 minuto antes de que empiecen a contar los retrasos.'
+      label: t('settings.notifications.beforeLate.label'),
+      description: t('settings.notifications.beforeLate.description')
     },
     {
       key: 'lateSummary',
-      label: 'Resumen de retrasos',
-      description: 'Recibe el resumen de retrasos y ausencias al terminar el margen.'
+      label: t('settings.notifications.lateSummary.label'),
+      description: t('settings.notifications.lateSummary.description')
     },
     {
       key: 'beforeEnd',
-      label: 'Alumnos que no han asistido',
-      description: 'Recibe sus nombres 1 minuto antes del final de la clase.'
+      label: t('settings.notifications.beforeEnd.label'),
+      description: t('settings.notifications.beforeEnd.description')
     }
   ] as const
   return (
@@ -101,18 +103,18 @@ export function SettingsView(): React.JSX.Element {
       <section className="card bg-base-100 shadow-sm" aria-labelledby="session-settings">
         <div className="card-body gap-3">
           <h2 id="session-settings" className="text-lg font-medium">
-            Registro de asistencia
+            {t('settings.attendance.title')}
           </h2>
           <div>
             <div className="flex flex-wrap items-center justify-between gap-4">
               <label htmlFor="late-minutes" className="text-sm font-medium">
-                Margen de retraso
+                {t('settings.attendance.lateMargin')}
               </label>
               <div className="join">
                 <button
                   type="button"
                   className="btn btn-sm btn-square join-item"
-                  aria-label="Reducir margen de retraso"
+                  aria-label={t('settings.attendance.decreaseMargin')}
                   disabled
                   onClick={() => preferences.update({ lateMinutes: preferences.lateMinutes - 1 })}
                 >
@@ -135,12 +137,14 @@ export function SettingsView(): React.JSX.Element {
                         preferences.update({ lateMinutes: value })
                     }}
                   />
-                  <span className="text-sm text-base-content/60">min</span>
+                  <span className="text-sm text-base-content/60">
+                    {t('settings.attendance.minutes')}
+                  </span>
                 </label>
                 <button
                   type="button"
                   className="btn btn-sm btn-square join-item"
-                  aria-label="Aumentar margen de retraso"
+                  aria-label={t('settings.attendance.increaseMargin')}
                   disabled
                   onClick={() => preferences.update({ lateMinutes: preferences.lateMinutes + 1 })}
                 >
@@ -149,7 +153,7 @@ export function SettingsView(): React.JSX.Element {
               </div>
             </div>
             <p id="late-help" className="mt-2 text-sm text-base-content/60">
-              Cada sesión fija su margen de retraso. Este ajuste no se aplica todavía.
+              {t('settings.attendance.lateHelp')}
             </p>
           </div>
         </div>
@@ -158,7 +162,7 @@ export function SettingsView(): React.JSX.Element {
         <div className="card-body gap-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 id="notification-settings" className="text-lg font-medium">
-              Notificaciones
+              {t('settings.notifications.title')}
             </h2>
             <button
               type="button"
@@ -169,7 +173,7 @@ export function SettingsView(): React.JSX.Element {
               }}
             >
               <Bell />
-              Probar notificación
+              {t('settings.notifications.test')}
             </button>
           </div>
           <div>
@@ -188,14 +192,14 @@ export function SettingsView(): React.JSX.Element {
       <section className="card bg-base-100 shadow-sm" aria-labelledby="theme-settings">
         <div className="card-body gap-3">
           <h2 id="theme-settings" className="text-lg font-medium">
-            Tema
+            {t('settings.theme.title')}
           </h2>
           <div className="flex items-center justify-between gap-4">
-            <span className="text-sm font-medium">Apariencia</span>
+            <span className="text-sm font-medium">{t('settings.theme.appearance')}</span>
             <div className="join">
               {[
-                { value: 'atempo-oscuro', label: 'Oscuro' },
-                { value: 'atempo-claro', label: 'Claro' }
+                { value: 'atempo-oscuro', label: t('settings.theme.dark') },
+                { value: 'atempo-claro', label: t('settings.theme.light') }
               ].map((option) => (
                 <button
                   type="button"
@@ -214,10 +218,10 @@ export function SettingsView(): React.JSX.Element {
       <section className="card bg-base-100 shadow-sm" aria-labelledby="language-settings">
         <div className="card-body gap-3">
           <h2 id="language-settings" className="text-lg font-medium">
-            Idioma
+            {t('settings.language.title')}
           </h2>
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <span className="text-sm font-medium">Idioma de la aplicación</span>
+            <span className="text-sm font-medium">{t('settings.language.label')}</span>
             <LanguagePicker />
           </div>
         </div>
@@ -234,17 +238,17 @@ export function SettingsView(): React.JSX.Element {
           >
             <Bell />
             <div>
-              <p className="text-sm font-medium">La clase termina en un minuto</p>
+              <p className="text-sm font-medium">{t('settings.notice.title')}</p>
               <p className="mt-1 text-sm text-base-content/60">
-                {missing.length === 1
-                  ? '1 alumno no ha asistido: '
-                  : `${missing.length} alumnos no han asistido: `}
-                {missing.map((name) => name.split(' ')[0]).join(', ')}.
+                {t('settings.notice.missing', {
+                  count: missing.length,
+                  names: missing.map((name) => name.split(' ')[0]).join(', ')
+                })}
               </p>
             </div>
             <button
               type="button"
-              aria-label="Cerrar notificación"
+              aria-label={t('settings.notice.close')}
               className="btn btn-xs btn-square"
               onClick={() => {
                 setNotice(0)

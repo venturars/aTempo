@@ -34,7 +34,7 @@ export const useStudentAccountsStore = create<StudentAccountsState>((set, get) =
     set((state) => ({
       accounts: state.accounts.map((account) => {
         if (normalizeEmail(account.email) !== wanted) return account
-        if (account.history.some((item) => item.label === entry.label)) return account
+        if (account.history.some((item) => item.date === entry.date)) return account
         return { ...account, history: [entry, ...account.history] }
       })
     }))

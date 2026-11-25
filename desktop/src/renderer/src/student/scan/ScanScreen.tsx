@@ -1,6 +1,9 @@
 import { useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { statusForArrival, statusLabel } from '../attendanceStatus'
+import { formatTime } from '../../language/format'
+import { useText } from '../../language/useText'
+import { statusForArrival, statusLabelKey, type AttendanceStatus } from '../attendanceStatus'
+import { classDayLabel } from '../classDate'
 import { NoStudentSession } from '../NoStudentSession'
 import { useCurrentStudent, useStudentAccountsStore } from '../studentAccounts'
 import {
@@ -11,8 +14,11 @@ import {
   type StudentAccount
 } from '../studentExample'
 
+// El resultado guarda los datos; el texto se escribe al pintar, en el idioma elegido.
 type ScanResult =
-  { kind: 'confirmed' | 'repeated'; arrival: string; text: string } | { kind: 'other' }
+  | { kind: 'confirmed'; arrival: string; status: AttendanceStatus }
+  | { kind: 'repeated'; arrival: string }
+  | { kind: 'other' }
 
 export function ScanScreen(): React.JSX.Element {
   const student = useCurrentStudent()
@@ -23,6 +29,7 @@ export function ScanScreen(): React.JSX.Element {
 }
 
 function StudentScan({ student }: { student: StudentAccount }): React.JSX.Element {
+  const t = useText()
   const recordEntry = useStudentAccountsStore((state) => state.recordEntry)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const [result, setResult] = useState<ScanResult | null>(null)
@@ -33,67 +40,73 @@ function StudentScan({ student }: { student: StudentAccount }): React.JSX.Elemen
       setResult({ kind: 'other' })
       return
     }
-    const previous = student.history.find((entry) => entry.label === todayClass.label)
+    const previous = student.history.find((entry) => entry.date === todayClass.date)
     if (previous) {
-      setResult({
-        kind: 'repeated',
-        arrival: previous.arrival ?? '',
-        text: `Ya registraste tu entrada a las ${previous.arrival}.`
-      })
+      setResult({ kind: 'repeated', arrival: previous.arrival ?? '' })
       return
     }
     const status = statusForArrival(reading.arrival, todayClass.start, lateMinutes)
-    recordEntry(student.email, { label: todayClass.label, arrival: reading.arrival, status })
-    setResult({
-      kind: 'confirmed',
-      arrival: reading.arrival,
-      text: `${statusLabel[status]} · ${reading.arrival}`
-    })
+    recordEntry(student.email, { date: todayClass.date, arrival: reading.arrival, status })
+    setResult({ kind: 'confirmed', arrival: reading.arrival, status })
+  }
+
+  function resultText(shown: ScanResult): string {
+    if (shown.kind === 'other') {
+      return t('student.scan.otherClass')
+    }
+    const time = shown.arrival === '' ? '' : formatTime(shown.arrival)
+    if (shown.kind === 'repeated') {
+      return t('student.scan.alreadyRegistered', { time })
+    }
+    return t('student.scan.confirmed', { status: t(statusLabelKey[shown.status]), time })
   }
 
   return (
     <main className="flex min-h-screen items-center justify-center p-4 md:p-8">
       <section className="flex w-full max-w-md flex-col gap-6 rounded-box bg-base-100 p-4 md:p-8">
         <Link to="/student/dashboard" className="link w-fit">
-          Volver
+          {t('common.back')}
         </Link>
-        <h1 className="text-3xl font-semibold text-base-content">Registrar asistencia</h1>
+        <h1 className="text-3xl font-semibold text-base-content">{t('student.scan.title')}</h1>
         <p className="text-secondary">
-          Clase de hoy: {todayClass.label}, {todayClass.start}
+          {t('student.scan.todayClass', {
+            day: classDayLabel(todayClass.date),
+            start: formatTime(todayClass.start)
+          })}
         </p>
         <button
           className="btn btn-primary"
           type="button"
           onClick={() => dialogRef.current?.showModal()}
         >
-          Escanear
+          {t('student.scan.scan')}
         </button>
         {result && (
           <div role="status" className="alert">
-            {result.kind === 'other' ? 'Este código no es de esta clase.' : result.text}
+            {resultText(result)}
           </div>
         )}
       </section>
       <dialog ref={dialogRef} className="modal" aria-labelledby="reader-title">
         <div className="modal-box w-full max-w-sm">
           <h2 id="reader-title" className="text-lg font-semibold">
-            Lector
+            {t('student.scan.reader.title')}
           </h2>
           <div className="mt-4 flex flex-col gap-2">
             {sampleReadings.map((reading) => (
               <button
-                key={reading.label}
+                key={`${reading.labelKey}-${reading.arrival}`}
                 className="btn w-full"
                 type="button"
                 onClick={() => onReading(reading)}
               >
-                {reading.label}
+                {t(reading.labelKey, { time: formatTime(reading.arrival) })}
               </button>
             ))}
           </div>
           <div className="modal-action">
             <form method="dialog">
-              <button className="btn">Cerrar</button>
+              <button className="btn">{t('common.close')}</button>
             </form>
           </div>
         </div>

@@ -1,5 +1,7 @@
 import { useLayoutEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { createPortal } from 'react-dom'
+import { formatTime } from '../language/format'
+import { useText } from '../language/useText'
 import { MobileAttendance } from './MobileAttendance'
 import { AttendanceStatus } from './AttendanceStatus'
 import { Avatar } from './avatar'
@@ -11,6 +13,7 @@ import {
   classSessions,
   compareByName,
   course,
+  percentLabel,
   rosterNames,
   sessionDate,
   sessionDateLabel,
@@ -22,6 +25,7 @@ import {
 type Selection = { name: string; session: ClassSession; row: RosterRow | undefined }
 
 export function StatsView(): React.JSX.Element {
+  const t = useText()
   const sessionMarks = usePanelStore((state) => state.sessionMarks)
   const sessions = [...classSessions].reverse().map((session) => {
     if (session.rows === null) {
@@ -83,17 +87,17 @@ export function StatsView(): React.JSX.Element {
   })
   const awards = [
     {
-      title: 'Nunca falta',
+      title: t('stats.awards.neverAbsent.title'),
       icon: 'trophy' as const,
-      description: 'Asistencia completa',
+      description: t('stats.awards.neverAbsent.description'),
       names: records
         .filter((person) => person.complete && person.attended === held.length)
         .map((person) => person.name)
     },
     {
-      title: 'Siempre a tiempo',
+      title: t('stats.awards.alwaysOnTime.title'),
       icon: 'clock' as const,
-      description: 'Siempre puntual',
+      description: t('stats.awards.alwaysOnTime.description'),
       names: records
         .filter(
           (person) => person.complete && person.attended > 0 && person.punctual === person.attended
@@ -145,7 +149,7 @@ export function StatsView(): React.JSX.Element {
               {(['presente', 'retraso', 'ausente', 'cancelada'] as const).map((mark) => (
                 <span key={mark} className="inline-flex items-center gap-2">
                   <AttendanceStatus mark={mark} />
-                  {markLabel[mark]}
+                  {markLabel(mark)}
                 </span>
               ))}
             </div>
@@ -164,20 +168,16 @@ export function StatsView(): React.JSX.Element {
                 className="attendance-scroll"
                 ref={scroll}
                 role="region"
-                aria-label="Asistencia por fecha. Desplázate en vertical para ver más alumnos y en horizontal para ver más sesiones."
+                aria-label={t('stats.grid.label')}
                 tabIndex={0}
                 onScroll={(event) => setScroll(event.currentTarget.scrollLeft)}
               >
                 <table className="table attendance-table">
-                  <caption className="sr-only">
-                    Asistencia de todos los alumnos por sesión. Los retrasos cuentan como
-                    asistencia; las sesiones canceladas no cuentan. Usa las flechas para recorrer
-                    los estados y Enter para ver el detalle.
-                  </caption>
+                  <caption className="sr-only">{t('stats.grid.caption')}</caption>
                   <thead>
                     <tr>
                       <th scope="col" className="attendance-name">
-                        Alumno
+                        {t('stats.grid.student')}
                       </th>
                       {visible.map((session) => (
                         <th
@@ -194,7 +194,7 @@ export function StatsView(): React.JSX.Element {
                         </th>
                       ))}
                       <th scope="col" className="attendance-total">
-                        Asistencia
+                        {t('stats.grid.attendance')}
                       </th>
                     </tr>
                   </thead>
@@ -215,12 +215,21 @@ export function StatsView(): React.JSX.Element {
                           const row = session.rows?.find((item) => item.name === person.name)
                           const mark = session.cancel ? 'cancelada' : (row?.mark ?? 'sin-registro')
                           const status = session.cancel
-                            ? 'Cancelada'
+                            ? t('stats.cancelled')
                             : row
-                              ? markLabel[row.mark]
-                              : 'Sin registro'
-                          const title = `${person.name} · ${sessionDateLabel(session.id)} · ${status}${row && row.time !== '—' ? ` · ${row.time}` : ''}`
-                          const time = row && row.time !== '—' ? row.time : 'Sin entrada'
+                              ? markLabel(row.mark)
+                              : t('stats.noRecord')
+                          const arrival = row && row.time !== '—' ? formatTime(row.time) : null
+                          const cell = {
+                            name: person.name,
+                            date: sessionDateLabel(session.id),
+                            status
+                          }
+                          const title =
+                            arrival === null
+                              ? t('stats.grid.cellLabel', cell)
+                              : t('stats.grid.cellLabelWithTime', { ...cell, time: arrival })
+                          const time = arrival ?? t('stats.noEntry')
                           return (
                             <td
                               key={session.id}
@@ -253,7 +262,7 @@ export function StatsView(): React.JSX.Element {
                         <td className="attendance-total tabular-nums text-base-content/50">
                           <span>
                             {held.length
-                              ? `${Math.round((person.attended / held.length) * 100)} %`
+                              ? percentLabel(Math.round((person.attended / held.length) * 100))
                               : '—'}
                           </span>
                         </td>
@@ -267,7 +276,7 @@ export function StatsView(): React.JSX.Element {
                   <button
                     type="button"
                     className="btn btn-sm"
-                    aria-label="Ver sesiones anteriores"
+                    aria-label={t('stats.grid.previousSessions')}
                     disabled={!overflow.left}
                     onClick={() => scroll.current?.scrollBy({ left: -168 })}
                   >
@@ -276,7 +285,7 @@ export function StatsView(): React.JSX.Element {
                   <button
                     type="button"
                     className="btn btn-sm"
-                    aria-label="Ver sesiones siguientes"
+                    aria-label={t('stats.grid.nextSessions')}
                     disabled={!overflow.right}
                     onClick={() => scroll.current?.scrollBy({ left: 168 })}
                   >
@@ -291,7 +300,7 @@ export function StatsView(): React.JSX.Element {
               role="status"
               className="border-t border-base-content/4 px-5 py-4 text-sm text-base-content/60"
             >
-              No hay clases celebradas en estas fechas. Elige otro intervalo.
+              {t('stats.noSessions')}
             </p>
           ) : null}
         </section>
@@ -308,8 +317,8 @@ export function StatsView(): React.JSX.Element {
                 </p>
                 <p className="text-sm text-base-content/60">
                   {selected.row && selected.row.time !== '—'
-                    ? `Entrada ${selected.row.time}`
-                    : 'Sin entrada'}
+                    ? t('stats.entry', { time: formatTime(selected.row.time) })
+                    : t('stats.noEntry')}
                 </p>
               </div>
             </div>
@@ -322,13 +331,13 @@ export function StatsView(): React.JSX.Element {
                 }
               >
                 {selected.session.cancel
-                  ? 'Cancelada'
+                  ? t('stats.cancelled')
                   : selected.row
-                    ? markLabel[selected.row.mark]
-                    : 'Sin registro'}
+                    ? markLabel(selected.row.mark)
+                    : t('stats.noRecord')}
               </span>
               <button type="button" className="btn btn-sm" onClick={() => setSelected(null)}>
-                Cerrar
+                {t('common.close')}
               </button>
             </div>
           </div>
@@ -336,7 +345,7 @@ export function StatsView(): React.JSX.Element {
       </div>
       <section aria-labelledby="awards-title" className="flex flex-col gap-4">
         <h2 id="awards-title" className="text-lg font-medium">
-          Reconocimientos
+          {t('stats.awards.title')}
         </h2>
         <div className="grid gap-4">
           {awards.map((award) => (

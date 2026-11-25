@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { clockTime } from '../api/isoTime'
+import { formatDate, formatTime } from '../language/format'
+import { text, useText } from '../language/useText'
 import { markOf } from './apiValues'
 import { markLabel } from './marks'
-import { usePanelStore, type PendingCorrection } from './panelStore'
+import { correctionErrorText, usePanelStore, type PendingCorrection } from './panelStore'
 
 export function CorrectionReasonDialog(): React.JSX.Element | null {
   const pending = usePanelStore((state) => state.pendingCorrection)
@@ -16,12 +18,19 @@ function sessionDay(startsAt: string | undefined): string {
   if (startsAt === undefined) return ''
   const [year, month, day] = startsAt.slice(0, 10).split('-').map(Number)
   const date = new Date(year, month - 1, day)
-  const weekday = date.toLocaleDateString('es', { weekday: 'short' }).replace('.', '')
-  const monthName = date.toLocaleDateString('es', { month: 'short' }).replace('.', '')
-  return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} ${day} ${monthName} ${year}`
+  const weekday = formatDate(date, { weekday: 'short' }).replace('.', '')
+  const monthName = formatDate(date, { month: 'short' }).replace('.', '')
+  // «Mar 10 nov 2026»: Intl escribe el día de la semana en minúscula.
+  return text('panel.correction.sessionDay', {
+    weekday: `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)}`,
+    day,
+    month: monthName,
+    year
+  })
 }
 
 function ReasonDialog({ pending }: { pending: PendingCorrection }): React.JSX.Element {
+  const t = useText()
   const busy = usePanelStore((state) => state.busy)
   const startsAt = usePanelStore((state) => state.session?.startsAt)
   const [missing, setMissing] = useState(false)
@@ -33,9 +42,13 @@ function ReasonDialog({ pending }: { pending: PendingCorrection }): React.JSX.El
   const { status, checkedInAt } = pending.correction
   const title =
     checkedInAt === undefined
-      ? `Cambiar a ${markLabel[markOf(status)]}`
-      : `Cambiar la entrada a las ${clockTime(checkedInAt)}`
-  const message = missing ? 'Escribe el motivo del cambio.' : error
+      ? t('panel.correction.changeTo', { mark: markLabel(markOf(status)) })
+      : t('panel.correction.changeArrival', { time: formatTime(clockTime(checkedInAt)) })
+  const message = missing
+    ? t('panel.correction.reasonRequired')
+    : error === null
+      ? null
+      : correctionErrorText(error)
 
   useEffect(() => {
     const previous = document.activeElement
@@ -87,7 +100,7 @@ function ReasonDialog({ pending }: { pending: PendingCorrection }): React.JSX.El
           </p>
         </div>
         <div className="flex flex-col gap-2">
-          <label htmlFor="correction-reason">Motivo</label>
+          <label htmlFor="correction-reason">{t('panel.correction.reason')}</label>
           <textarea
             id="correction-reason"
             ref={fieldRef}
@@ -109,10 +122,10 @@ function ReasonDialog({ pending }: { pending: PendingCorrection }): React.JSX.El
         </div>
         <div className="modal-action mt-0">
           <button type="button" className="btn" disabled={busy} onClick={cancelCorrection}>
-            Cancelar
+            {t('common.cancel')}
           </button>
           <button type="submit" className="btn btn-primary" disabled={busy}>
-            Guardar
+            {t('common.save')}
           </button>
         </div>
       </form>

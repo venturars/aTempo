@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useText } from '../language/useText'
 import { usePanelStore } from './panelStore'
 import { studentRisk } from './roster'
 
@@ -9,6 +10,8 @@ const riskClass = {
 } as const
 
 export function RiskHint({ name }: { name: string }): React.JSX.Element | null {
+  // Los textos del aviso salen de roster.ts: useText vuelve a pintarlos al cambiar el idioma.
+  useText()
   const sessionMarks = usePanelStore((state) => state.sessionMarks)
   const risk = studentRisk(name, sessionMarks)
   const anchorRef = useRef<HTMLSpanElement>(null)

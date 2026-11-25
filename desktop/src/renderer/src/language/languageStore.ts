@@ -77,4 +77,7 @@ export const useLanguageStore = create<LanguageState>((set) => ({
   }
 }))
 
-document.documentElement.lang = useLanguageStore.getState().language
+// Los tests de los stores cargan este módulo en Node, que no tiene document.
+if (typeof document !== 'undefined') {
+  document.documentElement.lang = useLanguageStore.getState().language
+}

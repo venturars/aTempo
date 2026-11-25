@@ -1,6 +1,9 @@
 import { Link } from '@tanstack/react-router'
+import { formatTime } from '../../language/format'
+import { useText } from '../../language/useText'
 import { markClass } from '../../login/trimesterExample'
-import { statusLabel, type AttendanceStatus } from '../attendanceStatus'
+import { statusLabelKey, type AttendanceStatus } from '../attendanceStatus'
+import { classDayLabel } from '../classDate'
 import { NoStudentSession } from '../NoStudentSession'
 import { useCurrentStudent } from '../studentAccounts'
 
@@ -11,6 +14,7 @@ function dot(status: AttendanceStatus): string {
 }
 
 export function HistoryScreen(): React.JSX.Element {
+  const t = useText()
   const student = useCurrentStudent()
   if (student === null) {
     return <NoStudentSession />
@@ -20,20 +24,20 @@ export function HistoryScreen(): React.JSX.Element {
     <main className="flex min-h-screen items-center justify-center p-4 md:p-8">
       <section className="flex w-full max-w-md flex-col gap-6 rounded-box bg-base-100 p-4 md:p-8">
         <Link to="/student/dashboard" className="link w-fit">
-          Volver
+          {t('common.back')}
         </Link>
-        <h1 className="text-3xl font-semibold text-base-content">Historial</h1>
+        <h1 className="text-3xl font-semibold text-base-content">{t('student.history.title')}</h1>
         {student.history.length === 0 ? (
-          <p>Todavía no tienes clases.</p>
+          <p>{t('student.history.empty')}</p>
         ) : (
           <ul className="list">
             {student.history.map((entry) => (
-              <li key={entry.label} className="list-row items-center">
-                <span>{entry.label}</span>
-                <span>{entry.arrival ?? '—'}</span>
+              <li key={entry.date} className="list-row items-center">
+                <span>{classDayLabel(entry.date)}</span>
+                <span>{entry.arrival === null ? '—' : formatTime(entry.arrival)}</span>
                 <span className="flex items-center gap-2">
                   <span className={`${dot(entry.status)} shrink-0`} aria-hidden="true" />
-                  {statusLabel[entry.status]}
+                  {t(statusLabelKey[entry.status])}
                 </span>
               </li>
             ))}

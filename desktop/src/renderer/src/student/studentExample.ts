@@ -1,7 +1,9 @@
+import type { TextKey } from '../language/messages'
 import type { AttendanceStatus } from './attendanceStatus'
 
+// date es la fecha de la clase, «2026-11-10». La pantalla la enseña como «Mar 10 nov».
 export type ClassEntry = {
-  label: string
+  date: string
   arrival: string | null
   status: AttendanceStatus
 }
@@ -14,13 +16,14 @@ export type StudentAccount = {
 }
 
 export type TodayClass = {
-  label: string
+  date: string
   start: string
   code: string
 }
 
+// labelKey es el texto del botón del lector; {time} se rellena con arrival.
 export type SampleReading = {
-  label: string
+  labelKey: TextKey
   code: string
   arrival: string
 }
@@ -30,17 +33,17 @@ export const exampleStudent: StudentAccount = {
   email: 'ada.lopez@clase.test',
   password: 'clase-2026',
   history: [
-    { label: 'Mar 10 nov', arrival: '08:57', status: 'presente' },
-    { label: 'Lun 9 nov', arrival: '09:16', status: 'tarde' },
-    { label: 'Vie 6 nov', arrival: null, status: 'ausente' },
-    { label: 'Jue 5 nov', arrival: '09:02', status: 'presente' },
-    { label: 'Mar 3 nov', arrival: '08:59', status: 'presente' },
-    { label: 'Lun 2 nov', arrival: '09:13', status: 'tarde' }
+    { date: '2026-11-10', arrival: '08:57', status: 'presente' },
+    { date: '2026-11-09', arrival: '09:16', status: 'tarde' },
+    { date: '2026-11-06', arrival: null, status: 'ausente' },
+    { date: '2026-11-05', arrival: '09:02', status: 'presente' },
+    { date: '2026-11-03', arrival: '08:59', status: 'presente' },
+    { date: '2026-11-02', arrival: '09:13', status: 'tarde' }
   ]
 }
 
 export const todayClass: TodayClass = {
-  label: 'Mié 11 nov',
+  date: '2026-11-11',
   start: '09:00',
   code: 'ATEMPO-CLASE-1109'
 }
@@ -48,7 +51,7 @@ export const todayClass: TodayClass = {
 export const lateMinutes = 10
 
 export const sampleReadings: SampleReading[] = [
-  { label: 'Llegar a las 08:58', code: todayClass.code, arrival: '08:58' },
-  { label: 'Llegar a las 09:14', code: todayClass.code, arrival: '09:14' },
-  { label: 'Código de otra clase', code: 'ATEMPO-CLASE-0000', arrival: '09:00' }
+  { labelKey: 'student.scan.reader.arriveAt', code: todayClass.code, arrival: '08:58' },
+  { labelKey: 'student.scan.reader.arriveAt', code: todayClass.code, arrival: '09:14' },
+  { labelKey: 'student.scan.reader.otherClass', code: 'ATEMPO-CLASE-0000', arrival: '09:00' }
 ]
