@@ -26,7 +26,7 @@ flowchart LR
   serviceSqlite[(SQLite_del_servicio)]
   objectApi[api_rustfs_Express]
   rustfs[(RustFS)]
-  electron -->|login| router
+  electron -->|login y API| router
   electron -.-> apiPg
   web -.-> apiPg
   apiPg -.-> nodeDomain
@@ -36,7 +36,7 @@ flowchart LR
   objectApi --> rustfs
 ```
 
-Las flechas discontinuas son el flujo previsto: hoy los frontends no llaman a `api-postgresql/` y ese servicio no importa `domain/node/`. El login de Electron va al `api-router/`. `domain/node/` hablará con `api-rustfs/` cuando esa persistencia entre en el paquete. Redis y el resto de microservicios del backend quedan fuera del escritorio.
+Las flechas discontinuas son el flujo previsto: hoy los frontends no llaman a `api-postgresql/` y ese servicio no importa `domain/node/`. El login de Electron y las peticiones de la pestaña Hoy van al `api-router/`. `domain/node/` hablará con `api-rustfs/` cuando esa persistencia entre en el paquete. Redis y el resto de microservicios del backend quedan fuera del escritorio.
 
 ## api-sqlite
 
