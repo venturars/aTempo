@@ -68,7 +68,6 @@ async function openTab(window: Page, label: string, title: string): Promise<void
   await expect(window.getByRole('heading', { level: 1, name: title })).toBeVisible()
 }
 
-// Ajustes está en el menú de la cuenta, abajo en la barra lateral.
 async function openSettings(window: Page): Promise<void> {
   await window.locator('aside details.dropdown > summary').click()
   await window.getByRole('button', { name: 'Ajustes', exact: true }).click()

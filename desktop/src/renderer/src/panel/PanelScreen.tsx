@@ -50,7 +50,6 @@ const tabs: { id: PanelTab; label: string }[] = [
   { id: 2, label: 'Estadísticas' },
   { id: 3, label: 'Ajustes' }
 ]
-// Ajustes no está en la navegación: se abre desde el menú de la cuenta, abajo en la barra lateral.
 const sections = tabs.filter((item) => item.id !== 3)
 
 // Nombre de la barra lateral. Si se abre la ruta del panel sin entrar, el de la cuenta de ejemplo.

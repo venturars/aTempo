@@ -341,7 +341,6 @@ test('opens Ajustes from the account menu, not from the sections', async () => {
     await expect(sections.locator('[aria-current="page"]')).toHaveCount(0)
     await expect(window.getByRole('button', { name: /^Volver a/ })).toHaveCount(0)
 
-    // Con la ficha de un alumno abierta, Ajustes la cierra.
     await sections.getByRole('button', { name: 'Dashboard', exact: true }).click()
     await window.getByRole('button', { name: 'Meghan Martin', exact: true }).click()
     await expect(window.getByRole('heading', { level: 1, name: 'Meghan Martin' })).toBeVisible()
