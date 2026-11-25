@@ -102,8 +102,8 @@ function createSeed(): AdminData {
       {
         id: adminId,
         organizationId,
-        name: 'Miguel Rodríguez',
-        email: 'miguel@neoland.example',
+        name: 'Ventura Rodríguez',
+        email: 'profesor@atempo.test',
         roles: ['admin', 'teacher'],
         state: 'active'
       },

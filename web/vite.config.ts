@@ -6,6 +6,13 @@ import { tanstackRouter } from '@tanstack/router-plugin/vite'
 
 export default defineConfig({
   server: {
+    proxy: {
+      '/api': {
+        target: `http://localhost:${process.env.ATEMPO_API_ROUTER_PORT ?? '3004'}`,
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    },
     fs: {
       allow: [resolve(import.meta.dirname, '..')]
     }

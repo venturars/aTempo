@@ -4,11 +4,11 @@
 web/
   package.json           # Vite, React y TanStack Router; pnpm 10.33.0
   pnpm-lock.yaml
-  README.md              # entrada y recorrido admin; acceso del alumno
+  README.md              # inicio de sesión Auth0, admin y portal del alumno
   src/
     admin/
       adminStore.ts      # CRUD mock de organización, personas, cursos y sesiones
-      AdminLayout.tsx    # entrada demo, navegación, tema y salida
+      AdminLayout.tsx    # panel Auth0, navegación, tema y salida
       AdminHome.tsx
       PeopleScreen.tsx
       CoursesScreen.tsx
@@ -35,7 +35,7 @@ web/
         my-classes/$courseId.$sessionId.tsx
       student/           # pantallas del portal del alumno
     student/             # vistas, datos y layout del alumno
-    session/             # sesión del alumno y preferencias de tema
+    session/             # sesión recuperada del router y rutas protegidas
     styles/app.css       # importa el sistema visual de Storybook
     routeTree.gen.ts     # generado por Vite, no se edita a mano
 ```
@@ -236,6 +236,8 @@ api-router/
       auth.module.ts
       auth.controller.ts
       auth.service.ts
+      web-session.dto.ts     # perfil web público
+      web-session.service.ts # tokens Auth0 en memoria y cookie opaca
       login-request.dto.ts
       login-response.dto.ts
       register-request.dto.ts
@@ -257,6 +259,7 @@ api-router/
     mock-api.e2e-spec.ts
     swagger.e2e-spec.ts
     auth.e2e-spec.ts
+    auth-web.e2e-spec.ts
     jest-e2e.json
 ```
 
@@ -291,7 +294,7 @@ desktop/
         routeTree.gen.ts  # generado por el plugin de TanStack Router
         routes/
           __root.tsx    # ruta raíz; si no hay ruta, el login
-          index.tsx     # /, login; ?invitation=<código> desde el correo de invitación
+          index.tsx     # /, login Auth0 del alumno
           student/
             dashboard.tsx  # /student/dashboard
             scan.tsx       # /student/scan, registrar asistencia

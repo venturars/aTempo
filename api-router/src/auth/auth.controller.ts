@@ -1,12 +1,16 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Get,
   Headers,
   HttpCode,
   HttpStatus,
   Post,
+  Req,
+  Res,
 } from '@nestjs/common'
+import type { Request, Response } from 'express'
 import {
   ApiBody,
   ApiConflictResponse,
@@ -28,11 +32,20 @@ import { RefreshRequestDto } from './refresh-request.dto'
 import { RefreshResponseDto } from './refresh-response.dto'
 import { RegisterRequestDto } from './register-request.dto'
 import { RegisterResponseDto } from './register-response.dto'
+import {
+  defaultWebOrigin,
+  webSessionCookieName,
+  WebSessionService,
+} from './web-session.service'
+import { WebSessionDto } from './web-session.dto'
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly webSessionService: WebSessionService,
+  ) {}
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
@@ -97,4 +110,106 @@ export class AuthController {
   me(@Headers('authorization') authorization?: string): Promise<MeResponseDto> {
     return this.authService.getAuthenticatedUser(authorization)
   }
+
+  @Post('web/login')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Abre una sesión web con cookie HttpOnly' })
+  @ApiBody({ type: LoginRequestDto })
+  @ApiOkResponse({ type: WebSessionDto })
+  @ApiUnauthorizedResponse({ description: 'Credenciales no válidas' })
+  async webLogin(
+    @Body() body: LoginRequestDto,
+    @Headers('origin') origin: string | undefined,
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<WebSessionDto> {
+    this.requireWebOrigin(origin)
+    response.setHeader('Cache-Control', 'no-store')
+    const previousSessionId = readCookie(
+      request.headers.cookie,
+      webSessionCookieName,
+    )
+    const result = await this.webSessionService.login(
+      body.email,
+      body.password,
+      previousSessionId,
+    )
+    response.cookie(webSessionCookieName, result.sessionId, {
+      httpOnly: true,
+      sameSite: 'lax',
+      path: '/',
+      secure: isSecureRequest(request),
+    })
+    return result.user
+  }
+
+  @Get('web/session')
+  @ApiOperation({ summary: 'Consulta y renueva la sesión web actual' })
+  @ApiOkResponse({ type: WebSessionDto })
+  @ApiUnauthorizedResponse({ description: 'La sesión web no existe o ha caducado' })
+  async webSession(
+    @Headers('cookie') cookieHeader: string | undefined,
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<WebSessionDto> {
+    response.setHeader('Cache-Control', 'no-store')
+    const sessionId = readCookie(cookieHeader, webSessionCookieName)
+    try {
+      return await this.webSessionService.getSession(sessionId)
+    } catch (error) {
+      clearWebSessionCookie(response, request)
+      throw error
+    }
+  }
+
+  @Post('web/logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Cierra la sesión web y revoca su refresh token' })
+  @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Sesión cerrada' })
+  async webLogout(
+    @Headers('origin') origin: string | undefined,
+    @Headers('cookie') cookieHeader: string | undefined,
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<void> {
+    this.requireWebOrigin(origin)
+    response.setHeader('Cache-Control', 'no-store')
+    const sessionId = readCookie(cookieHeader, webSessionCookieName)
+    await this.webSessionService.logout(sessionId)
+    clearWebSessionCookie(response, request)
+  }
+
+  private requireWebOrigin(origin: string | undefined): void {
+    const configuredOrigin = process.env.ATEMPO_WEB_ORIGIN?.trim() || defaultWebOrigin
+    if (origin !== configuredOrigin) {
+      throw new ForbiddenException({ code: 'WEB_ORIGIN_NOT_ALLOWED' })
+    }
+  }
+}
+
+function readCookie(header: string | undefined, name: string): string | undefined {
+  const cookie = header?.split(';').map((part) => part.trim()).find((part) => {
+    return part.startsWith(`${name}=`)
+  })
+  return cookie?.slice(name.length + 1) || undefined
+}
+
+function clearWebSessionCookie(response: Response, request: Request): void {
+  response.clearCookie(webSessionCookieName, {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    secure: isSecureRequest(request),
+  })
+}
+
+function isSecureRequest(request: Request): boolean {
+  const forwardedProtocol = request.headers['x-forwarded-proto']
+  const protocol = Array.isArray(forwardedProtocol)
+    ? forwardedProtocol[0]
+    : forwardedProtocol
+  return (
+    request.secure ||
+    protocol?.split(',')[0]?.trim() === 'https'
+  )
 }

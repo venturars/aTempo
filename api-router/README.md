@@ -2,7 +2,7 @@
 
 Servicio REST con NestJS y TypeScript. Recibe las peticiones de los frontends (Electron y web), las adapta y las delegará en la **SDK (lógica de negocio)**. El router no implementa reglas de negocio.
 
-Expone `GET /health`, `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout` y `GET /auth/me`. El login y el alta solicitan tokens a Auth0; `/auth/refresh` los renueva y `/auth/logout` revoca el refresh token. `/auth/me` valida el Bearer recibido. La lógica de negocio vivirá en [`sdk/`](../sdk/) (paquete hermano, carpeta pendiente); este servicio la consumirá cuando exista.
+Expone `GET /health`, los endpoints Auth0 Bearer `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout` y `GET /auth/me`, además de las rutas de sesión web `POST /auth/web/login`, `GET /auth/web/session` y `POST /auth/web/logout`. El login web conserva los tokens en memoria del router y entrega una cookie opaca HttpOnly. La lógica de negocio vivirá en [`sdk/`](../sdk/) (paquete hermano, carpeta pendiente); este servicio la consumirá cuando exista.
 
 ## Mock del contrato API v1
 
@@ -36,13 +36,23 @@ Por defecto escucha en el puerto `3000`. Puedes usar la variable `PORT`.
 
 ## Auth0
 
-Configura `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET` y `AUTH0_AUDIENCE` en el `.env` local de la raíz antes de iniciar Compose. `AUTH0_DOMAIN` es el dominio HTTPS del tenant y `AUTH0_AUDIENCE` es el API Identifier configurado en Auth0. Compose solo pasa estas variables al servicio `api-router`; el secreto no entra en Electron ni se versiona. La Application debe tener Password Grant y acceso a la conexión de usuarios. Las cuentas de prueba ya están creadas; comprueba que la conexión permite su login.
+Configura `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET` y `AUTH0_AUDIENCE` en el `.env` local de la raíz antes de iniciar Compose. `AUTH0_DOMAIN` es el dominio HTTPS del tenant y `AUTH0_AUDIENCE` es el API Identifier configurado en Auth0. Compose solo pasa estas variables al servicio `api-router`; el secreto no entra en los frontends ni se versiona. La aplicación Auth0 debe tener Password Grant y acceso a la conexión de usuarios. La web admite las cuentas existentes `profesor@atempo.test` y `ada.lopez@clase.test`, y asigna a cada una el perfil demo acordado.
 
 `POST /auth/login` recibe `{ "email": "...", "password": "..." }` y responde `{ "accessToken": "...", "expiresIn": 3600, "refreshToken": "..." }` cuando Auth0 incluye duración y refresh. Credenciales rechazadas devuelven `401` con código `INVALID_CREDENTIALS`. `POST /auth/register` recibe el mismo cuerpo y responde `201` con `{ "userId", "token", "refreshToken" }`; un correo duplicado es `409` `USER_EXISTS`. `POST /auth/refresh` recibe `{ "refreshToken" }` y responde `{ "token", "refreshToken" }`. `POST /auth/logout` recibe `{ "refreshToken" }` y responde `{ "success": true }`. `GET /auth/me` requiere `Authorization: Bearer <accessToken>` y devuelve `{ "email": "..." }` (trim y minúsculas) si el token incluye un claim `email` no vacío además de `sub`. Auth0 debe incluir `email` en el access token (API Identifier / Action); si no, `/auth/me` responde `401` `INVALID_TOKEN`. `/health` y `/docs` son públicos.
 
+## Sesión web
+
+`POST /auth/web/login` recibe `{ "email": "...", "password": "..." }`. Solo acepta las dos cuentas web configuradas, valida el access token con la comprobación existente y responde `200` con `{ "sub", "email", "profile" }`; las credenciales no válidas o perfiles no admitidos responden `401`. La respuesta fija `atempo_session`, una cookie opaca `HttpOnly`, `SameSite=Lax`, `Path=/` y `Secure` cuando la petición usa HTTPS. No devuelve tokens.
+
+`GET /auth/web/session` usa esa cookie, comprueba el token y lo renueva en el router cuando caduca. Responde con el mismo objeto de sesión o con `401`; en ese caso elimina la cookie. `POST /auth/web/logout` exige el origen web permitido, revoca el refresh token cuando existe, elimina la sesión y borra la cookie; responde `204`. Las respuestas de sesión llevan `Cache-Control: no-store`.
+
+El router guarda access y refresh tokens en memoria y limita cada sesión a siete días. La cookie no tiene `Max-Age` y dura la sesión del navegador. Reiniciar el router elimina las sesiones almacenadas. El origen permitido por defecto es `http://localhost:5191`; se puede cambiar con `ATEMPO_WEB_ORIGIN`.
+
+Durante el desarrollo, Vite envía `/api/*` al router y quita el prefijo `/api`. El destino por defecto es `http://localhost:3004`; se configura con `ATEMPO_API_ROUTER_PORT`. El comando `pnpm run atempo --router-only` inicia el router en ese puerto con el `.env` de Auth0.
+
 ## Docker Compose
 
-Tras `docker compose run --rm setup`, el servicio ya forma parte del entorno Compose: desde la raíz, `docker compose up api-router` lo sirve en <http://localhost:3000>. `docker compose up api-router api-postgresql api-sqlite api-rustfs` inicia las cuatro APIs actuales; PostgreSQL y RustFS arrancan como dependencias de sus servicios. La base y los datos de persistencia permanecen en volúmenes separados.
+Tras `docker compose run --rm setup`, el servicio forma parte del entorno Compose: desde la raíz, `docker compose up api-router` lo sirve en <http://localhost:3000>. `pnpm run atempo --router-only` usa el puerto `3004` por defecto para no ocuparlo. `docker compose up api-router api-postgresql api-sqlite api-rustfs` inicia las cuatro APIs actuales; PostgreSQL y RustFS arrancan como dependencias de sus servicios. La base y los datos de persistencia permanecen en volúmenes separados.
 
 Las pruebas y comprobaciones se ejecutan con el volumen Linux del paquete: `docker compose run --rm api-router pnpm test` (sustituye `test` por `typecheck`, `lint` o `build`).
 
