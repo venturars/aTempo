@@ -1,6 +1,6 @@
 # api-sqlite
 
-Servicio Flask de persistencia local para SQLite. `domain/python/` delegará aquí las lecturas y escrituras; `api-router/` no accede directamente a la base. Este servicio no usa ni sustituye `desktop/atempo.sqlite` y todavía no define tablas de dominio.
+Servicio Flask de persistencia local para SQLite. Importará `domain/python/` y delegará en ese paquete las lecturas y escrituras; hoy todavía no lo importa. `api-router/` no accede directamente a la base. Este servicio no usa ni sustituye `desktop/atempo.sqlite` y todavía no define tablas de dominio.
 
 ## Requisitos e instalación
 

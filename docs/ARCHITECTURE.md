@@ -6,7 +6,7 @@ Carpeta de la SDK: `domain/`, con `python/` (Python). HTTP de PostgreSQL: `api-p
 
 El flujo de producto con SQLite es Frontend → `api-sqlite` → `domain/python` → SQLite. `api-sqlite` transforma HTTP. `domain/python` valida los tipos y las reglas de fichaje y abre SQLite. Flask no escribe SQL.
 
-`domain/` es la carpeta de la SDK, hermana de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. `domain/python/` cubre `session` y `attendance` en SQLite: instantes a ISO UTC, UUID en minúsculas, fichaje coherente con el estado. `api-sqlite/` queda detrás.
+`domain/` es la carpeta de la SDK, hermana de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. `domain/python/` cubre `session` y `attendance` en SQLite: instantes a ISO UTC, UUID en minúsculas, fichaje coherente con el estado. `api-sqlite/` lo importará.
 
 `api-router/` expone `GET /health`, `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout` y `GET /auth/me`. El login y el alta intercambian credenciales con Auth0 mediante Resource Owner Password Grant (`offline_access`). `/auth/refresh` pide un access token nuevo; `/auth/logout` revoca el refresh token. `/auth/me` valida el Bearer mediante JWKS, emisor, audiencia y caducidad. El secreto de cliente solo vive en el router. Con `API_MOCK=true`, sirve además, con datos en memoria, los ocho endpoints del contrato API v1 que usa la pestaña Hoy (`src/mock-api/`); piden un `Authorization: Bearer` no vacío. Compose lo arranca así y lo publica solo en `127.0.0.1`. `api-postgresql/` expone `GET /health`, los listados `GET /person`, `GET /course`, `GET /organization`, `GET /person-role` y `GET /person-course`, `GET /person/:id` (una fila de `person` por UUID: 200, 404 o 503), `POST /person-course` (una matrícula: 201, 404, 409 o 503) y `DELETE /person-course/:personId/:courseId` (una matrícula: 204, 404 o 503); con `DATABASE_URL` consulta PostgreSQL y sin ella usa un mock de prueba. `api-rustfs/` solo expone `GET /health`, que confirma que el servicio HTTP responde; su conexión S3 se comprueba aparte. `api-sqlite/` solo expone `GET /health`, que ejecuta `SELECT 1`. La activación de invitaciones no llama a estas APIs; el login real accede solo al router a través del proceso principal de Electron. La pestaña Hoy llama al router, también a través de main, solo si arranca con `--api-transport=http`; sin ese flag usa el transporte mock, descrito en «Renderer». Compose publica las cuatro APIs en 3000–3003. Las APIs se conectan por la red interna a PostgreSQL (`postgres:5432`) y RustFS (`rustfs:9000`); los mismos servicios también sirven al almacén operativo. PostgreSQL se publica en el host por `5433` y RustFS por `9000`/`9001`. Los volúmenes compartidos `postgres-data` y `rustfs-data`, junto con `api-sqlite-data`, conservan sus datos.
 
@@ -18,6 +18,7 @@ La documentación interactiva (OpenAPI y Swagger UI) de cada servicio HTTP vive 
 flowchart LR
   electron[FrontendElectron]
   web[FrontendWeb]
+  router[APIRouterNest]
   sqliteApi[api_sqlite_Flask]
   pythonDomain[pythonDomain]
   serviceSqlite[(SQLite_del_servicio)]
@@ -25,15 +26,16 @@ flowchart LR
   postgres[(PostgreSQL)]
   objectApi[api_rustfs_Express]
   rustfs[(RustFS)]
-  electron --> sqliteApi
-  web --> sqliteApi
-  sqliteApi --> pythonDomain
+  electron -->|login y API| router
+  electron -.-> sqliteApi
+  web -.-> sqliteApi
+  sqliteApi -.-> pythonDomain
   pythonDomain --> serviceSqlite
   apiPg --> postgres
   objectApi --> rustfs
 ```
 
-El flujo de producto con SQLite es Frontend → `api-sqlite` → `domain/python` → SQLite. Redis y el resto de microservicios del backend quedan fuera del escritorio.
+El flujo de producto con SQLite es Frontend → `api-sqlite` → `domain/python` → SQLite. Las flechas discontinuas son ese flujo previsto: hoy los frontends no llaman a `api-sqlite/` y ese servicio no importa `domain/python/`. El login de Electron y las peticiones de la pestaña Hoy van al `api-router/`. Redis y el resto de microservicios del backend quedan fuera del escritorio.
 
 ## api-sqlite
 

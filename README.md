@@ -106,7 +106,7 @@ pnpm dev
 | `api-router/` | API REST con NestJS entre los frontends y la SDK de lógica de negocio (pendiente). |
 | `api-postgresql/` | API REST con NestJS entre la SDK y PostgreSQL. |
 | `api-rustfs/` | API REST con Express entre la SDK y RustFS (persistencia de objetos). |
-| `api-sqlite/` | Servicio Flask con Pydantic y SQLAlchemy Core entre `domain/python/` y SQLite. |
+| `api-sqlite/` | Servicio Flask con Pydantic que transforma HTTP y delegará en `domain/python/` el acceso a SQLite. |
 | `postgres/` | Core PostgreSQL y Drizzle Studio para ver sus tablas. No se abre desde el escritorio ni desde el API-router. |
 | `sqlite/` | SQLite operativo de fichaje y Datasette. Distinto del `atempo.sqlite` del escritorio. |
 | `rustfs/` | Justificantes (bucket `justifications`) y consola de RustFS. |
@@ -429,7 +429,7 @@ La API queda en <http://localhost:3001> y PostgreSQL en <http://localhost:5433> 
 
 ## API-sqlite
 
-`api-sqlite/` es el servicio de persistencia local previsto para `domain/python/`. Todavía no hay integración entre estos paquetes. Su base SQLite es distinta de la base local de Electron.
+`api-sqlite/` importará `domain/python/` para leer y escribir en SQLite. Todavía no hay integración entre estos paquetes. Su base SQLite es distinta de la base local de Electron.
 
 Para usar el servicio en Docker, primero ejecuta `docker compose run --rm setup` y después:
 
