@@ -34,7 +34,6 @@ function ReasonDialog({ pending }: { pending: PendingCorrection }): React.JSX.El
     checkedInAt === undefined
       ? `Cambiar a ${markLabel[markOf(status)]}`
       : `Cambiar la entrada a las ${clockTime(checkedInAt)}`
-  const message = error
 
   useEffect(() => {
     const previous = document.activeElement
@@ -88,16 +87,16 @@ function ReasonDialog({ pending }: { pending: PendingCorrection }): React.JSX.El
           <textarea
             id="correction-reason"
             ref={fieldRef}
-            className={message === null ? 'textarea w-full' : 'textarea textarea-error w-full'}
+            className={error === null ? 'textarea w-full' : 'textarea textarea-error w-full'}
             rows={3}
             value={reason}
-            aria-invalid={message !== null}
-            aria-describedby={message === null ? undefined : 'correction-reason-error'}
+            aria-invalid={error !== null}
+            aria-describedby={error === null ? undefined : 'correction-reason-error'}
             onChange={(event) => setReason(event.target.value)}
           />
-          {message === null ? null : (
+          {error === null ? null : (
             <p id="correction-reason-error" role="alert" className="text-sm">
-              {message}
+              {error}
             </p>
           )}
         </div>

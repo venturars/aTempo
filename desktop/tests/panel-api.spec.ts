@@ -292,6 +292,11 @@ test('applies the contract rules in the mock', async () => {
     code: 'VALIDATION_FAILED',
     details: [{ field: 'reason', message: 'El motivo tiene que ser texto.' }]
   })
+  const withNullReason = await client.correctAttendance(session.id, diegoMolero, {
+    status: 'late',
+    reason: null as unknown as string
+  })
+  expect(withNullReason).toMatchObject({ status: 'late', reason: null })
   await expect(
     client.correctAttendance(session.id, diegoMolero, {
       status: 'absent',
@@ -466,6 +471,24 @@ test('corrects a mark with a reason after closing', async () => {
     const dialog = window.getByRole('dialog', { name: 'Cambiar a Presente' })
     await expect(dialog).toContainText('Diego Molero ·')
     await giveReason(window)
+    await expect(diego.getByRole('button', { name: 'Presente', exact: true })).toBeVisible()
+  })
+})
+
+test('corrects a mark without a reason after closing', async () => {
+  await withPanel('success', async (window) => {
+    await window.getByRole('button', { name: 'Abrir lista', exact: true }).click()
+    await window.getByRole('button', { name: 'Cerrar lista', exact: true }).click()
+    await window.getByRole('dialog').getByRole('button', { name: 'Cerrar lista' }).click()
+    const diego = row(window, 'Diego Molero')
+    await diego.getByRole('button', { name: 'Ausente', exact: true }).click()
+    await window.getByRole('menu').getByRole('button', { name: 'Presente', exact: true }).click()
+    const dialog = window.getByRole('dialog', { name: 'Cambiar a Presente' })
+    await expect(dialog.locator('label[for="correction-reason"]')).toHaveText(
+      'Motivo · recomendado'
+    )
+    await dialog.getByRole('button', { name: 'Guardar', exact: true }).click()
+    await expect(dialog).toHaveCount(0)
     await expect(diego.getByRole('button', { name: 'Presente', exact: true })).toBeVisible()
   })
 })
