@@ -1,0 +1,59 @@
+name: "PR: check rules"
+
+on:
+  pull_request:
+    branches: [staging]
+    types: [opened, synchronize, reopened, ready_for_review, review_requested]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+# Un push nuevo a la misma pull request cancela la comprobación anterior
+concurrency:
+  group: pr-check-rules-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  check-rules:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '22'
+      # La pull request que abre «APM: update dependency» la crea el bot con otra rama y sin issue:
+      # no cumple estas reglas. Se salta solo el paso, para que el job siga en success y el aviso
+      # de Discord pueda publicarse.
+      - name: Comprobar la pull request
+        if: ${{ !(github.event.pull_request.user.login == 'github-actions[bot]' && github.event.pull_request.head.ref == 'chore/update-delivery-workflow') }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_ASSIGNEE: ${{ github.event.pull_request.assignee != null && github.event.pull_request.assignee.login || '' }}
+        run: node .github/scripts/review-pull-request.mjs
+      # Estos dos pasos cumplen aquí la función del discord-pr-trigger.yml del paquete
+      # delivery-workflow, que este repositorio no usa: «Discord: publish notice» necesita
+      # el artefacto discord-pr-number del run de este workflow. Van después de la comprobación,
+      # así que si esta falla no se sube nada. Solo se guarda el número de la PR.
+      - name: Guardar el número de la pull request
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          mkdir -p pr-event
+          printf '%s' "$PR_NUMBER" > pr-event/pr-number
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: discord-pr-number
+          path: pr-event/pr-number
+          retention-days: 1

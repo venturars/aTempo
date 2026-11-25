@@ -10,6 +10,7 @@ type MockAuthServer = {
 }
 
 const accessToken = 'mock-access-token-that-must-not-reach-the-renderer'
+const refreshToken = 'mock-refresh-token-that-must-not-reach-the-renderer'
 
 type AuthBridge = {
   auth: {
@@ -18,13 +19,13 @@ type AuthBridge = {
       sub: string
       email: string
     }>
+    register: (credentials: { email: string; password: string }) => Promise<{
+      sub: string
+      email: string
+    }>
     me: () => Promise<{ sub: string; email: string } | null>
     logout: () => Promise<void>
   }
-}
-
-function authBridge(): AuthBridge {
-  return (window as unknown as { api: AuthBridge }).api
 }
 
 async function readBody(request: IncomingMessage): Promise<unknown> {
@@ -55,7 +56,30 @@ async function createMockAuthServer(): Promise<MockAuthServer> {
         sendJson(response, 401, { code: 'INVALID_CREDENTIALS' })
         return
       }
-      sendJson(response, 200, { accessToken, expiresIn: 3600 })
+      sendJson(response, 200, { accessToken, refreshToken, expiresIn: 3600 })
+      return
+    }
+
+    if (request.method === 'POST' && request.url === '/auth/register') {
+      if ((body as { email?: string } | undefined)?.email === 'existe@atempo.test') {
+        sendJson(response, 409, { code: 'USER_EXISTS' })
+        return
+      }
+      sendJson(response, 201, {
+        userId: 'auth0|sample-user',
+        token: accessToken,
+        refreshToken
+      })
+      return
+    }
+
+    if (request.method === 'POST' && request.url === '/auth/refresh') {
+      sendJson(response, 401, { code: 'INVALID_REFRESH_TOKEN' })
+      return
+    }
+
+    if (request.method === 'POST' && request.url === '/auth/logout') {
+      sendJson(response, 200, { success: true })
       return
     }
 
@@ -137,12 +161,13 @@ test.describe('Auth0 desktop session bridge', () => {
         expect(router.requests[1]?.authorization).toBe(`Bearer ${accessToken}`)
 
         const bridge = await page.evaluate(async () => {
-          const user = await authBridge().auth.me()
-          return { user, methods: Object.keys(authBridge().auth) }
+          const user = await (window as unknown as { api: AuthBridge }).api.auth.me()
+          return { user, methods: Object.keys((window as unknown as { api: AuthBridge }).api.auth) }
         })
         expect(bridge.user).toEqual({ sub: 'auth0|sample-user', email: 'profesor@atempo.test' })
-        expect(bridge.methods).toEqual(['isConfigured', 'login', 'me', 'logout'])
+        expect(bridge.methods).toEqual(['isConfigured', 'login', 'register', 'me', 'logout'])
         expect(JSON.stringify(bridge)).not.toContain(accessToken)
+        expect(JSON.stringify(bridge)).not.toContain(refreshToken)
       })
     )
   })
@@ -176,11 +201,12 @@ test.describe('Auth0 desktop session bridge', () => {
     )
   })
 
-  test('does not create a local account when the router is configured', async () => {
+  test('registers through the router and keeps tokens out of the renderer', async () => {
     await withRouter(async (router) =>
       withElectron(
         async (_app, page) => {
-          await expect(page).toHaveURL(/#\/$/)
+          // #130 removed the sign-up screen and its flag: the app opens the login.
+          await expect(page.getByLabel('Correo', { exact: true })).toBeVisible()
           await expect(page.getByLabel('Nombre completo')).toHaveCount(0)
           await expect(page.getByRole('button', { name: 'Crear mi cuenta' })).toHaveCount(0)
           expect(router.requests).toEqual([])
@@ -194,7 +220,7 @@ test.describe('Auth0 desktop session bridge', () => {
     await withRouter(async (router) =>
       withElectron(async (_app, page) => {
         const login = await page.evaluate(() =>
-          authBridge().auth.login({
+          (window as unknown as { api: AuthBridge }).api.auth.login({
             email: 'ada.lopez@clase.test',
             password: 'auth0-test-password'
           })
@@ -202,13 +228,19 @@ test.describe('Auth0 desktop session bridge', () => {
         expect(login).toEqual({ sub: 'auth0|sample-user', email: 'ada.lopez@clase.test' })
 
         router.setMeUnauthorized(true)
-        await expect(page.evaluate(() => authBridge().auth.me())).resolves.toBeNull()
+        await expect(
+          page.evaluate(() => (window as unknown as { api: AuthBridge }).api.auth.me())
+        ).resolves.toBeNull()
         const requestsAfterUnauthorized = router.requests.length
-        await expect(page.evaluate(() => authBridge().auth.me())).resolves.toBeNull()
+        await expect(
+          page.evaluate(() => (window as unknown as { api: AuthBridge }).api.auth.me())
+        ).resolves.toBeNull()
         expect(router.requests).toHaveLength(requestsAfterUnauthorized)
 
-        await page.evaluate(() => authBridge().auth.logout())
-        await expect(page.evaluate(() => authBridge().auth.me())).resolves.toBeNull()
+        await page.evaluate(() => (window as unknown as { api: AuthBridge }).api.auth.logout())
+        await expect(
+          page.evaluate(() => (window as unknown as { api: AuthBridge }).api.auth.me())
+        ).resolves.toBeNull()
       })
     )
   })
@@ -221,6 +253,7 @@ test.describe('Auth0 desktop session bridge', () => {
         await page.getByRole('button', { name: 'Entrar', exact: true }).click()
         await expect(page).toHaveURL(/#\/teacher\/panel$/)
 
+        await page.locator('aside details.dropdown > summary').click()
         await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click()
 
         await expect(page).toHaveURL(/#\/$/)
@@ -228,8 +261,11 @@ test.describe('Auth0 desktop session bridge', () => {
         await expect(page.getByRole('button', { name: 'Cerrar sesión', exact: true })).toHaveCount(
           0
         )
+        expect(router.requests.some((request) => request.path === '/auth/logout')).toBe(true)
         const requestCount = router.requests.length
-        await expect(page.evaluate(() => authBridge().auth.me())).resolves.toBeNull()
+        await expect(
+          page.evaluate(() => (window as unknown as { api: AuthBridge }).api.auth.me())
+        ).resolves.toBeNull()
         expect(router.requests).toHaveLength(requestCount)
       })
     )
@@ -239,7 +275,7 @@ test.describe('Auth0 desktop session bridge', () => {
     await withRouter(async () => {
       await withElectron(async (_app, page) => {
         await page.evaluate(() =>
-          authBridge().auth.login({
+          (window as unknown as { api: AuthBridge }).api.auth.login({
             email: 'profesor@atempo.test',
             password: 'auth0-test-password'
           })
@@ -247,7 +283,9 @@ test.describe('Auth0 desktop session bridge', () => {
       })
 
       await withElectron(async (_app, page) => {
-        await expect(page.evaluate(() => authBridge().auth.me())).resolves.toBeNull()
+        await expect(
+          page.evaluate(() => (window as unknown as { api: AuthBridge }).api.auth.me())
+        ).resolves.toBeNull()
       })
     })
   })

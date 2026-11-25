@@ -33,6 +33,7 @@ debug-storybook.log
 .eslintcache
 .cache/
 .vite/
+.tanstack/
 *.log*
 npm-debug.log*
 pnpm-debug.log*

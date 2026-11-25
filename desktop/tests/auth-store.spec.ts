@@ -69,6 +69,23 @@ test.describe('Auth0 login store', () => {
     expect(useLoginStore.getState()).toMatchObject({ email: '', password: '', isSubmitting: false })
   })
 
+  test('waits for the previous logout before logging in again', async () => {
+    let finishLogout = (): void => undefined
+    const auth = (globalThis as unknown as { window: TestWindow }).window.api.auth
+    auth.logout = () => new Promise<void>((resolve) => (finishLogout = resolve))
+    useSessionStore.getState().endSession()
+    useLoginStore.getState().setEmail('profesor@atempo.test')
+    useLoginStore.getState().setPassword('auth0-test-password')
+
+    const login = useLoginStore.getState().submitWithAuth()
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(loginRequest).toBeNull()
+
+    finishLogout()
+    await expect(login).resolves.toBe(true)
+    expect(loginRequest).not.toBeNull()
+  })
+
   test('routes a known student account through the auth bridge', async () => {
     useLoginStore.getState().setEmail('ada.lopez@clase.test')
     useLoginStore.getState().setPassword('auth0-test-password')

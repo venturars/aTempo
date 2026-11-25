@@ -1,0 +1,136 @@
+name: "Workstation test"
+
+on:
+  pull_request:
+    branches: [staging]
+
+permissions:
+  contents: read
+
+jobs:
+  workstation-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Prepare isolated PostgreSQL password
+        run: |
+          password="$(openssl rand -hex 24)"
+          echo "::add-mask::$password"
+          printf 'ATEMPO_POSTGRES_PASSWORD=%s\n' "$password" >> "$GITHUB_ENV"
+
+      - name: Match container user to checkout ownership
+        run: sudo chown -R 1000:1000 "$GITHUB_WORKSPACE"
+
+      - name: Install from empty volumes
+        run: |
+          docker compose down --volumes --remove-orphans
+          docker compose config --quiet
+          docker compose run --build --rm setup
+
+      - name: Repeat install with existing volumes
+        run: docker compose run --rm setup
+
+      - name: Verify Linux dependencies stay in Docker volumes
+        run: |
+          for path in desktop/node_modules docs/storybook/node_modules api-router/node_modules \
+            api-postgresql/node_modules api-rustfs/node_modules api-sqlite/.venv; do
+            if [[ -d "$path" ]]; then
+              contents="$(find "$path" -mindepth 1 -print -quit)"
+              [[ -z "$contents" ]] || { echo "Host dependency found under $path" >&2; exit 1; }
+            fi
+          done
+
+      - name: Check Node APIs
+        run: |
+          for service in api-router api-postgresql api-rustfs; do
+            docker compose run --rm "$service" pnpm typecheck
+            docker compose run --rm "$service" pnpm lint
+            docker compose run --rm "$service" pnpm test
+            docker compose run --rm "$service" pnpm build
+          done
+
+      - name: Check blockend
+        run: docker compose run --rm blockend pnpm test
+
+      - name: Check SQLite API
+        run: docker compose run --rm api-sqlite /work/api-sqlite/.venv/bin/python -m unittest discover -s tests -v
+
+      - name: Check desktop and Storybook
+        run: |
+          docker compose run --rm desktop pnpm typecheck
+          docker compose run --rm desktop pnpm lint
+          docker compose run --rm storybook pnpm guide
+          docker compose run --rm storybook pnpm guide:check
+
+      - name: Start APIs and backing services
+        run: docker compose up --detach api-router api-postgresql api-sqlite api-rustfs
+
+      - name: Check health and Swagger over HTTP
+        run: |
+          set -euo pipefail
+          for port in 3000 3001 3002 3003; do
+            ready=false
+            for attempt in {1..60}; do
+              if curl --fail --silent "http://127.0.0.1:${port}/health" >/dev/null; then
+                ready=true
+                break
+              fi
+              sleep 2
+            done
+            if [[ "$ready" != true ]]; then
+              docker compose logs
+              exit 1
+            fi
+            curl --fail --location --silent "http://127.0.0.1:${port}/docs" | grep -qi swagger
+            curl --fail --silent "http://127.0.0.1:${port}/docs-json" | jq -e '.paths | has("/health")' >/dev/null
+          done
+          curl --fail --silent http://127.0.0.1:3000/health | jq -e '.status == "ok"' >/dev/null
+          curl --fail --silent http://127.0.0.1:3001/health | jq -e '.status == "ok" and .postgres == "ok"' >/dev/null
+          curl --fail --silent http://127.0.0.1:3002/health | jq -e '.status == "ok"' >/dev/null
+          curl --fail --silent http://127.0.0.1:3003/health | jq -e '.status == "ok"' >/dev/null
+
+      - name: Check PostgreSQL and RustFS connections and write probe data
+        run: |
+          docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U atempo -d atempo \
+            -c "CREATE TABLE compose_persistence_probe (value text); INSERT INTO compose_persistence_probe VALUES ('persisted');"
+          docker compose exec -T api-sqlite /work/api-sqlite/.venv/bin/python -c \
+            "import sqlite3; db=sqlite3.connect('/var/lib/atempo/api-sqlite.sqlite'); db.execute('CREATE TABLE compose_persistence_probe (value text)'); db.execute(\"INSERT INTO compose_persistence_probe VALUES ('persisted')\"); db.commit()"
+          docker compose exec -T api-rustfs node -e \
+            "require('./dist/rustfs/check-rustfs').checkRustfsWithDefaultClient().then(()=>console.log('RustFS S3 connection ok')).catch(error=>{console.error(error);process.exit(1)})"
+          docker compose exec -T api-rustfs node -e \
+            "const {Client}=require('minio'); const client=new Client({endPoint:'rustfs',port:9000,useSSL:false,accessKey:process.env.RUSTFS_ACCESS_KEY,secretKey:process.env.RUSTFS_SECRET_KEY}); (async()=>{await client.makeBucket('ci-persistence'); await client.putObject('ci-persistence','probe.txt','persisted');})().catch(error=>{console.error(error);process.exit(1)})"
+
+      - name: Recreate services and verify persistent data
+        run: |
+          docker compose up --detach --force-recreate postgres rustfs api-postgresql api-sqlite api-rustfs
+          for port in 3001 3002 3003; do
+            ready=false
+            for attempt in {1..60}; do
+              if curl --fail --silent "http://127.0.0.1:${port}/health" >/dev/null; then ready=true; break; fi
+              sleep 2
+            done
+            if [[ "$ready" != true ]]; then docker compose logs; exit 1; fi
+          done
+          postgres_value=$(docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U atempo -d atempo -tAc \
+            "SELECT value FROM compose_persistence_probe LIMIT 1")
+          [[ "$postgres_value" == persisted ]]
+          docker compose exec -T api-sqlite /work/api-sqlite/.venv/bin/python -c \
+            "import sqlite3; assert sqlite3.connect('/var/lib/atempo/api-sqlite.sqlite').execute('SELECT value FROM compose_persistence_probe').fetchone() == ('persisted',)"
+          docker compose exec -T api-rustfs node -e \
+            "const {Client}=require('minio'); const client=new Client({endPoint:'rustfs',port:9000,useSSL:false,accessKey:process.env.RUSTFS_ACCESS_KEY,secretKey:process.env.RUSTFS_SECRET_KEY}); client.getObject('ci-persistence','probe.txt').then(stream=>{let value='';stream.setEncoding('utf8');stream.on('data',chunk=>value+=chunk);stream.on('end',()=>{if(value!=='persisted')process.exit(1);console.log('RustFS data persisted')})}).catch(error=>{console.error(error);process.exit(1)})"
+
+      - name: Show service logs after failure
+        if: failure()
+        run: docker compose logs
+
+      - name: Stop services
+        if: always()
+        run: docker compose down --remove-orphans
+
+      - name: Restore runner checkout ownership
+        if: always()
+        run: sudo chown -R "$(id -u):$(id -g)" "$GITHUB_WORKSPACE"

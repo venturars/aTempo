@@ -10,7 +10,7 @@ describe('Swagger (e2e)', () => {
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule]
+      imports: [AppModule],
     }).compile()
 
     app = moduleFixture.createNestApplication()
@@ -30,10 +30,15 @@ describe('Swagger (e2e)', () => {
   })
 
   it('GET /docs-json exposes the public health and authentication endpoints', async () => {
-    const response = await request(app.getHttpServer()).get('/docs-json').expect(200)
+    const response = await request(app.getHttpServer())
+      .get('/docs-json')
+      .expect(200)
 
     expect(response.body.paths).toHaveProperty('/health')
     expect(response.body.paths).toHaveProperty('/auth/login')
     expect(response.body.paths).toHaveProperty('/auth/me')
+    expect(response.body.paths).toHaveProperty('/auth/register')
+    expect(response.body.paths).toHaveProperty('/auth/logout')
+    expect(response.body.paths).toHaveProperty('/auth/refresh')
   })
 })
