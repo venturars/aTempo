@@ -12,7 +12,7 @@ from python_domain.sqlite.queries.session import (
 from python_domain.types.session import Session
 
 
-def list_sessions(run: SqliteQuery = query) -> list[Session]:
+def retrieve_all_sessions(run: SqliteQuery = query) -> list[Session]:
     result = run(LIST_SESSIONS, None)
     return result.rows  # type: ignore[return-value]
 
@@ -24,7 +24,7 @@ def find_session_by_id(session_id: str, run: SqliteQuery = query) -> Session | N
     return result.rows[0]  # type: ignore[return-value]
 
 
-def list_sessions_by_course_id(
+def retrieve_all_sessions_by_course_id(
     course_id: str,
     run: SqliteQuery = query,
 ) -> list[Session]:
@@ -32,7 +32,7 @@ def list_sessions_by_course_id(
     return result.rows  # type: ignore[return-value]
 
 
-def list_sessions_by_professor_id(
+def retrieve_all_sessions_by_professor_id(
     professor_id: str,
     run: SqliteQuery = query,
 ) -> list[Session]:
@@ -40,7 +40,7 @@ def list_sessions_by_professor_id(
     return result.rows  # type: ignore[return-value]
 
 
-def insert_session(
+def add_session(
     session: Session,
     run: SqliteQuery = query,
 ) -> Session | None:
@@ -50,7 +50,7 @@ def insert_session(
     return result.rows[0]  # type: ignore[return-value]
 
 
-def update_session_row(
+def insert_session_row(
     session: Session,
     run: SqliteQuery = query,
 ) -> Session | None:
@@ -60,10 +60,10 @@ def update_session_row(
     return result.rows[0]  # type: ignore[return-value]
 
 
-def delete_session_attendances(session_id: str, run: SqliteQuery = query) -> None:
+def remove_session_attendances(session_id: str, run: SqliteQuery = query) -> None:
     run(DELETE_SESSION_ATTENDANCES, {"id": session_id})
 
 
-def delete_session_by_id(session_id: str, run: SqliteQuery = query) -> bool:
+def remove_session_by_id(session_id: str, run: SqliteQuery = query) -> bool:
     result = run(DELETE_SESSION, {"id": session_id})
     return result.rowcount > 0

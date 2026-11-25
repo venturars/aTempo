@@ -1,15 +1,15 @@
 import unittest
 
 from python_domain.attendance.add_attendance import add_attendance
-from python_domain.attendance.list_attendances import list_attendances
+from python_domain.attendance.retrieve_all_attendances import retrieve_all_attendances
 from python_domain.attendance.remove_attendance import remove_attendance
-from python_domain.attendance.update_attendance import update_attendance
+from python_domain.attendance.insert_attendance import insert_attendance
 from python_domain.errors import ValidationError
-from python_domain.session.create_session import create_session
-from python_domain.session.delete_session import delete_session
-from python_domain.session.get_session_by_id import get_session_by_id
-from python_domain.session.list_sessions import list_sessions
-from python_domain.session.update_session import update_session
+from python_domain.session.add_session import add_session
+from python_domain.session.remove_session import remove_session
+from python_domain.session.retrieve_session_by_id import retrieve_session_by_id
+from python_domain.session.retrieve_all_sessions import retrieve_all_sessions
+from python_domain.session.insert_session import insert_session
 
 from helpers import (
     OTHER_ID,
@@ -34,21 +34,21 @@ class WriteTests(unittest.TestCase):
             ValidationError,
             "session.course_id debe ser un string no vacío",
         ):
-            create_session({"session": {"status": "open"}})
-        self.assertEqual(list_sessions()["sessions"], [])
+            add_session({"session": {"status": "open"}})
+        self.assertEqual(retrieve_all_sessions()["sessions"], [])
 
     def test_does_not_write_when_late_after_minutes_does_not_fit(self) -> None:
         with self.assertRaisesRegex(
             ValidationError,
             "session.late_after_minutes no cabe en un entero de 64 bits",
         ):
-            create_session({
+            add_session({
                 "session": {**valid_session_input, "late_after_minutes": 2**63},
             })
-        self.assertEqual(list_sessions()["sessions"], [])
+        self.assertEqual(retrieve_all_sessions()["sessions"], [])
 
     def test_stores_offset_dates_as_utc(self) -> None:
-        created = create_session({
+        created = add_session({
             "session": {
                 **valid_session_input,
                 "start_at": "2026-01-01T10:00:00+02:00",
@@ -57,13 +57,13 @@ class WriteTests(unittest.TestCase):
         })["session"]
         self.assertEqual(created["start_at"], "2026-01-01T08:00:00.000Z")
         self.assertEqual(created["end_at"], "2026-01-01T09:00:00.000Z")
-        found = get_session_by_id({"id": created["id"]})["session"]
+        found = retrieve_session_by_id({"id": created["id"]})["session"]
         self.assertEqual(found, created)
 
     def test_creates_and_updates_a_session(self) -> None:
-        created = create_session({"session": valid_session_input})["session"]
+        created = add_session({"session": valid_session_input})["session"]
         self.assertEqual(created["status"], "open")
-        updated = update_session({
+        updated = insert_session({
             "session": {
                 **created,
                 "status": "closed",
@@ -76,7 +76,7 @@ class WriteTests(unittest.TestCase):
         self.assertEqual(updated["closed_at"], "2026-01-01T12:05:00.000Z")
 
     def test_update_returns_none_when_missing(self) -> None:
-        missing = update_session({
+        missing = insert_session({
             "session": {
                 **valid_session_input,
                 "id": OTHER_ID,
@@ -86,9 +86,9 @@ class WriteTests(unittest.TestCase):
         })["session"]
         self.assertIsNone(missing)
 
-    def test_update_attendance_returns_none_when_missing(self) -> None:
-        session = create_session({"session": valid_session_input})["session"]
-        missing = update_attendance({
+    def test_insert_attendance_returns_none_when_missing(self) -> None:
+        session = add_session({"session": valid_session_input})["session"]
+        missing = insert_attendance({
             "attendance": {
                 **valid_attendance,
                 "session_id": session["id"],
@@ -98,8 +98,8 @@ class WriteTests(unittest.TestCase):
         self.assertIsNone(missing)
 
     def test_updates_when_ids_differ_only_by_case(self) -> None:
-        created = create_session({"session": valid_session_input})["session"]
-        updated = update_session({
+        created = add_session({"session": valid_session_input})["session"]
+        updated = insert_session({
             "session": {
                 **created,
                 "id": created["id"].upper(),
@@ -115,7 +115,7 @@ class WriteTests(unittest.TestCase):
                 "session_id": created["id"],
             },
         })["attendance"]
-        attendance = update_attendance({
+        attendance = insert_attendance({
             "attendance": {
                 **row,
                 "session_id": created["id"].upper(),
@@ -129,7 +129,7 @@ class WriteTests(unittest.TestCase):
         self.assertEqual(attendance["status"], "present_late")
 
     def test_adds_updates_and_removes_attendance(self) -> None:
-        session = create_session({"session": valid_session_input})["session"]
+        session = add_session({"session": valid_session_input})["session"]
         created = add_attendance({
             "attendance": {
                 **valid_attendance,
@@ -137,7 +137,7 @@ class WriteTests(unittest.TestCase):
             },
         })["attendance"]
         self.assertEqual(created["status"], "present")
-        updated = update_attendance({
+        updated = insert_attendance({
             "attendance": {**created, "status": "present_late"},
         })["attendance"]
         self.assertIsNotNone(updated)
@@ -157,24 +157,24 @@ class WriteTests(unittest.TestCase):
         )
 
     def test_deletes_attendances_before_the_session(self) -> None:
-        session = create_session({"session": valid_session_input})["session"]
+        session = add_session({"session": valid_session_input})["session"]
         add_attendance({
             "attendance": {**valid_attendance, "session_id": session["id"]},
         })
-        self.assertTrue(delete_session({"id": session["id"]})["deleted"])
-        self.assertIsNone(get_session_by_id({"id": session["id"]})["session"])
-        self.assertEqual(list_attendances()["attendances"], [])
+        self.assertTrue(remove_session({"id": session["id"]})["deleted"])
+        self.assertIsNone(retrieve_session_by_id({"id": session["id"]})["session"])
+        self.assertEqual(retrieve_all_attendances()["attendances"], [])
 
     def test_delete_reports_false_when_the_session_is_missing(self) -> None:
-        self.assertFalse(delete_session({"id": SESSION_ID})["deleted"])
+        self.assertFalse(remove_session({"id": SESSION_ID})["deleted"])
 
     def test_deletes_when_the_id_differs_only_by_case(self) -> None:
-        session = create_session({"session": valid_session_input})["session"]
-        self.assertTrue(delete_session({"id": session["id"].upper()})["deleted"])
-        self.assertIsNone(get_session_by_id({"id": session["id"]})["session"])
+        session = add_session({"session": valid_session_input})["session"]
+        self.assertTrue(remove_session({"id": session["id"].upper()})["deleted"])
+        self.assertIsNone(retrieve_session_by_id({"id": session["id"]})["session"])
 
     def test_removes_attendance_when_ids_differ_only_by_case(self) -> None:
-        session = create_session({"session": valid_session_input})["session"]
+        session = add_session({"session": valid_session_input})["session"]
         add_attendance({
             "attendance": {**valid_attendance, "session_id": session["id"]},
         })
@@ -184,7 +184,7 @@ class WriteTests(unittest.TestCase):
                 "student_id": STUDENT_ID.upper(),
             })["deleted"],
         )
-        self.assertEqual(list_attendances()["attendances"], [])
+        self.assertEqual(retrieve_all_attendances()["attendances"], [])
 
 
 if __name__ == "__main__":

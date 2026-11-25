@@ -5,15 +5,15 @@ from python_domain.types.assert_values import assert_uuid
 from python_domain.types.session import Session, assert_session
 
 
-class GetSessionByIdInput(TypedDict):
+class RetrieveSessionByIdInput(TypedDict):
     id: str
 
 
-class GetSessionByIdOutput(TypedDict):
+class RetrieveSessionByIdOutput(TypedDict):
     session: Session | None
 
 
-def get_session_by_id(input: GetSessionByIdInput) -> GetSessionByIdOutput:
+def retrieve_session_by_id(input: RetrieveSessionByIdInput) -> RetrieveSessionByIdOutput:
     session_id = assert_uuid(input["id"], "session.id")
     row = find_session_by_id(session_id)
     if row is None:

@@ -5,13 +5,13 @@ from python_domain.sqlite.pool import SqliteQuery
 from python_domain.sqlite.executors.attendance import attendance_exists
 
 
-class AssertAttendanceAvailableInput(TypedDict):
+class FindAttendanceAvailableInput(TypedDict):
     session_id: str
     student_id: str
 
 
-def assert_attendance_available(
-    input: AssertAttendanceAvailableInput,
+def find_attendance_available(
+    input: FindAttendanceAvailableInput,
     run: SqliteQuery,
 ) -> None:
     if attendance_exists(input["session_id"], input["student_id"], run):

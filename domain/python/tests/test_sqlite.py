@@ -6,12 +6,12 @@ import unittest
 from sqlalchemy import event
 
 from python_domain.attendance.add_attendance import add_attendance
-from python_domain.attendance.list_attendances import list_attendances
-from python_domain.attendance.update_attendance import update_attendance
+from python_domain.attendance.retrieve_all_attendances import retrieve_all_attendances
+from python_domain.attendance.insert_attendance import insert_attendance
 from python_domain.errors import ConfigurationError, ConflictError
-from python_domain.session.create_session import create_session
-from python_domain.session.list_sessions import list_sessions
-from python_domain.session.update_session import update_session
+from python_domain.session.add_session import add_session
+from python_domain.session.retrieve_all_sessions import retrieve_all_sessions
+from python_domain.session.insert_session import insert_session
 from python_domain.sqlite.check import check
 from python_domain.sqlite.pool import get_engine, query, reset_pool, with_transaction
 
@@ -67,19 +67,19 @@ class SqliteTests(unittest.TestCase):
         self.assertTrue(in_transaction)
         self.assertTrue(in_transaction[-1])
 
-    def test_update_session_opens_one_transaction(self) -> None:
+    def test_insert_session_opens_one_transaction(self) -> None:
         open_memory_db()
-        session = create_session({"session": valid_session_input})["session"]
+        session = add_session({"session": valid_session_input})["session"]
         begins = count_begins(
-            lambda: update_session({
+            lambda: insert_session({
                 "session": {**session, "expected_count": 21},
             }),
         )
         self.assertEqual(begins, 1)
 
-    def test_add_and_update_attendance_open_one_transaction(self) -> None:
+    def test_add_and_insert_attendance_open_one_transaction(self) -> None:
         open_memory_db()
-        session = create_session({"session": valid_session_input})["session"]
+        session = add_session({"session": valid_session_input})["session"]
         row = {**valid_attendance, "session_id": session["id"]}
         self.assertEqual(
             count_begins(lambda: add_attendance({"attendance": row})),
@@ -87,7 +87,7 @@ class SqliteTests(unittest.TestCase):
         )
         self.assertEqual(
             count_begins(
-                lambda: update_attendance({
+                lambda: insert_attendance({
                     "attendance": {**row, "status": "present_late"},
                 }),
             ),
@@ -97,7 +97,7 @@ class SqliteTests(unittest.TestCase):
     def test_concurrent_add_attendance_keeps_one_row(self) -> None:
         path = open_file_db()
         try:
-            session = create_session({"session": valid_session_input})["session"]
+            session = add_session({"session": valid_session_input})["session"]
             body = {**valid_attendance, "session_id": session["id"]}
             results: list[object] = []
             errors: list[BaseException] = []
@@ -129,7 +129,7 @@ class SqliteTests(unittest.TestCase):
             self.assertEqual(len(errors), 1)
             self.assertIsInstance(errors[0], ConflictError)
             self.assertIn("attendance ya existe", str(errors[0]))
-            self.assertEqual(len(list_attendances()["attendances"]), 1)
+            self.assertEqual(len(retrieve_all_attendances()["attendances"]), 1)
         finally:
             close_memory_db()
             try:
@@ -140,7 +140,7 @@ class SqliteTests(unittest.TestCase):
     def test_read_does_not_block_during_write_transaction(self) -> None:
         path = open_file_db()
         try:
-            session = create_session({"session": valid_session_input})["session"]
+            session = add_session({"session": valid_session_input})["session"]
             started = threading.Event()
             release = threading.Event()
             listed: list[object] = []
@@ -164,7 +164,7 @@ class SqliteTests(unittest.TestCase):
 
             def read() -> None:
                 try:
-                    listed.extend(list_sessions()["sessions"])
+                    listed.extend(retrieve_all_sessions()["sessions"])
                 except BaseException as error:
                     errors.append(error)
 
@@ -187,7 +187,7 @@ class SqliteTests(unittest.TestCase):
     def test_other_connection_cannot_write_until_transaction_ends(self) -> None:
         path = open_file_db()
         try:
-            session = create_session({"session": valid_session_input})["session"]
+            session = add_session({"session": valid_session_input})["session"]
             started = threading.Event()
             release = threading.Event()
             errors: list[BaseException] = []

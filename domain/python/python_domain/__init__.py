@@ -5,24 +5,24 @@ from python_domain.attendance.add_attendance import (
     AddAttendanceOutput,
     add_attendance,
 )
-from python_domain.attendance.list_attendances import (
-    ListAttendancesOutput,
-    list_attendances,
+from python_domain.attendance.retrieve_all_attendances import (
+    RetrieveAllAttendancesOutput,
+    retrieve_all_attendances,
 )
-from python_domain.attendance.list_attendances_by_session import (
-    ListAttendancesBySessionInput,
-    ListAttendancesBySessionOutput,
-    list_attendances_by_session,
+from python_domain.attendance.retrieve_all_attendances_by_session import (
+    RetrieveAllAttendancesBySessionInput,
+    RetrieveAllAttendancesBySessionOutput,
+    retrieve_all_attendances_by_session,
 )
 from python_domain.attendance.remove_attendance import (
     RemoveAttendanceInput,
     RemoveAttendanceOutput,
     remove_attendance,
 )
-from python_domain.attendance.update_attendance import (
-    UpdateAttendanceInput,
-    UpdateAttendanceOutput,
-    update_attendance,
+from python_domain.attendance.insert_attendance import (
+    InsertAttendanceInput,
+    InsertAttendanceOutput,
+    insert_attendance,
 )
 from python_domain.errors import (
     ConflictError,
@@ -33,36 +33,36 @@ from python_domain.errors import (
     PersistenceError,
     ValidationError,
 )
-from python_domain.session.create_session import (
-    CreateSessionInput,
-    CreateSessionOutput,
-    create_session,
+from python_domain.session.add_session import (
+    AddSessionInput,
+    AddSessionOutput,
+    add_session,
 )
-from python_domain.session.delete_session import (
-    DeleteSessionInput,
-    DeleteSessionOutput,
-    delete_session,
+from python_domain.session.remove_session import (
+    RemoveSessionInput,
+    RemoveSessionOutput,
+    remove_session,
 )
-from python_domain.session.get_session_by_id import (
-    GetSessionByIdInput,
-    GetSessionByIdOutput,
-    get_session_by_id,
+from python_domain.session.retrieve_session_by_id import (
+    RetrieveSessionByIdInput,
+    RetrieveSessionByIdOutput,
+    retrieve_session_by_id,
 )
-from python_domain.session.list_sessions import ListSessionsOutput, list_sessions
-from python_domain.session.list_sessions_by_course import (
-    ListSessionsByCourseInput,
-    ListSessionsByCourseOutput,
-    list_sessions_by_course,
+from python_domain.session.retrieve_all_sessions import RetrieveAllSessionsOutput, retrieve_all_sessions
+from python_domain.session.retrieve_all_sessions_by_course import (
+    RetrieveAllSessionsByCourseInput,
+    RetrieveAllSessionsByCourseOutput,
+    retrieve_all_sessions_by_course,
 )
-from python_domain.session.list_sessions_by_professor import (
-    ListSessionsByProfessorInput,
-    ListSessionsByProfessorOutput,
-    list_sessions_by_professor,
+from python_domain.session.retrieve_all_sessions_by_professor import (
+    RetrieveAllSessionsByProfessorInput,
+    RetrieveAllSessionsByProfessorOutput,
+    retrieve_all_sessions_by_professor,
 )
-from python_domain.session.update_session import (
-    UpdateSessionInput,
-    UpdateSessionOutput,
-    update_session,
+from python_domain.session.insert_session import (
+    InsertSessionInput,
+    InsertSessionOutput,
+    insert_session,
 )
 from python_domain.sqlite.check import check
 from python_domain.sqlite.pool import close_pool, reset_pool
@@ -82,22 +82,22 @@ __all__ = [
     "Attendance",
     "ConflictError",
     "ConfigurationError",
-    "CreateSessionInput",
-    "CreateSessionOutput",
-    "DeleteSessionInput",
-    "DeleteSessionOutput",
+    "AddSessionInput",
+    "AddSessionOutput",
+    "RemoveSessionInput",
+    "RemoveSessionOutput",
     "DomainError",
     "DomainErrorCode",
-    "GetSessionByIdInput",
-    "GetSessionByIdOutput",
-    "ListAttendancesBySessionInput",
-    "ListAttendancesBySessionOutput",
-    "ListAttendancesOutput",
-    "ListSessionsByCourseInput",
-    "ListSessionsByCourseOutput",
-    "ListSessionsByProfessorInput",
-    "ListSessionsByProfessorOutput",
-    "ListSessionsOutput",
+    "RetrieveSessionByIdInput",
+    "RetrieveSessionByIdOutput",
+    "RetrieveAllAttendancesBySessionInput",
+    "RetrieveAllAttendancesBySessionOutput",
+    "RetrieveAllAttendancesOutput",
+    "RetrieveAllSessionsByCourseInput",
+    "RetrieveAllSessionsByCourseOutput",
+    "RetrieveAllSessionsByProfessorInput",
+    "RetrieveAllSessionsByProfessorOutput",
+    "RetrieveAllSessionsOutput",
     "NotFoundError",
     "PersistenceError",
     "RemoveAttendanceInput",
@@ -105,10 +105,10 @@ __all__ = [
     "Session",
     "SessionCreate",
     "SessionUpdate",
-    "UpdateAttendanceInput",
-    "UpdateAttendanceOutput",
-    "UpdateSessionInput",
-    "UpdateSessionOutput",
+    "InsertAttendanceInput",
+    "InsertAttendanceOutput",
+    "InsertSessionInput",
+    "InsertSessionOutput",
     "ValidationError",
     "add_attendance",
     "assert_attendance",
@@ -117,16 +117,16 @@ __all__ = [
     "assert_session_update",
     "check",
     "close_pool",
-    "create_session",
-    "delete_session",
-    "get_session_by_id",
-    "list_attendances",
-    "list_attendances_by_session",
-    "list_sessions",
-    "list_sessions_by_course",
-    "list_sessions_by_professor",
+    "add_session",
+    "remove_session",
+    "retrieve_session_by_id",
+    "retrieve_all_attendances",
+    "retrieve_all_attendances_by_session",
+    "retrieve_all_sessions",
+    "retrieve_all_sessions_by_course",
+    "retrieve_all_sessions_by_professor",
     "remove_attendance",
     "reset_pool",
-    "update_attendance",
-    "update_session",
+    "insert_attendance",
+    "insert_session",
 ]

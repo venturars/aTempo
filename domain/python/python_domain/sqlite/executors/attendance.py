@@ -10,12 +10,12 @@ from python_domain.sqlite.queries.attendance import (
 from python_domain.types.attendance import Attendance
 
 
-def list_attendances(run: SqliteQuery = query) -> list[Attendance]:
+def retrieve_all_attendances(run: SqliteQuery = query) -> list[Attendance]:
     result = run(LIST_ATTENDANCES, None)
     return result.rows  # type: ignore[return-value]
 
 
-def list_attendances_by_session_id(
+def retrieve_all_attendances_by_session_id(
     session_id: str,
     run: SqliteQuery = query,
 ) -> list[Attendance]:
@@ -35,7 +35,7 @@ def attendance_exists(
     return bool(result.rows)
 
 
-def insert_attendance(
+def add_attendance(
     attendance: Attendance,
     run: SqliteQuery = query,
 ) -> Attendance | None:
@@ -45,7 +45,7 @@ def insert_attendance(
     return result.rows[0]  # type: ignore[return-value]
 
 
-def update_attendance_row(
+def insert_attendance_row(
     attendance: Attendance,
     run: SqliteQuery = query,
 ) -> Attendance | None:
@@ -55,7 +55,7 @@ def update_attendance_row(
     return result.rows[0]  # type: ignore[return-value]
 
 
-def delete_attendance(
+def remove_attendance(
     session_id: str,
     student_id: str,
     run: SqliteQuery = query,

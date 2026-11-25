@@ -3,13 +3,13 @@ import unittest
 from sqlalchemy.exc import IntegrityError
 
 from python_domain.attendance.add_attendance import add_attendance
-from python_domain.attendance.list_attendances import list_attendances
-from python_domain.attendance.update_attendance import update_attendance
+from python_domain.attendance.retrieve_all_attendances import retrieve_all_attendances
+from python_domain.attendance.insert_attendance import insert_attendance
 from python_domain.errors import ConflictError, NotFoundError, ValidationError
-from python_domain.session.create_session import create_session
-from python_domain.session.get_session_by_id import get_session_by_id
-from python_domain.session.list_sessions import list_sessions
-from python_domain.session.update_session import update_session
+from python_domain.session.add_session import add_session
+from python_domain.session.retrieve_session_by_id import retrieve_session_by_id
+from python_domain.session.retrieve_all_sessions import retrieve_all_sessions
+from python_domain.session.insert_session import insert_session
 from python_domain.sqlite.pool import query
 
 from helpers import (
@@ -34,7 +34,7 @@ class RuleTests(unittest.TestCase):
             ValidationError,
             "session.end_at debe ser posterior a session.start_at",
         ):
-            create_session({
+            add_session({
                 "session": {
                     **valid_session_input,
                     "start_at": valid_session_input["end_at"],
@@ -49,7 +49,7 @@ class RuleTests(unittest.TestCase):
             })
 
     def test_does_not_insert_a_repeated_attendance(self) -> None:
-        session = create_session({"session": valid_session_input})["session"]
+        session = add_session({"session": valid_session_input})["session"]
         add_attendance({
             "attendance": {**valid_attendance, "session_id": session["id"]},
         })
@@ -59,7 +59,7 @@ class RuleTests(unittest.TestCase):
             })
 
     def test_treats_uppercase_student_id_as_the_same_attendance(self) -> None:
-        session = create_session({"session": valid_session_input})["session"]
+        session = add_session({"session": valid_session_input})["session"]
         student_id = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
         add_attendance({
             "attendance": {
@@ -79,12 +79,12 @@ class RuleTests(unittest.TestCase):
                     "student_id": student_id,
                 },
             })
-        rows = list_attendances()["attendances"]
+        rows = retrieve_all_attendances()["attendances"]
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["student_id"], student_id)
 
     def test_does_not_insert_check_in_outside_the_session(self) -> None:
-        session = create_session({"session": valid_session_input})["session"]
+        session = add_session({"session": valid_session_input})["session"]
         with self.assertRaisesRegex(
             ValidationError,
             "attendance.checked_in_at debe estar dentro de la sesión",
@@ -98,7 +98,7 @@ class RuleTests(unittest.TestCase):
             })
 
     def test_does_not_update_check_in_outside_the_session(self) -> None:
-        session = create_session({"session": valid_session_input})["session"]
+        session = add_session({"session": valid_session_input})["session"]
         created = add_attendance({
             "attendance": {**valid_attendance, "session_id": session["id"]},
         })["attendance"]
@@ -106,16 +106,16 @@ class RuleTests(unittest.TestCase):
             ValidationError,
             "attendance.checked_in_at debe estar dentro de la sesión",
         ):
-            update_attendance({
+            insert_attendance({
                 "attendance": {
                     **created,
                     "checked_in_at": "2026-01-01T09:00:00.000Z",
                 },
             })
-        self.assertEqual(list_attendances()["attendances"], [created])
+        self.assertEqual(retrieve_all_attendances()["attendances"], [created])
 
     def test_accepts_check_in_at_the_session_bounds(self) -> None:
-        session = create_session({"session": valid_session_input})["session"]
+        session = add_session({"session": valid_session_input})["session"]
         at_start = add_attendance({
             "attendance": {
                 **valid_attendance,
@@ -124,14 +124,14 @@ class RuleTests(unittest.TestCase):
             },
         })["attendance"]
         self.assertEqual(at_start["checked_in_at"], session["start_at"])
-        at_end = update_attendance({
+        at_end = insert_attendance({
             "attendance": {**at_start, "checked_in_at": session["end_at"]},
         })["attendance"]
         assert at_end is not None
         self.assertEqual(at_end["checked_in_at"], session["end_at"])
 
     def test_does_not_shorten_the_session_past_a_stored_check_in(self) -> None:
-        session = create_session({"session": valid_session_input})["session"]
+        session = add_session({"session": valid_session_input})["session"]
         add_attendance({
             "attendance": {**valid_attendance, "session_id": session["id"]},
         })
@@ -139,7 +139,7 @@ class RuleTests(unittest.TestCase):
             ValidationError,
             "attendance.checked_in_at debe estar dentro de la sesión",
         ):
-            update_session({
+            insert_session({
                 "session": {
                     **session,
                     "start_at": "2026-01-01T11:00:00.000Z",
@@ -147,12 +147,12 @@ class RuleTests(unittest.TestCase):
                 },
             })
         self.assertEqual(
-            get_session_by_id({"id": session["id"]})["session"],
+            retrieve_session_by_id({"id": session["id"]})["session"],
             session,
         )
 
     def test_database_rejects_present_without_check_in(self) -> None:
-        session = create_session({"session": valid_session_input})["session"]
+        session = add_session({"session": valid_session_input})["session"]
         with self.assertRaises(IntegrityError):
             query(
                 """INSERT INTO attendance (
@@ -162,7 +162,7 @@ class RuleTests(unittest.TestCase):
                 )""",
                 {"session_id": session["id"], "student_id": OTHER_ID},
             )
-        self.assertEqual(list_attendances()["attendances"], [])
+        self.assertEqual(retrieve_all_attendances()["attendances"], [])
 
     def test_database_rejects_an_offset_end_at(self) -> None:
         with self.assertRaises(IntegrityError):
@@ -182,7 +182,7 @@ class RuleTests(unittest.TestCase):
                     "professor_id": valid_session_input["professor_id"],
                 },
             )
-        self.assertEqual(list_sessions()["sessions"], [])
+        self.assertEqual(retrieve_all_sessions()["sessions"], [])
 
 
 if __name__ == "__main__":

@@ -1,54 +1,54 @@
-from python_domain.session.create_session import (
-    CreateSessionInput,
-    CreateSessionOutput,
-    create_session,
+from python_domain.session.add_session import (
+    AddSessionInput,
+    AddSessionOutput,
+    add_session,
 )
-from python_domain.session.delete_session import (
-    DeleteSessionInput,
-    DeleteSessionOutput,
-    delete_session,
+from python_domain.session.remove_session import (
+    RemoveSessionInput,
+    RemoveSessionOutput,
+    remove_session,
 )
-from python_domain.session.get_session_by_id import (
-    GetSessionByIdInput,
-    GetSessionByIdOutput,
-    get_session_by_id,
+from python_domain.session.retrieve_session_by_id import (
+    RetrieveSessionByIdInput,
+    RetrieveSessionByIdOutput,
+    retrieve_session_by_id,
 )
-from python_domain.session.list_sessions import ListSessionsOutput, list_sessions
-from python_domain.session.list_sessions_by_course import (
-    ListSessionsByCourseInput,
-    ListSessionsByCourseOutput,
-    list_sessions_by_course,
+from python_domain.session.retrieve_all_sessions import RetrieveAllSessionsOutput, retrieve_all_sessions
+from python_domain.session.retrieve_all_sessions_by_course import (
+    RetrieveAllSessionsByCourseInput,
+    RetrieveAllSessionsByCourseOutput,
+    retrieve_all_sessions_by_course,
 )
-from python_domain.session.list_sessions_by_professor import (
-    ListSessionsByProfessorInput,
-    ListSessionsByProfessorOutput,
-    list_sessions_by_professor,
+from python_domain.session.retrieve_all_sessions_by_professor import (
+    RetrieveAllSessionsByProfessorInput,
+    RetrieveAllSessionsByProfessorOutput,
+    retrieve_all_sessions_by_professor,
 )
-from python_domain.session.update_session import (
-    UpdateSessionInput,
-    UpdateSessionOutput,
-    update_session,
+from python_domain.session.insert_session import (
+    InsertSessionInput,
+    InsertSessionOutput,
+    insert_session,
 )
 
 __all__ = [
-    "CreateSessionInput",
-    "CreateSessionOutput",
-    "DeleteSessionInput",
-    "DeleteSessionOutput",
-    "GetSessionByIdInput",
-    "GetSessionByIdOutput",
-    "ListSessionsByCourseInput",
-    "ListSessionsByCourseOutput",
-    "ListSessionsByProfessorInput",
-    "ListSessionsByProfessorOutput",
-    "ListSessionsOutput",
-    "UpdateSessionInput",
-    "UpdateSessionOutput",
-    "create_session",
-    "delete_session",
-    "get_session_by_id",
-    "list_sessions",
-    "list_sessions_by_course",
-    "list_sessions_by_professor",
-    "update_session",
+    "AddSessionInput",
+    "AddSessionOutput",
+    "RemoveSessionInput",
+    "RemoveSessionOutput",
+    "RetrieveSessionByIdInput",
+    "RetrieveSessionByIdOutput",
+    "RetrieveAllSessionsByCourseInput",
+    "RetrieveAllSessionsByCourseOutput",
+    "RetrieveAllSessionsByProfessorInput",
+    "RetrieveAllSessionsByProfessorOutput",
+    "RetrieveAllSessionsOutput",
+    "InsertSessionInput",
+    "InsertSessionOutput",
+    "add_session",
+    "remove_session",
+    "retrieve_session_by_id",
+    "retrieve_all_sessions",
+    "retrieve_all_sessions_by_course",
+    "retrieve_all_sessions_by_professor",
+    "insert_session",
 ]
