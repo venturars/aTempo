@@ -1,28 +1,18 @@
 # Demo de aTempo
 
-El recorrido completo con datos de ejemplo: administración, profesor y alumno, desde la invitación hasta la llegada tarde. Funciona en `staging` sin Docker, Auth0 ni `.env`. La administración y la app del profesor vuelven al ejemplo al recargar o cerrar. La web del alumno guarda en el navegador las cuentas activadas, las entradas y los avisos: para repetir la demo, abre antes <http://localhost:5191/?reiniciar>.
+El recorrido muestra la web de administración y alumno con datos simulados, junto con el panel Electron del profesor autenticado por Auth0. La web guarda en este navegador las cuentas activadas, las entradas y los avisos; sus datos están separados de Electron y del `api-router`. Para reiniciar esos datos, abre <http://localhost:5191/?reiniciar>.
 
 ## Arrancar
 
-Con Node 24 y pnpm 10.33.0, desde la raíz del repositorio:
+Necesitas Node 24, pnpm 10.33.0, Docker disponible y un `.env` local con la configuración de Auth0. En Windows y macOS, si Docker Desktop está instalado, `pnpm run atempo` intenta iniciarlo cuando el motor no responde. En Linux, arranca manualmente el motor Docker antes de ejecutar el comando. Desde la raíz del repositorio ejecuta el comando de arranque:
 
 ```sh
-pnpm run demo:install
+pnpm run atempo
 ```
 
-Solo hace falta la primera vez y después de cada `git pull`. Instala las dependencias de `web/` y `desktop/`.
+El comando instala las dependencias de `web/` y `desktop/` cuando faltan, levanta `api-router` en Docker (puerto 3004 por defecto), sirve la web en <http://localhost:5191> y abre Electron. Cambia el puerto del router con `pnpm run atempo --port 3005`; `pnpm run atempo --router-only` inicia solo el router. Electron requiere las credenciales de Auth0 del `.env`.
 
-Abre dos terminales en la raíz:
-
-```sh
-pnpm run demo:web
-```
-
-```sh
-pnpm run demo:desktop
-```
-
-La primera sirve la web del alumno y la administración en <http://localhost:5191>. La segunda abre la app del profesor.
+La web usa datos simulados independientes del login Auth0 y de los datos de Electron. Por eso, una cuenta creada o una asistencia registrada en la web no aparece en la lista del profesor; en Electron, **Simular llegada** representa ese paso.
 
 ## 1. Administración
 
@@ -39,7 +29,8 @@ El correo de invitación no se envía todavía. Los dos pasos siguientes abren e
 Cierra la app del profesor (**Cmd+Q** en macOS) y ábrela con el enlace de invitación de Lucía Martín:
 
 ```sh
-pnpm run demo:desktop -- --invitation=731905
+cd desktop
+pnpm dev -- --invitation=731905
 ```
 
 1. En **Hola, Lucía**, elige una contraseña de al menos 8 caracteres y pulsa **Entrar**. Se abre **Hoy**.
@@ -65,7 +56,7 @@ La clase de ejemplo empieza a las 09:00. Con `?hora=` el inicio del alumno simul
 | <http://localhost:5191/student/dashboard?hora=08:59:45> | Agobiado en los últimos 30 segundos. Espera y verás cómo cambia a las 09:00. |
 | <http://localhost:5191/student/dashboard?hora=09:05> | Corre con pánico: ya llega tarde. |
 
-`?hora=` y `?dia=` solo funcionan con `pnpm run demo:web`. Fuera de lunes a viernes no hay clase: añade `&dia=lun` para verla.
+`?hora=` y `?dia=` funcionan en la web simulada. Fuera de lunes a viernes no hay clase: añade `&dia=lun` para verla.
 
 ## 5. Aviso de retraso
 
@@ -86,12 +77,13 @@ La clase de ejemplo empieza a las 09:00. Con `?hora=` el inicio del alumno simul
 Para escanear con el móvil, el móvil y el ordenador deben estar en la misma wifi. Arranca el profesor con la IP del ordenador:
 
 ```sh
-VITE_STUDENT_SITE_URL=http://<ip-del-ordenador>:5191 pnpm run demo:desktop
+cd desktop
+VITE_STUDENT_SITE_URL=http://<ip-del-ordenador>:5191 pnpm dev
 ```
 
-y la web con `pnpm run demo:web -- --host`.
+El comando integrado sirve la web solo en localhost. Para usar el móvil en la misma wifi, sirve la web desde `web/` con `pnpm dev -- --host` y configura `VITE_STUDENT_SITE_URL` con la IP del ordenador al iniciar Electron desde `desktop/`.
 
-La web y la app del profesor todavía no comparten datos: la entrada del alumno no aparece en la lista del profesor hasta que exista el backend. En la lista, **Simular llegada** hace ese papel.
+La web de ejemplo y Electron con Auth0 usan datos separados: la entrada del alumno no aparece en la lista del profesor. En la lista, **Simular llegada** representa ese paso.
 
 ## 7. Llegada tarde y corrección
 
@@ -104,4 +96,4 @@ La web y la app del profesor todavía no comparten datos: la entrada del alumno 
 
 - Web: abre <http://localhost:5191/?reiniciar>. Borra las cuentas activadas, las entradas y los avisos de este navegador.
 - Administración: recarga la página.
-- Profesor: sal con **Cmd+Q** y vuelve a ejecutar `pnpm run demo:desktop`.
+- Profesor: sal con **Cmd+Q** y vuelve a ejecutar `pnpm run atempo` desde la raíz para reiniciar la aplicación completa. `pnpm run demo:desktop` sigue disponible para iniciar Electron de forma aislada; úsalo para depurar o probar opciones como `pnpm run demo:desktop -- --api-fixture=empty`. El login Auth0 requiere que `api-router` esté arrancado.
