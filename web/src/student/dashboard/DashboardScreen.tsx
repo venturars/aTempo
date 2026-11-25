@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
+import type { TextKey } from '../../language/messages'
+import { useText } from '../../language/useText'
 import { StudentLayout } from '../StudentLayout'
 import { Tempito } from '../mascot/Tempito'
 import { readNoticesFor } from '../notice/studentNotices'
 import { useCurrentStudent } from '../studentAccounts'
-import { greetingForHour } from '../studentDate'
+import { greetingKeyForHour } from '../studentDate'
 import { canRegister, homeStateFor, moodFor, subtitleFor } from './homeState'
 
 const previewDays = ['dom', 'lun', 'mar', 'mie', 'jue', 'vie', 'sab']
@@ -43,6 +45,7 @@ function useNow(): Date {
 }
 
 export function DashboardScreen(): React.JSX.Element {
+  const t = useText()
   const now = useNow()
   const student = useCurrentStudent()
   const firstName = student.name.trim().split(/\s+/)[0] ?? ''
@@ -57,10 +60,12 @@ export function DashboardScreen(): React.JSX.Element {
         <div className="flex flex-col gap-3">
           <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
             {state.kind === 'registered' ? (
-              inClassGreeting(firstName, `${student.email} ${now.toDateString()}`)
+              t(inClassPhraseKey(`${student.email} ${now.toDateString()}`), {
+                name: firstName
+              })
             ) : (
               <>
-                {greetingForHour(now.getHours())},{' '}
+                {t(greetingKeyForHour(now.getHours()))},{' '}
                 <span className="whitespace-nowrap">{firstName}</span>
               </>
             )}
@@ -75,7 +80,7 @@ export function DashboardScreen(): React.JSX.Element {
             className="btn btn-primary btn-lg w-full max-w-xs"
             to="/student/scan"
           >
-            Registrar asistencia
+            {t('dashboard.register')}
           </Link>
         ) : null}
       </div>
@@ -83,17 +88,17 @@ export function DashboardScreen(): React.JSX.Element {
   )
 }
 
-const inClassPhrases = [
-  (name: string) => `Disfruta tu clase, ${name}`,
-  (name: string) => `Ya estás dentro, ${name}`,
-  (name: string) => `Aprovecha la clase, ${name}`,
-  (name: string) => `A por ello, ${name}`
+// Cada frase lleva {name}, el nombre del alumno.
+const inClassPhrases: TextKey[] = [
+  'dashboard.inClass.enjoy',
+  'dashboard.inClass.inside',
+  'dashboard.inClass.makeTheMost',
+  'dashboard.inClass.goForIt'
 ]
 
 // Ya está en clase: cada alumno ve una frase de ánimo, y cambia de un día a otro.
 // La frase sale de la semilla (correo y día), así no cambia al volver a la pantalla.
-function inClassGreeting(firstName: string, seed: string): string {
+function inClassPhraseKey(seed: string): TextKey {
   const total = [...seed].reduce((sum, letter) => sum + letter.charCodeAt(0), 0)
-  const phrase = inClassPhrases[total % inClassPhrases.length] ?? inClassPhrases[0]
-  return phrase(firstName)
+  return inClassPhrases[total % inClassPhrases.length] ?? inClassPhrases[0]
 }

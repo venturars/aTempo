@@ -1,8 +1,9 @@
 import { useId, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { DayPicker } from 'react-day-picker'
-import { es } from 'react-day-picker/locale'
 import 'react-day-picker/style.css'
+import { calendarLocale } from '../../language/format'
+import { text, useText } from '../../language/useText'
 import { formatDay } from '../studentDate'
 
 function startOfToday(): Date {
@@ -18,10 +19,11 @@ function daysFromToday(day: Date): number {
 }
 
 // Ejemplos: «Hoy, mar 17 nov», «Mañana, mié 18 nov», «Jue 19 nov».
+// Solo se llama al pintar, para que siga el idioma elegido.
 function dayLabel(day: Date): string {
   const offset = daysFromToday(day)
-  if (offset === 0) return `Hoy, ${formatDay(day).toLowerCase()}`
-  if (offset === 1) return `Mañana, ${formatDay(day).toLowerCase()}`
+  if (offset === 0) return text('notice.today', { day: formatDay(day, false) })
+  if (offset === 1) return text('notice.tomorrow', { day: formatDay(day, false) })
   return formatDay(day)
 }
 
@@ -34,6 +36,7 @@ export function DayField({
   day: Date
   onChange: (day: Date) => void
 }): React.JSX.Element {
+  const t = useText()
   const popoverId = useId()
   const popover = useRef<HTMLDivElement>(null)
 
@@ -78,7 +81,7 @@ export function DayField({
           ref={popover}
           popover="auto"
           role="dialog"
-          aria-label="Elegir día"
+          aria-label={t('notice.chooseDay')}
           className="picker-panel"
           style={{
             position: 'fixed',
@@ -93,7 +96,7 @@ export function DayField({
         >
           <DayPicker
             className="react-day-picker"
-            locale={es}
+            locale={calendarLocale()}
             mode="single"
             navLayout="around"
             selected={day}

@@ -1,12 +1,15 @@
-export type LoginErrors = { email: string; password: string }
+import type { TextKey } from '../language/messages'
+
+// La clave del texto de cada error, o '' si el campo está bien. La pantalla lo traduce con t().
+export type LoginErrors = { email: TextKey | ''; password: TextKey | '' }
 
 const emailShape = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function validateLogin(email: string, password: string): LoginErrors {
-  const errors = { email: '', password: '' }
+  const errors: LoginErrors = { email: '', password: '' }
   const trimmedEmail = email.trim()
-  if (trimmedEmail === '') errors.email = 'El correo es obligatorio.'
-  else if (!emailShape.test(trimmedEmail)) errors.email = 'El correo no tiene una forma válida.'
-  if (password === '') errors.password = 'La contraseña es obligatoria.'
+  if (trimmedEmail === '') errors.email = 'login.errors.emailRequired'
+  else if (!emailShape.test(trimmedEmail)) errors.email = 'login.errors.emailInvalid'
+  if (password === '') errors.password = 'login.errors.passwordRequired'
   return errors
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, Outlet, useNavigate } from '@tanstack/react-router'
 import { applyTheme, readTheme } from '../session/sessionStore'
+import { useText } from '../language/useText'
 import { ThemeToggle } from '../shared/ThemeToggle'
 import { AdminEntry } from './AdminEntry'
 import { useAdminStore } from './adminStore'
@@ -16,6 +17,7 @@ export function AdminLayout(): React.JSX.Element {
   const profile = useSessionStore((state) => state.profile)
   const endStudentSession = useSessionStore((state) => state.endStudentSession)
   const isLoggingOut = useSessionStore((state) => state.isLoggingOut)
+  const t = useText()
   const logoutError = useSessionStore((state) => state.logoutError)
   const navigate = useNavigate()
   const [theme, setTheme] = useState(readTheme)
@@ -78,7 +80,7 @@ export function AdminLayout(): React.JSX.Element {
         </div>
         {logoutError !== '' ? (
           <p className={`${pageWidth} alert alert-soft alert-error`} role="alert">
-            {logoutError}
+            {t(logoutError)}
           </p>
         ) : null}
         <nav

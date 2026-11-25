@@ -1,4 +1,5 @@
 import { storageKeys } from '../../storageKeys'
+import { dateKeyFromOldLabel } from '../studentDate'
 import { normalizeEmail } from '../studentExample'
 
 const noticesKey = storageKeys.notices
@@ -8,8 +9,8 @@ export type NoticeKind = 'retraso' | 'ausencia'
 export type StudentNotice = {
   email: string
   kind: NoticeKind
-  // Ejemplo: «Mié 18 nov». Igual que la etiqueta del historial.
-  day: string
+  // El día del aviso, «2026-11-18». Igual que la fecha de las entradas del historial.
+  date: string
   // «09:20» en un retraso. Vacío en una ausencia.
   arrival: string
   reason: string
@@ -17,24 +18,42 @@ export type StudentNotice = {
   attachmentName: string
 }
 
-function isNotice(value: unknown): value is StudentNotice {
-  if (typeof value !== 'object' || value === null) return false
+// La fecha del aviso. Las versiones anteriores guardaban el día en español
+// («Mié 18 nov», en day); se pasa a su fecha. Devuelve null si no se entiende.
+function noticeDate(notice: Record<string, unknown>): string | null {
+  if (typeof notice.date === 'string') return notice.date
+  return typeof notice.day === 'string' ? dateKeyFromOldLabel(notice.day) : null
+}
+
+function readNotice(value: unknown): StudentNotice | null {
+  if (typeof value !== 'object' || value === null) return null
   const notice = value as Record<string, unknown>
-  return (
-    typeof notice.email === 'string' &&
-    (notice.kind === 'retraso' || notice.kind === 'ausencia') &&
-    typeof notice.day === 'string' &&
-    typeof notice.arrival === 'string' &&
-    typeof notice.reason === 'string' &&
-    typeof notice.attachmentName === 'string'
-  )
+  const date = noticeDate(notice)
+  if (
+    date === null ||
+    typeof notice.email !== 'string' ||
+    (notice.kind !== 'retraso' && notice.kind !== 'ausencia') ||
+    typeof notice.arrival !== 'string' ||
+    typeof notice.reason !== 'string' ||
+    typeof notice.attachmentName !== 'string'
+  ) {
+    return null
+  }
+  return {
+    email: notice.email,
+    kind: notice.kind,
+    date,
+    arrival: notice.arrival,
+    reason: notice.reason,
+    attachmentName: notice.attachmentName
+  }
 }
 
 function readAllNotices(): StudentNotice[] {
   try {
     const stored = localStorage.getItem(noticesKey)
     const parsed = stored === null ? [] : (JSON.parse(stored) as unknown)
-    return Array.isArray(parsed) ? parsed.filter(isNotice) : []
+    return Array.isArray(parsed) ? parsed.map(readNotice).filter((notice) => notice !== null) : []
   } catch {
     return []
   }

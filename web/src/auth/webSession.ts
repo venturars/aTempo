@@ -5,7 +5,8 @@ export type WebSession = {
   profile: WebProfile
 }
 
-const loginErrorText = 'El correo o la contraseña no son correctos. Revísalos y prueba otra vez.'
+// Códigos de error, no textos: quien los recibe enseña su propio mensaje traducido.
+const loginErrorCode = 'WEB_LOGIN_FAILED'
 
 // Ordena los inicios de sesión respecto al cierre para no perder una cookie recién creada.
 let pendingLogout: Promise<void> = Promise.resolve()
@@ -32,9 +33,9 @@ export async function loginWebSession(email: string, password: string): Promise<
       password
     })
   } catch {
-    throw new Error(loginErrorText)
+    throw new Error(loginErrorCode)
   }
-  if (!response.ok) throw new Error(loginErrorText)
+  if (!response.ok) throw new Error(loginErrorCode)
   return (await response.json()) as WebSession
 }
 
@@ -50,14 +51,13 @@ export async function readWebSession(): Promise<WebSession | null> {
     response = await requestSession()
   }
   if (response === null || response.status === 401) return null
-  if (!response.ok) throw new Error('No se ha podido comprobar la sesión.')
+  if (!response.ok) throw new Error('WEB_SESSION_CHECK_FAILED')
   return (await response.json()) as WebSession
 }
 
 export function logoutWebSession(): Promise<void> {
-  pendingLogout = jsonRequest('/api/auth/logout', 'POST', {})
-    .then((response) => {
-      if (!response.ok && response.status !== 204) throw new Error('WEB_LOGOUT_FAILED')
-    })
+  pendingLogout = jsonRequest('/api/auth/logout', 'POST', {}).then((response) => {
+    if (!response.ok && response.status !== 204) throw new Error('WEB_LOGOUT_FAILED')
+  })
   return pendingLogout
 }

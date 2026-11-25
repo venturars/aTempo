@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
+import type { TextKey } from '../../language/messages'
+import { useText } from '../../language/useText'
 import { useSessionStore } from '../../session/sessionStore'
 import { useFlashStore } from '../flashStore'
 import { flowTopWithoutHeader } from '../flowLayout'
@@ -11,18 +13,19 @@ import { rememberCheckIn } from './pendingCheckIn'
 // El código se comprueba en el momento del escaneo.
 // Con la sesión abierta, apunta la entrada. Sin sesión, guarda el escaneo y lleva a entrar.
 // Qué se enseña si el QR no vale.
-const problemText: Record<CodeProblem, { title: string; body: string }> = {
+const problemText: Record<CodeProblem, { title: TextKey; body: TextKey }> = {
   expired: {
-    title: 'Este QR ya no vale',
-    body: 'Cambia cada 30 segundos. Escanéalo otra vez o escribe el código que hay debajo.'
+    title: 'checkIn.expired.title',
+    body: 'checkIn.expired.body'
   },
   'wrong-class': {
-    title: 'Este QR no es de tu clase',
-    body: 'Escanea el QR de tu clase o escribe el código que hay debajo.'
+    title: 'checkIn.wrongClass.title',
+    body: 'checkIn.wrongClass.body'
   }
 }
 
 export function CheckInScreen({ code }: { code: string }): React.JSX.Element | null {
+  const t = useText()
   const navigate = useNavigate()
   // En desarrollo, React ejecuta los efectos dos veces: cada código se atiende una sola vez.
   // Si llega otro enlace a la misma pantalla, el código cambia y se atiende de nuevo.
@@ -60,15 +63,15 @@ export function CheckInScreen({ code }: { code: string }): React.JSX.Element | n
     <main
       className={`page-enter flex min-h-screen flex-col items-center justify-center gap-3 p-6 text-center ${flowTopWithoutHeader}`}
     >
-      <h1 className="text-2xl font-semibold tracking-tight">{problemText[problem].title}</h1>
-      <p className="max-w-xs text-base text-base-content/60">{problemText[problem].body}</p>
+      <h1 className="text-2xl font-semibold tracking-tight">{t(problemText[problem].title)}</h1>
+      <p className="max-w-xs text-base text-base-content/60">{t(problemText[problem].body)}</p>
       <Link
         className="btn btn-primary btn-lg mt-5 w-full max-w-xs"
         to="/student/scan"
         search={{ escribir: true }}
         replace
       >
-        Escribir el código
+        {t('checkIn.typeCode')}
       </Link>
     </main>
   )

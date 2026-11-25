@@ -3,5 +3,168 @@
     "name": "Español",
     "title": "Idioma",
     "device": "Del dispositivo"
+  },
+  "app": {
+    "checkingSession": "Comprobando sesión",
+    "darkTheme": "Tema oscuro",
+    "dayLabel": "{weekday} {date}"
+  },
+  "common": {
+    "close": "Cerrar",
+    "signOut": "Cerrar sesión",
+    "signingOut": "Cerrando sesión…"
+  },
+  "login": {
+    "title": "Hola de nuevo",
+    "fromClassQr": "Entra para registrar tu asistencia.",
+    "invitationUnavailable": "La activación de invitaciones todavía no está disponible.",
+    "email": "Correo",
+    "password": "Contraseña",
+    "submit": "Entrar",
+    "submitting": "Entrando…",
+    "newAccountsUnavailable": "Las cuentas nuevas y las invitaciones todavía no están disponibles.",
+    "errors": {
+      "emailRequired": "El correo es obligatorio.",
+      "emailInvalid": "El correo no tiene una forma válida.",
+      "passwordRequired": "La contraseña es obligatoria.",
+      "wrongCredentials": "El correo o la contraseña no son correctos. Revísalos y prueba otra vez."
+    }
+  },
+  "account": {
+    "mainNav": "Principal",
+    "notice": "Avisar",
+    "history": "Resumen",
+    "menu": "Cuenta",
+    "errors": {
+      "logoutFailed": "No se pudo cerrar la sesión. Inténtalo otra vez."
+    }
+  },
+  "attendance": {
+    "status": {
+      "present": "Presente",
+      "late": "Tarde",
+      "absent": "Ausente"
+    }
+  },
+  "dashboard": {
+    "greeting": {
+      "morning": "Buenos días",
+      "afternoon": "Buenas tardes",
+      "night": "Buenas noches"
+    },
+    "inClass": {
+      "enjoy": "Disfruta tu clase, {name}",
+      "inside": "Ya estás dentro, {name}",
+      "makeTheMost": "Aprovecha la clase, {name}",
+      "goForIt": "A por ello, {name}"
+    },
+    "subtitle": {
+      "noClass": "Hoy no tienes clase",
+      "inClassSince": "{course} · En clase desde las {time}",
+      "absentNotice": "{course} · Avisaste que hoy no vienes",
+      "classOver": "{course} · La clase de hoy ya terminó",
+      "startsAt": "{course} · {time}",
+      "lateNotice": "{course} · Avisaste que llegas a las {time}"
+    },
+    "register": "Registrar asistencia"
+  },
+  "notice": {
+    "title": "Avisa a tu profesor",
+    "kindGroup": "Tipo de aviso",
+    "kind": {
+      "late": "Llego tarde",
+      "absent": "No puedo ir"
+    },
+    "day": "¿Qué día?",
+    "today": "Hoy, {day}",
+    "tomorrow": "Mañana, {day}",
+    "chooseDay": "Elegir día",
+    "arrival": "¿A qué hora llegas?",
+    "chooseTime": "Elegir hora",
+    "hourColumn": "Hora",
+    "minuteColumn": "Min",
+    "reason": "¿Quieres contar por qué?",
+    "optional": "· opcional",
+    "document": "Justificante",
+    "addDocument": "Añadir PDF o imagen",
+    "removeDocument": "Quitar",
+    "send": "Enviar",
+    "sent": "Gracias por avisar. Tu profesor ya lo sabe.",
+    "errors": {
+      "noClassThatDay": "Ese día no tienes clase.",
+      "arrivalMissing": "¿A qué hora llegarás? Escríbela o elígela.",
+      "beforeStart": "La clase empieza a las {time}. Avisa solo si llegas después.",
+      "afterEnd": "A esa hora la clase ya terminó. Si no vas a llegar, elige «No puedo ir»."
+    }
+  },
+  "scan": {
+    "scanTitle": "Escanea el QR",
+    "typeCode": "Escribir el código",
+    "codeTitle": "Escribe el código",
+    "codeHint": "Son las 6 cifras que hay debajo del QR.",
+    "codeLabel": "Código de la clase",
+    "register": "Registrar",
+    "scanAgain": "Escanear el QR",
+    "camera": {
+      "unsupported": "Este navegador no puede leer el QR. Puedes escanearlo con la cámara del móvil.",
+      "notAllowed": "No hay permiso para usar la cámara. Puedes activarlo en los ajustes del navegador.",
+      "notFound": "No encontramos ninguna cámara en este dispositivo.",
+      "inUse": "Otra app está usando la cámara. Ciérrala y prueba otra vez.",
+      "failed": "No se pudo abrir la cámara."
+    },
+    "errors": {
+      "wrongClass": "Ese código no es de esta clase. Revísalo y prueba otra vez.",
+      "expired": "Ese código no vale ahora. Prueba con el que se ve en la pantalla de clase."
+    }
+  },
+  "checkIn": {
+    "expired": {
+      "title": "Este QR ya no vale",
+      "body": "Cambia cada 30 segundos. Escanéalo otra vez o escribe el código que hay debajo."
+    },
+    "wrongClass": {
+      "title": "Este QR no es de tu clase",
+      "body": "Escanea el QR de tu clase o escribe el código que hay debajo."
+    },
+    "typeCode": "Escribir el código",
+    "errors": {
+      "noClassToday": "Hoy no tienes clase.",
+      "classOver": "La clase de hoy ya terminó.",
+      "signInFirst": "Entra para registrar tu asistencia.",
+      "alreadyInsideSince": "Ya estás dentro desde las {time}. Disfruta la clase.",
+      "alreadyInside": "Ya estás dentro desde las —. Disfruta la clase.",
+      "scanTooOld": "Pasaron más de 10 minutos desde que escaneaste el QR. Escanéalo otra vez."
+    }
+  },
+  "registered": {
+    "title": "Disfruta la clase",
+    "arrivedAt": "Has entrado a las",
+    "backHome": "Volver al inicio"
+  },
+  "history": {
+    "title": "Tu asistencia",
+    "loading": "Cargando tu asistencia…",
+    "loadError": "No hemos podido cargar tu asistencia.",
+    "retry": "Reintentar",
+    "totals": "Totales",
+    "attendance": "Asistencia",
+    "lateCount": "Retrasos",
+    "absentCount": "Ausencias",
+    "percent": "{value} %",
+    "classes": "Tus clases",
+    "empty": "Aún no tienes clases. Nos vemos en la primera.",
+    "notices": "Tus avisos",
+    "column": {
+      "date": "Fecha",
+      "arrival": "Llegada",
+      "status": "Estado",
+      "kind": "Tipo",
+      "detail": "Detalle"
+    },
+    "noticeKind": {
+      "late": "Tarde",
+      "absent": "Ausencia"
+    },
+    "arrivalDetail": "Llegada {time}"
   }
 }

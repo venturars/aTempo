@@ -3,5 +3,168 @@
     "name": "English",
     "title": "Language",
     "device": "Device"
+  },
+  "app": {
+    "checkingSession": "Checking your session",
+    "darkTheme": "Dark theme",
+    "dayLabel": "{weekday}, {date}"
+  },
+  "common": {
+    "close": "Close",
+    "signOut": "Sign out",
+    "signingOut": "Signing out…"
+  },
+  "login": {
+    "title": "Welcome back",
+    "fromClassQr": "Sign in to record your attendance.",
+    "invitationUnavailable": "Activating invitations isn't available yet.",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "newAccountsUnavailable": "New accounts and invitations aren't available yet.",
+    "errors": {
+      "emailRequired": "Enter your email.",
+      "emailInvalid": "That email doesn't look right.",
+      "passwordRequired": "Enter your password.",
+      "wrongCredentials": "The email or password isn't right. Check them and try again."
+    }
+  },
+  "account": {
+    "mainNav": "Main",
+    "notice": "Notify",
+    "history": "Summary",
+    "menu": "Account",
+    "errors": {
+      "logoutFailed": "We couldn't sign you out. Try again."
+    }
+  },
+  "attendance": {
+    "status": {
+      "present": "Present",
+      "late": "Late",
+      "absent": "Absent"
+    }
+  },
+  "dashboard": {
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "night": "Good evening"
+    },
+    "inClass": {
+      "enjoy": "Enjoy your class, {name}",
+      "inside": "You're in, {name}",
+      "makeTheMost": "Make the most of class, {name}",
+      "goForIt": "Go for it, {name}"
+    },
+    "subtitle": {
+      "noClass": "No class today",
+      "inClassSince": "{course} · In class since {time}",
+      "absentNotice": "{course} · You said you can't come today",
+      "classOver": "{course} · Today's class is over",
+      "startsAt": "{course} · {time}",
+      "lateNotice": "{course} · You said you'll arrive at {time}"
+    },
+    "register": "Record attendance"
+  },
+  "notice": {
+    "title": "Let your teacher know",
+    "kindGroup": "Notice type",
+    "kind": {
+      "late": "I'll be late",
+      "absent": "I can't come"
+    },
+    "day": "Which day?",
+    "today": "Today, {day}",
+    "tomorrow": "Tomorrow, {day}",
+    "chooseDay": "Choose a day",
+    "arrival": "What time will you arrive?",
+    "chooseTime": "Choose a time",
+    "hourColumn": "Hour",
+    "minuteColumn": "Min",
+    "reason": "Want to say why?",
+    "optional": "· optional",
+    "document": "Supporting document",
+    "addDocument": "Add a PDF or image",
+    "removeDocument": "Remove",
+    "send": "Send",
+    "sent": "Thanks for letting us know. Your teacher has been told.",
+    "errors": {
+      "noClassThatDay": "You don't have class that day.",
+      "arrivalMissing": "What time will you arrive? Type it or choose it.",
+      "beforeStart": "Class starts at {time}. Only send a notice if you arrive later.",
+      "afterEnd": "Class is over by then. If you can't make it, choose “I can't come”."
+    }
+  },
+  "scan": {
+    "scanTitle": "Scan the QR code",
+    "typeCode": "Type the code",
+    "codeTitle": "Type the code",
+    "codeHint": "It's the 6 digits under the QR code.",
+    "codeLabel": "Class code",
+    "register": "Record",
+    "scanAgain": "Scan the QR code",
+    "camera": {
+      "unsupported": "This browser can't read the QR code. You can scan it with your phone's camera.",
+      "notAllowed": "There's no permission to use the camera. You can turn it on in your browser settings.",
+      "notFound": "We couldn't find a camera on this device.",
+      "inUse": "Another app is using the camera. Close it and try again.",
+      "failed": "The camera couldn't be opened."
+    },
+    "errors": {
+      "wrongClass": "That code isn't for this class. Check it and try again.",
+      "expired": "That code isn't valid now. Try the one on the classroom screen."
+    }
+  },
+  "checkIn": {
+    "expired": {
+      "title": "This QR code has expired",
+      "body": "It changes every 30 seconds. Scan it again or type the code below it."
+    },
+    "wrongClass": {
+      "title": "This QR code isn't for your class",
+      "body": "Scan your class's QR code or type the code below it."
+    },
+    "typeCode": "Type the code",
+    "errors": {
+      "noClassToday": "You have no class today.",
+      "classOver": "Today's class is over.",
+      "signInFirst": "Sign in to record your attendance.",
+      "alreadyInsideSince": "You've been in since {time}. Enjoy the class.",
+      "alreadyInside": "You're already in. Enjoy the class.",
+      "scanTooOld": "More than 10 minutes have passed since you scanned the QR code. Scan it again."
+    }
+  },
+  "registered": {
+    "title": "Enjoy the class",
+    "arrivedAt": "You arrived at",
+    "backHome": "Back to home"
+  },
+  "history": {
+    "title": "Your attendance",
+    "loading": "Loading your attendance…",
+    "loadError": "We couldn't load your attendance.",
+    "retry": "Try again",
+    "totals": "Totals",
+    "attendance": "Attendance",
+    "lateCount": "Late",
+    "absentCount": "Absences",
+    "percent": "{value}%",
+    "classes": "Your classes",
+    "empty": "No classes yet. See you at the first one.",
+    "notices": "Your notices",
+    "column": {
+      "date": "Date",
+      "arrival": "Arrival",
+      "status": "Status",
+      "kind": "Type",
+      "detail": "Details"
+    },
+    "noticeKind": {
+      "late": "Late",
+      "absent": "Absence"
+    },
+    "arrivalDetail": "Arrival {time}"
   }
 }

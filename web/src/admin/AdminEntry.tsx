@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
+import { useText } from '../language/useText'
 import { useLoginStore } from '../login/loginStore'
 import { useSessionStore } from '../session/sessionStore'
 import { ThemeToggle } from '../shared/ThemeToggle'
@@ -11,6 +12,7 @@ export function AdminEntry({
   dark: boolean
   onTheme: () => void
 }): React.JSX.Element {
+  const t = useText()
   const [showSignUpNotice, setShowSignUpNotice] = useState(false)
   const email = useLoginStore((state) => state.email)
   const password = useLoginStore((state) => state.password)
@@ -57,7 +59,7 @@ export function AdminEntry({
               disabled={isSubmitting}
               onChange={(event) => setEmail(event.target.value)}
             />
-            {emailError ? <p className="text-sm text-error">{emailError}</p> : null}
+            {emailError ? <p className="text-sm text-error">{t(emailError)}</p> : null}
           </div>
           <div className="field">
             <label htmlFor="admin-password">Contraseña</label>
@@ -71,14 +73,14 @@ export function AdminEntry({
               disabled={isSubmitting}
               onChange={(event) => setPassword(event.target.value)}
             />
-            {passwordError ? <p className="text-sm text-error">{passwordError}</p> : null}
+            {passwordError ? <p className="text-sm text-error">{t(passwordError)}</p> : null}
           </div>
           <button className="btn btn-primary" type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Entrando…' : 'Entrar'}
           </button>
           {loginError ? (
             <div className="alert alert-soft alert-error" role="alert">
-              <span>{loginError}</span>
+              <span>{t(loginError)}</span>
             </div>
           ) : null}
         </form>

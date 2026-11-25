@@ -1,6 +1,8 @@
+import { formatTime } from '../../language/format'
+import { text } from '../../language/useText'
 import type { ClassEntry } from '../studentExample'
 import { todayClass } from '../studentExample'
-import { formatDay } from '../studentDate'
+import { dateKey } from '../studentDate'
 import type { StudentNotice } from '../notice/studentNotices'
 import { moodBeforeDeadline, secondsUntil, type TempitoMood } from '../mascot/tempitoMood'
 
@@ -21,17 +23,20 @@ export function homeStateFor(
 ): HomeState {
   if (!todayClass.weekdays.includes(now.getDay())) return { kind: 'no-class' }
 
-  const todayLabel = formatDay(now)
-  const entry = history.find((item) => item.label === todayLabel)
+  const today = dateKey(now)
+  const entry = history.find((item) => item.date === today)
   if (entry?.arrival) return { kind: 'registered', arrival: entry.arrival }
 
   if (secondsUntil(now, todayClass.end) <= 0) return { kind: 'class-over' }
 
   // Los avisos llegan del más reciente al más antiguo: vale el último que mandó.
-  const notice = notices.find((item) => item.day === todayLabel)
+  const notice = notices.find((item) => item.date === today)
   if (notice?.kind === 'ausencia') return { kind: 'absent-notice' }
 
-  return { kind: 'upcoming', noticeArrival: notice?.kind === 'retraso' ? notice.arrival : null }
+  return {
+    kind: 'upcoming',
+    noticeArrival: notice?.kind === 'retraso' ? notice.arrival : null
+  }
 }
 
 // Si avisó de un retraso, la hora que cuenta para Tempito es la que dijo, no la de la clase.
@@ -46,21 +51,31 @@ export function moodFor(state: HomeState, now: Date): TempitoMood {
   }
 }
 
-// La línea gris bajo el saludo.
+// La línea gris bajo el saludo. Solo se llama al pintar, para que siga el idioma elegido.
 export function subtitleFor(state: HomeState): string {
+  const course = todayClass.name
   switch (state.kind) {
     case 'no-class':
-      return 'Hoy no tienes clase'
+      return text('dashboard.subtitle.noClass')
     case 'registered':
-      return `${todayClass.name} · En clase desde las ${state.arrival}`
+      return text('dashboard.subtitle.inClassSince', {
+        course,
+        time: formatTime(state.arrival)
+      })
     case 'absent-notice':
-      return `${todayClass.name} · Avisaste que hoy no vienes`
+      return text('dashboard.subtitle.absentNotice', { course })
     case 'class-over':
-      return `${todayClass.name} · La clase de hoy ya terminó`
+      return text('dashboard.subtitle.classOver', { course })
     case 'upcoming':
       return state.noticeArrival === null
-        ? `${todayClass.name} · ${todayClass.start}`
-        : `${todayClass.name} · Avisaste que llegas a las ${state.noticeArrival}`
+        ? text('dashboard.subtitle.startsAt', {
+            course,
+            time: formatTime(todayClass.start)
+          })
+        : text('dashboard.subtitle.lateNotice', {
+            course,
+            time: formatTime(state.noticeArrival)
+          })
   }
 }
 

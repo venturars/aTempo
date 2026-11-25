@@ -1,3 +1,5 @@
+import { useText } from '../language/useText'
+
 const sunIcon = (
   <svg
     width="16"
@@ -46,13 +48,14 @@ export function ThemeToggle({
   dark: boolean
   onToggle: () => void
 }): React.JSX.Element {
+  const t = useText()
   return (
     <button
       className="theme-switch"
       type="button"
       role="switch"
       aria-checked={dark}
-      aria-label="Tema oscuro"
+      aria-label={t('app.darkTheme')}
       onClick={onToggle}
     >
       {sunIcon}

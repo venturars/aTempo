@@ -46,7 +46,11 @@ Los datos administrativos de esta demo vuelven al seed al recargar el navegador.
 
 Con Vite y el router en marcha, abre <http://localhost:5191/> e inicia sesión con Auth0 como `ada.lopez@clase.test`. El registro abierto y la activación de invitaciones están deshabilitados. Las invitaciones pendientes son datos de demostración y no habilitan una cuenta ni envían correo.
 
-El historial y los avisos de alumno de la demo permanecen en el almacenamiento local del navegador. `/?reiniciar` limpia esos datos locales y abre el inicio del alumno; para cerrar también la sesión Auth0, usa **Cerrar sesión**.
+El historial y los avisos de alumno de la demo permanecen en el almacenamiento local del navegador. `/?reiniciar` limpia esos datos locales, también el idioma elegido, y abre el inicio del alumno; para cerrar también la sesión Auth0, usa **Cerrar sesión**.
+
+## Idioma
+
+La web del alumno sale en el idioma del navegador, o en español si el navegador no está en español ni en inglés. Se cambia en **Idioma**, en el menú de la cuenta, y en la cabecera del login; la elección se guarda en `localStorage` como `atempo-student-language`. Los textos viven en `src/locales/es.json` y `src/locales/en.json`, sin librería de traducción: el español es el original y la reserva. `src/language/` tiene el mismo módulo que el escritorio: `useText()` para los textos y `format.ts` para fechas, horas y números con `Intl`. La administración sigue en español; la traduce #248.
 
 Para registrar asistencia, abre **Hoy → Abrir lista** en Electron. Escanea su QR o escribe en la web las seis cifras que aparecen debajo. Ambos cambian cada 30 segundos. Consulta los pasos para probar con un móvil en [el PR #123](https://github.com/venturars/aTempo/pull/123).
 
