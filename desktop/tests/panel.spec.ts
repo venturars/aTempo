@@ -204,14 +204,12 @@ test('groups the Sesiones counts under Alumnos and lines up the dates', async ()
       }
     }
 
-    // El día del mes empieza en el mismo sitio, sea cual sea el día de la semana.
     const days = window.locator('tbody tr td:first-child button > span:nth-child(2)')
     await expect(days).toHaveCount(7)
     const starts = await days.evaluateAll((spans) =>
       spans.map((span) => Math.round(span.getBoundingClientRect().left))
     )
     expect(new Set(starts).size).toBe(1)
-    // También caben los días que no salen en los datos de ejemplo.
     const overflowing = await days.first().evaluate((day) => {
       const weekday = day.previousElementSibling as HTMLElement
       const probe = weekday.cloneNode() as HTMLElement
