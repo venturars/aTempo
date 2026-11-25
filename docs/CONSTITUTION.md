@@ -42,11 +42,12 @@ El API-router no implementa reglas de negocio.
 ## 5. Stack de `api-postgresql/`
 
 - **NestJS 11** expone REST hacia PostgreSQL.
+- **pg** abre hoy la conexión en `PostgresService`, hasta que el servicio importe `domain/node`.
 - **@nestjs/swagger** documenta la API y sirve Swagger UI en `/docs` para pruebas manuales.
 - **TypeScript** escribe el servicio.
 - **pnpm** es el gestor de paquetes de `api-postgresql/`. Las versiones van fijas, sin `^`.
 
-El flujo de producto es Frontend → `api-postgresql` → `domain/node` → PostgreSQL. Nest transforma HTTP y delega en `domain/node`. Ese paquete abre la base. Nest no escribe SQL. El escritorio no llama a este servicio.
+El flujo de producto previsto es Frontend → `api-postgresql` → `domain/node` → PostgreSQL. Nest transforma HTTP y delega en `domain/node`. Ese paquete abre la base. Nest no escribe SQL. Hoy el escritorio todavía no llama a este servicio: su login va al `api-router`.
 
 ## 6. Stack de `api-rustfs/`
 

@@ -18,6 +18,7 @@ La documentación interactiva (OpenAPI y Swagger UI) de cada servicio HTTP vive 
 flowchart LR
   electron[FrontendElectron]
   web[FrontendWeb]
+  router[APIRouterNest]
   apiPg[apiPostgresql]
   nodeDomain[nodeDomain]
   postgres[(PostgreSQL)]
@@ -25,16 +26,17 @@ flowchart LR
   serviceSqlite[(SQLite_del_servicio)]
   objectApi[api_rustfs_Express]
   rustfs[(RustFS)]
-  electron --> apiPg
-  web --> apiPg
-  apiPg --> nodeDomain
+  electron -->|login| router
+  electron -.-> apiPg
+  web -.-> apiPg
+  apiPg -.-> nodeDomain
   nodeDomain --> postgres
   sqliteApi --> serviceSqlite
   nodeDomain -.-> objectApi
   objectApi --> rustfs
 ```
 
-`domain/node/` hablará con `api-rustfs/` cuando esa persistencia entre en el paquete. Redis y el resto de microservicios del backend quedan fuera del escritorio.
+Las flechas discontinuas son el flujo previsto: hoy los frontends no llaman a `api-postgresql/` y ese servicio no importa `domain/node/`. El login de Electron va al `api-router/`. `domain/node/` hablará con `api-rustfs/` cuando esa persistencia entre en el paquete. Redis y el resto de microservicios del backend quedan fuera del escritorio.
 
 ## api-sqlite
 
