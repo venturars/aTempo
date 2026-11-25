@@ -59,7 +59,15 @@ export const todayEntry = rosterNames.map((name) => {
   return arrivalThatDay(name, '11')
 })
 
-export const todayLabel = 'Mié 11 nov 2026'
+// Título de una sesión a partir de su id: «Mar 10 nov» → «Mar 10 nov 2026».
+export function sessionTitle(id: string): string {
+  return `${id} 2026`
+}
+
+// La sesión de Hoy. Los cambios se guardan con este id, como los de las sesiones pasadas.
+export const todaySessionId = 'Mié 11 nov'
+
+export const todayLabel = sessionTitle(todaySessionId)
 
 // La clase del Dashboard. Si cae en todayLabel, el título es Hoy. Si no, es la próxima.
 export const dashboardDate = todayLabel

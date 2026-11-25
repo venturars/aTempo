@@ -11,9 +11,7 @@ test('real build renders and accepts input without native visibility or focus', 
     await page.getByLabel('Correo').fill('hidden@clase.test')
     await page.getByLabel('Contraseña').fill('secreta12')
     await page.getByRole('button', { name: 'Entrar' }).click()
-    await expect(page.getByRole('alert')).toHaveText(
-      'El correo o la contraseña no coinciden con la cuenta de ejemplo.'
-    )
+    await expect(page.getByRole('alert')).toHaveText('El correo o la contraseña no coinciden.')
     await expect(page.getByRole('status')).toHaveCount(0)
     const text = await page.locator('body').innerText()
     expect(text).not.toContain('hidden@clase.test')
@@ -24,9 +22,9 @@ test('real build renders and accepts input without native visibility or focus', 
     await page.keyboard.type('.es')
     await expect(page.getByLabel('Correo')).toHaveValue('hidden@clase.test.es')
     await page.evaluate(() => {
-      window.location.hash = '#/sign-up'
+      window.location.hash = '#/student/dashboard'
     })
-    await expect(page.getByRole('button', { name: 'Crear mi cuenta' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Dashboard alumno', level: 1 })).toBeVisible()
     const screenshot = await page.screenshot({ path: test.info().outputPath('hidden-smoke.png') })
     expect(screenshot.length).toBeGreaterThan(10000)
     const audit = await app.evaluate(({ BrowserWindow, app }) => {

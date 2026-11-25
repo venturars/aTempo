@@ -7,6 +7,7 @@ export type Person = {
   email: string
   roles: ('admin' | 'teacher' | 'student')[]
   state: 'active' | 'invited'
+  identificationDocument?: string
 }
 
 export type Course = {
@@ -65,8 +66,8 @@ export type RecurringSessionResult = {
   skippedCount: number
 }
 
-type AdminData = {
-  organization: { id: string; name: string }
+export type AdminData = {
+  organization: { id: string; name: string; taxId: string }
   people: Person[]
   courses: Course[]
   sessions: ClassSession[]
@@ -95,7 +96,7 @@ const adminId = 'person-admin'
 // Each reset gets fresh arrays, including roles and course enrolments.
 function createSeed(): AdminData {
   return {
-    organization: { id: organizationId, name: 'Neoland' },
+    organization: { id: organizationId, name: 'Neoland', taxId: 'B87654321' },
     currentPersonId: null,
     people: [
       {
@@ -135,7 +136,7 @@ function createSeed(): AdminData {
       {
         id: 'course-web',
         organizationId,
-        name: 'Desarrollo web',
+        name: 'AI Engineering',
         teacherId: adminId,
         studentIds: ['person-student-ana', 'person-student-luis']
       },
@@ -180,7 +181,7 @@ function adminError(state: AdminData): string | null {
     person.state !== 'active' ||
     !person.roles.includes('admin')
   ) {
-    return 'Abre la demo con una cuenta administradora de esta organización.'
+    return 'Entra con una cuenta administradora de esta organización.'
   }
   return null
 }

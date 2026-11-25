@@ -259,9 +259,23 @@ api-router/
       health.module.ts
       health.controller.ts
       health-response.dto.ts
+    auth/
+      auth.module.ts
+      auth.controller.ts
+      auth.service.ts
+      login-request.dto.ts
+      login-response.dto.ts
+      register-request.dto.ts
+      register-response.dto.ts
+      logout-request.dto.ts
+      logout-response.dto.ts
+      refresh-request.dto.ts
+      refresh-response.dto.ts
+      me-response.dto.ts
   test/
     health.e2e-spec.ts
     swagger.e2e-spec.ts
+    auth.e2e-spec.ts
     jest-e2e.json
 ```
 
@@ -294,8 +308,7 @@ desktop/
         routeTree.gen.ts  # generado por el plugin de TanStack Router
         routes/
           __root.tsx    # ruta raíz; si no hay ruta, el login
-          index.tsx     # /, login
-          sign-up.tsx   # /sign-up, registro
+          index.tsx     # /, login; ?invitation=<código> desde el correo de invitación
           student/
             dashboard.tsx  # /student/dashboard
             scan.tsx       # /student/scan, registrar asistencia
@@ -304,17 +317,25 @@ desktop/
             dashboard.tsx  # /organization/dashboard, Resumen de la organización
           teacher/
             panel.tsx      # /teacher/panel, PanelScreen
-        env.d.ts
+        env.d.ts          # tipo de VITE_STUDENT_SITE_URL
         styles/
           app.css       # importa docs/storybook/src/system.css
           fonts/        # Geist e Inter, woff2 con licencia OFL
         login/
-          LoginScreen.tsx
+          LoginScreen.tsx       # entrar, o elegir contraseña desde el enlace de una invitación
           loginStore.ts
+          activateStore.ts      # contraseña nueva de una invitación
+          invitations.ts        # invitaciones de ejemplo de profesor y alumno
+          teacherAccounts.ts    # cuentas de profesor en memoria
           teacherDemoAccount.ts # cuenta pública de ejemplo del profesor
           validateLogin.ts
+          validateActivation.ts
           trimesterExample.ts
+          weekExample.ts        # semana de ejemplo del panel de la invitación
+        navigation/
+          BackButton.tsx        # volver a la pantalla anterior
         panel/
+          AccountMenu.tsx    # menú de la cuenta con «Salir», abajo en la barra lateral
           AttendanceStatus.tsx
           DateFilter.tsx
           JustificationAccess.tsx
@@ -326,21 +347,19 @@ desktop/
           StatsView.tsx
           StudentHistory.tsx
           avatar.tsx
+          classCode.ts       # código y enlace del QR de cada periodo de 30 s
           markControl.tsx
+          markCorrection.tsx # motivo de un cambio con la lista cerrada
           marks.ts
           panelStore.ts
           riskHint.tsx
           roster.ts
-          sessionQr.tsx
+          sessionQr.tsx      # QR real y código de 6 cifras
           settingsStore.ts
+          studentSite.ts     # dirección del sitio del alumno que abre el QR
         organization/
           OrganizationDashboardScreen.tsx
           organizationExample.ts
-        register/
-          RegisterScreen.tsx
-          registerStore.ts
-          validateRegister.ts
-          weekExample.ts
         student/
           NoStudentSession.tsx # aviso cuando la sesión no es de un alumno con cuenta
           attendanceStatus.ts  # estado de asistencia y margen de tarde
@@ -353,7 +372,7 @@ desktop/
           history/
             HistoryScreen.tsx  # clases de la cuenta con hora y estado
         session/
-          sessionStore.ts  # perfil, correo en memoria y ruta de su dashboard
+          sessionStore.ts  # perfil, correo y nombre en memoria, salir y ruta de su dashboard
         underConstruction/
           UnderConstructionScreen.tsx  # pantalla provisional con título
   tests/
@@ -365,13 +384,14 @@ desktop/
     hidden-electron.spec.ts # smoke del build real: entrada, navegación y captura
     login.spec.ts
     teacher-login.spec.ts # acceso con la cuenta pública del profesor
+    teacher-account.spec.ts # activar invitaciones y salir
+    teacher-corrections.spec.ts # cambios con la lista cerrada, motivo, registro y volver
     panel.spec.ts
-    teacher-qr.spec.ts  # temporizador, llegadas y dos temas a 390/1280 px
+    teacher-qr.spec.ts  # QR legible, código de 6 cifras, periodos del reloj, llegadas y dos temas a 390/1280 px
     organization-dashboard.spec.ts
-    register.spec.ts
     dashboard.spec.ts
     navigation.spec.ts  # rutas, flags de arranque y dashboard de cada perfil
-    student.spec.ts     # alta y acceso del alumno, escaneo, historial y estado de asistencia; escaneo e historial en ambos temas a 390/1280 px (fuentes, espaciado y desbordamiento)
+    student.spec.ts     # acceso del alumno con la cuenta de ejemplo o una invitación, escaneo, historial y estado de asistencia; escaneo e historial en ambos temas a 390/1280 px (fuentes, espaciado y desbordamiento)
     visual-system.spec.ts  # paridad de Storybook y escritorio, temas y rutas
     snapshots/
       login-empty.png
@@ -379,10 +399,6 @@ desktop/
       login-alert.png
       login-narrow.png
       login-claro.png
-      register-empty.png
-      register-errors.png
-      register-narrow.png
-      register-claro.png
       dashboard-empty.png
       panel-hoy.png
       panel-sesiones.png
@@ -401,7 +417,6 @@ desktop/
       teacher-qr-claro-desktop.png
       teacher-qr-oscuro-movil.png
       teacher-qr-claro-movil.png
-      student-register-390.png
       student-dashboard-390.png
       student-scan-390.png
       student-scan-confirmed-390.png
