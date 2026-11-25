@@ -498,12 +498,10 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
     return (
       <section className="card w-full overflow-hidden bg-base-100 shadow-sm">
         <table className="table table-spread">
-          {/* scope="colgroup" necesita el grupo de columnas: sin él, «Alumnos» no cubre ninguna. */}
-          <colgroup>
-            <col />
-            <col />
-            <col span={3} />
-          </colgroup>
+          {/* Dos grupos de columnas: Fecha y Asistencia, y las tres cifras. scope="colgroup" de
+              «Alumnos» se refiere al segundo. */}
+          <colgroup span={2} />
+          <colgroup span={3} />
           <thead>
             {/* Las tres cifras cuentan alumnos: «3 tarde» son tres alumnos, no el profesor. */}
             <tr>
