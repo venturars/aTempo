@@ -58,136 +58,136 @@ export { check } from './postgres/check'
 export type { PersonCourseLookup } from './postgres/executors/person-course'
 
 export {
-  listOrganizations,
-  type ListOrganizationsOutput,
-} from './organization/list-organizations'
+  retrieveAllOrganizations,
+  type RetrieveAllOrganizationsOutput,
+} from './organization/retrieve-all-organizations'
 export {
-  getOrganizationById,
-  type GetOrganizationByIdInput,
-  type GetOrganizationByIdOutput,
-} from './organization/get-organization-by-id'
+  retrieveOrganizationById,
+  type RetrieveOrganizationByIdInput,
+  type RetrieveOrganizationByIdOutput,
+} from './organization/retrieve-organization-by-id'
 export {
-  createOrganization,
-  type CreateOrganizationInput,
-  type CreateOrganizationOutput,
-} from './organization/create-organization'
+  addOrganization,
+  type AddOrganizationInput,
+  type AddOrganizationOutput,
+} from './organization/add-organization'
 export {
-  updateOrganization,
-  type UpdateOrganizationInput,
-  type UpdateOrganizationOutput,
-} from './organization/update-organization'
+  insertOrganization,
+  type InsertOrganizationInput,
+  type InsertOrganizationOutput,
+} from './organization/insert-organization'
 export {
-  deleteOrganization,
-  type DeleteOrganizationInput,
-  type DeleteOrganizationOutput,
-} from './organization/delete-organization'
+  removeOrganization,
+  type RemoveOrganizationInput,
+  type RemoveOrganizationOutput,
+} from './organization/remove-organization'
 export {
-  listPersons,
-  type ListPersonsOutput,
-} from './person/list-persons'
+  retrieveAllPersons,
+  type RetrieveAllPersonsOutput,
+} from './person/retrieve-all-persons'
 export {
-  getPersonById,
-  type GetPersonByIdInput,
-  type GetPersonByIdOutput,
-} from './person/get-person-by-id'
+  retrievePersonById,
+  type RetrievePersonByIdInput,
+  type RetrievePersonByIdOutput,
+} from './person/retrieve-person-by-id'
 export {
-  listPersonsByCourse,
-  type ListPersonsByCourseInput,
-  type ListPersonsByCourseOutput,
-} from './person/list-persons-by-course'
+  retrieveAllPersonsByCourse,
+  type RetrieveAllPersonsByCourseInput,
+  type RetrieveAllPersonsByCourseOutput,
+} from './person/retrieve-all-persons-by-course'
 export {
-  listPersonsByRole,
-  type ListPersonsByRoleInput,
-  type ListPersonsByRoleOutput,
-} from './person/list-persons-by-role'
+  retrieveAllPersonsByRole,
+  type RetrieveAllPersonsByRoleInput,
+  type RetrieveAllPersonsByRoleOutput,
+} from './person/retrieve-all-persons-by-role'
 export {
-  createPerson,
-  type CreatePersonInput,
-  type CreatePersonOutput,
-} from './person/create-person'
+  addPerson,
+  type AddPersonInput,
+  type AddPersonOutput,
+} from './person/add-person'
 export {
-  updatePerson,
-  type UpdatePersonInput,
-  type UpdatePersonOutput,
-} from './person/update-person'
+  insertPerson,
+  type InsertPersonInput,
+  type InsertPersonOutput,
+} from './person/insert-person'
 export {
-  deletePerson,
-  type DeletePersonInput,
-  type DeletePersonOutput,
-} from './person/delete-person'
+  removePerson,
+  type RemovePersonInput,
+  type RemovePersonOutput,
+} from './person/remove-person'
 export {
-  listCourses,
-  type ListCoursesOutput,
-} from './course/list-courses'
+  retrieveAllCourses,
+  type RetrieveAllCoursesOutput,
+} from './course/retrieve-all-courses'
 export {
-  getCourseById,
-  type GetCourseByIdInput,
-  type GetCourseByIdOutput,
-} from './course/get-course-by-id'
+  retrieveCourseById,
+  type RetrieveCourseByIdInput,
+  type RetrieveCourseByIdOutput,
+} from './course/retrieve-course-by-id'
 export {
-  listCoursesByPerson,
-  type ListCoursesByPersonInput,
-  type ListCoursesByPersonOutput,
-} from './course/list-courses-by-person'
+  retrieveAllCoursesByPerson,
+  type RetrieveAllCoursesByPersonInput,
+  type RetrieveAllCoursesByPersonOutput,
+} from './course/retrieve-all-courses-by-person'
 export {
-  listCoursesByOrganization,
-  type ListCoursesByOrganizationInput,
-  type ListCoursesByOrganizationOutput,
-} from './course/list-courses-by-organization'
+  retrieveAllCoursesByOrganization,
+  type RetrieveAllCoursesByOrganizationInput,
+  type RetrieveAllCoursesByOrganizationOutput,
+} from './course/retrieve-all-courses-by-organization'
 export {
-  createCourse,
-  type CreateCourseInput,
-  type CreateCourseOutput,
-} from './course/create-course'
+  addCourse,
+  type AddCourseInput,
+  type AddCourseOutput,
+} from './course/add-course'
 export {
-  updateCourse,
-  type UpdateCourseInput,
-  type UpdateCourseOutput,
-} from './course/update-course'
+  insertCourse,
+  type InsertCourseInput,
+  type InsertCourseOutput,
+} from './course/insert-course'
 export {
-  deleteCourse,
-  type DeleteCourseInput,
-  type DeleteCourseOutput,
-} from './course/delete-course'
+  removeCourse,
+  type RemoveCourseInput,
+  type RemoveCourseOutput,
+} from './course/remove-course'
 export {
-  listRoles,
-  type ListRolesOutput,
-} from './role/list-roles'
+  retrieveAllRoles,
+  type RetrieveAllRolesOutput,
+} from './role/retrieve-all-roles'
 export {
-  getRoleByName,
-  type GetRoleByNameInput,
-  type GetRoleByNameOutput,
-} from './role/get-role-by-name'
+  retrieveRoleByName,
+  type RetrieveRoleByNameInput,
+  type RetrieveRoleByNameOutput,
+} from './role/retrieve-role-by-name'
 export {
-  listRolesByPerson,
-  type ListRolesByPersonInput,
-  type ListRolesByPersonOutput,
-} from './role/list-roles-by-person'
+  retrieveAllRolesByPerson,
+  type RetrieveAllRolesByPersonInput,
+  type RetrieveAllRolesByPersonOutput,
+} from './role/retrieve-all-roles-by-person'
 export {
-  listPersonCourses,
-  type ListPersonCoursesOutput,
-} from './person-course/list-person-courses'
+  retrieveAllPersonCourses,
+  type RetrieveAllPersonCoursesOutput,
+} from './person-course/retrieve-all-person-courses'
 export {
   addPersonCourse,
   type AddPersonCourseInput,
   type AddPersonCourseOutput,
 } from './person-course/add-person-course'
 export {
-  removePersonCourse,
-  type RemovePersonCourseInput,
-  type RemovePersonCourseOutput,
-} from './person-course/remove-person-course'
+  deregisterPersonCourse,
+  type DeregisterPersonCourseInput,
+  type DeregisterPersonCourseOutput,
+} from './person-course/deregister-person-course'
 export {
-  listPersonRoles,
-  type ListPersonRolesOutput,
-} from './person-role/list-person-roles'
+  retrieveAllPersonRoles,
+  type RetrieveAllPersonRolesOutput,
+} from './person-role/retrieve-all-person-roles'
 export {
   addPersonRole,
   type AddPersonRoleInput,
   type AddPersonRoleOutput,
 } from './person-role/add-person-role'
 export {
-  removePersonRole,
-  type RemovePersonRoleInput,
-  type RemovePersonRoleOutput,
-} from './person-role/remove-person-role'
+  deregisterPersonRole,
+  type DeregisterPersonRoleInput,
+  type DeregisterPersonRoleOutput,
+} from './person-role/deregister-person-role'

@@ -14,7 +14,7 @@ import {
 import { query, type PostgresQuery } from '../pool'
 import type { IdRow } from './id-row'
 
-export async function listCourses(run: PostgresQuery = query): Promise<Course[]> {
+export async function retrieveAllCourses(run: PostgresQuery = query): Promise<Course[]> {
   const result = await run(LIST_COURSES)
   return result.rows as Course[]
 }
@@ -27,7 +27,7 @@ export async function findCourseById(
   return (result.rows[0] as Course | undefined) ?? null
 }
 
-export async function listCoursesByPersonId(
+export async function retrieveAllCoursesByPersonId(
   personId: string,
   run: PostgresQuery = query,
 ): Promise<Course[]> {
@@ -35,7 +35,7 @@ export async function listCoursesByPersonId(
   return result.rows as Course[]
 }
 
-export async function listCoursesByOrganizationId(
+export async function retrieveAllCoursesByOrganizationId(
   organizationId: string,
   run: PostgresQuery = query,
 ): Promise<Course[]> {
@@ -64,7 +64,7 @@ export async function findCourseIdByAcronym(
   return row?.id ?? null
 }
 
-export async function insertCourse(
+export async function addCourse(
   course: CourseCreate,
   run: PostgresQuery = query,
 ): Promise<Course | null> {
@@ -79,7 +79,7 @@ export async function insertCourse(
   return (result.rows[0] as Course | undefined) ?? null
 }
 
-export async function updateCourseRow(
+export async function insertCourseRow(
   course: CourseUpdate,
   run: PostgresQuery = query,
 ): Promise<Course | null> {
@@ -95,14 +95,14 @@ export async function updateCourseRow(
   return (result.rows[0] as Course | undefined) ?? null
 }
 
-export async function deleteCourseEnrollments(
+export async function removeCourseEnrollments(
   id: string,
   run: PostgresQuery = query,
 ): Promise<void> {
   await run(DELETE_COURSE_ENROLLMENTS, [id])
 }
 
-export async function deleteCourseById(
+export async function removeCourseById(
   id: string,
   run: PostgresQuery = query,
 ): Promise<boolean> {

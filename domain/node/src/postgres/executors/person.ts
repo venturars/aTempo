@@ -16,7 +16,7 @@ import {
 import { query, type PostgresQuery } from '../pool'
 import type { IdRow } from './id-row'
 
-export async function listPersons(run: PostgresQuery = query): Promise<Person[]> {
+export async function retrieveAllPersons(run: PostgresQuery = query): Promise<Person[]> {
   const result = await run(LIST_PERSONS)
   return result.rows as Person[]
 }
@@ -29,7 +29,7 @@ export async function findPersonById(
   return (result.rows[0] as Person | undefined) ?? null
 }
 
-export async function listPersonsByCourseId(
+export async function retrieveAllPersonsByCourseId(
   courseId: string,
   run: PostgresQuery = query,
 ): Promise<Person[]> {
@@ -37,7 +37,7 @@ export async function listPersonsByCourseId(
   return result.rows as Person[]
 }
 
-export async function listPersonsByRoleName(
+export async function retrieveAllPersonsByRoleName(
   roleName: RoleName,
   run: PostgresQuery = query,
 ): Promise<Person[]> {
@@ -65,7 +65,7 @@ export async function findPersonIdByIdentificationDocument(
   return row?.id ?? null
 }
 
-export async function insertPerson(
+export async function addPerson(
   person: PersonCreate,
   run: PostgresQuery = query,
 ): Promise<Person | null> {
@@ -80,7 +80,7 @@ export async function insertPerson(
   return (result.rows[0] as Person | undefined) ?? null
 }
 
-export async function updatePersonRow(
+export async function insertPersonRow(
   person: PersonUpdate,
   run: PostgresQuery = query,
 ): Promise<Person | null> {
@@ -96,21 +96,21 @@ export async function updatePersonRow(
   return (result.rows[0] as Person | undefined) ?? null
 }
 
-export async function deletePersonRoles(
+export async function removePersonRoles(
   id: string,
   run: PostgresQuery = query,
 ): Promise<void> {
   await run(DELETE_PERSON_ROLES, [id])
 }
 
-export async function deletePersonCourses(
+export async function removePersonCourses(
   id: string,
   run: PostgresQuery = query,
 ): Promise<void> {
   await run(DELETE_PERSON_COURSES, [id])
 }
 
-export async function deletePersonById(
+export async function removePersonById(
   id: string,
   run: PostgresQuery = query,
 ): Promise<boolean> {

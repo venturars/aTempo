@@ -16,7 +16,7 @@ import {
 import { query, type PostgresQuery } from '../pool'
 import type { IdRow } from './id-row'
 
-export async function listOrganizations(
+export async function retrieveAllOrganizations(
   run: PostgresQuery = query,
 ): Promise<Organization[]> {
   const result = await run(LIST_ORGANIZATIONS)
@@ -40,7 +40,7 @@ export async function findOrganizationIdByTaxId(
   return row?.id ?? null
 }
 
-export async function insertOrganization(
+export async function addOrganization(
   organization: OrganizationCreate,
   run: PostgresQuery = query,
 ): Promise<Organization | null> {
@@ -51,7 +51,7 @@ export async function insertOrganization(
   return (result.rows[0] as Organization | undefined) ?? null
 }
 
-export async function updateOrganizationRow(
+export async function insertOrganizationRow(
   organization: OrganizationUpdate,
   run: PostgresQuery = query,
 ): Promise<Organization | null> {
@@ -63,21 +63,21 @@ export async function updateOrganizationRow(
   return (result.rows[0] as Organization | undefined) ?? null
 }
 
-export async function deleteOrganizationEnrollments(
+export async function removeOrganizationEnrollments(
   id: string,
   run: PostgresQuery = query,
 ): Promise<void> {
   await run(DELETE_ORGANIZATION_ENROLLMENTS, [id])
 }
 
-export async function deleteOrganizationCourses(
+export async function removeOrganizationCourses(
   id: string,
   run: PostgresQuery = query,
 ): Promise<void> {
   await run(DELETE_ORGANIZATION_COURSES, [id])
 }
 
-export async function deleteOrganizationById(
+export async function removeOrganizationById(
   id: string,
   run: PostgresQuery = query,
 ): Promise<boolean> {

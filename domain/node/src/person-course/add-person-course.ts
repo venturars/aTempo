@@ -1,7 +1,7 @@
 import { fail } from '../errors'
 import { withTransaction } from '../postgres/pool'
 import {
-  insertPersonCourse,
+  addPersonCourse as addPersonCourseRow,
   lookupPersonCourse,
 } from '../postgres/executors/person-course'
 import {
@@ -34,7 +34,7 @@ export async function addPersonCourse(
       fail('person_course', 'taken')
     }
 
-    const row = await insertPersonCourse(personCourse, run)
+    const row = await addPersonCourseRow(personCourse, run)
     if (!row) {
       fail('person_course', 'not_created')
     }

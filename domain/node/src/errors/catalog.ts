@@ -2,64 +2,64 @@ import type { DomainErrorCode } from './domain-error'
 
 export const DOMAIN_ERROR_REASONS = {
   empty: {
-    code: 'VALIDATION',
+    type: 'VALIDATION',
     message: (label: string) => `${label} debe ser un string no vacío`,
   },
   uuid: {
-    code: 'VALIDATION',
+    type: 'VALIDATION',
     message: (label: string) => `${label} debe ser un uuid`,
   },
   date: {
-    code: 'VALIDATION',
+    type: 'VALIDATION',
     message: (label: string) => `${label} debe ser una fecha`,
   },
   instant: {
-    code: 'VALIDATION',
+    type: 'VALIDATION',
     message: (label: string) => `${label} debe ser una fecha con zona horaria`,
   },
   object: {
-    code: 'VALIDATION',
+    type: 'VALIDATION',
     message: (label: string) => `${label} debe ser un objeto`,
   },
   nullable_string: {
-    code: 'VALIDATION',
+    type: 'VALIDATION',
     message: (label: string) => `${label} debe ser string o null`,
   },
   format: {
-    code: 'VALIDATION',
+    type: 'VALIDATION',
     message: (label: string) => `${label} tiene un formato inválido`,
   },
   order: {
-    code: 'VALIDATION',
+    type: 'VALIDATION',
     message: (label: string) => `${label} debe ser posterior a course.start_at`,
   },
   taken: {
-    code: 'CONFLICT',
+    type: 'CONFLICT',
     message: (label: string) => `${label} ya existe`,
   },
   exclusive: {
-    code: 'CONFLICT',
+    type: 'CONFLICT',
     message: () => 'un student no puede llevar otro rol',
   },
   missing: {
-    code: 'NOT_FOUND',
+    type: 'NOT_FOUND',
     message: (label: string) => `${label} no existe`,
   },
   not_created: {
-    code: 'PERSISTENCE',
+    type: 'PERSISTENCE',
     message: (label: string) => `${label} no se ha creado`,
   },
   unmapped: {
-    code: 'PERSISTENCE',
+    type: 'PERSISTENCE',
     message: () => 'error de PostgreSQL',
   },
   missing_env: {
-    code: 'CONFIGURATION',
+    type: 'CONFIGURATION',
     message: (label: string) => `Falta ${label.slice(label.indexOf('.') + 1)}`,
   },
 } as const satisfies Record<
   string,
-  { code: DomainErrorCode; message: (label: string) => string }
+  { type: DomainErrorCode; message: (label: string) => string }
 >
 
 export type DomainErrorReason = keyof typeof DOMAIN_ERROR_REASONS

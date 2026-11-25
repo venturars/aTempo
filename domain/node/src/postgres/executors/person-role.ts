@@ -8,7 +8,7 @@ import {
 } from '../queries/person-role'
 import { query, type PostgresQuery } from '../pool'
 
-export async function listPersonRoles(
+export async function retrieveAllPersonRoles(
   run: PostgresQuery = query,
 ): Promise<PersonRole[]> {
   const result = await run(LIST_PERSON_ROLES)
@@ -24,7 +24,7 @@ export async function personRoleExists(
   return Boolean(result.rows[0])
 }
 
-export async function insertPersonRole(
+export async function addPersonRole(
   personRole: PersonRole,
   run: PostgresQuery = query,
 ): Promise<PersonRole | null> {
@@ -35,7 +35,7 @@ export async function insertPersonRole(
   return (result.rows[0] as PersonRole | undefined) ?? null
 }
 
-export async function deletePersonRole(
+export async function deregisterPersonRole(
   personId: string,
   role: RoleName,
   run: PostgresQuery = query,

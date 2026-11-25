@@ -1,10 +1,10 @@
-import { createCourse } from '../src/course/create-course'
-import { updateCourse } from '../src/course/update-course'
+import { addCourse } from '../src/course/add-course'
+import { insertCourse } from '../src/course/insert-course'
 import { ConflictError } from '../src/errors'
-import { createOrganization } from '../src/organization/create-organization'
-import { updateOrganization } from '../src/organization/update-organization'
-import { createPerson } from '../src/person/create-person'
-import { updatePerson } from '../src/person/update-person'
+import { addOrganization } from '../src/organization/add-organization'
+import { insertOrganization } from '../src/organization/insert-organization'
+import { addPerson } from '../src/person/add-person'
+import { insertPerson } from '../src/person/insert-person'
 import { addPersonRole } from '../src/person-role/add-person-role'
 import { addPersonCourse } from '../src/person-course/add-person-course'
 import {
@@ -56,7 +56,7 @@ describe('reglas de negocio', () => {
   it('does not query when course dates or address fail', async () => {
     const calls = mockDriver()
     await expect(
-      createCourse({
+      addCourse({
         course: {
           ...courseCreate,
           start_at: validCourse.end_at,
@@ -65,17 +65,17 @@ describe('reglas de negocio', () => {
       }),
     ).rejects.toThrow('course.end_at debe ser posterior a course.start_at')
     await expect(
-      createCourse({
+      addCourse({
         course: { ...courseCreate, contract_address: '0x123' },
       }),
     ).rejects.toThrow('course.contract_address debe ser 0x y 40 hex')
     await expect(
-      createCourse({
+      addCourse({
         course: { ...courseCreate, start_at: '2026-09-01T08:00' },
       }),
     ).rejects.toThrow('course.start_at debe ser una fecha con zona horaria')
     await expect(
-      createCourse({
+      addCourse({
         course: {
           ...courseCreate,
           start_at: '2026-02-30T08:00:00.000Z',
@@ -88,13 +88,13 @@ describe('reglas de negocio', () => {
   it('does not insert when tax_id already exists', async () => {
     const calls = mockDriver(async () => rowsResult([validOrganization]))
     await expect(
-      createOrganization({ organization: organizationCreate }),
+      addOrganization({ organization: organizationCreate }),
     ).rejects.toMatchObject({
       id: 'organization.tax_id.taken',
       message: 'organization.tax_id ya existe',
     })
     await expect(
-      createOrganization({ organization: organizationCreate }),
+      addOrganization({ organization: organizationCreate }),
     ).rejects.toBeInstanceOf(ConflictError)
     expect(wrote(calls)).toBe(false)
     expect(calls).toHaveLength(2)
@@ -105,7 +105,7 @@ describe('reglas de negocio', () => {
       rowsResult([{ id: validOrganization.id }]),
     )
     await expect(
-      createOrganization({ organization: organizationCreate }),
+      addOrganization({ organization: organizationCreate }),
     ).rejects.toThrow('organization.tax_id ya existe')
     expect(wrote(calls)).toBe(false)
   })
@@ -113,7 +113,7 @@ describe('reglas de negocio', () => {
   it('allows updating an organization that keeps its tax_id', async () => {
     const calls = mockDriver(async () => rowsResult([validOrganization]))
     await expect(
-      updateOrganization({ organization: validOrganization }),
+      insertOrganization({ organization: validOrganization }),
     ).resolves.toEqual({ organization: validOrganization })
     expect(wrote(calls)).toBe(true)
   })
@@ -133,7 +133,7 @@ describe('reglas de negocio', () => {
       return emptyResult()
     })
     await expect(
-      updatePerson({
+      insertPerson({
         person: { ...validPerson, id: validPerson.id.toUpperCase() },
       }),
     ).resolves.toEqual({ person: validPerson })
@@ -147,14 +147,14 @@ describe('reglas de negocio', () => {
     const other = { ...validOrganization, id: OTHER_ID }
     const calls = mockDriver(async () => rowsResult([other]))
     await expect(
-      updateOrganization({ organization: validOrganization }),
+      insertOrganization({ organization: validOrganization }),
     ).rejects.toThrow('organization.tax_id ya existe')
     expect(wrote(calls)).toBe(false)
   })
 
   it('does not insert when identification_document exists', async () => {
     const calls = mockDriver(async () => rowsResult([validPerson]))
-    await expect(createPerson({ person: personCreate })).rejects.toThrow(
+    await expect(addPerson({ person: personCreate })).rejects.toThrow(
       'person.identification_document ya existe',
     )
     expect(wrote(calls)).toBe(false)
@@ -168,7 +168,7 @@ describe('reglas de negocio', () => {
       }
       return rowsResult([validCourse])
     })
-    await expect(createCourse({ course: courseCreate })).rejects.toThrow(
+    await expect(addCourse({ course: courseCreate })).rejects.toThrow(
       'course.contract_address ya existe',
     )
     expect(wrote(calls)).toBe(false)
@@ -185,7 +185,7 @@ describe('reglas de negocio', () => {
       }
       return rowsResult([validCourse])
     })
-    await expect(createCourse({ course: courseCreate })).rejects.toThrow(
+    await expect(addCourse({ course: courseCreate })).rejects.toThrow(
       'course.acronym ya existe en la organización',
     )
     expect(wrote(calls)).toBe(false)
@@ -203,7 +203,7 @@ describe('reglas de negocio', () => {
       }
       return rowsResult([other])
     })
-    await expect(updateCourse({ course: validCourse })).rejects.toThrow(
+    await expect(insertCourse({ course: validCourse })).rejects.toThrow(
       'course.acronym ya existe en la organización',
     )
     expect(wrote(calls)).toBe(false)
@@ -217,7 +217,7 @@ describe('reglas de negocio', () => {
       return emptyResult()
     })
     await expect(
-      createPerson({
+      addPerson({
         person: {
           ...personCreate,
           identification_document:
@@ -240,7 +240,7 @@ describe('reglas de negocio', () => {
       return emptyResult()
     })
     await expect(
-      createOrganization({
+      addOrganization({
         organization: {
           ...organizationCreate,
           tax_id: validOrganization.tax_id.toLowerCase(),
@@ -263,7 +263,7 @@ describe('reglas de negocio', () => {
       }
       return emptyResult()
     })
-    await expect(updatePerson({ person: validPerson })).rejects.toThrow(
+    await expect(insertPerson({ person: validPerson })).rejects.toThrow(
       'person.email ya existe',
     )
     expect(wrote(calls)).toBe(false)
@@ -276,7 +276,7 @@ describe('reglas de negocio', () => {
       }
       return emptyResult()
     })
-    await expect(updatePerson({ person: validPerson })).rejects.toThrow(
+    await expect(insertPerson({ person: validPerson })).rejects.toThrow(
       'person.identification_document ya existe',
     )
     expect(wrote(calls)).toBe(false)
@@ -296,7 +296,7 @@ describe('reglas de negocio', () => {
       }
       return emptyResult()
     })
-    await expect(updateCourse({ course: validCourse })).rejects.toThrow(
+    await expect(insertCourse({ course: validCourse })).rejects.toThrow(
       'course.contract_address ya existe',
     )
     expect(wrote(calls)).toBe(false)
@@ -310,7 +310,7 @@ describe('reglas de negocio', () => {
       return rowsResult([validPerson])
     })
     await expect(
-      createPerson({
+      addPerson({
         person: {
           ...personCreate,
           identification_document: '88888888X',
@@ -332,7 +332,7 @@ describe('reglas de negocio', () => {
       return rowsResult([validCourse])
     })
     await expect(
-      createCourse({
+      addCourse({
         course: { ...courseCreate, contract_address: mixed },
       }),
     ).rejects.toThrow('course.contract_address ya existe')
@@ -400,19 +400,19 @@ describe('reglas de negocio', () => {
   it('does not query when birth_date is not a calendar date', async () => {
     const calls = mockDriver()
     await expect(
-      createPerson({
+      addPerson({
         person: { ...personCreate, birth_date: '2026-13-40' },
       }),
     ).rejects.toThrow('person.birth_date debe ser una fecha')
     await expect(
-      createPerson({ person: { ...personCreate, birth_date: 'ayer' } }),
+      addPerson({ person: { ...personCreate, birth_date: 'ayer' } }),
     ).rejects.toThrow('person.birth_date debe ser una fecha')
     expect(calls).toHaveLength(0)
   })
 
   it('does not insert when the organization does not exist', async () => {
     const calls = mockDriver(async () => emptyResult())
-    await expect(createCourse({ course: courseCreate })).rejects.toThrow(
+    await expect(addCourse({ course: courseCreate })).rejects.toThrow(
       'organization no existe',
     )
     expect(wrote(calls)).toBe(false)
@@ -455,7 +455,7 @@ describe('reglas de negocio', () => {
   it('does not query when first_name is empty on update', async () => {
     const calls = mockDriver()
     await expect(
-      updatePerson({ person: { ...validPerson, first_name: '' } }),
+      insertPerson({ person: { ...validPerson, first_name: '' } }),
     ).rejects.toThrow('person.first_name debe ser un string no vacío')
     expect(calls).toHaveLength(0)
   })

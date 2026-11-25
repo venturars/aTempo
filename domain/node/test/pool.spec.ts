@@ -12,7 +12,7 @@ jest.mock('pg', () => ({
   })),
 }))
 
-import { deletePerson } from '../src/person/delete-person'
+import { removePerson } from '../src/person/remove-person'
 import { closePool, query, resetDb } from '../src/postgres/pool'
 import { commandResult, emptyResult, PERSON_ID } from './helpers'
 
@@ -59,7 +59,7 @@ describe('pool', () => {
       }
       return commandResult(1)
     })
-    await expect(deletePerson({ id: PERSON_ID })).resolves.toEqual({
+    await expect(removePerson({ id: PERSON_ID })).resolves.toEqual({
       deleted: true,
     })
     expect(clientSql()).toEqual([
@@ -80,7 +80,7 @@ describe('pool', () => {
       }
       return commandResult(1)
     })
-    await expect(deletePerson({ id: PERSON_ID })).rejects.toMatchObject({
+    await expect(removePerson({ id: PERSON_ID })).rejects.toMatchObject({
       id: 'postgres.unmapped',
       cause: expect.objectContaining({ message: 'timeout' }),
     })

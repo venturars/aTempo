@@ -1,16 +1,16 @@
-import { createCourse } from '../src/course/create-course'
-import { deleteCourse } from '../src/course/delete-course'
-import { updateCourse } from '../src/course/update-course'
-import { createOrganization } from '../src/organization/create-organization'
-import { deleteOrganization } from '../src/organization/delete-organization'
-import { updateOrganization } from '../src/organization/update-organization'
+import { addCourse } from '../src/course/add-course'
+import { removeCourse } from '../src/course/remove-course'
+import { insertCourse } from '../src/course/insert-course'
+import { addOrganization } from '../src/organization/add-organization'
+import { removeOrganization } from '../src/organization/remove-organization'
+import { insertOrganization } from '../src/organization/insert-organization'
 import { addPersonCourse } from '../src/person-course/add-person-course'
-import { removePersonCourse } from '../src/person-course/remove-person-course'
-import { createPerson } from '../src/person/create-person'
-import { deletePerson } from '../src/person/delete-person'
-import { updatePerson } from '../src/person/update-person'
+import { deregisterPersonCourse } from '../src/person-course/deregister-person-course'
+import { addPerson } from '../src/person/add-person'
+import { removePerson } from '../src/person/remove-person'
+import { insertPerson } from '../src/person/insert-person'
 import { addPersonRole } from '../src/person-role/add-person-role'
-import { removePersonRole } from '../src/person-role/remove-person-role'
+import { deregisterPersonRole } from '../src/person-role/deregister-person-role'
 import type { CourseCreate } from '../src/types/course'
 import type { OrganizationCreate } from '../src/types/organization'
 import type { PersonCreate } from '../src/types/person'
@@ -61,12 +61,12 @@ describe('escrituras', () => {
   it('does not query when create input is missing a field', async () => {
     const calls = mockDriver()
     await expect(
-      createOrganization({
+      addOrganization({
         organization: { name: 'Acme' } as OrganizationCreate,
       }),
     ).rejects.toThrow('organization.tax_id debe ser un string no vacío')
     await expect(
-      createPerson({
+      addPerson({
         person: {
           email: validPerson.email,
           first_name: validPerson.first_name,
@@ -77,7 +77,7 @@ describe('escrituras', () => {
       }),
     ).rejects.toThrow('person.identification_document debe ser un string no vacío')
     await expect(
-      createCourse({
+      addCourse({
         course: {
           organization_id: ORG_ID,
           name: 'Primero',
@@ -104,20 +104,20 @@ describe('escrituras', () => {
 
   it('does not query when a write id is not a uuid', async () => {
     const calls = mockDriver()
-    await expect(deleteOrganization({ id: 'no-es-uuid' })).rejects.toThrow(
+    await expect(removeOrganization({ id: 'no-es-uuid' })).rejects.toThrow(
       'organization.id debe ser un uuid',
     )
-    await expect(deletePerson({ id: 'no-es-uuid' })).rejects.toThrow(
+    await expect(removePerson({ id: 'no-es-uuid' })).rejects.toThrow(
       'person.id debe ser un uuid',
     )
-    await expect(deleteCourse({ id: 'no-es-uuid' })).rejects.toThrow(
+    await expect(removeCourse({ id: 'no-es-uuid' })).rejects.toThrow(
       'course.id debe ser un uuid',
     )
     await expect(
-      removePersonCourse({ personId: 'no-es-uuid', courseId: COURSE_ID }),
+      deregisterPersonCourse({ personId: 'no-es-uuid', courseId: COURSE_ID }),
     ).rejects.toThrow('person_course.person_id debe ser un uuid')
     await expect(
-      removePersonRole({
+      deregisterPersonRole({
         personId: PERSON_ID,
         roleName: 'admin' as RoleName,
       }),
@@ -152,12 +152,12 @@ describe('escrituras', () => {
     })
 
     await expect(
-      createOrganization({ organization: organizationCreate }),
+      addOrganization({ organization: organizationCreate }),
     ).resolves.toEqual({ organization: validOrganization })
-    await expect(createPerson({ person: personCreate })).resolves.toEqual({
+    await expect(addPerson({ person: personCreate })).resolves.toEqual({
       person: validPerson,
     })
-    await expect(createCourse({ course: courseCreate })).resolves.toEqual({
+    await expect(addCourse({ course: courseCreate })).resolves.toEqual({
       course: validCourse,
     })
     await expect(
@@ -171,7 +171,7 @@ describe('escrituras', () => {
   it('updates a row after assert and returns null when missing', async () => {
     const calls = mockDriver(async () => rowsResult([validOrganization]))
     await expect(
-      updateOrganization({ organization: validOrganization }),
+      insertOrganization({ organization: validOrganization }),
     ).resolves.toEqual({ organization: validOrganization })
     expect(calls.some((call) => call.sql.includes('UPDATE'))).toBe(true)
 
@@ -183,12 +183,12 @@ describe('escrituras', () => {
       return emptyResult()
     })
     await expect(
-      updateOrganization({ organization: validOrganization }),
+      insertOrganization({ organization: validOrganization }),
     ).resolves.toEqual({ organization: null })
-    await expect(updatePerson({ person: validPerson })).resolves.toEqual({
+    await expect(insertPerson({ person: validPerson })).resolves.toEqual({
       person: null,
     })
-    await expect(updateCourse({ course: validCourse })).resolves.toEqual({
+    await expect(insertCourse({ course: validCourse })).resolves.toEqual({
       course: null,
     })
   })
@@ -207,7 +207,7 @@ describe('escrituras', () => {
       }
       return emptyResult()
     })
-    await expect(updatePerson({ person: validPerson })).resolves.toEqual({
+    await expect(insertPerson({ person: validPerson })).resolves.toEqual({
       person: validPerson,
     })
     expect(calls.some((call) => call.sql.includes('UPDATE person'))).toBe(true)
@@ -230,7 +230,7 @@ describe('escrituras', () => {
       }
       return emptyResult()
     })
-    await expect(updateCourse({ course: validCourse })).resolves.toEqual({
+    await expect(insertCourse({ course: validCourse })).resolves.toEqual({
       course: validCourse,
     })
     expect(calls.some((call) => call.sql.includes('UPDATE course'))).toBe(true)
@@ -238,7 +238,7 @@ describe('escrituras', () => {
 
   it('deletes dependents before the parent row', async () => {
     const personCalls = mockDriver(async () => commandResult(1))
-    await expect(deletePerson({ id: PERSON_ID })).resolves.toEqual({
+    await expect(removePerson({ id: PERSON_ID })).resolves.toEqual({
       deleted: true,
     })
     expect(personCalls.map((call) => call.sql)).toEqual([
@@ -250,7 +250,7 @@ describe('escrituras', () => {
     ])
 
     const courseCalls = mockDriver(async () => commandResult(1))
-    await expect(deleteCourse({ id: COURSE_ID })).resolves.toEqual({
+    await expect(removeCourse({ id: COURSE_ID })).resolves.toEqual({
       deleted: true,
     })
     expect(courseCalls.map((call) => call.sql)).toEqual([
@@ -261,7 +261,7 @@ describe('escrituras', () => {
     ])
 
     const orgCalls = mockDriver(async () => commandResult(1))
-    await expect(deleteOrganization({ id: ORG_ID })).resolves.toEqual({
+    await expect(removeOrganization({ id: ORG_ID })).resolves.toEqual({
       deleted: true,
     })
     expect(orgCalls.map((call) => call.sql)).toEqual([
@@ -280,7 +280,7 @@ describe('escrituras', () => {
       }
       return commandResult(1)
     })
-    await expect(deletePerson({ id: PERSON_ID })).rejects.toMatchObject({
+    await expect(removePerson({ id: PERSON_ID })).rejects.toMatchObject({
       id: 'postgres.unmapped',
       cause: expect.objectContaining({ message: 'timeout' }),
     })
@@ -298,7 +298,7 @@ describe('escrituras', () => {
       }
       return commandResult(1)
     })
-    await expect(deleteOrganization({ id: ORG_ID })).rejects.toMatchObject({
+    await expect(removeOrganization({ id: ORG_ID })).rejects.toMatchObject({
       id: 'postgres.unmapped',
       cause: expect.objectContaining({ message: 'timeout' }),
     })
@@ -321,7 +321,7 @@ describe('escrituras', () => {
       }
       return commandResult(1)
     })
-    await expect(deletePerson({ id: PERSON_ID })).rejects.toMatchObject({
+    await expect(removePerson({ id: PERSON_ID })).rejects.toMatchObject({
       id: 'postgres.unmapped',
       cause: expect.objectContaining({ message: 'timeout' }),
     })
@@ -330,27 +330,27 @@ describe('escrituras', () => {
   it('deletes by key and reports whether a row was removed', async () => {
     mockDriver(async () => commandResult(1))
     await expect(
-      removePersonCourse({ personId: PERSON_ID, courseId: COURSE_ID }),
+      deregisterPersonCourse({ personId: PERSON_ID, courseId: COURSE_ID }),
     ).resolves.toEqual({ deleted: true })
     await expect(
-      removePersonRole({ personId: PERSON_ID, roleName: 'teacher' }),
+      deregisterPersonRole({ personId: PERSON_ID, roleName: 'teacher' }),
     ).resolves.toEqual({ deleted: true })
 
     mockDriver(async () => commandResult(0))
-    await expect(deleteOrganization({ id: ORG_ID })).resolves.toEqual({
+    await expect(removeOrganization({ id: ORG_ID })).resolves.toEqual({
       deleted: false,
     })
-    await expect(deletePerson({ id: PERSON_ID })).resolves.toEqual({
+    await expect(removePerson({ id: PERSON_ID })).resolves.toEqual({
       deleted: false,
     })
-    await expect(deleteCourse({ id: COURSE_ID })).resolves.toEqual({
+    await expect(removeCourse({ id: COURSE_ID })).resolves.toEqual({
       deleted: false,
     })
     await expect(
-      removePersonCourse({ personId: PERSON_ID, courseId: COURSE_ID }),
+      deregisterPersonCourse({ personId: PERSON_ID, courseId: COURSE_ID }),
     ).resolves.toEqual({ deleted: false })
     await expect(
-      removePersonRole({ personId: PERSON_ID, roleName: 'teacher' }),
+      deregisterPersonRole({ personId: PERSON_ID, roleName: 'teacher' }),
     ).resolves.toEqual({ deleted: false })
   })
 

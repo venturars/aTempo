@@ -38,7 +38,7 @@ export function domainError(
   const id: DomainErrorId = `${label}.${reason}`
   const spec = DOMAIN_ERROR_REASONS[reason]
   const message = DOMAIN_ERROR_MESSAGES[id] ?? spec.message(label)
-  const ErrorClass = ERROR_BY_CODE[spec.code]
+  const ErrorClass = ERROR_BY_CODE[spec.type]
   return new ErrorClass(message, {
     id,
     ...labelParts(label),
