@@ -7,6 +7,10 @@ const audit = { attempts: [], violations: [], windows: 0 }
 globalThis.__hiddenElectronAudit = audit
 // Las capturas no dependen de si macOS muestra las barras de desplazamiento (ratón o trackpad).
 app.commandLine.appendSwitch('hide-scrollbars')
+// Los tests buscan textos en español: el sistema simulado está en español salvo que el test
+// pida otro idioma con --test-lang=<locale>.
+const testLang = process.argv.find((arg) => arg.startsWith('--test-lang='))
+app.commandLine.appendSwitch('lang', testLang ? testLang.slice('--test-lang='.length) : 'es-ES')
 function record(event, detail) {
   fs.appendFileSync(
     process.env.ATEMPO_NATIVE_AUDIT,

@@ -12,6 +12,7 @@ import {
   type TrimesterDay
 } from './trimesterExample'
 import { weekDays, weekPresence } from './weekExample'
+import { LanguagePicker } from '../language/LanguagePicker'
 
 const legendMarks: AttendanceMark[] = ['presente', 'retraso', 'ausencia']
 
@@ -180,6 +181,9 @@ function LoginForm({ notice }: { notice: string }): React.JSX.Element {
 
   return (
     <section className="flex w-full max-w-md flex-col gap-8 rounded-box bg-base-100 p-4 md:p-8">
+      <div className="flex justify-end">
+        <LanguagePicker size="xs" />
+      </div>
       {notice !== '' ? (
         <div className="alert" role="status">
           <span>{notice}</span>
@@ -254,6 +258,9 @@ function ActivateForm({ invitation }: { invitation: Invitation }): React.JSX.Ele
 
   return (
     <section className="flex w-full max-w-md flex-col gap-8 rounded-box bg-base-100 p-4 md:p-8">
+      <div className="flex justify-end">
+        <LanguagePicker size="xs" />
+      </div>
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-medium">Hola, {firstName}</h1>
         <p className="text-base-content/70">

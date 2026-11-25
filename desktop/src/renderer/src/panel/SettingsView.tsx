@@ -2,6 +2,7 @@ import { useEffect, useId, useState } from 'react'
 import { useSettingsStore } from './settingsStore'
 import { rosterNames, todayEntry } from './roster'
 import { saveTheme } from '../theme'
+import { LanguagePicker } from '../language/LanguagePicker'
 
 function Bell(): React.JSX.Element {
   return (
@@ -207,6 +208,17 @@ export function SettingsView(): React.JSX.Element {
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+      <section className="card bg-base-100 shadow-sm" aria-labelledby="language-settings">
+        <div className="card-body gap-3">
+          <h2 id="language-settings" className="text-lg font-medium">
+            Idioma
+          </h2>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <span className="text-sm font-medium">Idioma de la aplicación</span>
+            <LanguagePicker />
           </div>
         </div>
       </section>
