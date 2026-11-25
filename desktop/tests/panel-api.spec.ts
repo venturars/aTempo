@@ -294,7 +294,7 @@ test('applies the contract rules in the mock', async () => {
   })
   const withNullReason = await client.correctAttendance(session.id, diegoMolero, {
     status: 'late',
-    reason: null as unknown as string
+    reason: null
   })
   expect(withNullReason).toMatchObject({ status: 'late', reason: null })
   await expect(

@@ -92,11 +92,15 @@ export class AttendanceCorrectionDto {
   })
   status!: CorrectedStatus
 
-  // Opcional: sin motivo, o con solo espacios, el registro guarda reason: null.
-  @ApiPropertyOptional({ example: 'Llegó con el autobús de las 09:00.' })
+  // Opcional: sin motivo, con null o con solo espacios, el registro guarda reason: null.
+  @ApiPropertyOptional({
+    type: String,
+    nullable: true,
+    example: 'Llegó con el autobús de las 09:00.',
+  })
   @IsOptional()
   @IsString({ message: 'El motivo tiene que ser texto.' })
-  reason?: string
+  reason?: string | null
 
   @ApiPropertyOptional({ example: '2026-11-23T09:20:00+01:00' })
   @IsOptional()

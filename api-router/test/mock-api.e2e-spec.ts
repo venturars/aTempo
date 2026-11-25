@@ -157,6 +157,13 @@ describe('Mock API v1 (e2e)', () => {
       .send({ status: 'absent', reason: '  ' })
       .expect(200)
     expect(blankReason.body).toMatchObject({ status: 'absent', reason: null })
+
+    const nullReason = await request(server)
+      .put(`/sessions/${sessionId}/attendances/${studentId}`)
+      .set(auth)
+      .send({ status: 'late', reason: null })
+      .expect(200)
+    expect(nullReason.body).toMatchObject({ status: 'late', reason: null })
   })
 
   it('PUT attendances rejects a reason that is not text', async () => {
