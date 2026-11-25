@@ -1,6 +1,6 @@
 from typing import Literal
 
-DomainErrorCode = Literal[
+DomainErrorKind = Literal[
     "VALIDATION",
     "NOT_FOUND",
     "CONFLICT",
@@ -14,13 +14,13 @@ class DomainError(Exception):
         self,
         message: str,
         *,
-        code: DomainErrorCode,
+        kind: DomainErrorKind,
         id: str,
         entity: str | None = None,
         field: str | None = None,
     ) -> None:
         super().__init__(message)
-        self.code = code
+        self.kind = kind
         self.id = id
         self.entity = entity
         self.field = field
@@ -37,7 +37,7 @@ class ValidationError(DomainError):
     ) -> None:
         super().__init__(
             message,
-            code="VALIDATION",
+            kind="VALIDATION",
             id=id,
             entity=entity,
             field=field,
@@ -55,7 +55,7 @@ class NotFoundError(DomainError):
     ) -> None:
         super().__init__(
             message,
-            code="NOT_FOUND",
+            kind="NOT_FOUND",
             id=id,
             entity=entity,
             field=field,
@@ -73,7 +73,7 @@ class ConflictError(DomainError):
     ) -> None:
         super().__init__(
             message,
-            code="CONFLICT",
+            kind="CONFLICT",
             id=id,
             entity=entity,
             field=field,
@@ -91,7 +91,7 @@ class ConfigurationError(DomainError):
     ) -> None:
         super().__init__(
             message,
-            code="CONFIGURATION",
+            kind="CONFIGURATION",
             id=id,
             entity=entity,
             field=field,
@@ -109,7 +109,7 @@ class PersistenceError(DomainError):
     ) -> None:
         super().__init__(
             message,
-            code="PERSISTENCE",
+            kind="PERSISTENCE",
             id=id,
             entity=entity,
             field=field,

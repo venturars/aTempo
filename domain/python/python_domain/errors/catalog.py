@@ -1,99 +1,99 @@
 from collections.abc import Callable
 from typing import Literal, TypedDict
 
-from python_domain.errors.domain_error import DomainErrorCode
+from python_domain.errors.domain_error import DomainErrorKind
 
 
 class ReasonSpec(TypedDict):
-    code: DomainErrorCode
+    kind: DomainErrorKind
     message: Callable[[str], str]
 
 
 DOMAIN_ERROR_REASONS: dict[str, ReasonSpec] = {
     "empty": {
-        "code": "VALIDATION",
+        "kind": "VALIDATION",
         "message": lambda label: f"{label} debe ser un string no vacío",
     },
     "uuid": {
-        "code": "VALIDATION",
+        "kind": "VALIDATION",
         "message": lambda label: f"{label} debe ser un uuid",
     },
     "date": {
-        "code": "VALIDATION",
+        "kind": "VALIDATION",
         "message": lambda label: f"{label} debe ser una fecha",
     },
     "instant": {
-        "code": "VALIDATION",
+        "kind": "VALIDATION",
         "message": lambda label: f"{label} debe ser una fecha con zona horaria",
     },
     "object": {
-        "code": "VALIDATION",
+        "kind": "VALIDATION",
         "message": lambda label: f"{label} debe ser un objeto",
     },
     "format": {
-        "code": "VALIDATION",
+        "kind": "VALIDATION",
         "message": lambda label: f"{label} tiene un formato inválido",
     },
     "order": {
-        "code": "VALIDATION",
+        "kind": "VALIDATION",
         "message": lambda label: f"{label} debe ser posterior a session.start_at",
     },
     "integer": {
-        "code": "VALIDATION",
+        "kind": "VALIDATION",
         "message": lambda label: f"{label} debe ser un entero",
     },
     "int_range": {
-        "code": "VALIDATION",
+        "kind": "VALIDATION",
         "message": lambda label: f"{label} no cabe en un entero de 64 bits",
     },
     "non_negative": {
-        "code": "VALIDATION",
+        "kind": "VALIDATION",
         "message": lambda label: f"{label} debe ser un entero no negativo",
     },
     "required": {
-        "code": "VALIDATION",
+        "kind": "VALIDATION",
         "message": lambda label: f"{label} es obligatorio",
     },
     "forbidden": {
-        "code": "VALIDATION",
+        "kind": "VALIDATION",
         "message": lambda label: f"{label} no aplica",
     },
     "window": {
-        "code": "VALIDATION",
+        "kind": "VALIDATION",
         "message": lambda label: f"{label} debe estar dentro de la sesión",
     },
     "taken": {
-        "code": "CONFLICT",
+        "kind": "CONFLICT",
         "message": lambda label: f"{label} ya existe",
     },
     "has_children": {
-        "code": "CONFLICT",
+        "kind": "CONFLICT",
         "message": lambda label: f"{label} todavía tiene asistencias",
     },
     "missing": {
-        "code": "NOT_FOUND",
+        "kind": "NOT_FOUND",
         "message": lambda label: f"{label} no existe",
     },
     "not_created": {
-        "code": "PERSISTENCE",
+        "kind": "PERSISTENCE",
         "message": lambda label: f"{label} no se ha creado",
     },
     "unmapped": {
-        "code": "PERSISTENCE",
+        "kind": "PERSISTENCE",
         "message": lambda _label: "error de SQLite",
     },
     "missing_env": {
-        "code": "CONFIGURATION",
+        "kind": "CONFIGURATION",
         "message": lambda label: (
             f"Falta {label[label.find('.') + 1 :]}" if "." in label else f"Falta {label}"
         ),
     },
     "invalid_url": {
-        "code": "CONFIGURATION",
+        "kind": "CONFIGURATION",
         "message": lambda label: f"{label} no es una URL válida",
     },
     "not_sqlite": {
-        "code": "CONFIGURATION",
+        "kind": "CONFIGURATION",
         "message": lambda label: f"{label} tiene que ser una URL de SQLite",
     },
 }

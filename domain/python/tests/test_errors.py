@@ -28,11 +28,11 @@ class CatalogTests(unittest.TestCase):
     def tearDown(self) -> None:
         close_memory_db()
 
-    def test_builds_id_code_entity_and_field_from_label_and_reason(self) -> None:
+    def test_builds_id_kind_entity_and_field_from_label_and_reason(self) -> None:
         error = domain_error("attendance", "taken")
         self.assertIsInstance(error, ConflictError)
         self.assertEqual(error.id, "attendance.taken")
-        self.assertEqual(error.code, "CONFLICT")
+        self.assertEqual(error.kind, "CONFLICT")
         self.assertEqual(error.entity, "attendance")
         self.assertIsNone(error.field)
         self.assertEqual(str(error), "attendance ya existe")
@@ -57,7 +57,7 @@ class CatalogTests(unittest.TestCase):
             query("SELECT * FROM no_such_table")
         error = caught.exception
         self.assertEqual(error.id, "sqlite.unmapped")
-        self.assertEqual(error.code, "PERSISTENCE")
+        self.assertEqual(error.kind, "PERSISTENCE")
         self.assertEqual(error.entity, "sqlite")
         self.assertEqual(str(error), "error de SQLite")
         self.assertIn("no such table", str(error.__cause__))
@@ -67,14 +67,14 @@ class CatalogTests(unittest.TestCase):
             fail("session", "missing")
         error = caught.exception
         self.assertEqual(error.id, "session.missing")
-        self.assertEqual(error.code, "NOT_FOUND")
+        self.assertEqual(error.kind, "NOT_FOUND")
 
     def test_identifies_a_validation_from_assert_attendance(self) -> None:
         with self.assertRaises(ValidationError) as caught:
             assert_attendance({**valid_attendance, "status": "late"})
         error = caught.exception
         self.assertEqual(error.id, "attendance.status.format")
-        self.assertEqual(error.code, "VALIDATION")
+        self.assertEqual(error.kind, "VALIDATION")
         self.assertEqual(error.entity, "attendance")
         self.assertEqual(error.field, "status")
 
@@ -100,7 +100,7 @@ class CatalogTests(unittest.TestCase):
             )
         error = caught.exception
         self.assertEqual(error.id, "attendance.taken")
-        self.assertEqual(error.code, "CONFLICT")
+        self.assertEqual(error.kind, "CONFLICT")
 
     def test_production_source_raises_with_fail(self) -> None:
         offenders: list[str] = []

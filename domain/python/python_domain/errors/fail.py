@@ -11,14 +11,14 @@ from python_domain.errors.domain_error import (
     ConflictError,
     ConfigurationError,
     DomainError,
-    DomainErrorCode,
+    DomainErrorKind,
     NotFoundError,
     PersistenceError,
     ValidationError,
     label_parts,
 )
 
-ERROR_BY_CODE: dict[DomainErrorCode, type[DomainError]] = {
+ERROR_BY_KIND: dict[DomainErrorKind, type[DomainError]] = {
     "VALIDATION": ValidationError,
     "NOT_FOUND": NotFoundError,
     "CONFLICT": ConflictError,
@@ -34,7 +34,7 @@ def domain_error(
     error_id: DomainErrorId = f"{label}.{reason}"
     spec = DOMAIN_ERROR_REASONS[reason]
     message = DOMAIN_ERROR_MESSAGES.get(error_id, spec["message"](label))
-    error_class = ERROR_BY_CODE[spec["code"]]
+    error_class = ERROR_BY_KIND[spec["kind"]]
     parts = label_parts(label)
     return error_class(
         message,
