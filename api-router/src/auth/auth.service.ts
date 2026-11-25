@@ -19,6 +19,7 @@ import { RegisterResponseDto } from './register-response.dto'
 type JwtHeader = { alg: 'RS256'; kid: string }
 type JwtPayload = {
   aud: string | string[]
+  email: string
   exp: number
   iss: string
   nbf?: number
@@ -56,8 +57,14 @@ function isJwtPayload(value: unknown): value is JwtPayload {
     typeof value.iss === 'string' &&
     (value.nbf === undefined || typeof value.nbf === 'number') &&
     typeof value.sub === 'string' &&
-    value.sub.length > 0
+    value.sub.length > 0 &&
+    typeof value.email === 'string' &&
+    value.email.trim() !== ''
   )
+}
+
+function normalizeAuthEmail(email: string): string {
+  return email.trim().toLowerCase()
 }
 
 function isAuth0RsaKey(value: unknown): value is Auth0RsaKey {
@@ -363,7 +370,7 @@ export class AuthService {
       throw this.invalidToken()
     }
 
-    return { sub: payload.sub }
+    return { email: normalizeAuthEmail(payload.email) }
   }
 
   private getAuth0Config(): {

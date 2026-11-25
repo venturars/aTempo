@@ -1,7 +1,7 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 import type { RouterRequest, RouterResponse } from './router'
 
-export type AuthUser = { sub: string; email: string }
+export type AuthUser = { email: string }
 
 declare global {
   interface Window {
