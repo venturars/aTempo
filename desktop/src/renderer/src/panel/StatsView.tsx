@@ -19,10 +19,6 @@ import {
   type ClassSession
 } from './roster'
 
-function dateLabel(session: ClassSession): string {
-  return sessionDateLabel(session.id)
-}
-
 type Selection = { name: string; session: ClassSession; row: RosterRow | undefined }
 
 export function StatsView(): React.JSX.Element {
@@ -223,7 +219,7 @@ export function StatsView(): React.JSX.Element {
                             : row
                               ? markLabel[row.mark]
                               : 'Sin registro'
-                          const title = `${person.name} · ${dateLabel(session)} · ${status}${row && row.time !== '—' ? ` · ${row.time}` : ''}`
+                          const title = `${person.name} · ${sessionDateLabel(session.id)} · ${status}${row && row.time !== '—' ? ` · ${row.time}` : ''}`
                           const time = row && row.time !== '—' ? row.time : 'Sin entrada'
                           return (
                             <td
@@ -308,7 +304,7 @@ export function StatsView(): React.JSX.Element {
               <Avatar name={selected.name} />
               <div className="min-w-0">
                 <p className="text-sm font-medium">
-                  {selected.name} · {dateLabel(selected.session)}
+                  {selected.name} · {sessionDateLabel(selected.session.id)}
                 </p>
                 <p className="text-sm text-base-content/60">
                   {selected.row && selected.row.time !== '—'

@@ -46,6 +46,10 @@ function arrivalThatDay(name: string, day: string): string {
   return `${h}:${m}`
 }
 
+// La fecha de la sesión de Hoy. Da su título y sus llegadas de ejemplo. Las marcas de Hoy
+// se guardan con el id de la sesión de la API, no con este.
+export const todaySessionId = '2026-11-11'
+
 export const todayEntry = rosterNames.map((name) => {
   if (name === 'Meghan Martin') {
     return '—'
@@ -56,7 +60,7 @@ export const todayEntry = rosterNames.map((name) => {
   if (name === 'Victor Chang') {
     return '09:14'
   }
-  return arrivalThatDay(name, '11')
+  return arrivalThatDay(name, String(sessionDate(todaySessionId).getDate()))
 })
 
 // El id de una sesión es su fecha, «2026-11-10». Se lee como fecha local: con
@@ -93,9 +97,6 @@ export function sessionDateLabel(id: string): string {
 export function sessionTitle(id: string): string {
   return `${sessionShortWeekday(id)} ${sessionDateLabel(id)}`
 }
-
-// La sesión de Hoy. Los cambios se guardan con este id, como los de las sesiones pasadas.
-export const todaySessionId = '2026-11-11'
 
 export const todayLabel = sessionTitle(todaySessionId)
 
