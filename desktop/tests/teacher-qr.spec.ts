@@ -210,9 +210,11 @@ test('closes the mark menu when the keyboard focus moves to another control', as
 test('keeps one mark menu open at a time and closes it on scroll', async () => {
   await withPanel(async (p) => {
     await open(p)
-    await row(p, 'Diego Molero').getByRole('button', { name: 'Pendiente', exact: true }).click()
-    await expect(p.getByRole('menu')).toHaveCount(1)
+    // Primero la fila de abajo: su menú se abre hacia abajo y no tapa el botón de la de arriba.
+    // Al revés, Playwright movería la página para llegar al botón tapado y el scroll cerraría el menú.
     await row(p, 'Diego Torres').getByRole('button', { name: 'Pendiente', exact: true }).click()
+    await expect(p.getByRole('menu')).toHaveCount(1)
+    await row(p, 'Diego Molero').getByRole('button', { name: 'Pendiente', exact: true }).click()
     await expect(p.getByRole('menu')).toHaveCount(1)
     await p.mouse.wheel(0, 200)
     await expect(p.getByRole('menu')).toHaveCount(0)
