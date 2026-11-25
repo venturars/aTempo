@@ -1,8 +1,10 @@
 # aTempo
 
-aTempo registra la asistencia de los alumnos de una clase. Este repositorio tiene el prototipo de escritorio para profesor y alumno y la guía visual compartida.
+aTempo registra la asistencia de los alumnos de una clase. Este repositorio tiene la app de escritorio del profesor (`desktop/`), la web del alumno y la administración (`web/`) y la guía visual compartida.
 
 La visión, los perfiles y las decisiones de producto están en [principles.md](principles.md).
+
+Para enseñar la aplicación entera con datos de ejemplo, sin Docker ni Auth0, sigue [DEMO.md](DEMO.md): `pnpm run demo:install`, `pnpm run demo:web` y `pnpm run demo:desktop`.
 
 ## Arranque rápido con Auth0
 
@@ -35,23 +37,71 @@ Desde un arranque nuevo, usa el formulario **Entrar** con una de estas cuentas p
 | Profesor | `profesor@atempo.test` | `Profesor123!` | Hoy, en el panel del profesor |
 | Alumno | `ada.lopez@clase.test` | `clase-2026` | Dashboard de Ada López |
 
-Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alumnos y pasar lista.
+La pestaña Hoy usa un cliente de la API con datos simulados. Para ver otro caso, arranca desde `desktop/` con `pnpm exec electron-vite dev -- --api-fixture=<nombre>`: `empty` (sin clases hoy), `denied` (sin acceso), `unauthenticated` (sesión caducada: vuelve al login), `network` (las escrituras no llegan), `timeout` (las escrituras no responden en 10 segundos), `server-error` (las escrituras responden 500), `conflict` (la clase se abrió desde otro sitio) `expired-code` (el primer código del QR llega caducado) o `code-unavailable` (las dos primeras peticiones del código fallan).
 
-Para probar al alumno desde el login, sal completamente de la aplicación: en macOS usa **Cmd+Q**; cerrar solo la ventana no termina el proceso. Detén también `pnpm dev` con **Ctrl+C** en su terminal y vuelve a ejecutar `pnpm dev` desde `desktop/`.
+Para que la pestaña Hoy hable HTTP con `api-router`, arráncalo con `docker compose up api-router` y la app, desde `desktop/`, con `ATEMPO_API_ROUTER_URL=http://localhost:3000 pnpm exec electron-vite dev -- --api-transport=http`. Las peticiones pasan por el proceso principal, que añade el Access Token del login. El mock del router pide ese token: sin login contra el router responde `401` y la pestaña vuelve al login. El router responde con datos en memoria; para empezar de cero, reinícialo. Con el transporte HTTP, «Simular llegada» y «Volver a abrir» quedan desactivados: no están en el contrato.
+
+### Probar la invitación de profesor
+
+Con las dependencias de `desktop/` instaladas, detén el arranque normal y abre la demo con este comando desde `desktop/`.
+
+```sh
+pnpm dev -- --invitation=731905
+```
+
+1. En **Hola, Lucía**, escribe una contraseña de al menos 8 caracteres y pulsa **Entrar**. Se activa `lucia.martin@atempo.test` y se abre **Hoy**.
+2. Pulsa tu nombre al pie de la barra lateral y selecciona **Cerrar sesión**. Vuelve a entrar con el correo de Lucía y la contraseña que elegiste.
+3. Si vuelves a abrir la misma invitación durante ese arranque, aparece el login con un aviso de que la cuenta ya está activada.
+
+El comando simula el enlace de invitación. El envío de correo y la apertura de Electron desde un enlace real están pendientes. Usa `--invitation=264018` para probar a Bruno Sanz como alumno o `--invitation=000000` para ver el aviso de enlace no válido.
+
+### Cambiar la contraseña del profesor
+
+1. En el panel de profesor, pulsa tu nombre y elige **Cambiar contraseña**.
+2. Escribe la contraseña actual y una nueva de al menos 8 caracteres. Repite la nueva y pulsa **Guardar contraseña**.
+3. Usa **Cerrar sesión** para comprobar que la contraseña anterior se rechaza y que la nueva abre el panel.
+
+Las invitaciones activadas y los cambios de contraseña duran hasta que recargas el renderer o reinicias Electron.
+
+### Probar el QR y las correcciones
+
+Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alumnos y pasar lista. El QR y el código de 6 cifras de debajo cambian cada 30 segundos. El QR es un enlace al sitio del alumno, `http://localhost:5191/student/check-in?code=ATEMPO-CLASE-1109-<código>`. Ese sitio es `web/`; abajo está cómo arrancarlo. Desde el móvil, `localhost` es el propio móvil. Para escanear con el móvil en la misma wifi, arranca desde `desktop/` con la IP del ordenador:
+
+```sh
+VITE_STUDENT_SITE_URL=http://<ip-del-ordenador>:5191 pnpm dev
+```
+
+Con la lista abierta o cerrada, cambiar un estado o una hora pide un motivo. Al pasar el ratón por encima del estado se ve quién lo cambió, cuándo y por qué.
+
+En el escritorio del alumno, pulsa **Cerrar sesión** en su inicio.
 
 Como alumno, pulsa **Registrar asistencia**, **Escanear** y **Llegar a las 08:58**. Debe aparecer el estado **Presente** con la hora **08:58**. Pulsa **Volver** y **Resumen de asistencia** para comprobar la nueva entrada en el historial.
 
-El correo admite mayúsculas y espacios laterales; la contraseña debe coincidir exactamente. Una contraseña incorrecta o un correo desconocido muestran un error y conservan el login. El registro crea alumnos y reserva el correo del profesor.
+El correo admite mayúsculas y espacios laterales; la contraseña debe coincidir exactamente. Una contraseña incorrecta o un correo desconocido muestran un error y conservan el login.
 
-Las cuentas, la sesión y la asistencia de ejemplo viven en memoria del renderer. Recargarlo o reiniciar completamente la aplicación vacía la sesión, restablece los datos de ejemplo y elimina los alumnos registrados durante ese arranque. Repite la salida completa y el arranque para probar otra cuenta desde cero.
+Las cuentas, las invitaciones activadas, la sesión, la asistencia y los cambios de ejemplo viven en memoria del renderer. Recargarlo o reiniciar completamente la aplicación vacía la sesión y restablece los datos de ejemplo. Para empezar desde cero, sal con **Cmd+Q** en macOS (cerrar solo la ventana no termina el proceso), detén `pnpm dev` con **Ctrl+C** y vuelve a ejecutarlo desde `desktop/`.
 
 El lector del alumno ofrece lecturas simuladas y no usa cámara. Estos flujos no se conectan al backend ni a un servicio de autenticación.
+
+## Probar la web del alumno y la administración
+
+Con Node 24 y pnpm 10.33.0:
+
+```sh
+cd web
+pnpm install --frozen-lockfile
+pnpm dev
+```
+
+- Alumno: <http://localhost:5191/>. La cuenta de ejemplo y `/?reiniciar` están en [web/README.md](web/README.md).
+- Administración: <http://localhost:5191/admin>, con `miguel@neoland.example` / `neoland-2026` o **Crear cuenta** para dar de alta otra organización.
 
 ## Qué hay
 
 | Carpeta | Qué es |
 | --- | --- |
-| `desktop/` | Prototipo para profesor y alumno con Electron y React; las demos usan datos en memoria. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/sign-up` para el registro. |
+| `desktop/` | Prototipo para profesor y alumno con Electron y React; las demos usan datos en memoria. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/student/dashboard` para el dashboard del alumno. |
+| `web/` | Web del alumno y demo de administración con Vite y React, en el puerto 5191. |
 | `api-router/` | API REST con NestJS entre los frontends y la SDK de lógica de negocio (pendiente). |
 | `api-postgresql/` | API REST con NestJS entre la SDK y PostgreSQL. |
 | `api-rustfs/` | API REST con Express de objetos en RustFS. Aún no importa `domain/rustfs`. |
@@ -311,7 +361,7 @@ pnpm run test:visual --workers=1 --retries=0 --global-timeout=300000 --update-sn
 
 La suite del sistema visual sirve `docs/storybook/storybook-static` en `http://127.0.0.1:6006` y lo cierra al terminar, aunque falle. Necesita las dependencias de `docs/storybook/` instaladas en tu ordenador (`pnpm install` en esa carpeta), no solo en Docker, y el puerto 6006 libre: si tienes Storybook en Docker, páralo antes con `docker compose stop storybook`.
 
-Cada pull request a `staging` pasa lint, typecheck y el build de Storybook en GitHub Actions ([ci.yml](.github/workflows/ci.yml)), en cada paquete que cambia. Un paquete es cualquier carpeta con un `pnpm-lock.yaml`, así que uno nuevo entra solo. Si el paquete es `domain/rustfs`, el job también ejecuta `pnpm test`. Si una comprobación falla, «CI / ci» queda en rojo.
+Cada pull request a `staging` pasa lint, typecheck y el build de Storybook en GitHub Actions ([code-check.yml](.github/workflows/code-check.yml)), en cada paquete que cambia. Un paquete es cualquier carpeta con un `pnpm-lock.yaml`, así que uno nuevo entra solo. Si el paquete es `domain/rustfs`, el job también ejecuta `pnpm test`. Si cambia `desktop/`, `web/` o algo compartido (`.github/`, `Dockerfile`, `docker-compose.yml`), el job `admin-tests` instala Chromium y ejecuta los tests de administración de desktop con Playwright, sin abrir Electron (`playwright.admin.config.ts`, un solo worker, sin reintentos ni snapshots nuevos). Si no cambia ninguno, el job se salta y «Code: check / ci» pasa igual. Si una comprobación o esos tests fallan, «Code: check / ci» queda en rojo.
 
 ### Ventana de Electron desde Docker (experimental)
 
@@ -355,7 +405,7 @@ Ese comando es obligatorio: sin él, el markdown se queda desfasado. No se edita
 docker compose up api-router
 ```
 
-El servicio queda en <http://localhost:3000>. `GET /health` debe devolver `{ "status": "ok" }`. La documentación interactiva está en <http://localhost:3000/docs>. Su contenedor monta solo `api-router/`, sus `node_modules` y la caché pnpm; el `.env` de la raíz no queda disponible dentro del servicio. Para pararlo, `Ctrl+C` o `docker compose stop api-router`.
+El servicio queda en <http://localhost:3000>. `GET /health` debe devolver `{ "status": "ok" }`. Compose lo arranca con `API_MOCK=true`: sirve además, con datos en memoria, los ocho endpoints del contrato API v1 que usa la pestaña Hoy del panel. La documentación interactiva está en <http://localhost:3000/docs>. Su contenedor monta solo `api-router/`, sus `node_modules` y la caché pnpm; el `.env` de la raíz no queda disponible dentro del servicio. Para pararlo, `Ctrl+C` o `docker compose stop api-router`.
 
 Las comprobaciones se lanzan en Docker:
 
@@ -416,7 +466,7 @@ Desde la raíz, inicia Express y RustFS:
 docker compose up api-rustfs
 ```
 
-La API queda en <http://localhost:3003>; RustFS está disponible en los puertos S3 `9000` y consola `9001` desde el ordenador, y la API se conecta a `rustfs:9000` dentro de Compose. El volumen compartido `rustfs-data` conserva los objetos. `/health` sigue comprobando solo que responde la API HTTP; la conexión S3 se verifica por separado en el workflow `.github/workflows/docker-apis.yml`. Swagger está en `/docs/`. Las pruebas se ejecutan en Docker con `docker compose run --rm api-rustfs pnpm test`; typecheck, lint y build usan el mismo patrón. El flujo de producto es Frontend → `api-rustfs` → `domain/rustfs` → RustFS; Express aún no importa el paquete. Más detalle en [api-rustfs/README.md](api-rustfs/README.md).
+La API queda en <http://localhost:3003>; RustFS está disponible en los puertos S3 `9000` y consola `9001` desde el ordenador, y la API se conecta a `rustfs:9000` dentro de Compose. El volumen compartido `rustfs-data` conserva los objetos. `/health` sigue comprobando solo que responde la API HTTP; la conexión S3 se verifica por separado en el workflow `.github/workflows/workstation-test.yml`. Swagger está en `/docs/`. Las pruebas se ejecutan en Docker con `docker compose run --rm api-rustfs pnpm test`; typecheck, lint y build usan el mismo patrón. Más detalle en [api-rustfs/README.md](api-rustfs/README.md).
 
 ## Dominio RustFS
 
@@ -432,15 +482,19 @@ pnpm test
 
 `pnpm test` sustituye el driver S3: RustFS no tiene que estar en marcha. Más detalle en [domain/README.md](domain/README.md) y [domain/rustfs/README.md](domain/rustfs/README.md).
 
-Las cuatro APIs pueden iniciarse juntas con `docker compose up api-router api-postgresql api-sqlite api-rustfs`; Compose inicia PostgreSQL y RustFS como dependencias. El workflow `.github/workflows/docker-apis.yml` valida setup, pruebas, HTTP y persistencia en un runner Ubuntu al abrir o actualizar una pull request hacia `staging`, sin secretos y con permisos de solo lectura.
+Las cuatro APIs pueden iniciarse juntas con `docker compose up api-router api-postgresql api-sqlite api-rustfs`; Compose inicia PostgreSQL y RustFS como dependencias. El workflow `.github/workflows/workstation-test.yml` valida setup, pruebas, HTTP y persistencia en un runner Ubuntu al abrir o actualizar una pull request hacia `staging`, sin secretos y con permisos de solo lectura. También ejecuta el paso «Check blockend» (`docker compose run --rm blockend pnpm test`), entre «Check Node APIs» y «Check SQLite API». Esos tests usan la red interna de Hardhat, así que el workflow no arranca Anvil.
 
 ## Avisos opcionales de PR en Discord
 
-El workflow `.github/workflows/discord-pr-notifications.yml` activa los avisos desde `main` para las PR dirigidas a `staging` y los comentarios de asociación. Usa la acción compartida fijada a un commit y no ejecuta código de la PR. APM no instala este workflow ni lo incorpora a los pasos de los agentes.
+El workflow `Discord: publish notice` (`.github/workflows/discord-pr-publish.yml`) publica los avisos desde `main`. Se dispara cuando terminan en `success` `PR: check rules` (PR dirigidas a `staging`) o `Discord: capture confirmation` (comentarios de asociación), y usa la acción `.github/actions/discord-pr-notifications`. No ejecuta código de la PR. APM no instala estos workflows ni los incorpora a los pasos de los agentes.
+
+El publicador necesita el artefacto `discord-pr-number`, que contiene solo el número de la PR. `PR: check rules` (`.github/workflows/pr-check-rules.yml`) lo sube al final de su job, después de comprobar la PR; `Discord: capture confirmation` sube el suyo con `/discord-map`. Este repositorio no usa el `discord-pr-trigger.yml` del paquete `delivery-workflow`: su función la cumple `PR: check rules`. No lo copies a `.github/workflows/`, para que el artefacto tenga un solo origen en los eventos de PR.
 
 Al solicitar al menos dos revisores, el bot publica una línea separadora, el repositorio, el título de la PR, los revisores y el enlace. No incluye el cuerpo de la PR. Muestra los logins de GitHub aunque no encuentre sus cuentas de Discord, y menciona únicamente a quienes tengan una asociación verificada.
 
-Un administrador puede configurar una vez la variable opcional `DISCORD_USER_MAP` en el entorno protegido `Discord-PR-Notifications`, con un JSON como `{"login-github":"ID_DE_DISCORD"}` y un ID numérico real en lugar del marcador. Esta asociación fija tiene prioridad, no caduca y se comprueba contra los miembros del servidor antes de mencionar. Para el resto se conserva la caché cifrada de 48 horas; la búsqueda automática acepta diferencias de mayúsculas en el nombre de usuario de Discord.
+Un administrador puede configurar una vez la variable opcional `DISCORD_USER_MAP` en el entorno protegido `discord-pr-notifications`, con un JSON como `{"login-github":"ID_DE_DISCORD"}` y un ID numérico real en lugar del marcador. Esta asociación fija tiene prioridad, no caduca y se comprueba contra los miembros del servidor antes de mencionar. Para el resto se conserva la caché cifrada de 48 horas; la búsqueda automática acepta diferencias de mayúsculas en el nombre de usuario de Discord.
+
+El log de la acción registra una línea por cada revisor sin mención, con el prefijo `Reviewer without Discord mention:`, su login y el motivo (`no unique exact match` o `confirmation is not a unique guild member`). Cuando varios revisores resuelven al mismo usuario de Discord, registra una sola línea por incidencia con los logins de todos los implicados, separados por coma, y el motivo `multiple reviewers resolve to the same Discord user`. Un login con saltos de línea o caracteres de control se escribe en una sola línea. El log no incluye IDs de Discord ni tokens. Un revisor sin mención no bloquea el aviso: sale con su login en texto plano y «sin mención de Discord».
 
 Para confirmar una asociación que falte, el autor de la PR o un miembro autorizado del repositorio puede dejar este comentario en la PR:
 

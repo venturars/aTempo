@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 async function enterStudent(page: Page): Promise<void> {
   await page.goto('/')
@@ -9,9 +9,22 @@ async function enterStudent(page: Page): Promise<void> {
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Ada')
 }
 
+const adminEntry = (page: Page): Locator =>
+  page.getByRole('heading', { level: 1, name: 'Administración', exact: true })
+
+async function logInAdmin(
+  page: Page,
+  email = 'miguel@neoland.example',
+  password = 'neoland-2026'
+): Promise<void> {
+  await page.getByLabel('Correo', { exact: true }).fill(email)
+  await page.getByLabel('Contraseña', { exact: true }).fill(password)
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click()
+}
+
 async function enterAdmin(page: Page): Promise<void> {
   await page.goto('/admin')
-  await page.getByRole('button', { name: 'Abrir demo de administración' }).click()
+  await logInAdmin(page)
   await expect(page.getByRole('navigation', { name: 'Administración', exact: true })).toBeVisible()
 }
 
@@ -123,7 +136,7 @@ test('validates and cancels course and session forms', async ({ page }) => {
   await expect(page.getByRole('alert')).toContainText('profesor')
   await page.getByRole('button', { name: 'Cancelar', exact: true }).click()
   await expect(page.getByRole('row')).toHaveCount(3)
-  await page.getByRole('link', { name: 'Desarrollo web', exact: true }).click()
+  await page.getByRole('link', { name: 'AI Engineering', exact: true }).click()
   await page.getByRole('button', { name: 'Programar sesión', exact: true }).click()
   await page.getByRole('button', { name: 'Guardar sesión', exact: true }).click()
   await expect(page.getByRole('alert')).toContainText('fecha')
@@ -139,11 +152,11 @@ test('dual-role admin sees only assigned classes in the reused read-only view', 
   await enterAdmin(page)
   await createCourse(page, 'Mi curso nuevo', 'Miguel Rodríguez', 'Ana López')
   await adminNav(page, 'Mis clases')
-  await expect(page.getByRole('link', { name: 'Desarrollo web', exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'AI Engineering', exact: true })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Mi curso nuevo', exact: true })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Diseño UX/UI', exact: true })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Crear curso', exact: true })).toHaveCount(0)
-  await page.getByRole('link', { name: 'Desarrollo web', exact: true }).click()
+  await page.getByRole('link', { name: 'AI Engineering', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Programar sesión', exact: true })).toHaveCount(0)
   await expect(page.getByRole('button', { name: /Editar|Eliminar/ })).toHaveCount(0)
   await page.getByRole('table', { name: 'Sesiones del curso' }).getByRole('link').click()
@@ -157,7 +170,7 @@ test('dual-role admin sees only assigned classes in the reused read-only view', 
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Hola, Miguel')
 })
 
-test('deep links require demo entry and reject another teacher course/session in Mis clases', async ({
+test('deep links require admin login and reject another teacher course/session in Mis clases', async ({
   page
 }) => {
   for (const [path, heading] of [
@@ -166,14 +179,14 @@ test('deep links require demo entry and reject another teacher course/session in
     ['/admin/my-classes/course-design/session-design', 'Sesión no disponible']
   ]) {
     await page.goto(path)
-    await expect(page.getByRole('button', { name: 'Abrir demo de administración' })).toBeVisible()
+    await expect(adminEntry(page)).toBeVisible()
     await expect(page.getByRole('table')).toHaveCount(0)
-    await page.getByRole('button', { name: 'Abrir demo de administración' }).click()
+    await logInAdmin(page)
     await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible()
   }
   await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click()
   await page.goBack()
-  await expect(page.getByRole('button', { name: 'Abrir demo de administración' })).toBeVisible()
+  await expect(adminEntry(page)).toBeVisible()
   await expect(page.getByRole('table')).toHaveCount(0)
 })
 
@@ -181,10 +194,7 @@ for (const width of [390, 1280]) {
   for (const theme of ['atempo-oscuro', 'atempo-claro']) {
     test(`admin forms and tables fit ${width}px in ${theme}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 })
-      await page.addInitScript(
-        (name) => localStorage.setItem('atempo-student-theme', name),
-        theme
-      )
+      await page.addInitScript((name) => localStorage.setItem('atempo-student-theme', name), theme)
       await enterAdmin(page)
       await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
       await page.screenshot({
@@ -256,7 +266,7 @@ test('admin entry and logout leave the student session and accounts alone', asyn
   await enterAdmin(page)
   await invite(page, 'Nueva alumna', 'nueva@clase.test', 'student')
   await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Abrir demo de administración' })).toBeVisible()
+  await expect(adminEntry(page)).toBeVisible()
   expect(
     await page.evaluate(() => ({
       session: localStorage.getItem('atempo-student-session'),
@@ -267,13 +277,13 @@ test('admin entry and logout leave the student session and accounts alone', asyn
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Ada')
 })
 
-test('reload restores the admin seed and requires reopening the demo', async ({ page }) => {
+test('reload restores the admin seed and requires logging in again', async ({ page }) => {
   await enterAdmin(page)
   await invite(page, 'Temporal', 'temporal@clase.test', 'student')
   await page.reload()
-  await expect(page.getByRole('button', { name: 'Abrir demo de administración' })).toBeVisible()
+  await expect(adminEntry(page)).toBeVisible()
   await expect(page.getByRole('table')).toHaveCount(0)
-  await page.getByRole('button', { name: 'Abrir demo de administración' }).click()
+  await logInAdmin(page)
   await adminNav(page, 'Personas')
   await expect(page.getByRole('row')).toHaveCount(5)
   await expect(page.getByText('temporal@clase.test', { exact: true })).toHaveCount(0)
@@ -381,7 +391,7 @@ test('admin details can be edited while their actual roles remain read-only', as
     page.getByRole('button', { name: 'Eliminar Miguel Docente', exact: true })
   ).toHaveCount(0)
   await adminNav(page, 'Mis clases')
-  await expect(page.getByRole('link', { name: 'Desarrollo web', exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'AI Engineering', exact: true })).toBeVisible()
 })
 
 test('student deletion cleans enrolments and an assigned teacher requires course reassignment', async ({
@@ -400,7 +410,7 @@ test('student deletion cleans enrolments and an assigned teacher requires course
   await page.getByRole('button', { name: 'Eliminar Ana López', exact: true }).click()
   await dialog.getByRole('button', { name: 'Eliminar', exact: true }).click()
   await adminNav(page, 'Cursos')
-  await page.getByRole('link', { name: 'Desarrollo web', exact: true }).click()
+  await page.getByRole('link', { name: 'AI Engineering', exact: true }).click()
   await expect(
     page.getByRole('heading', { name: 'Alumnos matriculados · 1', exact: true })
   ).toBeVisible()
@@ -428,14 +438,14 @@ test('course edits update its session roster and course deletion removes its ses
 }) => {
   await enterAdmin(page)
   await adminNav(page, 'Cursos')
-  await page.getByRole('link', { name: 'Desarrollo web', exact: true }).click()
+  await page.getByRole('link', { name: 'AI Engineering', exact: true }).click()
   const originalCoursePath = new URL(page.url()).pathname
   await page.getByRole('button', { name: 'Editar curso', exact: true }).click()
   await expect(page.getByLabel('Profesor', { exact: true })).toHaveValue('person-admin')
   await expect(page.getByRole('checkbox', { name: 'Ana López', exact: true })).toBeChecked()
   await page.getByLabel('Nombre del curso', { exact: true }).fill('Cambio cancelado')
   await page.getByRole('button', { name: 'Cancelar', exact: true }).click()
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Desarrollo web')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('AI Engineering')
   await page.getByRole('button', { name: 'Editar curso', exact: true }).click()
   await page.getByLabel('Nombre del curso', { exact: true }).fill('Curso editado')
   await page.getByLabel('Profesor', { exact: true }).selectOption('person-teacher')
@@ -487,7 +497,7 @@ test('session editing is prefilled and validated; deleting it preserves its cour
 }) => {
   await enterAdmin(page)
   await adminNav(page, 'Cursos')
-  await page.getByRole('link', { name: 'Desarrollo web', exact: true }).click()
+  await page.getByRole('link', { name: 'AI Engineering', exact: true }).click()
   await page.getByRole('table', { name: 'Sesiones del curso' }).getByRole('link').click()
   const originalPath = new URL(page.url()).pathname
   await page.getByRole('button', { name: 'Editar sesión', exact: true }).click()
@@ -512,7 +522,7 @@ test('session editing is prefilled and validated; deleting it preserves its cour
   ).toBeVisible()
   await page.getByRole('button', { name: 'Eliminar sesión', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Eliminar sesión', exact: true })
-  await expect(dialog).toContainText('Desarrollo web')
+  await expect(dialog).toContainText('AI Engineering')
   await expect(dialog).toContainText('1 de diciembre de 2026')
   await dialog.getByRole('button', { name: 'Cancelar', exact: true }).click()
   await page.getByRole('button', { name: 'Eliminar sesión', exact: true }).click()
@@ -521,7 +531,7 @@ test('session editing is prefilled and validated; deleting it preserves its cour
   await expect(
     page.getByText('Todavía no hay sesiones programadas.', { exact: true })
   ).toBeVisible()
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Desarrollo web')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('AI Engineering')
 })
 
 for (const theme of ['atempo-oscuro', 'atempo-claro']) {
@@ -587,7 +597,7 @@ async function openWeeklyForm(page: Page): Promise<void> {
 async function openSeedCourse(page: Page): Promise<void> {
   await enterAdmin(page)
   await adminNav(page, 'Cursos')
-  await page.getByRole('link', { name: 'Desarrollo web', exact: true }).click()
+  await page.getByRole('link', { name: 'AI Engineering', exact: true }).click()
 }
 
 test('weekly preview creates four independent sessions and returns to course for individual CRUD', async ({
@@ -708,12 +718,9 @@ for (const width of [390, 1280]) {
   for (const theme of ['atempo-oscuro', 'atempo-claro']) {
     test(`weekly form fits ${width}px in ${theme} with keyboard selection and cancellation`, async ({
       page
-    }) => {
+    }, testInfo) => {
       await page.setViewportSize({ width, height: 900 })
-      await page.addInitScript(
-        (name) => localStorage.setItem('atempo-student-theme', name),
-        theme
-      )
+      await page.addInitScript((name) => localStorage.setItem('atempo-student-theme', name), theme)
       await openSeedCourse(page)
       await openWeeklyForm(page)
       await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
@@ -741,7 +748,7 @@ for (const width of [390, 1280]) {
         )
       })
       await page.screenshot({
-        path: `/private/tmp/atempo-recurrence-qa/weekly-${theme}-${width}.png`,
+        path: testInfo.outputPath(`weekly-${theme}-${width}.png`),
         fullPage: true,
         animations: 'disabled'
       })
@@ -754,3 +761,129 @@ for (const width of [390, 1280]) {
     })
   }
 }
+
+const newOrganization = {
+  'Nombre de la organización': 'Academia Norte',
+  CIF: 'B-1234567-9',
+  Nombre: 'Carmen',
+  Apellidos: 'Vidal Ruiz',
+  'Documento de identidad': '12345678z',
+  Correo: 'Carmen@Norte.example',
+  Contraseña: 'norte-2026'
+}
+
+async function fillSignUp(page: Page, values: Record<string, string>): Promise<void> {
+  for (const [label, value] of Object.entries(values))
+    await page.getByLabel(label, { exact: true }).fill(value)
+  await page.getByRole('button', { name: 'Crear cuenta', exact: true }).click()
+}
+
+test('rejects a wrong password with the same message for any email', async ({ page }) => {
+  await page.goto('/admin')
+  for (const email of ['miguel@neoland.example', 'nadie@neoland.example']) {
+    await logInAdmin(page, email, 'otra-clave')
+    await expect(page.getByRole('alert')).toHaveText('El correo o la contraseña no coinciden.')
+  }
+  await expect(page.getByRole('navigation', { name: 'Administración', exact: true })).toHaveCount(0)
+})
+
+test('validates every sign-up field and rejects data already in use', async ({ page }) => {
+  await page.goto('/admin')
+  await page.getByRole('button', { name: 'Crear cuenta', exact: true }).click()
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Crea la cuenta de tu organización' })
+  ).toBeVisible()
+  await fillSignUp(page, { Correo: 'no-es-correo', Contraseña: 'corta' })
+  for (const [label, message] of [
+    ['Nombre de la organización', 'Escribe el nombre de la organización.'],
+    ['CIF', 'Escribe un CIF de 9 caracteres.'],
+    ['Nombre', 'Escribe tu nombre.'],
+    ['Apellidos', 'Escribe tus apellidos.'],
+    ['Documento de identidad', 'Escribe un DNI, NIE o pasaporte válido.'],
+    ['Correo', 'Escribe un correo válido.'],
+    ['Contraseña', 'Usa al menos 8 caracteres.']
+  ]) {
+    const field = page.getByLabel(label, { exact: true })
+    await expect(field).toHaveAttribute('aria-invalid', 'true')
+    await expect(field).toHaveAccessibleDescription(message)
+  }
+  await fillSignUp(page, {
+    ...newOrganization,
+    CIF: 'b87654321',
+    Correo: 'lucia@neoland.example'
+  })
+  await expect(page.getByLabel('CIF', { exact: true })).toHaveAccessibleDescription(
+    'Ya hay una organización con este CIF.'
+  )
+  await expect(page.getByLabel('Correo', { exact: true })).toHaveAccessibleDescription(
+    'Ya hay una cuenta con este correo.'
+  )
+  await expect(page.getByRole('navigation', { name: 'Administración', exact: true })).toHaveCount(0)
+})
+
+test('creates an organization, logs out and switches between both admin accounts', async ({
+  page
+}) => {
+  await page.goto('/admin')
+  await page.getByRole('button', { name: 'Crear cuenta', exact: true }).click()
+  await fillSignUp(page, newOrganization)
+  const nav = page.getByRole('navigation', { name: 'Administración', exact: true })
+  await expect(nav).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Hola, Carmen')
+  await expect(page.getByRole('banner')).toContainText('Academia Norte')
+  await expect(nav.getByRole('link', { name: 'Mis clases', exact: true })).toHaveCount(0)
+  await adminNav(page, 'Personas')
+  await expect(page.getByRole('row')).toHaveCount(2)
+  await expect(page.getByRole('row').nth(1)).toContainText('carmen@norte.example')
+  await invite(page, 'Pablo Gil', 'pablo@norte.example', 'teacher')
+
+  await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click()
+  await expect(adminEntry(page)).toBeVisible()
+  await logInAdmin(page)
+  await expect(page.getByRole('banner')).toContainText('Neoland')
+  await adminNav(page, 'Personas')
+  await expect(page.getByText('pablo@norte.example', { exact: true })).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click()
+  await logInAdmin(page, 'carmen@norte.example', 'norte-2026')
+  await expect(page.getByRole('banner')).toContainText('Academia Norte')
+  await adminNav(page, 'Personas')
+  await expect(page.getByText('pablo@norte.example', { exact: true })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click()
+  await page.getByRole('button', { name: 'Crear cuenta', exact: true }).click()
+  await fillSignUp(page, { ...newOrganization, CIF: 'B11111111', Correo: 'otra@norte.example' })
+  await expect(
+    page.getByLabel('Documento de identidad', { exact: true })
+  ).toHaveAccessibleDescription('Ya hay una cuenta con este documento.')
+})
+
+// Las capturas se hacen en macOS, como las de Electron: en Linux cambian las fuentes.
+test('matches the admin entry, sign-up and new organization screens at 1280 px', async ({
+  page
+}) => {
+  test.skip(process.platform !== 'darwin', 'Las capturas de referencia son de macOS.')
+  await page.clock.setFixedTime(new Date('2026-11-11T10:00:00'))
+  await page.setViewportSize({ width: 1280, height: 900 })
+  const screen = async (name: string): Promise<void> => {
+    await page.evaluate(() => document.fonts.ready)
+    await expect(page).toHaveScreenshot(name, { animations: 'disabled', fullPage: true })
+  }
+  await page.goto('/admin')
+  await expect(adminEntry(page)).toBeVisible()
+  await screen('admin-login-1280.png')
+
+  await page.getByRole('button', { name: 'Crear cuenta', exact: true }).click()
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Crea la cuenta de tu organización' })
+  ).toBeVisible()
+  await screen('admin-sign-up-1280.png')
+
+  await page.getByRole('button', { name: 'Crear cuenta', exact: true }).click()
+  await expect(page.getByLabel('CIF', { exact: true })).toHaveAttribute('aria-invalid', 'true')
+  await screen('admin-sign-up-errors-1280.png')
+
+  await fillSignUp(page, newOrganization)
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Hola, Carmen')
+  await screen('admin-new-organization-1280.png')
+})

@@ -5,11 +5,8 @@ import { useSessionStore } from '../src/renderer/src/session/sessionStore'
 
 type AuthBridge = {
   isConfigured: () => Promise<boolean>
-  login: (credentials: { email: string; password: string }) => Promise<{
-    sub: string
-    email: string
-  }>
-  me: () => Promise<{ sub: string; email: string } | null>
+  login: (credentials: { email: string; password: string }) => Promise<{ email: string }>
+  me: () => Promise<{ email: string } | null>
   logout: () => Promise<void>
 }
 
@@ -25,7 +22,7 @@ function installAuthBridge(): void {
     login: async (credentials) => {
       loginRequest = credentials
       if (loginFailure !== null) throw loginFailure
-      return { sub: 'auth0|sample-user', email: credentials.email }
+      return { email: credentials.email.trim().toLowerCase() }
     },
     me: async () => null,
     logout: async () => {}
@@ -52,6 +49,15 @@ test.describe('Auth0 login store', () => {
 
   test.afterEach(restoreWindow)
 
+  test('identifies the user by email only; the bridge does not expose sub', async () => {
+    const user = await (globalThis as unknown as { window: TestWindow }).window.api.auth.login({
+      email: 'profesor@atempo.test',
+      password: 'auth0-test-password'
+    })
+    expect(user).toEqual({ email: 'profesor@atempo.test' })
+    expect(user).not.toHaveProperty('sub')
+  })
+
   test('sends a known teacher account through the auth bridge and clears the form', async () => {
     useLoginStore.getState().setEmail(' PROFESOR@ATEMPO.TEST ')
     useLoginStore.getState().setPassword('auth0-test-password')
@@ -67,6 +73,23 @@ test.describe('Auth0 login store', () => {
       email: 'profesor@atempo.test'
     })
     expect(useLoginStore.getState()).toMatchObject({ email: '', password: '', isSubmitting: false })
+  })
+
+  test('waits for the previous logout before logging in again', async () => {
+    let finishLogout = (): void => undefined
+    const auth = (globalThis as unknown as { window: TestWindow }).window.api.auth
+    auth.logout = () => new Promise<void>((resolve) => (finishLogout = resolve))
+    useSessionStore.getState().endSession()
+    useLoginStore.getState().setEmail('profesor@atempo.test')
+    useLoginStore.getState().setPassword('auth0-test-password')
+
+    const login = useLoginStore.getState().submitWithAuth()
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(loginRequest).toBeNull()
+
+    finishLogout()
+    await expect(login).resolves.toBe(true)
+    expect(loginRequest).not.toBeNull()
   })
 
   test('routes a known student account through the auth bridge', async () => {

@@ -1,4 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
+import { useSessionStore } from '../../session/sessionStore'
 import { NoStudentSession } from '../NoStudentSession'
 import { useCurrentStudent } from '../studentAccounts'
 
@@ -26,6 +27,11 @@ export function DashboardScreen(): React.JSX.Element {
     if (actionId === 'resumen-asistencia') void navigate({ to: '/student/history' })
   }
 
+  function logOut(): void {
+    useSessionStore.getState().endSession()
+    void navigate({ to: '/' })
+  }
+
   if (student === null) {
     return <NoStudentSession />
   }
@@ -33,8 +39,15 @@ export function DashboardScreen(): React.JSX.Element {
   return (
     <main className="flex min-h-screen items-center justify-center p-4 md:p-8">
       <section className="w-full max-w-3xl rounded-box bg-base-100 p-4 md:p-8">
-        <h1 className="text-2xl font-semibold text-base-content">Dashboard alumno</h1>
-        <p className="mt-2 text-secondary">Bienvenido {student.name}</p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-base-content">Dashboard alumno</h1>
+            <p className="mt-2 text-secondary">Bienvenido {student.name}</p>
+          </div>
+          <button className="btn btn-ghost btn-sm" type="button" onClick={logOut}>
+            Cerrar sesión
+          </button>
+        </div>
         <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
           {dashboardActions.map((action) => (
             <button

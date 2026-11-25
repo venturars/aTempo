@@ -11,6 +11,10 @@ export type StudentAccount = {
   email: string
   password: string
   history: ClassEntry[]
+  // Campos de person en PostgreSQL. La cuenta de ejemplo no los tiene.
+  firstName?: string
+  lastName?: string
+  identificationDocument?: string
 }
 
 export type TodayClass = {

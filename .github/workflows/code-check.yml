@@ -1,0 +1,166 @@
+# Comprueba cada pull request a staging. Cada carpeta con un pnpm-lock.yaml es un paquete:
+# se comprueban los que la pull request cambia (todos si cambia algo compartido) con lint,
+# typecheck y build-storybook, si el paquete tiene el script. Si el paquete es domain/rustfs,
+# el job también ejecuta pnpm test.
+# Además, si cambia desktop/ o web/ (o algo compartido), corren los tests de administración
+# de desktop en un navegador sin cabeza (Playwright, sin abrir Electron).
+# La comprobación que resume el resultado es «Code: check / ci»: falla si algún paquete o esos tests fallan.
+name: "Code: check"
+
+on:
+  pull_request:
+    branches: [staging]
+    # ready_for_review: al sacar la pull request de draft corre la comprobación que se saltó
+    types: [opened, synchronize, reopened, ready_for_review]
+
+# Solo lee el repositorio
+permissions:
+  contents: read
+
+# Un push nuevo a la misma pull request cancela la comprobación anterior
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  # En draft se salta este job y, con él, «check» y «admin-tests»; «ci» da por bueno el resultado
+  select-packages:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.packages.outputs.packages }}
+      admin: ${{ steps.packages.outputs.admin }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: packages
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          mapfile -t all < <(git ls-files -- '*pnpm-lock.yaml' | xargs -rn1 dirname | grep -vx '.' | sort -u)
+          changed=$(git diff --name-only "$BASE_SHA" HEAD)
+
+          # Lo compartido (workflows, imagen de Docker) puede romper cualquier paquete
+          if grep -qE '^(\.github/|Dockerfile$|docker-compose\.yml$)' <<<"$changed"; then
+            selected=("${all[@]}")
+          else
+            selected=()
+            for package in "${all[@]}"; do
+              while IFS= read -r file; do
+                if [[ $file == "$package/"* ]]; then
+                  selected+=("$package")
+                  break
+                fi
+              done <<<"$changed"
+            done
+          fi
+
+          packages=$(printf '%s\n' "${selected[@]}" | jq -Rc 'select(length > 0)' | jq -sc .)
+          echo "packages=$packages" >> "$GITHUB_OUTPUT"
+
+          # Los tests de administración dependen de desktop/ y de web/: se reutiliza la selección de arriba
+          admin=false
+          for package in "${selected[@]}"; do
+            if [[ $package == "desktop" || $package == "web" ]]; then
+              admin=true
+            fi
+          done
+          echo "admin=$admin" >> "$GITHUB_OUTPUT"
+          echo "Paquetes: ${all[*]}. Se comprueban: $packages" >> "$GITHUB_STEP_SUMMARY"
+
+  # Sin «name»: GitHub lo llama «check (<paquete>)», y solo «check» si se salta
+  check:
+    needs: select-packages
+    if: needs.select-packages.outputs.packages != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      # Un paquete en rojo no detiene a los demás
+      fail-fast: false
+      matrix:
+        package: ${{ fromJSON(needs.select-packages.outputs.packages) }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.package }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # pnpm sale de packageManager en el package.json del paquete
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: ${{ matrix.package }}/package.json
+
+      # Node 24.22.3, el mismo que el Dockerfile
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.22.3
+          cache: pnpm
+          cache-dependency-path: ${{ matrix.package }}/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+      # --if-present: si el paquete no tiene el script, el paso no hace nada
+      - run: pnpm run --if-present lint
+      - run: pnpm run --if-present typecheck
+      - run: pnpm run --if-present build-storybook
+      - if: matrix.package == 'domain/rustfs'
+        run: pnpm test
+
+  # Tests de administración de desktop (Playwright, sin Electron). Necesitan desktop/ y web/ a la vez,
+  # por eso no caben en la matriz «check». Si «select-packages» dice admin=false, el job se salta y «ci» lo da por bueno.
+  admin-tests:
+    needs: select-packages
+    if: needs.select-packages.outputs.admin == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # pnpm sale de packageManager en el package.json de desktop
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: desktop/package.json
+
+      # Node 24.22.3, el mismo que el Dockerfile
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.22.3
+          cache: pnpm
+          cache-dependency-path: |
+            desktop/pnpm-lock.yaml
+            web/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+        working-directory: desktop
+      - run: pnpm install --frozen-lockfile
+        working-directory: web
+
+      # --with-deps instala también las librerías del sistema que Chromium necesita en Linux
+      - run: pnpm exec playwright install --with-deps chromium
+        working-directory: desktop
+
+      # La config arranca sola el servidor de web/ en el puerto 5193
+      - run: pnpm exec playwright test --config playwright.admin.config.ts --workers=1 --retries=0 --update-snapshots=none
+        working-directory: desktop
+
+      # Si un test falla, se guardan capturas y trazas para diagnosticarlo
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: admin-test-results
+          path: desktop/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # El resumen del resultado: falla si algún job falló o se canceló. Pasa si no había paquetes que comprobar.
+  ci:
+    needs: [select-packages, check, admin-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Resultados: $RESULTS"
+          if [[ " $RESULTS " == *" failure "* || " $RESULTS " == *" cancelled "* ]]; then
+            exit 1
+          fi

@@ -18,7 +18,7 @@ El recorrido verificable es **invitar a una persona → crear un curso → asign
 
 ### Comportamiento
 
-- La entrada `/admin` ofrece abrir explícitamente la demo de administración. No pide ni almacena contraseñas. No sustituye al registro/login real de la organización.
+- La entrada `/admin` pide correo y contraseña y permite crear la cuenta de una organización con su primer admin, en memoria. Simula `POST /auth/register` y `POST /auth/login` del contrato v1 (#90) hasta que exista la API (#199).
 - La demo tiene una sola organización y un administrador con `roles: ['admin', 'teacher']`. Se usan identificadores estables para personas, cursos y sesiones; los nombres no son claves.
 - **Personas:** muestra profesores y alumnos, su rol y su estado activo o invitación pendiente. Invitar pide nombre, correo y rol profesor/alumno y permite añadir el rol administrador a profesores; crea una persona pendiente. La interfaz confirma que la invitación quedó preparada, sin afirmar que se envió un email. Las cuentas activas pertenecen al seed; la activación de invitaciones es trabajo de #129/#130 y no se duplica aquí.
 - **Cursos:** permite crear un curso con nombre, un profesor de la organización y alumnos de la organización. El administrador que también es profesor aparece entre los profesores elegibles. Los alumnos no pueden recibir roles de profesor/admin. La selección de alumnos no contiene duplicados.
@@ -26,7 +26,7 @@ El recorrido verificable es **invitar a una persona → crear un curso → asign
 - **Sesiones:** desde un curso se crea una sesión con fecha, hora inicial, hora final y aula. La hora final debe ser posterior a la inicial en ese mismo día. Se muestra como programada; todavía no se abre ni se pasa lista desde administración.
 - **Listado de sesión:** deriva las personas matriculadas del curso, muestra el profesor asignado y las entradas como pendientes, sin inventar llegadas, ausencias o registros históricos.
 - **Mis clases:** el administrador/profesor puede cambiar a una vista de lectura de sus propios cursos y sesiones y volver a administración. Reutiliza el detalle/listado anterior y no reproduce el panel de asistencia de Electron. Un curso de otro profesor no aparece en esa vista.
-- Cambiar tema usa el comportamiento y los tokens existentes. Salir cierra solo la sesión demo de administrador y vuelve a su entrada. Recargar restaura el seed y exige abrir de nuevo la demo; no se alteran las cuentas/sesión del alumno.
+- Cambiar tema usa el comportamiento y los tokens existentes. Salir cierra solo la sesión de administrador y vuelve a su entrada. Recargar restaura el seed, borra las organizaciones creadas y exige volver a entrar; no se alteran las cuentas/sesión del alumno.
 
 ### Ampliación CRUD local
 
@@ -226,7 +226,7 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Abrir <http://localhost:5191/admin> y pulsar **Abrir demo de administración**. No se introducen credenciales.
+Abrir <http://localhost:5191/admin> y entrar con `miguel@neoland.example` / `neoland-2026`.
 
 1. En Personas, preparar una invitación de profesor y otra de alumno; deben aparecer pendientes.
 2. En Cursos, crear un curso y asignarle esas personas. Abrirlo y programar una sesión con fecha, inicio, fin y aula.

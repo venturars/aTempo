@@ -4,16 +4,22 @@ import {
   type JsonWebKey as CryptoJsonWebKey,
 } from 'node:crypto'
 import {
+  BadRequestException,
+  ConflictException,
   Injectable,
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common'
 import { LoginResponseDto } from './login-response.dto'
+import { LogoutResponseDto } from './logout-response.dto'
 import { MeResponseDto } from './me-response.dto'
+import { RefreshResponseDto } from './refresh-response.dto'
+import { RegisterResponseDto } from './register-response.dto'
 
 type JwtHeader = { alg: 'RS256'; kid: string }
 type JwtPayload = {
   aud: string | string[]
+  email: string
   exp: number
   iss: string
   nbf?: number
@@ -51,8 +57,14 @@ function isJwtPayload(value: unknown): value is JwtPayload {
     typeof value.iss === 'string' &&
     (value.nbf === undefined || typeof value.nbf === 'number') &&
     typeof value.sub === 'string' &&
-    value.sub.length > 0
+    value.sub.length > 0 &&
+    typeof value.email === 'string' &&
+    value.email.trim() !== ''
   )
+}
+
+function normalizeAuthEmail(email: string): string {
+  return email.trim().toLowerCase()
 }
 
 function isAuth0RsaKey(value: unknown): value is Auth0RsaKey {
@@ -73,6 +85,160 @@ export class AuthService {
   private cachedKeys: Auth0RsaKey[] = []
   private cachedKeysUntil = 0
 
+  async register(
+    email: string,
+    password: string,
+  ): Promise<RegisterResponseDto> {
+    const config = this.getAuth0Config()
+    const signupResponse = await fetch(`${config.issuer}dbconnections/signup`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        client_id: config.clientId,
+        email,
+        password,
+        connection: 'Username-Password-Authentication',
+      }),
+      signal: AbortSignal.timeout(auth0RequestTimeoutMs),
+    }).catch(() => {
+      throw new ServiceUnavailableException({
+        code: 'AUTH_PROVIDER_UNAVAILABLE',
+      })
+    })
+
+    const signupResult: unknown = await signupResponse.json().catch(() => null)
+    if (
+      !signupResponse.ok &&
+      isRecord(signupResult) &&
+      signupResult.code === 'user_exists'
+    ) {
+      throw new ConflictException({ code: 'USER_EXISTS' })
+    }
+    if (
+      !signupResponse.ok &&
+      isRecord(signupResult) &&
+      (signupResult.code === 'invalid_password' ||
+        signupResult.code === 'invalid_signup' ||
+        signupResult.name === 'PasswordStrengthError')
+    ) {
+      throw new BadRequestException({ code: 'INVALID_SIGNUP' })
+    }
+    if (!signupResponse.ok) {
+      throw new ServiceUnavailableException({
+        code: 'AUTH_PROVIDER_UNAVAILABLE',
+      })
+    }
+    if (
+      !isRecord(signupResult) ||
+      typeof signupResult._id !== 'string' ||
+      signupResult._id.length === 0
+    ) {
+      throw new ServiceUnavailableException({
+        code: 'AUTH_PROVIDER_INVALID_RESPONSE',
+      })
+    }
+
+    const loginResult = await this.login(email, password)
+    if (
+      typeof loginResult.refreshToken !== 'string' ||
+      loginResult.refreshToken.length === 0
+    ) {
+      throw new ServiceUnavailableException({
+        code: 'AUTH_PROVIDER_INVALID_RESPONSE',
+      })
+    }
+
+    const rawId = signupResult._id
+    return {
+      userId: rawId.startsWith('auth0|') ? rawId : `auth0|${rawId}`,
+      token: loginResult.accessToken,
+      refreshToken: loginResult.refreshToken,
+    }
+  }
+
+  async logout(refreshToken: string): Promise<LogoutResponseDto> {
+    const config = this.getAuth0Config()
+    const response = await fetch(`${config.issuer}oauth/revoke`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        client_id: config.clientId,
+        client_secret: config.clientSecret,
+        token: refreshToken,
+      }),
+      signal: AbortSignal.timeout(auth0RequestTimeoutMs),
+    }).catch(() => {
+      throw new ServiceUnavailableException({
+        code: 'AUTH_PROVIDER_UNAVAILABLE',
+      })
+    })
+
+    const result: unknown = await response.json().catch(() => null)
+    if (
+      isRecord(result) &&
+      (result.error === 'invalid_grant' || result.error === 'invalid_request')
+    ) {
+      throw new UnauthorizedException({ code: 'INVALID_REFRESH_TOKEN' })
+    }
+    if (!response.ok && (response.status === 400 || response.status === 401)) {
+      throw new UnauthorizedException({ code: 'INVALID_REFRESH_TOKEN' })
+    }
+    if (!response.ok) {
+      throw new ServiceUnavailableException({
+        code: 'AUTH_PROVIDER_UNAVAILABLE',
+      })
+    }
+
+    return { success: true }
+  }
+
+  async refreshToken(refreshToken: string): Promise<RefreshResponseDto> {
+    const config = this.getAuth0Config()
+    const response = await fetch(`${config.issuer}oauth/token`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+        client_id: config.clientId,
+        client_secret: config.clientSecret,
+      }),
+      signal: AbortSignal.timeout(auth0RequestTimeoutMs),
+    }).catch(() => {
+      throw new ServiceUnavailableException({
+        code: 'AUTH_PROVIDER_UNAVAILABLE',
+      })
+    })
+
+    const result: unknown = await response.json().catch(() => null)
+    if (isRecord(result) && result.error === 'invalid_grant') {
+      throw new UnauthorizedException({ code: 'INVALID_REFRESH_TOKEN' })
+    }
+    if (!response.ok) {
+      throw new ServiceUnavailableException({
+        code: 'AUTH_PROVIDER_UNAVAILABLE',
+      })
+    }
+    if (
+      !isRecord(result) ||
+      typeof result.access_token !== 'string' ||
+      result.access_token.length === 0
+    ) {
+      throw new ServiceUnavailableException({
+        code: 'AUTH_PROVIDER_INVALID_RESPONSE',
+      })
+    }
+
+    return {
+      token: result.access_token,
+      refreshToken:
+        typeof result.refresh_token === 'string' &&
+        result.refresh_token.length > 0
+          ? result.refresh_token
+          : refreshToken,
+    }
+  }
+
   async login(email: string, password: string): Promise<LoginResponseDto> {
     // Las credenciales solo viajan del router al endpoint de tokens de Auth0.
     const config = this.getAuth0Config()
@@ -86,7 +252,7 @@ export class AuthService {
         client_id: config.clientId,
         client_secret: config.clientSecret,
         audience: config.audience,
-        scope: 'openid profile email',
+        scope: 'openid profile email offline_access',
       }),
       signal: AbortSignal.timeout(auth0RequestTimeoutMs),
     }).catch(() => {
@@ -118,6 +284,10 @@ export class AuthService {
       accessToken: result.access_token,
       ...(typeof result.expires_in === 'number'
         ? { expiresIn: result.expires_in }
+        : {}),
+      ...(typeof result.refresh_token === 'string' &&
+      result.refresh_token.length > 0
+        ? { refreshToken: result.refresh_token }
         : {}),
     }
   }
@@ -200,7 +370,7 @@ export class AuthService {
       throw this.invalidToken()
     }
 
-    return { sub: payload.sub }
+    return { email: normalizeAuthEmail(payload.email) }
   }
 
   private getAuth0Config(): {
