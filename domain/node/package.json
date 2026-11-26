@@ -10,7 +10,8 @@
     "build": "tsc -p tsconfig.build.json",
     "lint": "eslint \"{src,test}/**/*.ts\"",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "jest --config ./test/jest.json"
+    "test": "jest --config ./test/jest.json",
+    "test:ci": "pnpm test"
   },
   "dependencies": {
     "pg": "8.23.1"
