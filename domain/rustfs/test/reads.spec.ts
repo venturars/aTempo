@@ -1,5 +1,10 @@
-import { GetObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3'
 import {
+  GetObjectCommand,
+  HeadBucketCommand,
+  HeadObjectCommand,
+} from '@aws-sdk/client-s3'
+import {
+  assertJustification,
   getJustification,
   justificationExists,
   PersistenceError,
@@ -73,6 +78,29 @@ describe('getJustification', () => {
     })
   })
 
+  it('lee un objeto sin Content-Type como application/octet-stream', async () => {
+    // Un objeto subido al bucket por otra herramienta, sin Content-Type.
+    mockSend(async () => ({ Body: validJustification.body, ETag: '"etag-1"' }))
+
+    const { justification } = await getJustification({ id: DOCUMENT_ID })
+    expect(justification?.content_type).toBe('application/octet-stream')
+    // Lo leído cumple las reglas del propio paquete.
+    expect(() => assertJustification(justification!)).not.toThrow()
+  })
+
+  it('devuelve { justification: null } ante un 404 sin nombre en GetObject', async () => {
+    // Un GET lleva cuerpo: si faltara el bucket, S3 diría NoSuchBucket.
+    mockSend(async () => {
+      throw Object.assign(new Error('Not Found'), {
+        $metadata: { httpStatusCode: 404 },
+      })
+    })
+
+    await expect(getJustification({ id: DOCUMENT_ID })).resolves.toEqual({
+      justification: null,
+    })
+  })
+
   it('devuelve { justification: null } si S3 responde NoSuchKey', async () => {
     mockSend(async (command) => {
       if (command instanceof GetObjectCommand) {
@@ -108,6 +136,47 @@ describe('getJustification', () => {
 })
 
 describe('justificationExists', () => {
+  it('devuelve { exists: false } si HeadBucket da 403 por credenciales que solo ven objetos', async () => {
+    mockSend(async (command) => {
+      if (command instanceof HeadObjectCommand) {
+        throw missingKeyError()
+      }
+      throw Object.assign(new Error('AccessDenied'), {
+        name: 'AccessDenied',
+        $metadata: { httpStatusCode: 403 },
+      })
+    })
+
+    await expect(justificationExists({ id: DOCUMENT_ID })).resolves.toEqual({
+      exists: false,
+    })
+  })
+
+  it('lanza PersistenceError si HeadObject responde NoSuchBucket, sin enviar HeadBucket', async () => {
+    const calls = mockSend(async () => {
+      throw missingBucketError()
+    })
+
+    await expect(
+      justificationExists({ id: DOCUMENT_ID }),
+    ).rejects.toBeInstanceOf(PersistenceError)
+    expect(
+      calls.filter((command) => command instanceof HeadBucketCommand),
+    ).toEqual([])
+  })
+
+  it('lanza PersistenceError ante un 404 sin nombre de S3', async () => {
+    mockSend(async () => {
+      throw Object.assign(new Error('Not Found'), {
+        $metadata: { httpStatusCode: 404 },
+      })
+    })
+
+    await expect(
+      justificationExists({ id: DOCUMENT_ID }),
+    ).rejects.toBeInstanceOf(PersistenceError)
+  })
+
   it('lanza ValidationError si el UUID es inválido y no envía comandos S3', async () => {
     const calls = mockSend()
 
@@ -119,6 +188,9 @@ describe('justificationExists', () => {
 
   it('devuelve { exists: true } si la clave está y { exists: false } si no', async () => {
     const calls = mockSend(async (command) => {
+      if (command instanceof HeadBucketCommand) {
+        return {}
+      }
       if (!(command instanceof HeadObjectCommand)) {
         throw new Error(`comando inesperado ${command.constructor.name}`)
       }
@@ -137,7 +209,9 @@ describe('justificationExists', () => {
       }),
     ).resolves.toEqual({ exists: false })
 
-    expect(calls).toHaveLength(2)
+    // La clave que falta pide además HeadBucket para confirmar el bucket.
+    expect(calls).toHaveLength(3)
+    expect(calls[2]).toBeInstanceOf(HeadBucketCommand)
     expect(calls[0]).toBeInstanceOf(HeadObjectCommand)
     expect(calls[0].input).toEqual({
       Bucket: 'justifications',
@@ -171,8 +245,9 @@ describe('justificationExists', () => {
   })
 
   it('lanza PersistenceError si el bucket no existe', async () => {
+    // Forma real del SDK: HeadObject y HeadBucket dan 404 NotFound.
     mockSend(async () => {
-      throw missingBucketError()
+      throw missingKeyError()
     })
 
     await expect(

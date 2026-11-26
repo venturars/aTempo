@@ -1,10 +1,15 @@
 import {
   GetObjectCommand,
+  HeadBucketCommand,
   HeadObjectCommand,
   PutObjectCommand,
 } from '@aws-sdk/client-s3'
 
 export const JUSTIFICATIONS_BUCKET = 'justifications'
+
+export function headJustificationsBucketCommand(): HeadBucketCommand {
+  return new HeadBucketCommand({ Bucket: JUSTIFICATIONS_BUCKET })
+}
 
 export function headJustificationCommand(key: string): HeadObjectCommand {
   return new HeadObjectCommand({
@@ -30,5 +35,8 @@ export function putJustificationCommand(
     Key: key,
     Body: body,
     ContentType: contentType,
+    // Escritura condicional: RustFS solo crea el objeto si la clave no existe.
+    // Si dos subidas llegan a la vez, la segunda recibe 412 y no sobrescribe.
+    IfNoneMatch: '*',
   })
 }

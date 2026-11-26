@@ -1,5 +1,6 @@
 import {
   ValidationError,
+  assertJustification,
   assertJustificationCreate,
   assertUuid,
   normalizeUuid,
@@ -7,6 +8,14 @@ import {
 import { DOCUMENT_ID, validJustification } from './helpers'
 
 describe('tipos de justificante', () => {
+  it('acepta un etag vacío y rechaza uno que no es string con un mensaje que no dice "no vacío"', () => {
+    const stored = { ...validJustification, etag: '' }
+    expect(assertJustification(stored).etag).toBe('')
+    expect(() =>
+      assertJustification({ ...stored, etag: 123 as unknown as string }),
+    ).toThrow(/^justification\.etag debe ser un string$/)
+  })
+
   it('lanza ValidationError si el UUID es inválido', () => {
     expect(() => assertUuid('no-es-uuid', 'justification.document_id')).toThrow(
       ValidationError,

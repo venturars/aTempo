@@ -55,7 +55,7 @@ Carpeta: `domain/rustfs/`. Nombre npm: `atempo-domain-rustfs`.
 
 Paquete librería TypeScript. Guarda y lee justificantes en RustFS con `@aws-sdk/client-s3` 3.943.0. No es un servicio HTTP. `api-rustfs` delegará en él; hoy no lo importa. El `S3Client` usa `forcePathStyle: true` y `region: "us-east-1"`. El endpoint se ensambla con `RUSTFS_ENDPOINT` (host), `RUSTFS_PORT`, `RUSTFS_USE_SSL`, `RUSTFS_ACCESS_KEY` y `RUSTFS_SECRET_KEY`. Si falta alguna, lanza `ConfigurationError`. El paquete npm `minio` no entra aquí.
 
-La API pública es RORO: `check()` envía `HeadBucket` al bucket `justifications` y devuelve `{ ok: true }`; `putJustification`, `getJustification` y `justificationExists` operan sobre la clave UUID en minúsculas. Un put sobre una clave existente lanza `ConflictError` y no envía `PutObject`. El SDK no exporta el `S3Client` ni borra objetos. Los tests sustituyen el driver S3: RustFS no tiene que estar en marcha. El paquete se instala y se prueba en el ordenador; no entra en Compose ni en `setup`.
+La API pública es RORO: `check()` envía `HeadBucket` al bucket `justifications` y devuelve `{ ok: true }`; `putJustification`, `getJustification` y `justificationExists` operan sobre la clave UUID en minúsculas. Un put es un solo `PutObject` con `IfNoneMatch: '*'`: sobre una clave existente RustFS responde 412 y el SDK lanza `ConflictError` sin sobrescribir. El SDK no exporta el `S3Client` ni borra objetos. Los tests sustituyen el driver S3: RustFS no tiene que estar en marcha. El paquete se instala y se prueba en el ordenador; no entra en Compose ni en `setup`.
 
 ## api-postgresql
 

@@ -31,7 +31,7 @@ export function assertJustificationCreate(
 
 export function assertJustification(value: Justification): Justification {
   const created = assertJustificationCreate(value)
-  assertString(value.etag, 'justification.etag', true)
+  assertString(value.etag, 'justification.etag')
   return {
     ...created,
     etag: value.etag,

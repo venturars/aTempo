@@ -1,8 +1,4 @@
-import { ConflictError } from '../errors'
-import {
-  insertJustification,
-  justificationKeyExists,
-} from '../rustfs/store/justification'
+import { insertJustification } from '../rustfs/store/justification'
 import {
   assertJustificationCreate,
   type Justification,
@@ -21,13 +17,8 @@ export async function putJustification(
   input: PutJustificationInput,
 ): Promise<PutJustificationOutput> {
   const justification = assertJustificationCreate(input.justification)
-  const exists = await justificationKeyExists(justification.document_id)
-  if (exists) {
-    throw new ConflictError('justification.document_id ya existe', {
-      entity: 'justification',
-      field: 'document_id',
-    })
-  }
-
+  // Una sola petición: el PutObject lleva IfNoneMatch '*', así que RustFS no
+  // sobrescribe una clave que ya existe (412 -> ConflictError) y avisa si falta
+  // el bucket (NoSuchBucket -> PersistenceError). No hace falta mirar antes.
   return { justification: await insertJustification(justification) }
 }

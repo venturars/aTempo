@@ -33,11 +33,57 @@ function requiredEnv(name: RustfsEnvKey): string {
   return value
 }
 
-function endpointFromEnv(): string {
-  const host = requiredEnv('RUSTFS_ENDPOINT')
-  const port = requiredEnv('RUSTFS_PORT')
-  const useSsl = requiredEnv('RUSTFS_USE_SSL')
-  const scheme = useSsl === 'true' || useSsl === '1' ? 'https' : 'http'
+/**
+ * Lee RUSTFS_USE_SSL. Acepta true/false y 1/0 sin distinguir mayúsculas. Otro
+ * valor (`yes`, `on`, una errata) es un fallo de configuración: tomarlo como
+ * false enviaría las peticiones firmadas sin cifrar sin avisar.
+ */
+function useSslFromEnv(): boolean {
+  const value = requiredEnv('RUSTFS_USE_SSL').trim().toLowerCase()
+  if (value === 'true' || value === '1') {
+    return true
+  }
+  if (value === 'false' || value === '0') {
+    return false
+  }
+  throw new ConfigurationError(
+    'RUSTFS_USE_SSL tiene que ser true, false, 1 o 0',
+    { entity: 'rustfs', field: 'RUSTFS_USE_SSL' },
+  )
+}
+
+/**
+ * Lee RUSTFS_ENDPOINT como host, igual que api-rustfs y docker-compose.yml
+ * (`rustfs`, `127.0.0.1`). Los scripts de rustfs/ usan la misma variable como
+ * URL completa: aquí ese valor es un error claro y no una URL rota.
+ */
+function hostFromEnv(): string {
+  const host = requiredEnv('RUSTFS_ENDPOINT').trim()
+  if (host.includes('://') || host.includes('/') || host.includes(':')) {
+    throw new ConfigurationError(
+      'RUSTFS_ENDPOINT tiene que ser solo el host, sin esquema ni puerto (por ejemplo rustfs o 127.0.0.1)',
+      { entity: 'rustfs', field: 'RUSTFS_ENDPOINT' },
+    )
+  }
+  return host
+}
+
+function portFromEnv(): number {
+  const text = requiredEnv('RUSTFS_PORT').trim()
+  const port = Number(text)
+  if (!/^\d+$/.test(text) || port < 1 || port > 65535) {
+    throw new ConfigurationError(
+      'RUSTFS_PORT tiene que ser un número de 1 a 65535',
+      { entity: 'rustfs', field: 'RUSTFS_PORT' },
+    )
+  }
+  return port
+}
+
+export function endpointFromEnv(): string {
+  const host = hostFromEnv()
+  const port = portFromEnv()
+  const scheme = useSslFromEnv() ? 'https' : 'http'
   return `${scheme}://${host}:${port}`
 }
 

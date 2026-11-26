@@ -51,17 +51,63 @@ function isMissingObject(error: object): boolean {
   )
 }
 
-export function isMissingKeyError(error: unknown): boolean {
+/**
+ * Un HEAD de la clave dio 404. Un HEAD no lleva cuerpo: S3 responde el mismo
+ * 404 NotFound si falta la clave o si falta el bucket. Un 404 sin nombre de S3
+ * (un proxy, una ruta mal puesta) no dice que falte la clave.
+ */
+export function isMissingKeyOnHead(error: unknown): boolean {
   if (typeof error !== 'object' || error === null) {
     return false
   }
   if (isMissingBucket(error)) {
     return false
   }
-  if (isMissingObject(error)) {
-    return true
+  return isMissingObject(error)
+}
+
+/**
+ * Un GET de la clave dio 404. Un GET sí lleva cuerpo: S3 nombra NoSuchBucket
+ * cuando falta el bucket. Cualquier otro 404 es una clave que no existe.
+ */
+export function isMissingKeyOnGet(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) {
+    return false
   }
-  return httpStatus(error) === 404
+  if (isMissingBucket(error)) {
+    return false
+  }
+  return isMissingObject(error) || httpStatus(error) === 404
+}
+
+/** HeadBucket dio 404: el bucket no existe. Un 403 no dice nada del bucket. */
+export function isMissingBucketOnHead(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) {
+    return false
+  }
+  return (
+    isMissingBucket(error) ||
+    isMissingObject(error) ||
+    httpStatus(error) === 404
+  )
+}
+
+/**
+ * La escritura condicional (`IfNoneMatch: '*'`) no se hizo porque la clave ya
+ * existe: 412 PreconditionFailed. Un 409 ConditionalRequestConflict no entra:
+ * significa que otra escritura sobre la misma clave está en curso y puede
+ * fallar, así que la clave quizá no llegue a existir. Ese caso sale como
+ * PersistenceError y quien llama puede reintentar.
+ */
+export function isKeyTakenError(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) {
+    return false
+  }
+  return (
+    httpStatus(error) === 412 ||
+    s3Name(error) === 'PreconditionFailed' ||
+    s3Code(error) === 'PreconditionFailed'
+  )
 }
 
 export function rethrowS3(error: unknown): never {
