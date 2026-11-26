@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, Outlet, useNavigate } from '@tanstack/react-router'
 import { applyTheme, readTheme } from '../session/sessionStore'
 import { ThemeToggle } from '../shared/ThemeToggle'
 import { AdminEntry } from './AdminEntry'
 import { useAdminStore } from './adminStore'
+import { useSessionStore } from '../session/sessionStore'
 
 const pageWidth = 'mx-auto w-full max-w-5xl px-4 sm:px-6'
 
@@ -12,9 +13,19 @@ export function AdminLayout(): React.JSX.Element {
   const people = useAdminStore((state) => state.people)
   const currentPersonId = useAdminStore((state) => state.currentPersonId)
   const exitDemo = useAdminStore((state) => state.exitDemo)
+  const profile = useSessionStore((state) => state.profile)
+  const endStudentSession = useSessionStore((state) => state.endStudentSession)
+  const isLoggingOut = useSessionStore((state) => state.isLoggingOut)
+  const logoutError = useSessionStore((state) => state.logoutError)
   const navigate = useNavigate()
   const [theme, setTheme] = useState(readTheme)
   const currentPerson = people.find((person) => person.id === currentPersonId)
+
+  useEffect(() => {
+    if (profile === 'admin' && currentPersonId === null) {
+      useAdminStore.getState().enterDemo()
+    }
+  }, [currentPersonId, profile])
 
   function onTheme(): void {
     const next = theme === 'atempo-claro' ? 'atempo-oscuro' : 'atempo-claro'
@@ -22,12 +33,22 @@ export function AdminLayout(): React.JSX.Element {
     setTheme(next)
   }
 
-  function onExit(): void {
+  async function onExit(): Promise<void> {
+    if (!(await endStudentSession())) return
     exitDemo()
     void navigate({ to: '/admin' })
   }
 
+  if (profile === 'admin' && currentPersonId === null) {
+    return (
+      <main className="flex min-h-screen items-center justify-center" role="status">
+        <span className="loading loading-spinner loading-lg" aria-label="Abriendo administración" />
+      </main>
+    )
+  }
+
   if (
+    profile !== 'admin' ||
     !currentPerson?.roles.includes('admin') ||
     currentPerson.organizationId !== organization.id ||
     currentPerson.state !== 'active'
@@ -45,11 +66,21 @@ export function AdminLayout(): React.JSX.Element {
           <span className="hidden text-sm text-base-content/60 sm:block">{organization.name}</span>
           <div className="ml-auto flex items-center gap-4">
             <ThemeToggle dark={theme === 'atempo-oscuro'} onToggle={onTheme} />
-            <button className="btn btn-ghost btn-sm" type="button" onClick={onExit}>
-              Cerrar sesión
+            <button
+              className="btn btn-ghost btn-sm"
+              type="button"
+              disabled={isLoggingOut}
+              onClick={() => void onExit()}
+            >
+              {isLoggingOut ? 'Cerrando sesión…' : 'Cerrar sesión'}
             </button>
           </div>
         </div>
+        {logoutError !== '' ? (
+          <p className={`${pageWidth} alert alert-soft alert-error`} role="alert">
+            {logoutError}
+          </p>
+        ) : null}
         <nav
           className={`${pageWidth} flex h-12 items-stretch gap-1 sm:gap-4`}
           aria-label="Administración"

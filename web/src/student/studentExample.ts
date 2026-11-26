@@ -9,7 +9,6 @@ export type ClassEntry = {
 export type StudentAccount = {
   name: string
   email: string
-  password: string
   history: ClassEntry[]
   // Campos de person en PostgreSQL. La cuenta de ejemplo no los tiene.
   firstName?: string
@@ -30,7 +29,6 @@ export type TodayClass = {
 export const exampleStudent: StudentAccount = {
   name: 'Ada López',
   email: 'ada.lopez@clase.test',
-  password: 'clase-2026',
   history: [
     { label: 'Mar 10 nov', arrival: '08:57', status: 'presente' },
     { label: 'Lun 9 nov', arrival: '09:16', status: 'tarde' },
