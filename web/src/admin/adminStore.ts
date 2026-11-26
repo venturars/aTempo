@@ -1,13 +1,18 @@
 import { create } from 'zustand'
 
+// Los campos siguen la tabla person de postgres/init/01_schema.sql. name es el nombre completo para las tablas.
 export type Person = {
   id: string
   organizationId: string
   name: string
+  firstName: string
+  lastName: string
+  identificationDocument: string
   email: string
+  birthDate: string
+  phone: string
   roles: ('admin' | 'teacher' | 'student')[]
   state: 'active' | 'invited'
-  identificationDocument?: string
 }
 
 export type Course = {
@@ -31,11 +36,16 @@ export type ClassSession = {
 
 export type MutationResult<T> = { ok: true; value: T } | { ok: false; error: string }
 export type InvitePersonInput = {
-  name: string
+  firstName: string
+  lastName: string
+  identificationDocument: string
   email: string
+  birthDate: string
+  phone: string
   role: 'teacher' | 'student'
-  admin?: boolean
 }
+// Solo el admin cambia su propia cuenta, y lo único que decide de su rol es si también da clase.
+export type UpdateAdminInput = Omit<InvitePersonInput, 'role'> & { teaches: boolean }
 export type CreateCourseInput = {
   name: string
   teacherId: string
@@ -83,6 +93,7 @@ export type AdminStore = AdminData & {
   createSession: (input: CreateSessionInput) => MutationResult<ClassSession>
   createRecurringSessions: (input: RecurringSessionInput) => MutationResult<RecurringSessionResult>
   updatePerson: (id: string, input: InvitePersonInput) => MutationResult<Person>
+  updateAdmin: (input: UpdateAdminInput) => MutationResult<Person>
   deletePerson: (id: string) => MutationResult<null>
   updateCourse: (id: string, input: CreateCourseInput) => MutationResult<Course>
   deleteCourse: (id: string) => MutationResult<null>
@@ -102,8 +113,13 @@ function createSeed(): AdminData {
       {
         id: adminId,
         organizationId,
-        name: 'Miguel Rodríguez',
-        email: 'miguel@neoland.example',
+        name: 'Ventura Rodríguez',
+        firstName: 'Ventura',
+        lastName: 'Rodríguez',
+        identificationDocument: '50123456K',
+        email: 'profesor@atempo.test',
+        birthDate: '1990-04-12',
+        phone: '+34 600 111 222',
         roles: ['admin', 'teacher'],
         state: 'active'
       },
@@ -111,7 +127,12 @@ function createSeed(): AdminData {
         id: 'person-teacher',
         organizationId,
         name: 'Lucía García',
+        firstName: 'Lucía',
+        lastName: 'García',
+        identificationDocument: '23456789D',
         email: 'lucia@neoland.example',
+        birthDate: '1988-09-30',
+        phone: '+34 600 333 444',
         roles: ['teacher'],
         state: 'active'
       },
@@ -119,7 +140,12 @@ function createSeed(): AdminData {
         id: 'person-student-ana',
         organizationId,
         name: 'Ana López',
+        firstName: 'Ana',
+        lastName: 'López',
+        identificationDocument: '34567890V',
         email: 'ana@neoland.example',
+        birthDate: '2001-02-15',
+        phone: '',
         roles: ['student'],
         state: 'active'
       },
@@ -127,7 +153,12 @@ function createSeed(): AdminData {
         id: 'person-student-luis',
         organizationId,
         name: 'Luis Martín',
+        firstName: 'Luis',
+        lastName: 'Martín',
+        identificationDocument: '45678901G',
         email: 'luis@neoland.example',
+        birthDate: '1999-11-03',
+        phone: '',
         roles: ['student'],
         state: 'active'
       }
@@ -203,33 +234,78 @@ function isValidTime(value: string): boolean {
   return typeof value === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value)
 }
 
+type PersonData = Pick<
+  Person,
+  'name' | 'firstName' | 'lastName' | 'identificationDocument' | 'email' | 'birthDate' | 'phone'
+>
+
+// Como en el alta del admin: 12.345.678-z y 12345678Z son el mismo documento.
+function normalizeDocument(value: string): string {
+  return cleanText(value)
+    .replace(/[\s.-]/g, '')
+    .toUpperCase()
+}
+
+function today(): string {
+  const now = new Date()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${now.getFullYear()}-${month}-${day}`
+}
+
 function validatePerson(
   state: AdminData,
-  input: InvitePersonInput,
+  input: Omit<InvitePersonInput, 'role'>,
   excludedId?: string
-): MutationResult<Pick<Person, 'name' | 'email'>> {
-  const name = cleanText(input.name)
+): MutationResult<PersonData> {
+  const firstName = cleanText(input.firstName)
+  const lastName = cleanText(input.lastName)
+  const identificationDocument = normalizeDocument(input.identificationDocument)
   const email = cleanText(input.email).toLowerCase()
-  if (!name) return { ok: false, error: 'Escribe el nombre de la persona.' }
+  const birthDate = cleanText(input.birthDate)
+  const phone = cleanText(input.phone)
+  if (!firstName) return { ok: false, error: 'Escribe el nombre de la persona.' }
+  if (!lastName) return { ok: false, error: 'Escribe los apellidos de la persona.' }
+  if (!/^[A-Z0-9]{5,20}$/.test(identificationDocument))
+    return { ok: false, error: 'Escribe un DNI, NIE o pasaporte válido.' }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     return { ok: false, error: 'Escribe un correo válido.' }
-  if (input.role !== 'teacher' && input.role !== 'student')
-    return { ok: false, error: 'Selecciona el rol profesor o alumno.' }
-  if (
-    input.admin !== undefined &&
-    (typeof input.admin !== 'boolean' || (input.admin && input.role !== 'teacher'))
+  if (birthDate && (!isValidDate(birthDate) || birthDate > today()))
+    return { ok: false, error: 'Escribe una fecha de nacimiento válida.' }
+  if (phone && !/^\+?[0-9 ]{6,20}$/.test(phone))
+    return {
+      ok: false,
+      error: 'Escribe un teléfono con cifras, espacios y un + inicial.'
+    }
+  const others = state.people.filter(
+    (person) => person.id !== excludedId && person.organizationId === state.organization.id
   )
-    return { ok: false, error: 'El rol de administrador solo se puede añadir a un profesor.' }
-  if (
-    state.people.some(
-      (person) =>
-        person.id !== excludedId &&
-        person.organizationId === state.organization.id &&
-        person.email.trim().toLowerCase() === email
-    )
-  )
-    return { ok: false, error: 'Ya existe una persona con ese correo en la organización.' }
-  return { ok: true, value: { name, email } }
+  if (others.some((person) => person.identificationDocument === identificationDocument))
+    return {
+      ok: false,
+      error: 'Ya existe una persona con ese documento en la organización.'
+    }
+  if (others.some((person) => person.email.trim().toLowerCase() === email))
+    return {
+      ok: false,
+      error: 'Ya existe una persona con ese correo en la organización.'
+    }
+  return {
+    ok: true,
+    value: {
+      name: `${firstName} ${lastName}`,
+      firstName,
+      lastName,
+      identificationDocument,
+      email,
+      birthDate,
+      phone
+    }
+  }
+}
+
+function isRole(role: unknown): role is 'teacher' | 'student' {
+  return role === 'teacher' || role === 'student'
 }
 
 function validateCourse(
@@ -400,13 +476,14 @@ export const useAdminStore = create<AdminStore>((set, get) => {
       const state = get()
       const error = adminError(state)
       if (error) return { ok: false, error }
+      if (!isRole(input.role)) return { ok: false, error: 'Selecciona el rol profesor o alumno.' }
       const result = validatePerson(state, input)
       if (!result.ok) return result
       const person: Person = {
         id: nextId('person', state.people),
         organizationId: state.organization.id,
         ...result.value,
-        roles: input.admin ? ['admin', 'teacher'] : [input.role],
+        roles: [input.role],
         state: 'invited'
       }
       set({ people: [...state.people, person] })
@@ -419,25 +496,64 @@ export const useAdminStore = create<AdminStore>((set, get) => {
       const existing = state.people.find(
         (person) => person.id === id && person.organizationId === state.organization.id
       )
-      if (!existing) return { ok: false, error: 'No se encuentra la persona en la organización.' }
-      const isAdmin = existing.roles.includes('admin')
-      const preserveRoles =
-        isAdmin && (id === state.currentPersonId || !existing.roles.includes('teacher'))
+      if (!existing)
+        return {
+          ok: false,
+          error: 'No se encuentra la persona en la organización.'
+        }
+      if (existing.roles.includes('admin'))
+        return {
+          ok: false,
+          error: 'El admin cambia sus datos desde su propia cuenta.'
+        }
+      if (!isRole(input.role)) return { ok: false, error: 'Selecciona el rol profesor o alumno.' }
       const result = validatePerson(state, input, id)
       if (!result.ok) return result
-      const roles: Person['roles'] = preserveRoles ? [...existing.roles] : [input.role]
-      if (!preserveRoles && input.role === 'teacher' && (input.admin ?? isAdmin)) {
-        roles.unshift('admin')
-      }
-      if (!roles.includes('teacher') && state.courses.some((course) => course.teacherId === id))
-        return { ok: false, error: 'Reasigna los cursos de esta persona antes de cambiar su rol.' }
+      const roles: Person['roles'] = [input.role]
+      if (input.role !== 'teacher' && state.courses.some((course) => course.teacherId === id))
+        return {
+          ok: false,
+          error: 'Reasigna los cursos de esta persona antes de cambiar su rol.'
+        }
       if (
-        !roles.includes('student') &&
+        input.role !== 'student' &&
         state.courses.some((course) => course.studentIds.includes(id))
       )
-        return { ok: false, error: 'Retira sus matrículas antes de cambiar su rol.' }
+        return {
+          ok: false,
+          error: 'Retira sus matrículas antes de cambiar su rol.'
+        }
       const person: Person = { ...existing, ...result.value, roles }
-      set({ people: state.people.map((entry) => (entry.id === id ? person : entry)) })
+      set({
+        people: state.people.map((entry) => (entry.id === id ? person : entry))
+      })
+      return { ok: true, value: person }
+    },
+    updateAdmin: (input) => {
+      const state = get()
+      const error = adminError(state)
+      if (error) return { ok: false, error }
+      const id = state.currentPersonId
+      const existing = state.people.find((person) => person.id === id)
+      if (!existing)
+        return {
+          ok: false,
+          error: 'No se encuentra la persona en la organización.'
+        }
+      if (typeof input.teaches !== 'boolean')
+        return { ok: false, error: 'Indica si también das clase.' }
+      const result = validatePerson(state, input, existing.id)
+      if (!result.ok) return result
+      if (!input.teaches && state.courses.some((course) => course.teacherId === existing.id))
+        return {
+          ok: false,
+          error: 'Reasigna tus cursos antes de dejar de ser profesor.'
+        }
+      const roles: Person['roles'] = input.teaches ? ['admin', 'teacher'] : ['admin']
+      const person: Person = { ...existing, ...result.value, roles }
+      set({
+        people: state.people.map((entry) => (entry.id === existing.id ? person : entry))
+      })
       return { ok: true, value: person }
     },
     deletePerson: (id) => {
