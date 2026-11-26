@@ -8,8 +8,8 @@ FROM node:24.22.3-trixie AS base
 ARG PNPM_VERSION=10.33.0
 ARG APM_VERSION=0.39.0
 # Checksums de apm-linux-*.tar.gz en la release de APM. Cambian con APM_VERSION.
-ARG APM_SHA256_ARM64=2fd5ecb25cbfe7324935dbe506d2a66bf6538fc0dac3bb3aea9f53f04bc1caa6
-ARG APM_SHA256_X86_64=c91007b5ed708dd3f6dabfe3a3a1ed98305f775f0a5323249e7a6b6bb5fa22c0
+ARG APM_SHA256_ARM64=01ba7e98b71469225298557dd06fb4ea9e8de61c739182d09b3e26c788c1d975
+ARG APM_SHA256_X86_64=3a84e9c14ab594c22e97f6ccc9be41bed14199fe4f4aa24a206d23b65919592d
 # Snapshot Debian de Python (base) y de las librerías de desktop-gui. Cambia la fecha y todas las versiones fijadas juntas.
 ARG DEBIAN_SNAPSHOT=20261116T000000Z
 # Lo pone Docker al construir: arm64 en Apple Silicon, amd64 en la mayoría de PCs.
