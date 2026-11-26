@@ -1,99 +1,65 @@
 # Demo de aTempo
 
-El recorrido muestra la web de administración y alumno con datos simulados, junto con el panel Electron del profesor autenticado por Auth0. La web guarda en este navegador las cuentas activadas, las entradas y los avisos; sus datos están separados de Electron y del `api-router`. Para reiniciar esos datos, abre <http://localhost:5191/?reiniciar>.
+Electron conserva una demo local con cuentas y datos de ejemplo. La web de alumnado y administración requiere Auth0 y el api-router; no ofrece acceso simulado sin ellos. El panel web usa datos demo en memoria y el portal del alumno conserva su historial y avisos en el navegador.
 
 ## Arrancar
 
-Necesitas Node 24, pnpm 10.33.0, Docker disponible y un `.env` local con la configuración de Auth0. En Windows y macOS, si Docker Desktop está instalado, `pnpm run atempo` intenta iniciarlo cuando el motor no responde. En Linux, arranca manualmente el motor Docker antes de ejecutar el comando. Desde la raíz del repositorio ejecuta el comando de arranque:
+Necesitas Node 24, pnpm 10.33.0, Docker disponible y un `.env` local con la configuración de Auth0. En Windows y macOS, si Docker Desktop está instalado, `pnpm run atempo` intenta iniciarlo cuando el motor no responde. En Linux, arranca manualmente el motor Docker antes de ejecutar el comando. Desde la raíz del repositorio:
 
 ```sh
 pnpm run atempo
 ```
 
-El comando instala las dependencias de `web/` y `desktop/` cuando faltan, levanta `api-router` en Docker (puerto 3004 por defecto), sirve la web en <http://localhost:5191> y abre Electron. Cambia el puerto del router con `pnpm run atempo --port 3005`; `pnpm run atempo --router-only` inicia solo el router. Electron requiere las credenciales de Auth0 del `.env`.
+El comando instala las dependencias de `web/` y `desktop/` cuando faltan, levanta `api-router` en Docker (puerto 3004 por defecto), sirve la web en <http://localhost:5191> y abre Electron. Cambia el puerto del router con `pnpm run atempo --port 3005`; `pnpm run atempo --router-only` inicia solo el router.
 
-La web usa datos simulados independientes del login Auth0 y de los datos de Electron. Por eso, una cuenta creada o una asistencia registrada en la web no aparece en la lista del profesor; en Electron, **Simular llegada** representa ese paso.
+Configura `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET` y `AUTH0_AUDIENCE` en el `.env` de la raíz. Abre <http://localhost:5191/> para el alumno y <http://localhost:5191/admin> para administración. Usa las contraseñas registradas en Auth0:
 
-## 1. Administración
+| Correo | Área de la web | Datos demo |
+| --- | --- | --- |
+| `ada.lopez@clase.test` | Portal del alumno | Ada López |
+| `profesor@atempo.test` | Administración | Ventura Rodríguez |
 
-1. Abre <http://localhost:5191/admin> y pulsa **Crear cuenta**.
-2. Rellena la organización, su CIF (9 caracteres, por ejemplo `B12345678`) y tus datos: nombre, apellidos, documento de identidad (por ejemplo `12345678Z`), correo y una contraseña de al menos 8 caracteres. Pulsa **Crear cuenta**: entras en la administración vacía de tu organización.
-3. Pulsa **Cerrar sesión** y entra con la organización de ejemplo: `miguel@neoland.example` / `neoland-2026`. Tiene personas, cursos y sesiones.
-4. En **Personas**, pulsa **Invitar persona** e invita a un profesor o a un alumno. Queda con **Invitación pendiente**.
-5. En **Cursos**, crea un curso, ábrelo y pulsa **Programar sesión**.
+El router guarda la sesión en memoria y entrega una cookie HttpOnly. La cookie no tiene Max-Age; el router expira las sesiones a los siete días. Reiniciar el router invalida las sesiones. El login web no crea cuentas. **Crear cuenta** y activar una invitación muestran un aviso de que todavía no están disponibles.
 
-El correo de invitación no se envía todavía. Los dos pasos siguientes abren el enlace que llevaría ese correo.
+### Electron sin Auth0
 
-## 2. Profesor invitado
+Para depurar solo el escritorio sin web ni router, usa `pnpm run demo:desktop` desde la raíz. Entra con las cuentas públicas de ejemplo de Electron: `profesor@atempo.test` / `Profesor123!` o `ada.lopez@clase.test` / `clase-2026`. Las invitaciones de prueba de Electron se describen más abajo.
 
-Cierra la app del profesor (**Cmd+Q** en macOS) y ábrela con el enlace de invitación de Lucía Martín:
+## Administración web
+
+1. Entra con `profesor@atempo.test`. Abre la organización demo Neoland como Ventura Rodríguez, administrador y profesor.
+2. **Personas** permite preparar invitaciones demo; no envía correo. La cuenta invitada no puede activarse desde el login web en esta versión.
+3. **Cursos** permite asignar profesores y alumnos demo. Abre un curso para programar sesiones y ver su lista pendiente.
+4. **Mis clases** muestra en modo lectura las sesiones de los cursos asignados a Ventura.
+5. Recargar restablece las personas, cursos y sesiones demo. La sesión Auth0 se recupera con la cookie mientras siga vigente.
+
+## Portal del alumno
+
+1. Entra en <http://localhost:5191/> con `ada.lopez@clase.test`.
+2. Abre **Resumen** para ver el historial de ejemplo. **Avisar** permite registrar avisos demo.
+3. El acceso con invitación no activa cuentas nuevas. El login muestra que la activación todavía no está disponible.
+4. El historial y los avisos se conservan en el navegador. Para reiniciar los datos locales de esta demo, abre <http://localhost:5191/?reiniciar>. La sesión Auth0 se recupera mientras siga vigente; usa **Cerrar sesión** para terminarla.
+
+## QR y entrada
+
+1. En Electron, abre **Hoy → Abrir lista**. Aparecen el QR y un código que cambian cada 30 segundos.
+2. En el navegador, escanea el QR o escribe el código. Si no hay una sesión web, inicia sesión como Ada; el enlace pendiente continúa después del login.
+3. La entrada de alumno se conserva en el historial web. No aparece en la lista del profesor: el registro de asistencia de Electron sigue siendo una demo separada del portal web.
+4. Para que un móvil llegue al servidor Vite, ambos equipos deben compartir wifi. Configura `VITE_STUDENT_SITE_URL` con la IP del ordenador al arrancar Electron y arranca la web con `--host`, por ejemplo `pnpm --dir web dev -- --host`. Si abres la web desde la IP en vez de `localhost`, configura también `ATEMPO_WEB_ORIGIN` con ese origen antes de arrancar el router.
+
+## Invitaciones locales de Electron
+
+Las invitaciones simuladas siguen disponibles en Electron cuando lo arrancas con `pnpm run demo:desktop`. Por ejemplo, para Lucía:
 
 ```sh
 cd desktop
 pnpm dev -- --invitation=731905
 ```
 
-1. En **Hola, Lucía**, elige una contraseña de al menos 8 caracteres y pulsa **Entrar**. Se abre **Hoy**.
-2. Pulsa tu nombre al pie de la barra lateral y **Cerrar sesión**. Vuelve a entrar con `lucia.martin@atempo.test` y tu contraseña.
-
-Sin invitación, el profesor de ejemplo entra con `profesor@atempo.test` / `Profesor123!`.
-
-## 3. Alumno invitado
-
-1. Abre <http://localhost:5191/?invitation=264018>. Es el enlace de invitación de Bruno Sanz. Si dice que la invitación ya está activada, abre antes <http://localhost:5191/?reiniciar>.
-2. El nombre y los apellidos vienen de la invitación. Completa el documento de identidad (por ejemplo `87654321X`), elige una contraseña de al menos 8 caracteres y pulsa **Entrar**. Se abre su inicio con Tempito.
-
-El alumno de ejemplo entra en <http://localhost:5191/> con `ada.lopez@clase.test` / `clase-2026`.
-
-## 4. Tempito antes de clase
-
-La clase de ejemplo empieza a las 09:00. Con `?hora=` el inicio del alumno simula otra hora de hoy:
-
-| Abre | Tempito |
-| --- | --- |
-| <http://localhost:5191/student/dashboard?hora=08:40> | Tranquilo, con gafas de sol: llega con tiempo. |
-| <http://localhost:5191/student/dashboard?hora=08:57> | Corre: faltan menos de 5 minutos. |
-| <http://localhost:5191/student/dashboard?hora=08:59:45> | Agobiado en los últimos 30 segundos. Espera y verás cómo cambia a las 09:00. |
-| <http://localhost:5191/student/dashboard?hora=09:05> | Corre con pánico: ya llega tarde. |
-
-`?hora=` y `?dia=` funcionan en la web simulada. Fuera de lunes a viernes no hay clase: añade `&dia=lun` para verla.
-
-## 5. Aviso de retraso
-
-1. En la web del alumno, pulsa **Avisar** y elige **Llego tarde**.
-2. Pon `09:30` como hora de llegada, un motivo si quieres y pulsa **Enviar**.
-3. El inicio dice «Avisaste que llegas a las 09:30».
-4. Abre <http://localhost:5191/student/dashboard?hora=09:20>. Sin el aviso, Tempito correría con pánico; con él cuenta hasta las 09:30 y sigue tranquilo.
-
-**No puedo ir** avisa de una ausencia y admite un justificante.
-
-## 6. QR y entrada
-
-1. En la app del profesor, en **Hoy**, pulsa **Abrir lista**. Aparecen el QR de la clase y un código de 6 cifras, que cambian cada 30 segundos.
-2. En la web del alumno, pulsa **Registrar asistencia**. Escanea el QR con la cámara, o pulsa **Escribir el código** y teclea las 6 cifras.
-3. Aparece «Disfruta la clase» con la hora de entrada, y el inicio cambia a «En clase desde las …».
-4. En **Resumen** está la entrada de hoy. La entrada guarda la hora real: después de las 09:10 queda como **Tarde**.
-
-Para escanear con el móvil, el móvil y el ordenador deben estar en la misma wifi. Arranca el profesor con la IP del ordenador:
-
-```sh
-cd desktop
-VITE_STUDENT_SITE_URL=http://<ip-del-ordenador>:5191 pnpm dev
-```
-
-El comando integrado sirve la web solo en localhost. Para usar el móvil en la misma wifi, sirve la web desde `web/` con `pnpm dev -- --host` y configura `VITE_STUDENT_SITE_URL` con la IP del ordenador al iniciar Electron desde `desktop/`.
-
-La web de ejemplo y Electron con Auth0 usan datos separados: la entrada del alumno no aparece en la lista del profesor. En la lista, **Simular llegada** representa ese paso.
-
-## 7. Llegada tarde y corrección
-
-1. En la app del profesor, con la lista abierta, pulsa **Simular llegada** varias veces. Cada alumno entra con su hora de ejemplo y queda **Presente** o **Tarde** según el inicio de la clase y el margen de **Ajustes**.
-2. Pulsa **Cerrar lista** y confirma. Los que no llegaron pasan a **Ausente**.
-3. En la fila de un alumno que llegó tarde, abre su estado y elige **Presente**. Se abre «Cambiar a Presente»: escribe el motivo y pulsa **Guardar**.
-4. Pasa el ratón por encima del estado: se ve quién lo cambió, cuándo y por qué.
+El envío de correo y el enlace real todavía no están conectados. Estas invitaciones no crean usuarios Auth0 ni activan cuentas del portal web.
 
 ## Volver a empezar
 
-- Web: abre <http://localhost:5191/?reiniciar>. Borra las cuentas activadas, las entradas y los avisos de este navegador.
-- Administración: recarga la página.
-- Profesor: sal con **Cmd+Q** y vuelve a ejecutar `pnpm run atempo` desde la raíz para reiniciar la aplicación completa. `pnpm run demo:desktop` sigue disponible para iniciar Electron de forma aislada; úsalo para depurar o probar opciones como `pnpm run demo:desktop -- --api-fixture=empty`. El login Auth0 requiere que `api-router` esté arrancado.
+- Portal del alumno: abre <http://localhost:5191/?reiniciar> para borrar historial y avisos locales de este navegador.
+- Administración web: recarga la página para restablecer los datos demo en memoria.
+- Electron: cierra la app con **Cmd+Q** en macOS y vuelve a ejecutar `pnpm run atempo` desde la raíz, o `pnpm run demo:desktop` para depuración aislada. El login Auth0 en Electron requiere que `api-router` esté arrancado.

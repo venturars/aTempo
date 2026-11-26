@@ -4,7 +4,7 @@ aTempo registra la asistencia de los alumnos de una clase. Este repositorio tien
 
 La visión, los perfiles y las decisiones de producto están en [principles.md](principles.md).
 
-Para iniciar la aplicación web y Electron juntos, sigue [DEMO.md](DEMO.md) y ejecuta `pnpm run atempo` desde la raíz. La web usa datos simulados independientes; Electron inicia sesión con Auth0 y consume `api-router`.
+La demo local de Electron puede funcionar con datos de ejemplo sin Auth0. La web del alumno y la administración requieren Auth0 y `api-router`. Para arrancar web y Electron juntos, sigue [DEMO.md](DEMO.md) y ejecuta `pnpm run atempo` desde la raíz.
 
 ## Arranque rápido con Auth0
 
@@ -89,7 +89,13 @@ El lector del alumno ofrece lecturas simuladas y no usa cámara. Estos flujos no
 
 El comando `pnpm run atempo` sirve la web automáticamente en el puerto 5191. Usa este arranque aislado solo para depurar la web sin Electron o para exponer Vite en la red local:
 
-Con Node 24 y pnpm 10.33.0:
+La web requiere un `.env` de Auth0 en la raíz, Docker y Node 24 con pnpm 10.33.0. Desde la raíz, arranca el router sin abrir Electron:
+
+```sh
+pnpm run atempo --router-only
+```
+
+En otra terminal, con Node 24 y pnpm 10.33.0:
 
 ```sh
 cd web
@@ -97,8 +103,7 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-- Alumno: <http://localhost:5191/>. La cuenta de ejemplo y `/?reiniciar` están en [web/README.md](web/README.md).
-- Administración: <http://localhost:5191/admin>, con `miguel@neoland.example` / `neoland-2026` o **Crear cuenta** para dar de alta otra organización.
+Abre <http://localhost:5191/> para el alumno o <http://localhost:5191/admin> para administración. Inicia sesión con `ada.lopez@clase.test` para Ada López o `profesor@atempo.test` para entrar al panel demo como Ventura Rodríguez. Las contraseñas son las de esas cuentas en Auth0. El alta de organización y la activación de invitaciones desde el login web todavía no están disponibles.
 
 ## Qué hay
 

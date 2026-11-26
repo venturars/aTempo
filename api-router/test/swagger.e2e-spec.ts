@@ -40,5 +40,8 @@ describe('Swagger (e2e)', () => {
     expect(response.body.paths).toHaveProperty('/auth/register')
     expect(response.body.paths).toHaveProperty('/auth/logout')
     expect(response.body.paths).toHaveProperty('/auth/refresh')
+    expect(response.body.paths).not.toHaveProperty('/auth/web/login')
+    expect(response.body.paths).not.toHaveProperty('/auth/web/session')
+    expect(response.body.paths).not.toHaveProperty('/auth/web/logout')
   })
 })
