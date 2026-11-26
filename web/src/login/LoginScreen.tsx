@@ -4,6 +4,7 @@ import { destinationAfterSignIn, hasPendingCheckIn } from '../student/checkIn/pe
 import { ThemeToggle } from '../shared/ThemeToggle'
 import { applyTheme, readTheme, useSessionStore, type ThemeName } from '../session/sessionStore'
 import { useLoginStore } from './loginStore'
+import { PasswordInput } from '../shared/PasswordInput'
 
 // Auth0 gestiona las invitaciones y altas fuera de este prototipo.
 export function LoginScreen(): React.JSX.Element {
@@ -74,10 +75,9 @@ export function LoginScreen(): React.JSX.Element {
           </div>
           <div className="field">
             <label htmlFor="password">Contraseña</label>
-            <input
+            <PasswordInput
               id="password"
               className={passwordError !== '' ? 'input input-error w-full' : 'input w-full'}
-              type="password"
               autoComplete="current-password"
               value={password}
               aria-invalid={passwordError !== ''}

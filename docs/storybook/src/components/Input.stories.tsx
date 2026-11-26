@@ -27,6 +27,18 @@ export const Gallery: Story = {
         <input className="input input-ghost" type="text" aria-label="Ghost" placeholder="Ghost" />
         <input className="input input-error" type="text" aria-label="Correo" aria-invalid="true" defaultValue="ana" />
       </Section>
+      <Section title="Contraseña">
+        <div className="input pr-1">
+          <input className="grow" type="password" aria-label="Contraseña" defaultValue="clase-2026" />
+          <button type="button" className="btn btn-ghost btn-square btn-sm" >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            <span className="sr-only">Mostrar contraseña</span>
+          </button>
+        </div>
+      </Section>
     </Frame>
   )
 }
