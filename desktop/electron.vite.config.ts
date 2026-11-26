@@ -16,7 +16,16 @@ export default defineConfig({
   renderer: {
     resolve: {
       alias: {
-        '@renderer': resolve('src/renderer/src')
+        '@renderer': resolve('src/renderer/src'),
+        // La administración es el mismo código que la web (#265).
+        '@web': resolve('../web/src')
+      },
+      // El código de web/ debe usar las mismas copias que el renderer, o los hooks se rompen.
+      dedupe: ['react', 'react-dom', 'zustand', '@tanstack/react-router']
+    },
+    server: {
+      fs: {
+        allow: [resolve('..')]
       }
     },
     plugins: [

@@ -3,6 +3,8 @@
   themes: false;
 }
 @import '../../../../../docs/storybook/src/system.css';
+/* Pantallas de administración compartidas con la web (#265). */
+@source '../../../../../web/src/admin';
 
 /* Fuentes en el repo, bajo SIL OFL. Ver fonts/OFL.txt. */
 @font-face {

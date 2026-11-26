@@ -1,8 +1,9 @@
 import { create } from 'zustand'
 
-export type Profile = 'student' | 'teacher' | 'organization'
+export type Profile = 'student' | 'teacher' | 'organization' | 'admin'
 
-export type DashboardPath = '/student/dashboard' | '/teacher/panel' | '/organization/dashboard'
+export type DashboardPath =
+  '/student/dashboard' | '/teacher/panel' | '/organization/dashboard' | '/admin'
 
 type SessionState = {
   profile: Profile | null
@@ -21,7 +22,8 @@ type SessionState = {
 const dashboardPaths: Record<Profile, DashboardPath> = {
   student: '/student/dashboard',
   teacher: '/teacher/panel',
-  organization: '/organization/dashboard'
+  organization: '/organization/dashboard',
+  admin: '/admin'
 }
 
 export function dashboardPathForProfile(profile: Profile): DashboardPath {

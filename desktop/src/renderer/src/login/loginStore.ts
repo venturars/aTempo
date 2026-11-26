@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { afterPendingLogout, useSessionStore } from '../session/sessionStore'
 import { normalizeEmail, useStudentAccountsStore } from '../student/studentAccounts'
 import { exampleStudent } from '../student/studentExample'
+import { adminDemoAccount } from './adminDemoAccount'
 import { teacherDemoAccount } from './teacherDemoAccount'
 import { useTeacherAccountsStore } from './teacherAccounts'
 import { validateLogin } from './validateLogin'
@@ -56,6 +57,17 @@ export const useLoginStore = create<LoginState>((set, get) => ({
         loginError: ''
       })
       return false
+    }
+
+    // Sin Auth0, la cuenta de demo del admin abre la administración compartida con la web (#265).
+    if (normalizeEmail(email) === adminDemoAccount.email) {
+      if (password !== adminDemoAccount.password) {
+        set({ emailError: '', passwordError: '', loginError: loginErrorText })
+        return false
+      }
+      useSessionStore.getState().startSession('admin', adminDemoAccount.email)
+      set(emptyLoginForm)
+      return true
     }
 
     // Sin Auth0: la cuenta de ejemplo y las invitaciones activadas durante este arranque.

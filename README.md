@@ -38,6 +38,7 @@ Desde un arranque nuevo, usa el formulario **Entrar** con una de estas cuentas p
 | --- | --- | --- | --- |
 | Profesor | `profesor@atempo.test` | `Profesor123!` | Hoy, en el panel del profesor |
 | Alumno | `ada.lopez@clase.test` | `clase-2026` | Dashboard de Ada López |
+| Administración | `admin@atempo.test` | `admin-demo` | La misma administración que la web: Personas, Cursos y Mis clases |
 
 La pestaña Hoy usa un cliente de la API con datos simulados. Para depurar otro escenario con Electron aislado, arranca desde la raíz con `pnpm run demo:desktop -- --api-fixture=<nombre>`: `empty` (sin clases hoy), `denied` (sin acceso), `unauthenticated` (sesión caducada: vuelve al login), `network` (las escrituras no llegan), `timeout` (las escrituras no responden en 10 segundos), `server-error` (las escrituras responden 500), `conflict` (la clase se abrió desde otro sitio), `expired-code` (el primer código del QR llega caducado) o `code-unavailable` (las dos primeras peticiones del código fallan).
 
