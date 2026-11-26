@@ -67,7 +67,11 @@ from python_domain.session.update_session import (
 )
 from python_domain.sqlite.check import check
 from python_domain.sqlite.pool import close_pool, reset_pool
-from python_domain.types.attendance import Attendance, assert_attendance
+from python_domain.types.attendance import (
+    Attendance,
+    assert_attendance,
+    attendance_from_row,
+)
 from python_domain.types.session import (
     Session,
     SessionCreate,
@@ -75,6 +79,7 @@ from python_domain.types.session import (
     assert_session,
     assert_session_create,
     assert_session_update,
+    session_from_row,
 )
 
 __all__ = [
@@ -117,8 +122,10 @@ __all__ = [
     "assert_session",
     "assert_session_create",
     "assert_session_update",
+    "attendance_from_row",
     "check",
     "close_pool",
+    "session_from_row",
     "add_session",
     "remove_session",
     "retrieve_session_by_id",

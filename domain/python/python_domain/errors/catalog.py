@@ -10,6 +10,14 @@ class ReasonSpec(TypedDict):
 
 
 DOMAIN_ERROR_REASONS: dict[str, ReasonSpec] = {
+    "string": {
+        "kind": "VALIDATION",
+        "message": lambda label: f"{label} debe ser un string",
+    },
+    "nullable_string": {
+        "kind": "VALIDATION",
+        "message": lambda label: f"{label} debe ser un string o null",
+    },
     "empty": {
         "kind": "VALIDATION",
         "message": lambda label: f"{label} debe ser un string no vacío",
@@ -99,6 +107,8 @@ DOMAIN_ERROR_REASONS: dict[str, ReasonSpec] = {
 }
 
 DomainErrorReason = Literal[
+    "string",
+    "nullable_string",
     "empty",
     "uuid",
     "date",

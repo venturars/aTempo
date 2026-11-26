@@ -7,6 +7,7 @@ from python_domain.types.attendance import (
     Attendance,
     assert_attendance,
     assert_checked_in_at_in_session,
+    attendance_from_row,
 )
 from python_domain.types.assert_values import read_input_field
 
@@ -32,6 +33,6 @@ def update_attendance(input: UpdateAttendanceInput) -> UpdateAttendanceOutput:
         row = update_attendance_row(body, tx)
         if row is None:
             return None
-        return assert_attendance(row)
+        return attendance_from_row(row)
 
     return {"attendance": with_transaction(run)}

@@ -16,6 +16,26 @@ INSTANT_RE = re.compile(
 )
 
 
+def assert_string(value: object, label: DomainLabel) -> str:
+    """Comprueba que es un string. Acepta el string vacío."""
+    if not isinstance(value, str):
+        fail(label, "string")
+    return value
+
+
+def assert_nullable_string(value: object, label: DomainLabel) -> str | None:
+    if value is not None and not isinstance(value, str):
+        fail(label, "nullable_string")
+    return value
+
+
+def assert_row(value: object, label: DomainLabel) -> Mapping[str, object]:
+    """Comprueba que una fila de SQLite es un mapping para leer sus columnas."""
+    if not isinstance(value, Mapping):
+        fail(label, "object")
+    return value
+
+
 def assert_non_empty_string(value: object, label: DomainLabel) -> str:
     if not isinstance(value, str) or value == "":
         fail(label, "empty")

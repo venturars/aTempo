@@ -4,7 +4,12 @@ from python_domain.sqlite.pool import SqliteQuery, with_transaction
 from python_domain.sqlite.executors.attendance import retrieve_all_attendances_by_session_id
 from python_domain.sqlite.executors.session import update_session_row
 from python_domain.types.attendance import assert_checked_in_at_in_session
-from python_domain.types.session import Session, SessionUpdate, assert_session
+from python_domain.types.session import (
+    Session,
+    SessionUpdate,
+    assert_session,
+    session_from_row,
+)
 from python_domain.types.assert_values import read_input_field
 
 
@@ -29,6 +34,6 @@ def update_session(input: UpdateSessionInput) -> UpdateSessionOutput:
         row = update_session_row(session, tx)
         if row is None:
             return None
-        return assert_session(row)
+        return session_from_row(row)
 
     return {"session": with_transaction(run)}

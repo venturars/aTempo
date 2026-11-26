@@ -5,6 +5,8 @@ from python_domain.types.assert_values import (
     assert_non_empty_string,
     assert_nullable_instant,
     assert_nullable_int,
+    assert_nullable_string,
+    assert_string,
     assert_uuid,
     normalize_instant,
     truncate_to_milliseconds,
@@ -22,6 +24,7 @@ from python_domain.types.attendance import (
     assert_attendance_status,
     assert_check_in_method,
     assert_checked_in_at_in_session,
+    attendance_from_row,
 )
 from python_domain.types.session import (
     SESSION_STATUSES,
@@ -34,6 +37,7 @@ from python_domain.types.session import (
     assert_session_create,
     assert_session_status,
     assert_session_update,
+    session_from_row,
 )
 
 __all__ = [
@@ -61,11 +65,15 @@ __all__ = [
     "assert_non_empty_string",
     "assert_nullable_instant",
     "assert_nullable_int",
+    "assert_nullable_string",
     "assert_session",
     "assert_session_create",
     "assert_session_status",
     "assert_session_update",
+    "assert_string",
+    "attendance_from_row",
     "assert_uuid",
     "normalize_instant",
+    "session_from_row",
     "truncate_to_milliseconds",
 ]
