@@ -4,19 +4,21 @@ aTempo registra la asistencia de los alumnos de una clase. Este repositorio tien
 
 La visión, los perfiles y las decisiones de producto están en [principles.md](principles.md).
 
-La demo local de Electron puede funcionar con datos de ejemplo sin Auth0. La web del alumno y la administración requieren Auth0 y `api-router`; los pasos están en [DEMO.md](DEMO.md).
+La demo local de Electron puede funcionar con datos de ejemplo sin Auth0. La web del alumno y la administración requieren Auth0 y `api-router`. Para arrancar web y Electron juntos, ejecuta `pnpm run atempo` desde la raíz.
 
 ## Arranque rápido con Auth0
 
-Con el `.env` local configurado para Auth0 y las dependencias nativas de `desktop/` instaladas, ejecuta desde la raíz del checkout en Windows, macOS o Linux:
+Necesitas Node 24, pnpm 10.33.0, Docker disponible y un `.env` local con la configuración de Auth0. En Windows y macOS, si Docker Desktop está instalado, el comando intenta iniciarlo cuando el motor no responde. En Linux, arranca manualmente el motor Docker antes de ejecutar el comando. Desde la raíz del checkout en Windows, macOS o Linux, ejecuta:
 
 ```sh
 pnpm run atempo
 ```
 
-El comando inicia Docker Desktop si está instalado y hace falta, crea el proyecto Compose `auth0-atempo`, instala las dependencias del router en su volumen Docker, sirve `api-router` en el puerto 3004 y abre Electron conectado a ese router. En Linux, si usas el motor Docker sin Desktop, arráncalo antes con las herramientas de tu distribución. El puerto 3004 permite mantener otro router en el 3000; puedes cambiarlo con `pnpm run atempo --port 3005`. En un worktree dentro de `.worktrees/`, el script usa el `.env` de la copia principal si no hay uno en el worktree. El router queda arrancado al cerrar Electron. Usa las cuentas y contraseñas configuradas en Auth0 para este modo.
+El comando instala automáticamente las dependencias de `web/` y `desktop/` si faltan, prepara los volúmenes Docker de las APIs y arranca en el único proyecto Compose `atempo` el router, las APIs PostgreSQL, SQLite y RustFS, PostgreSQL, RustFS y Datasette. `init-db` prepara SQLite y termina con código 0. El router escucha en el puerto 3000, la web en <http://localhost:5191> y Electron usa ese mismo router. Puedes cambiar el puerto del router con `pnpm run atempo --port 3005`; la web y Electron usarán ese puerto. En un worktree dentro de `.worktrees/`, el script usa el `.env` de la copia principal si no hay uno en el worktree. Los servicios Docker quedan arrancados al cerrar Electron. `pnpm run atempo --router-only` arranca solo el router. Usa las cuentas y contraseñas configuradas en Auth0 para este modo.
 
-## Probar las demos de profesor y alumno
+## Desarrollo aislado de Electron
+
+El arranque habitual de web y Electron es `pnpm run atempo`, descrito arriba. Las siguientes recetas arrancan solo Electron para depuración y pruebas de escenarios; no sustituyen el comando de la aplicación completa.
 
 Para abrir Electron en tu ordenador necesitas Node 24 y pnpm 10.33.0. Desde la raíz de la copia que vas a revisar, instala las dependencias nativas y arranca la aplicación:
 
@@ -37,7 +39,7 @@ Desde un arranque nuevo, usa el formulario **Entrar** con una de estas cuentas p
 | Profesor | `profesor@atempo.test` | `Profesor123!` | Hoy, en el panel del profesor |
 | Alumno | `ada.lopez@clase.test` | `clase-2026` | Dashboard de Ada López |
 
-La pestaña Hoy usa un cliente de la API con datos simulados. Para ver otro caso, arranca desde `desktop/` con `pnpm exec electron-vite dev -- --api-fixture=<nombre>`: `empty` (sin clases hoy), `denied` (sin acceso), `unauthenticated` (sesión caducada: vuelve al login), `network` (las escrituras no llegan), `timeout` (las escrituras no responden en 10 segundos), `server-error` (las escrituras responden 500), `conflict` (la clase se abrió desde otro sitio) `expired-code` (el primer código del QR llega caducado) o `code-unavailable` (las dos primeras peticiones del código fallan).
+La pestaña Hoy usa un cliente de la API con datos simulados. Para depurar otro escenario con Electron aislado, arranca desde la raíz con `pnpm run demo:desktop -- --api-fixture=<nombre>`: `empty` (sin clases hoy), `denied` (sin acceso), `unauthenticated` (sesión caducada: vuelve al login), `network` (las escrituras no llegan), `timeout` (las escrituras no responden en 10 segundos), `server-error` (las escrituras responden 500), `conflict` (la clase se abrió desde otro sitio), `expired-code` (el primer código del QR llega caducado) o `code-unavailable` (las dos primeras peticiones del código fallan).
 
 Para que la pestaña Hoy hable HTTP con `api-router`, arráncalo con `docker compose up api-router` y la app, desde `desktop/`, con `ATEMPO_API_ROUTER_URL=http://localhost:3000 pnpm exec electron-vite dev -- --api-transport=http`. Las peticiones pasan por el proceso principal, que añade el Access Token del login. El mock del router pide ese token: sin login contra el router responde `401` y la pestaña vuelve al login. El router responde con datos en memoria; para empezar de cero, reinícialo. Con el transporte HTTP, «Simular llegada» y «Volver a abrir» quedan desactivados: no están en el contrato.
 
@@ -65,7 +67,9 @@ Las invitaciones activadas y los cambios de contraseña duran hasta que recargas
 
 ### Probar el QR y las correcciones
 
-Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alumnos y pasar lista. El QR y el código de 6 cifras de debajo cambian cada 30 segundos. El QR es un enlace al sitio del alumno, `http://localhost:5191/student/check-in?code=ATEMPO-CLASE-1109-<código>`. Ese sitio es `web/`; abajo está cómo arrancarlo. Desde el móvil, `localhost` es el propio móvil. Para escanear con el móvil en la misma wifi, arranca desde `desktop/` con la IP del ordenador:
+Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alumnos y pasar lista. El QR y el código de 6 cifras de debajo cambian cada 30 segundos. El QR es un enlace a la web del alumno, que el arranque integrado ya sirve en <http://localhost:5191>. Desde el móvil, `localhost` es el propio móvil. Para depurar el escaneo desde un móvil en la misma wifi, puedes arrancar la web y Electron por separado con la IP del ordenador:
+
+Configura `ATEMPO_WEB_ORIGIN=http://<ip-del-ordenador>:5191` en el `.env` de la raíz y arranca el router con `pnpm run atempo --router-only`. En otra terminal, ejecuta `pnpm --dir web dev --host 0.0.0.0` para que el móvil alcance Vite. El origen configurado debe coincidir con la dirección que abre el móvil. Arranca Electron desde `desktop/` con `VITE_STUDENT_SITE_URL` apuntando a esa misma dirección. El ejemplo siguiente usa la sintaxis de macOS/Linux; en PowerShell asigna `$env:VITE_STUDENT_SITE_URL` antes de ejecutar `pnpm dev`.
 
 ```sh
 VITE_STUDENT_SITE_URL=http://<ip-del-ordenador>:5191 pnpm dev
@@ -83,7 +87,11 @@ Las cuentas, las invitaciones activadas, la sesión, la asistencia y los cambios
 
 El lector del alumno ofrece lecturas simuladas y no usa cámara. Estos flujos no se conectan al backend ni a un servicio de autenticación.
 
-## Probar la web del alumno y la administración
+La asistencia registrada en la web del alumno se guarda en el navegador y no aparece en la lista del profesor de Electron. La lista del escritorio mantiene sus datos simulados por separado.
+
+### Desarrollo aislado de la web
+
+El comando `pnpm run atempo` sirve la web automáticamente en el puerto 5191. Usa este arranque aislado solo para depurar la web sin Electron o para exponer Vite en la red local:
 
 La web requiere un `.env` de Auth0 en la raíz, Docker y Node 24 con pnpm 10.33.0. Desde la raíz, arranca el router sin abrir Electron:
 
@@ -91,11 +99,12 @@ La web requiere un `.env` de Auth0 en la raíz, Docker y Node 24 con pnpm 10.33.
 pnpm run atempo --router-only
 ```
 
-En otra terminal, instala las dependencias web (la primera vez) y sirve Vite:
+En otra terminal, con Node 24 y pnpm 10.33.0:
 
 ```sh
-pnpm --dir web install --frozen-lockfile
-pnpm run demo:web
+cd web
+pnpm install --frozen-lockfile
+pnpm dev
 ```
 
 Abre <http://localhost:5191/> para el alumno o <http://localhost:5191/admin> para administración. Inicia sesión con `ada.lopez@clase.test` para Ada López o `profesor@atempo.test` para entrar al panel demo como Ventura Rodríguez. Las contraseñas son las de esas cuentas en Auth0. El alta de organización y la activación de invitaciones desde el login web todavía no están disponibles.

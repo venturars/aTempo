@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: `http://localhost:${process.env.ATEMPO_API_ROUTER_PORT ?? '3004'}`,
+        target: `http://localhost:${process.env.ATEMPO_API_ROUTER_PORT ?? '3000'}`,
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }
