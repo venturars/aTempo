@@ -29,6 +29,8 @@ export function StudentLayout({
 }): React.JSX.Element {
   const student = useCurrentStudent()
   const endStudentSession = useSessionStore((state) => state.endStudentSession)
+  const isLoggingOut = useSessionStore((state) => state.isLoggingOut)
+  const logoutError = useSessionStore((state) => state.logoutError)
   const navigate = useNavigate()
   const [theme, setTheme] = useState<ThemeName>(readTheme)
   const accountMenu = useRef<HTMLDetailsElement>(null)
@@ -40,9 +42,9 @@ export function StudentLayout({
     setTheme(next)
   }
 
-  function onSignOut(): void {
+  async function onSignOut(): Promise<void> {
     accountMenu.current?.removeAttribute('open')
-    endStudentSession()
+    if (!(await endStudentSession())) return
     void navigate({ to: '/' })
   }
 
@@ -79,14 +81,25 @@ export function StudentLayout({
               </summary>
               <ul className="dropdown-content menu rounded-box top-full z-10 mt-1 w-52 bg-base-100 p-2 shadow-lg">
                 <li>
-                  <button type="button" onClick={onSignOut}>
-                    Cerrar sesión
+                  <button
+                    type="button"
+                    disabled={isLoggingOut}
+                    onClick={() => void onSignOut()}
+                  >
+                    {isLoggingOut ? 'Cerrando sesión…' : 'Cerrar sesión'}
                   </button>
                 </li>
               </ul>
             </details>
           </div>
         </header>
+        {logoutError !== '' ? (
+          <div className={`${pageWidth} mt-4`}>
+            <p className="alert alert-soft alert-error" role="alert">
+              {logoutError}
+            </p>
+          </div>
+        ) : null}
         <main
           className={
             place === 'center'
