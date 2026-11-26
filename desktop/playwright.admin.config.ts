@@ -2,7 +2,7 @@ import { defineConfig } from '@playwright/test'
 
 export default defineConfig({
   testDir: './tests',
-  testMatch: /(admin-(store|web)|web-invite)\.spec\.ts/,
+  testMatch: /(admin-(store|web)|web-invite|web-auth0)\.spec\.ts/,
   snapshotPathTemplate: '{testDir}/snapshots/{arg}{ext}',
   workers: 1,
   reporter: 'line',

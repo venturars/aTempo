@@ -15,18 +15,9 @@ import { formatDay, minutesOfDay } from './studentDate'
 
 const accountsKey = storageKeys.accounts
 
-export type NewStudent = {
-  firstName: string
-  lastName: string
-  identificationDocument: string
-  email: string
-  password: string
-}
-
 type StudentAccountsState = {
   accounts: StudentAccount[]
   findByEmail: (email: string) => StudentAccount | undefined
-  addAccount: (person: NewStudent) => StudentAccount
   recordEntry: (email: string, entry: ClassEntry) => void
 }
 
@@ -39,12 +30,33 @@ function readAccounts(): StudentAccount[] {
   const raw = localStorage.getItem(accountsKey)
   if (raw === null) return [copyExample()]
   try {
-    const parsed = JSON.parse(raw) as StudentAccount[]
+    const parsed: unknown = JSON.parse(raw)
     if (!Array.isArray(parsed) || parsed.length === 0) return [copyExample()]
-    return parsed
+    // Descarta contraseñas que dejaron las versiones locales anteriores de la demo.
+    const accounts = parsed.filter(isStudentAccount).map((account) => {
+      const safeAccount = { ...account }
+      delete safeAccount.password
+      return safeAccount
+    })
+    if (accounts.length === 0) return [copyExample()]
+    saveAccounts(accounts)
+    return accounts
   } catch {
     return [copyExample()]
   }
+}
+
+function isStudentAccount(value: unknown): value is StudentAccount & { password?: string } {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'email' in value &&
+    typeof value.email === 'string' &&
+    'name' in value &&
+    typeof value.name === 'string' &&
+    'history' in value &&
+    Array.isArray(value.history)
+  )
 }
 
 function saveAccounts(accounts: StudentAccount[]): void {
@@ -56,23 +68,6 @@ export const useStudentAccountsStore = create<StudentAccountsState>((set, get) =
   findByEmail: (email) => {
     const wanted = normalizeEmail(email)
     return get().accounts.find((account) => normalizeEmail(account.email) === wanted)
-  },
-  addAccount: (person) => {
-    const firstName = person.firstName.trim()
-    const lastName = person.lastName.trim()
-    const account: StudentAccount = {
-      name: `${firstName} ${lastName}`,
-      email: normalizeEmail(person.email),
-      password: person.password,
-      history: [],
-      firstName,
-      lastName,
-      identificationDocument: person.identificationDocument
-    }
-    const accounts = [...get().accounts, account]
-    saveAccounts(accounts)
-    set({ accounts })
-    return account
   },
   recordEntry: (email, entry) => {
     const wanted = normalizeEmail(email)

@@ -1,17 +1,36 @@
 import { spawn, spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
+import { createServer } from 'node:net'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { setTimeout as delay } from 'node:timers/promises'
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const webRoot = join(projectRoot, 'web')
 const desktopRoot = join(projectRoot, 'desktop')
+const webVite = join(webRoot, 'node_modules', 'vite', 'bin', 'vite.js')
 const electronVite = join(desktopRoot, 'node_modules', 'electron-vite', 'bin', 'electron-vite.js')
+const webPort = 5191
 // El proyecto Compose conserva este nombre aunque cambie el nombre del worktree.
-const composeProjectName = 'auth0-atempo'
+const composeProjectName = 'atempo'
+
+export async function ensureWebPortAvailable(port = webPort) {
+  // Detecta otra web abierta antes de preparar los contenedores.
+  await new Promise((resolveAvailable, rejectAvailable) => {
+    const server = createServer()
+    server.once('error', (error) => {
+      if (error.code === 'EADDRINUSE') {
+        rejectAvailable(new Error(`El puerto web ${port} ya está ocupado. Cierra la otra instancia de aTempo antes de arrancar otra.`))
+      } else {
+        rejectAvailable(error)
+      }
+    })
+    server.listen(port, 'localhost', () => server.close(resolveAvailable))
+  })
+}
 
 function readOptions(args) {
-  let port = 3004
+  let port = 3000
   let routerOnly = false
 
   for (let index = 0; index < args.length; index++) {
@@ -52,14 +71,48 @@ function runDocker(args, environment = process.env) {
   if (result.status !== 0) throw new Error(`docker ${args.slice(0, 2).join(' ')} ha fallado.`)
 }
 
-async function waitForDocker() {
-  if (dockerIsReady()) return
+export function installDependencies(packageRoot, { run = spawnSync, platform = process.platform } = {}) {
+  // En Windows, pnpm.cmd se ejecuta desde cmd.exe con una orden fija.
+  const command = platform === 'win32' ? (process.env.ComSpec ?? 'cmd.exe') : 'pnpm'
+  const args = platform === 'win32'
+    ? ['/d', '/s', '/c', 'pnpm install --frozen-lockfile']
+    : ['install', '--frozen-lockfile']
+  const result = run(command, args, {
+    cwd: packageRoot,
+    stdio: 'inherit'
+  })
+  if (result.error) throw result.error
+  if (result.status !== 0) throw new Error(`No se pudieron instalar las dependencias de ${packageRoot}.`)
+}
 
-  // Docker Desktop se puede iniciar desde su CLI; otros motores deben estar en marcha.
-  runDocker(['desktop', 'start'])
+export function prepareDependencies({ exists = existsSync, install = installDependencies } = {}) {
+  // Prepara solo los paquetes cuyo ejecutable de desarrollo aún no existe.
+  if (!exists(webVite)) {
+    console.log('Instalando dependencias de web/.')
+    install(webRoot)
+  }
+  if (!exists(electronVite)) {
+    console.log('Instalando dependencias de desktop/.')
+    install(desktopRoot)
+  }
+}
+
+export async function waitForDocker({
+  platform = process.platform,
+  isReady = dockerIsReady,
+  startDesktop = () => runDocker(['desktop', 'start']),
+  pause = delay
+} = {}) {
+  if (isReady()) return
+  if (platform !== 'win32' && platform !== 'darwin') {
+    throw new Error(`Docker no está disponible en ${platform}. Inicia manualmente el motor Docker y vuelve a intentarlo.`)
+  }
+
+  // Solo Windows y macOS admiten el autoarranque de Docker Desktop.
+  startDesktop()
   for (let attempt = 0; attempt < 30; attempt++) {
-    await delay(2000)
-    if (dockerIsReady()) return
+    await pause(2000)
+    if (isReady()) return
   }
   throw new Error('Docker no ha terminado de arrancar.')
 }
@@ -79,27 +132,70 @@ async function waitForRouter(port) {
   throw new Error(`api-router no responde en http://localhost:${port}/health.`)
 }
 
-function startElectron(port) {
-  return new Promise((resolveApp, rejectApp) => {
-    const electron = spawn(process.execPath, [electronVite, 'dev'], {
-      cwd: desktopRoot,
-      env: { ...process.env, ATEMPO_API_ROUTER_URL: `http://localhost:${port}` },
-      stdio: 'inherit'
-    })
-    electron.once('error', rejectApp)
-    electron.once('close', (code) => {
-      if (code === 0) resolveApp()
-      else rejectApp(new Error(`Electron termino con el codigo ${code}.`))
-    })
+export function startProcess(command, args, options, { start = spawn } = {}) {
+  const child = start(command, args, { ...options, stdio: 'inherit' })
+  const closed = new Promise((resolveClose, rejectClose) => {
+    child.once('error', rejectClose)
+    child.once('close', (code, signal) => resolveClose({ code, signal }))
   })
+  return { child, closed }
 }
 
-async function main() {
-  const { port, routerOnly } = readOptions(process.argv.slice(2))
-  const envFile = findEnvFile()
-  if (!routerOnly && !existsSync(electronVite)) {
-    throw new Error('Faltan las dependencias nativas de desktop/. Ejecuta una vez pnpm install en desktop/.')
+export function stopProcess(child) {
+  if (child && child.exitCode === null && child.signalCode === null) child.kill('SIGTERM')
+}
+
+export function webProcessOptions(port, environment = process.env) {
+  // El proxy web sigue el puerto publicado por Compose, incluso con --port.
+  return { cwd: webRoot, env: { ...environment, ATEMPO_API_ROUTER_PORT: String(port) } }
+}
+
+export async function superviseFrontends(webProcess, electronProcess) {
+  try {
+    // Cierra ambos procesos frontend al salir o fallar cualquiera de ellos.
+    const outcome = await Promise.race([
+      electronProcess.closed.then((result) => ({ process: 'Electron', result })),
+      webProcess.closed.then((result) => ({ process: 'web', result }))
+    ])
+    if (outcome.process === 'web') {
+      throw new Error(`El servidor web terminó con el código ${outcome.result.code ?? outcome.result.signal}.`)
+    }
+    if (outcome.result.code !== 0) {
+      throw new Error(`Electron terminó con el código ${outcome.result.code ?? outcome.result.signal}.`)
+    }
+  } finally {
+    stopProcess(electronProcess.child)
+    stopProcess(webProcess.child)
   }
+}
+
+export async function waitForWeb(webProcess, {
+  request = fetch,
+  pause = delay,
+  port = webPort,
+  attempts = 30
+} = {}) {
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    const finished = await Promise.race([
+      webProcess.closed.then((result) => ({ result })),
+      pause(1000).then(() => null)
+    ])
+    if (finished) throw new Error(`El servidor web terminó antes de estar listo (código ${finished.result.code}).`)
+    try {
+      const response = await request(`http://localhost:${port}/`, { signal: AbortSignal.timeout(1000) })
+      if (response.ok) return
+    } catch {
+      // Vite puede seguir compilando durante el arranque.
+    }
+  }
+  throw new Error(`La web no responde en http://localhost:${port}/.`)
+}
+
+export async function main() {
+  const { port, routerOnly } = readOptions(process.argv.slice(2))
+  if (!routerOnly) await ensureWebPortAvailable()
+  const envFile = findEnvFile()
+  if (!routerOnly) prepareDependencies()
 
   await waitForDocker()
   const composeArgs = ['compose', '--env-file', envFile, '-p', composeProjectName]
@@ -107,16 +203,45 @@ async function main() {
     ...process.env,
     ATEMPO_API_ROUTER_PORT: String(port)
   }
-  // El volumen de dependencias es nuevo al cambiar de nombre el proyecto Compose.
+  // Reutiliza las dependencias del router del proyecto Compose principal.
   runDocker([...composeArgs, 'run', '--rm', '--no-deps', 'api-router', 'pnpm', 'install', '--frozen-lockfile'], composeEnvironment)
-  runDocker([...composeArgs, 'up', '-d', 'api-router'], composeEnvironment)
+  if (!routerOnly) {
+    // Prepara los volúmenes de las APIs antes de iniciar sus servicios persistentes.
+    for (const service of ['api-postgresql', 'api-rustfs']) {
+      runDocker([...composeArgs, 'run', '--rm', '--no-deps', service, 'pnpm', 'install', '--frozen-lockfile'], composeEnvironment)
+    }
+    runDocker([
+      ...composeArgs, 'run', '--rm', '--no-deps', 'api-sqlite', 'sh', '-c',
+      'test -x .venv/bin/python || python3.13 -m venv .venv; .venv/bin/python -m pip install --disable-pip-version-check --no-cache-dir .'
+    ], composeEnvironment)
+  }
+  const services = routerOnly
+    ? ['api-router']
+    : ['api-router', 'api-postgresql', 'api-sqlite', 'api-rustfs', 'datasette']
+  runDocker([...composeArgs, 'up', '-d', '--wait', ...services], composeEnvironment)
   await waitForRouter(port)
   console.log(`api-router listo en http://localhost:${port}`)
 
-  if (!routerOnly) await startElectron(port)
+  if (routerOnly) return
+
+  const webProcess = startProcess(process.execPath, [webVite, '--port', String(webPort), '--strictPort'], webProcessOptions(port))
+  let electronProcess
+  try {
+    await waitForWeb(webProcess)
+    console.log(`Web lista en http://localhost:${webPort}`)
+    electronProcess = startProcess(process.execPath, [electronVite, 'dev'], {
+      cwd: desktopRoot,
+      env: { ...process.env, ATEMPO_API_ROUTER_URL: `http://localhost:${port}` }
+    })
+    await superviseFrontends(webProcess, electronProcess)
+  } finally {
+    if (!electronProcess) stopProcess(webProcess.child)
+  }
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error)
-  process.exitCode = 1
-})
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : error)
+    process.exitCode = 1
+  })
+}

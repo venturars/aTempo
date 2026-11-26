@@ -1,66 +1,63 @@
 # Web de aTempo
 
-El portal del alumno y la demo de administración comparten este paquete. Importan `docs/storybook/src/system.css` y usan daisyUI y el control de tema compartido de `src/shared/ThemeToggle.tsx`. Se abren en el navegador, separados de Electron.
+El portal del alumno y el panel de administración comparten este paquete. Importan `docs/storybook/src/system.css` y usan daisyUI y el control de tema compartido de `src/shared/ThemeToggle.tsx`. La web requiere Auth0 y el router; autentica en `/api/auth/login`, `/api/auth/me`, `/api/auth/refresh` y `/api/auth/logout`. Los tokens viven en cookies `HttpOnly`.
+
+## Iniciar la web
+
+Con Node 24 y pnpm 10.33.0, desde la raíz:
+
+```sh
+pnpm run atempo
+```
+
+El comando instala las dependencias de `web/` y `desktop/` si faltan, arranca en el proyecto Compose `atempo` el router, las tres APIs de persistencia, PostgreSQL, RustFS y Datasette, sirve Vite en `http://localhost:5191` y abre Electron. Vite reenvía `/api/*` al mismo router quitando el prefijo `/api`. Los servicios Docker siguen activos al cerrar Electron. Para usar otro puerto de router, `pnpm run atempo --port 3005`. Para depurar solo la web, `pnpm run atempo --router-only` y en otra terminal `pnpm --dir web dev`.
+
+Auth0 debe estar configurado y disponible para entrar en la web. `profesor@atempo.test` corresponde a Ventura Rodríguez, administrador y profesor del seed; `ada.lopez@clase.test` corresponde a Ada, alumna. Las contraseñas se gestionan en Auth0 y no se guardan en el navegador.
+
+Si arrancas el router aislado con `pnpm run atempo --router-only --port 3005`, pasa el mismo puerto a la web: `$env:ATEMPO_API_ROUTER_PORT='3005'; pnpm --dir web dev` en PowerShell, o `ATEMPO_API_ROUTER_PORT=3005 pnpm --dir web dev` en macOS/Linux.
 
 ## Probar administración
 
-Con Node 24 y pnpm 10.33.0, desde la raíz de esta copia:
+Abre <http://localhost:5191/admin> e inicia sesión como `profesor@atempo.test`. El panel incluye **Personas**, **Cursos** y **Mis clases**. En **Personas**, **Invitar persona** permite preparar una invitación pendiente para los datos de demostración. La activación de invitaciones y **Crear cuenta** están deshabilitados; no se envía correo ni se crea una cuenta web.
 
-```sh
-cd web
-node --version
-pnpm --version
-pnpm install --frozen-lockfile
-pnpm dev
-```
-
-Abre <http://localhost:5191/admin> y entra con `miguel@neoland.example` / `neoland-2026`. Aparece el inicio de la organización Neoland, con **Personas**, **Cursos** y **Mis clases**. El administrador de ejemplo también es profesor.
-
-Para probar el alta de una organización, pulsa **Crear cuenta** en la misma pantalla. Pide el nombre y el CIF de la organización y el nombre, apellidos, documento de identidad, correo y contraseña del admin, los campos obligatorios de `organization` y `person` en `postgres/init/01_schema.sql`. Al crearla entras en su administración vacía, solo con tu cuenta. Con **Cerrar sesión** puedes volver a entrar con cualquiera de las dos cuentas; cada una abre su organización. El correo, el CIF y el documento no se pueden repetir, y una contraseña errónea da el mismo aviso exista o no el correo, como `POST /auth/register` y `POST /auth/login` del contrato v1 (#90).
-
-1. En **Personas**, pulsa **Invitar persona** y completa el nombre y el correo. Selecciona **Profesor** para ver el interruptor **También es administrador**. Actívalo si necesita ese rol y pulsa **Preparar invitación**. La fila muestra **Administrador y profesor** e **Invitación pendiente**. Puedes quitar y volver a dar ese rol desde **Editar**.
-2. En **Cursos**, pulsa **Crear curso**. Pon un nombre, selecciona profesor y alumnos y guarda. Puedes seleccionar las personas que acabas de invitar, conservando su estado pendiente.
-3. Abre el curso y pulsa **Programar sesión**. Selecciona fecha, inicio, fin y aula. El fin debe ser posterior al inicio en el mismo día.
-4. Abre la sesión. Debe mostrar el profesor del curso y su alumnado, con la asistencia pendiente.
-5. Para probar **Mis clases**, crea un curso cuyo profesor sea Miguel Rodríguez, el administrador docente del seed. Ahí solo aparecen sus cursos y los detalles son de lectura.
+1. En **Personas**, pulsa **Invitar persona**. Mientras rellenas el formulario la tabla se oculta. Pide los campos de `person`: nombre, apellidos, documento de identidad, correo y, si quieres, fecha de nacimiento y teléfono. Elige **Alumno** o **Profesor** y pulsa **Preparar invitación**. La fila muestra el documento e **Invitación pendiente**. El documento y el correo no se pueden repetir en la organización.
+2. Solo hay un admin por organización. Con **Editar** en tu propia cuenta decides con **También soy profesor** si también das clase; no puedes dejarlo mientras tengas cursos.
+3. En **Cursos**, pulsa **Crear curso**. Añade nombre, profesor y alumnos, y guarda.
+4. Abre el curso y pulsa **Programar sesión**. Selecciona fecha, inicio, fin y aula. El fin debe ser posterior al inicio en el mismo día.
+5. Abre la sesión para ver el profesor, el alumnado y la asistencia pendiente.
+6. Para probar **Mis clases**, asigna el curso a Ventura Rodríguez. Esa vista muestra sus cursos en modo lectura.
 
 ### Sesiones semanales
 
-La creación semanal está implementada en #139 / PR #140 y verificada con la batería completa de 111 pruebas. Para probarla:
+1. Desde un curso, abre **Programar sesión**. En **Repetición**, elige **Semanal**; **Una sesión** conserva la creación individual. Introduce fecha inicial y final inclusiva, marca días y completa horario y aula compartidos.
+2. Comprueba la vista previa y guarda las coincidencias. Las sesiones duplicadas por curso, fecha e intervalo se omiten.
+3. Cancela, selecciona un rango sin coincidencias, días vacíos, un rango invertido o más de 366 ocurrencias candidatas: no se escribe ninguna sesión.
+4. Edita o elimina una ocurrencia y comprueba que las demás permanecen.
 
-1. Desde un curso, abrir **Programar sesión**. En **Repetición**, elegir **Semanal**; **Una sesión** conserva la creación individual. Introducir **Fecha inicial** 2026-11-02 y **Fecha final (incluida)** 2026-11-11, marcar **Lunes** y **Miércoles** y completar horario y aula compartidos.
-2. Comprobar **Vista previa**: cuatro coincidencias, cuatro por crear y cero ya existentes en un curso sin esas sesiones. Muestra primera y última fecha; **Ver fechas** despliega 2, 4, 9 y 11 de noviembre. **Guardar sesiones** cierra el formulario y muestra el listado del curso con las cantidades creadas y omitidas.
-3. Repetir el lote, también cambiando el aula: las coincidencias por curso/fecha/inicio/fin se omiten. Si todas existen, el formulario permanece abierto con **Nada nuevo** y no guarda.
-4. Cancelar, seleccionar un rango sin coincidencias o días vacíos, invertir el rango o superar 366 ocurrencias candidatas: no debe escribirse ninguna sesión. Las fechas deben ser reales y el fin posterior al inicio del mismo día.
-5. Editar o eliminar una ocurrencia y comprobar que las demás permanecen. Conservar la creación de una sesión única y su edición. Probar teclado, móvil y ambos temas.
-
-Las fechas del rango son inclusivas y se calculan sin cambios por zona horaria o DST. Cada ocurrencia funciona como una sesión independiente; el límite de 366 se aplica antes de omitir duplicados. La batería Playwright siguiente pasó 111/111 en 40,5 s (85 pruebas del store y 26 de navegador; 46 nuevas y 65 anteriores). También pasó el build de `web/`. La evidencia y el alcance de las comprobaciones están en [admin-prototype.md](../docs/admin-prototype.md#verificación-fresca-de-recurrencia--139--pr-140). La revisión de concepto pasó sin discrepancias y las cuatro pruebas focales de capturas pasaron tras ajustar su posición inicial; se revisaron móvil claro y escritorio oscuro.
+Las fechas del rango son inclusivas y se calculan sin cambios por zona horaria o DST. Cada ocurrencia es una sesión independiente y el límite de 366 se aplica antes de omitir duplicados.
 
 ### Editar y eliminar
 
-- En **Personas**, **Editar** abre el mismo formulario con los datos actuales y **Guardar cambios** conserva el identificador y el estado de la cuenta. En tu propia fila, el aviso bajo el nombre explica por qué solo aparece **Editar**. Puedes cambiar el nombre y el correo de tu cuenta.
-- Para eliminar un profesor asignado, edita antes sus cursos y selecciona otro profesor. Eliminar un alumno lo retira también de los cursos donde estaba matriculado. Cambiar un rol se rechaza mientras deje asignaciones incompatibles.
-- Abre un curso para **Editar curso** o **Eliminar curso**. Editar permite cambiar nombre, profesor y alumnado. Eliminar pide confirmación e indica cuántas sesiones programadas se borrarán con el curso; las personas permanecen.
-- Abre una sesión para **Editar sesión** o **Eliminar sesión**. Editar permite cambiar fecha, horario y aula, manteniendo su curso. Eliminar esa sesión conserva el curso y su alumnado.
-- **Cancelar** una edición o confirmación conserva los datos. Los listados de las sesiones programadas reflejan los cambios del curso. **Mis clases** sigue siendo de lectura.
+- **Editar** una persona conserva su identificador y estado. Eliminar un alumno lo retira también de los cursos donde estaba matriculado; para eliminar un profesor asignado, reasigna antes sus cursos.
+- Editar un curso permite cambiar nombre, profesor y alumnado. Eliminarlo pide confirmación y elimina sus sesiones programadas; las personas permanecen.
+- Editar una sesión permite cambiar fecha, horario y aula. Eliminarla conserva el curso y su alumnado.
+- **Cancelar** conserva los datos. **Mis clases** sigue siendo de lectura.
 
-La evidencia histórica de la ampliación CRUD es: batería completa 65/65 y comprobación focal 3/3 tras el último ajuste del texto de confirmación. La secuencia y el alcance de estas comprobaciones están en [admin-prototype.md](../docs/admin-prototype.md#verificación-y-runbook-local).
-
-El tema claro/oscuro se cambia desde la cabecera. **Cerrar sesión** vuelve a la entrada de administración; los datos y las cuentas creadas continúan en memoria mientras no recargues. Recargar el navegador restaura los datos iniciales, borra las organizaciones creadas y exige volver a entrar. Entrar o salir de administración no cambia las cuentas ni la sesión del alumno. Para parar Vite, usa **Ctrl+C** en su terminal.
-
-El panel guarda las invitaciones pendientes en la demo web. La activación y la creación de contraseña se prueban con una invitación de ejemplo en [el PR #130 de Electron](https://github.com/venturars/aTempo/pull/130). El envío de correo y la conexión entre ambas demos están pendientes. Consulta el alcance en [admin-prototype.md](../docs/admin-prototype.md).
+Los datos administrativos de esta demo vuelven al seed al recargar el navegador. Las cookies `atempo_access` y `atempo_refresh` son `HttpOnly`, `SameSite=Lax`, tienen `Path=/` y no llevan `Max-Age`. El JavaScript no las lee; al recargar, la web llama a `/api/auth/me` y, si hace falta, a `/api/auth/refresh`. **Cerrar sesión** revoca el refresh y borra las cookies.
 
 ## Probar al alumno
 
-Con el mismo servidor en marcha, abre <http://localhost:5191/>. La cuenta pública de ejemplo es `ada.lopez@clase.test` / `clase-2026`. No hay registro abierto: la organización invita y el alumno entra la primera vez desde el enlace del correo. Para simularlo, abre <http://localhost:5191/?invitation=264018>: pide una contraseña para Bruno Sanz (`bruno.sanz@clase.test`), abre su inicio y, desde entonces, Bruno entra con el login normal. Un enlace ya usado o desconocido, como `?invitation=000000`, abre el login con un aviso. La sesión, las cuentas, las entradas y los avisos se guardan en `localStorage`, así que siguen al abrir el enlace del QR en una pestaña nueva.
+Con Vite y el router en marcha, abre <http://localhost:5191/> e inicia sesión con Auth0 como `ada.lopez@clase.test`. El registro abierto y la activación de invitaciones están deshabilitados. Las invitaciones pendientes son datos de demostración y no habilitan una cuenta ni envían correo.
 
-Para registrar asistencia, abre **Hoy → Abrir lista** en [el Electron del PR #130](https://github.com/venturars/aTempo/pull/130). Escanea su QR o escribe en la web las seis cifras que aparecen debajo. Ambos cambian cada 30 segundos. Consulta los pasos para probar con un móvil en [el PR #123](https://github.com/venturars/aTempo/pull/123).
+El historial y los avisos de alumno de la demo permanecen en el almacenamiento local del navegador. `/?reiniciar` limpia esos datos locales y abre el inicio del alumno; para cerrar también la sesión Auth0, usa **Cerrar sesión**.
 
-Para volver a probar el recorrido en desarrollo, abre http://localhost:5191/?reiniciar. Restablece la demo en este navegador y abre el inicio del alumno.
+Para registrar asistencia, abre **Hoy → Abrir lista** en Electron. Escanea su QR o escribe en la web las seis cifras que aparecen debajo. Ambos cambian cada 30 segundos. Consulta los pasos para probar con un móvil en [el PR #123](https://github.com/venturars/aTempo/pull/123).
+
+La entrada del alumno queda en el almacenamiento local de su navegador. No aparece en la lista del profesor de Electron, que conserva sus datos simulados por separado.
 
 ## Probar el historial y las rutas del alumno
 
-Sin sesión, abrir una pantalla privada del alumno devuelve al login. El enlace de registro de asistencia por QR pide iniciar sesión antes de guardar la entrada.
+Sin sesión, abrir una pantalla privada del alumno devuelve al login Auth0. El enlace de registro de asistencia por QR pide iniciar sesión antes de guardar la entrada.
 
 Con sesión iniciada y el servidor de desarrollo en marcha, abre estas rutas a 390 px en ambos temas:
 
@@ -72,7 +69,7 @@ Los fixtures solo funcionan en desarrollo y no cambian las clases ni los avisos 
 
 ## Comprobar los cambios
 
-Desde `web/`, `pnpm build` comprueba los tipos y genera `dist/`. Las pruebas focales de administración viven en `desktop/tests/` y reutilizan el Playwright ya instalado. Desde la raíz, con las dependencias nativas de `desktop/` instaladas:
+Desde `web/`, `pnpm build` comprueba los tipos y genera `dist/`. Las pruebas focales de administración viven en `desktop/tests/` y reutilizan Playwright. Desde la raíz, con las dependencias nativas de `desktop/` instaladas:
 
 ```sh
 cd desktop
