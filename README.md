@@ -4,7 +4,7 @@ aTempo registra la asistencia de los alumnos de una clase. Este repositorio tien
 
 La visión, los perfiles y las decisiones de producto están en [principles.md](principles.md).
 
-La demo local de Electron puede funcionar con datos de ejemplo sin Auth0. La web del alumno y la administración requieren Auth0 y `api-router`. Para arrancar web y Electron juntos, sigue [DEMO.md](DEMO.md) y ejecuta `pnpm run atempo` desde la raíz.
+La demo local de Electron puede funcionar con datos de ejemplo sin Auth0. La web del alumno y la administración requieren Auth0 y `api-router`. Para arrancar web y Electron juntos, ejecuta `pnpm run atempo` desde la raíz.
 
 ## Arranque rápido con Auth0
 
