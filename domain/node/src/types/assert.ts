@@ -3,8 +3,14 @@ import { fail, type DomainLabel } from '../errors'
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
+/**
+ * Los `assert*` reciben `unknown` porque validan datos que llegan de fuera
+ * (un body JSON, una fila de PostgreSQL). Si el valor no vale, lanzan; si vale,
+ * lo devuelven con su tipo.
+ */
+
 /** Comprueba que es un string. Acepta el string vacío. */
-export function assertString(value: string, label: DomainLabel): string {
+export function assertString(value: unknown, label: DomainLabel): string {
   if (typeof value !== 'string') {
     fail(label, 'string')
   }
@@ -13,7 +19,7 @@ export function assertString(value: string, label: DomainLabel): string {
 
 /** Comprueba que es un string con al menos un carácter. */
 export function assertNonEmptyString(
-  value: string,
+  value: unknown,
   label: DomainLabel,
 ): string {
   if (typeof value !== 'string' || value.length === 0) {
@@ -22,12 +28,12 @@ export function assertNonEmptyString(
   return value
 }
 
-export function assertUuid(value: string, label: DomainLabel): string {
-  assertNonEmptyString(value, label)
-  if (!UUID_RE.test(value)) {
+export function assertUuid(value: unknown, label: DomainLabel): string {
+  const text = assertNonEmptyString(value, label)
+  if (!UUID_RE.test(text)) {
     fail(label, 'uuid')
   }
-  return value
+  return text
 }
 
 export function normalizeUuid(value: string): string {
@@ -56,7 +62,7 @@ export function assertCalendarDate(
 }
 
 export function assertNullableString(
-  value: string | null,
+  value: unknown,
   label: DomainLabel,
 ): string | null {
   if (value !== null && typeof value !== 'string') {
@@ -65,12 +71,13 @@ export function assertNullableString(
   return value
 }
 
-export function assertObject<T extends object>(
-  value: T,
+/** Comprueba que es un objeto y lo devuelve para leer sus campos uno a uno. */
+export function assertObject(
+  value: unknown,
   label: DomainLabel,
-): T {
+): Record<string, unknown> {
   if (value === null || typeof value !== 'object') {
     fail(label, 'object')
   }
-  return value
+  return value as Record<string, unknown>
 }

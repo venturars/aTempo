@@ -273,7 +273,7 @@ describe('assert*', () => {
 describe('string validators', () => {
   it('assertString accepts an empty string and rejects other types', () => {
     expect(assertString('', 'course.name')).toBe('')
-    expect(() => assertString(3 as unknown as string, 'course.name')).toThrow(
+    expect(() => assertString(3, 'course.name')).toThrow(
       'course.name debe ser un string',
     )
   })
@@ -324,8 +324,22 @@ describe('personFromRow', () => {
   })
 
   it('still rejects a row with the wrong shape', () => {
-    expect(() =>
-      personFromRow({ ...validPerson, phone: 5 as unknown as string }),
-    ).toThrow(ValidationError)
+    expect(() => personFromRow({ ...validPerson, phone: 5 })).toThrow(
+      ValidationError,
+    )
+  })
+})
+
+describe('validators on external data', () => {
+  it('validate a parsed JSON body without a cast', () => {
+    const body: unknown = JSON.parse(JSON.stringify(validPersonCourse))
+    expect(assertPersonCourse(body)).toEqual(validPersonCourse)
+  })
+
+  it('reject a body that is not an object', () => {
+    expect(() => assertPersonCourse(JSON.parse('"text"'))).toThrow(
+      ValidationError,
+    )
+    expect(() => assertPersonCourse(null)).toThrow(ValidationError)
   })
 })

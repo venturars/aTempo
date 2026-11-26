@@ -1,11 +1,7 @@
 import { fail, type DomainLabel } from '../errors'
 import { assertNonEmptyString, assertObject } from './assert'
 
-export const ROLE_NAMES = [
-  'organization_admin',
-  'teacher',
-  'student',
-] as const
+export const ROLE_NAMES = ['organization_admin', 'teacher', 'student'] as const
 
 export type RoleName = (typeof ROLE_NAMES)[number]
 
@@ -18,17 +14,17 @@ export function isRoleName(value: string): value is RoleName {
 }
 
 export function assertRoleName(
-  value: string,
+  value: unknown,
   label: DomainLabel = 'role.name',
 ): RoleName {
-  assertNonEmptyString(value, label)
-  if (!isRoleName(value)) {
+  const name = assertNonEmptyString(value, label)
+  if (!isRoleName(name)) {
     fail(label, 'format')
   }
-  return value
+  return name
 }
 
-export function assertRole(value: Role): Role {
-  assertObject(value, 'role')
-  return { name: assertRoleName(value.name) }
+export function assertRole(value: unknown): Role {
+  const role = assertObject(value, 'role')
+  return { name: assertRoleName(role.name) }
 }

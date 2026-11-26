@@ -26,15 +26,15 @@ export type CourseCreate = Omit<Course, 'id'>
 
 export type CourseUpdate = Course
 
-export function assertCourseCreate(value: CourseCreate): CourseCreate {
+export function assertCourseCreate(value: unknown): CourseCreate {
   return courseFields(value, false)
 }
 
-export function assertCourse(value: Course): Course {
+export function assertCourse(value: unknown): Course {
   return courseWithId(value, true)
 }
 
-export function assertCourseUpdate(value: CourseUpdate): CourseUpdate {
+export function assertCourseUpdate(value: unknown): CourseUpdate {
   return courseWithId(value, false)
 }
 
@@ -44,23 +44,24 @@ export function assertCourseUpdate(value: CourseUpdate): CourseUpdate {
  * comprueba la forma. Una fecha que la entrada no aceptaría (un año de cinco
  * cifras) no rompe el listado entero.
  */
-export function courseFromRow(row: Course): Course {
-  assertObject(row, 'course')
-  assertUuid(row.id, 'course.id')
-  assertUuid(row.organization_id, 'course.organization_id')
-  assertString(row.name, 'course.name')
-  assertString(row.acronym, 'course.acronym')
-  assertNonEmptyString(row.start_at, 'course.start_at')
-  assertNonEmptyString(row.end_at, 'course.end_at')
-  assertNonEmptyString(row.contract_address, 'course.contract_address')
+export function courseFromRow(value: unknown): Course {
+  const row = assertObject(value, 'course')
+  const id = assertUuid(row.id, 'course.id')
+  const organizationId = assertUuid(
+    row.organization_id,
+    'course.organization_id',
+  )
   return {
-    id: normalizeUuid(row.id),
-    organization_id: normalizeUuid(row.organization_id),
-    name: row.name,
-    acronym: row.acronym,
-    start_at: row.start_at,
-    end_at: row.end_at,
-    contract_address: row.contract_address,
+    id: normalizeUuid(id),
+    organization_id: normalizeUuid(organizationId),
+    name: assertString(row.name, 'course.name'),
+    acronym: assertString(row.acronym, 'course.acronym'),
+    start_at: assertNonEmptyString(row.start_at, 'course.start_at'),
+    end_at: assertNonEmptyString(row.end_at, 'course.end_at'),
+    contract_address: assertNonEmptyString(
+      row.contract_address,
+      'course.contract_address',
+    ),
   }
 }
 
@@ -115,39 +116,42 @@ export function assertCourseDates(startAt: string, endAt: string): void {
   }
 }
 
-function courseWithId(value: Course, allowEmptyLabels: boolean): Course {
-  assertObject(value, 'course')
-  assertUuid(value.id, 'course.id')
+function courseWithId(value: unknown, allowEmptyLabels: boolean): Course {
+  const course = assertObject(value, 'course')
+  const id = assertUuid(course.id, 'course.id')
   return {
-    id: normalizeUuid(value.id),
-    ...courseFields(value, allowEmptyLabels),
+    id: normalizeUuid(id),
+    ...courseFields(course, allowEmptyLabels),
   }
 }
 
-function courseFields(
-  value: CourseCreate,
-  allowEmptyLabels: boolean,
-): CourseCreate {
-  assertObject(value, 'course')
-  assertUuid(value.organization_id, 'course.organization_id')
+function courseFields(value: unknown, allowEmptyLabels: boolean): CourseCreate {
+  const course = assertObject(value, 'course')
+  const organizationId = assertUuid(
+    course.organization_id,
+    'course.organization_id',
+  )
   const assertLabel = allowEmptyLabels ? assertString : assertNonEmptyString
-  assertLabel(value.name, 'course.name')
-  assertLabel(value.acronym, 'course.acronym')
-  assertNonEmptyString(value.start_at, 'course.start_at')
-  assertNonEmptyString(value.end_at, 'course.end_at')
-  assertNonEmptyString(value.contract_address, 'course.contract_address')
-  assertContractAddress(value.contract_address)
-  const startAt = normalizeInstant(value.start_at, 'course.start_at')
-  const endAt = normalizeInstant(value.end_at, 'course.end_at')
+  const name = assertLabel(course.name, 'course.name')
+  const acronym = assertLabel(course.acronym, 'course.acronym')
+  const startAtText = assertNonEmptyString(course.start_at, 'course.start_at')
+  const endAtText = assertNonEmptyString(course.end_at, 'course.end_at')
+  const contractAddress = assertNonEmptyString(
+    course.contract_address,
+    'course.contract_address',
+  )
+  assertContractAddress(contractAddress)
+  const startAt = normalizeInstant(startAtText, 'course.start_at')
+  const endAt = normalizeInstant(endAtText, 'course.end_at')
   if (!(endAt > startAt)) {
     fail('course.end_at', 'order')
   }
   return {
-    organization_id: normalizeUuid(value.organization_id),
-    name: value.name,
-    acronym: value.acronym,
+    organization_id: normalizeUuid(organizationId),
+    name,
+    acronym,
     start_at: startAt,
     end_at: endAt,
-    contract_address: value.contract_address,
+    contract_address: contractAddress,
   }
 }

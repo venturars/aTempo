@@ -16,44 +16,35 @@ export type OrganizationCreate = Omit<Organization, 'id'>
 
 export type OrganizationUpdate = Organization
 
-export function assertOrganizationCreate(
-  value: OrganizationCreate,
-): OrganizationCreate {
+export function assertOrganizationCreate(value: unknown): OrganizationCreate {
   return organizationFields(value, false)
 }
 
-export function assertOrganization(value: Organization): Organization {
+export function assertOrganization(value: unknown): Organization {
   return organizationWithId(value, true)
 }
 
-export function assertOrganizationUpdate(
-  value: OrganizationUpdate,
-): OrganizationUpdate {
+export function assertOrganizationUpdate(value: unknown): OrganizationUpdate {
   return organizationWithId(value, false)
 }
 
-function organizationWithId(
-  value: Organization,
-  allowEmpty: boolean,
-): Organization {
-  assertObject(value, 'organization')
-  assertUuid(value.id, 'organization.id')
+function organizationWithId(value: unknown, allowEmpty: boolean): Organization {
+  const organization = assertObject(value, 'organization')
+  const id = assertUuid(organization.id, 'organization.id')
   return {
-    id: normalizeUuid(value.id),
-    ...organizationFields(value, allowEmpty),
+    id: normalizeUuid(id),
+    ...organizationFields(organization, allowEmpty),
   }
 }
 
 function organizationFields(
-  value: OrganizationCreate,
+  value: unknown,
   allowEmpty: boolean,
 ): OrganizationCreate {
-  assertObject(value, 'organization')
+  const organization = assertObject(value, 'organization')
   const assertText = allowEmpty ? assertString : assertNonEmptyString
-  assertText(value.name, 'organization.name')
-  assertText(value.tax_id, 'organization.tax_id')
   return {
-    name: value.name,
-    tax_id: value.tax_id,
+    name: assertText(organization.name, 'organization.name'),
+    tax_id: assertText(organization.tax_id, 'organization.tax_id'),
   }
 }

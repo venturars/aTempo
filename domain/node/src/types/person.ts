@@ -47,15 +47,15 @@ export function assertBirthDate(value: string | null): void {
   )
 }
 
-export function assertPersonCreate(value: PersonCreate): PersonCreate {
+export function assertPersonCreate(value: unknown): PersonCreate {
   return personFields(value, false)
 }
 
-export function assertPerson(value: Person): Person {
+export function assertPerson(value: unknown): Person {
   return personWithId(value, true)
 }
 
-export function assertPersonUpdate(value: PersonUpdate): PersonUpdate {
+export function assertPersonUpdate(value: unknown): PersonUpdate {
   return personWithId(value, false)
 }
 
@@ -64,60 +64,54 @@ export function assertPersonUpdate(value: PersonUpdate): PersonUpdate {
  * un valor guardado que la entrada no aceptaría (un `birth_date` con un año de
  * cinco cifras, un documento vacío) no rompe el listado entero.
  */
-export function personFromRow(row: Person): Person {
-  assertObject(row, 'person')
-  assertUuid(row.id, 'person.id')
-  assertString(row.identification_document, 'person.identification_document')
-  assertString(row.email, 'person.email')
-  assertString(row.first_name, 'person.first_name')
-  assertString(row.last_name, 'person.last_name')
-  assertNullableString(row.birth_date, 'person.birth_date')
-  assertNullableString(row.phone, 'person.phone')
+export function personFromRow(value: unknown): Person {
+  const row = assertObject(value, 'person')
+  const id = assertUuid(row.id, 'person.id')
   return {
-    id: normalizeUuid(row.id),
-    identification_document: row.identification_document,
-    email: row.email,
-    first_name: row.first_name,
-    last_name: row.last_name,
-    birth_date: row.birth_date,
-    phone: row.phone,
+    id: normalizeUuid(id),
+    identification_document: assertString(
+      row.identification_document,
+      'person.identification_document',
+    ),
+    email: assertString(row.email, 'person.email'),
+    first_name: assertString(row.first_name, 'person.first_name'),
+    last_name: assertString(row.last_name, 'person.last_name'),
+    birth_date: assertNullableString(row.birth_date, 'person.birth_date'),
+    phone: assertNullableString(row.phone, 'person.phone'),
   }
 }
 
-function personWithId(value: Person, allowEmptyNames: boolean): Person {
-  assertObject(value, 'person')
-  assertUuid(value.id, 'person.id')
+function personWithId(value: unknown, allowEmptyNames: boolean): Person {
+  const person = assertObject(value, 'person')
+  const id = assertUuid(person.id, 'person.id')
   return {
-    id: normalizeUuid(value.id),
-    ...personFields(value, allowEmptyNames),
+    id: normalizeUuid(id),
+    ...personFields(person, allowEmptyNames),
   }
 }
 
-function personFields(
-  value: PersonCreate,
-  allowEmptyNames: boolean,
-): PersonCreate {
-  assertObject(value, 'person')
-  assertNonEmptyString(
-    value.identification_document,
+function personFields(value: unknown, allowEmptyNames: boolean): PersonCreate {
+  const person = assertObject(value, 'person')
+  const identificationDocument = assertNonEmptyString(
+    person.identification_document,
     'person.identification_document',
   )
-  assertNonEmptyString(value.email, 'person.email')
-  if (normalizeEmail(value.email).length === 0) {
+  const email = assertNonEmptyString(person.email, 'person.email')
+  if (normalizeEmail(email).length === 0) {
     fail('person.email', 'empty')
   }
   const assertName = allowEmptyNames ? assertString : assertNonEmptyString
-  assertName(value.first_name, 'person.first_name')
-  assertName(value.last_name, 'person.last_name')
-  assertNullableString(value.birth_date, 'person.birth_date')
-  assertBirthDate(value.birth_date)
-  assertNullableString(value.phone, 'person.phone')
+  const firstName = assertName(person.first_name, 'person.first_name')
+  const lastName = assertName(person.last_name, 'person.last_name')
+  const birthDate = assertNullableString(person.birth_date, 'person.birth_date')
+  assertBirthDate(birthDate)
+  const phone = assertNullableString(person.phone, 'person.phone')
   return {
-    identification_document: value.identification_document,
-    email: value.email,
-    first_name: value.first_name,
-    last_name: value.last_name,
-    birth_date: value.birth_date,
-    phone: value.phone,
+    identification_document: identificationDocument,
+    email,
+    first_name: firstName,
+    last_name: lastName,
+    birth_date: birthDate,
+    phone,
   }
 }
