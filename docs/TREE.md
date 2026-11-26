@@ -96,10 +96,48 @@ docs/BLOCKEND.md
 permanent-data.md
 ```
 
-# Árbol de `sdk/` (pendiente)
+# Árbol de `sdk/`
 
 ```text
-sdk/                  # lógica de negocio; paquete aún no creado
+sdk/
+  README.md
+  package.json           # atempo-sdk; pnpm 10.33.0; no es un servicio HTTP
+  pnpm-lock.yaml
+  tsconfig.json
+  tsconfig.build.json
+  eslint.config.mjs
+  .prettierrc
+  src/
+    index.ts
+    shared/
+      result.ts          # Result ok | err
+      app-error.ts       # VALIDATION, CONFIGURATION, PERSISTENCE, CONFLICT, NOT_FOUND
+    domain/
+      email.ts             # Email
+      identifier.ts        # TaxId, IdentificationDocument
+      text.ts              # NonEmptyText, Phone
+      invitation-status.ts
+      scalars.ts           # Uuid, DateOnly
+      person-record.ts     # tabla person
+      person-role.ts       # tabla person_role
+      person.ts            # OrganizationPerson = record + roles
+      organization.ts
+      person-repository.ts
+      organization-dashboard.ts
+    application/
+      after-auth.ts
+      create-organization.ts
+      invite-person.ts
+      get-organization-dashboard.ts
+      directory.spec.ts
+      after-auth.spec.ts
+      get-organization-dashboard.spec.ts
+    infrastructure/
+      postgres-health-client.ts
+      in-memory-person-repository.ts
+      organization-dashboard-fixtures.ts
+    composition/
+      create-sdk.ts
 ```
 
 # Árbol de `api-sqlite/`
@@ -213,7 +251,7 @@ api-rustfs/
 
 ```text
 api-router/
-  package.json
+  package.json           # dependencia file:../sdk (atempo-sdk)
   pnpm-lock.yaml
   .npmrc
   nest-cli.json
@@ -224,7 +262,7 @@ api-router/
   src/
     main.ts
     configure-app.ts   # CORS, ValidationPipe, filtro de errores del contrato, Swagger /docs
-    app.module.ts      # carga mock-api/ con API_MOCK=true
+    app.module.ts      # carga mock-api/ con API_MOCK=true; AuthService llama afterAuth
     contract/
       contract-exception.ts        # errores con el formato del contrato
       contract-exception.filter.ts # responde con ese formato
@@ -237,7 +275,8 @@ api-router/
     auth/
       auth.module.ts
       auth.controller.ts
-      auth.service.ts
+      auth.service.ts        # Auth0; afterAuth tras login, register y me; 503 solo CONFIGURATION/PERSISTENCE; VALIDATION → 400
+      atempo-sdk.token.ts
       web-session.dto.ts     # perfil web público
       web-session.service.ts # allowlist web y perfil; tokens en cookies HttpOnly
       login-request.dto.ts
@@ -249,6 +288,17 @@ api-router/
       refresh-request.dto.ts
       refresh-response.dto.ts
       me-response.dto.ts
+    sdk/
+      sdk.module.ts          # createSdk() global; ATEMPO_SDK
+    organizations/
+      organizations.module.ts
+      organizations.controller.ts
+      people.controller.ts
+    organization-dashboard/
+      organization-dashboard.module.ts
+      organization-dashboard.controller.ts  # GET /organization/dashboard
+    shared/
+      bearer.guard.ts        # Bearer no vacío (admin y mock-api)
     mock-api/
       mock-api.module.ts
       sessions.controller.ts # /sessions del contrato API v1
@@ -262,6 +312,8 @@ api-router/
     swagger.e2e-spec.ts
     auth.e2e-spec.ts
     auth-web.e2e-spec.ts
+    organizations.e2e-spec.ts
+    organization-dashboard.e2e-spec.ts
     jest-e2e.json
 ```
 

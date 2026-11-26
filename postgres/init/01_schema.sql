@@ -10,13 +10,18 @@ CREATE TABLE organization (
 
 CREATE TABLE person (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id uuid NOT NULL REFERENCES organization (id),
   identification_document text NOT NULL UNIQUE,
   email text NOT NULL UNIQUE,
   first_name text NOT NULL,
   last_name text NOT NULL,
   birth_date date,
-  phone text
+  phone text,
+  invitation_status text NOT NULL DEFAULT 'active'
+    CHECK (invitation_status IN ('pending', 'active'))
 );
+
+CREATE INDEX person_organization_id_idx ON person (organization_id);
 
 CREATE TABLE course (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -70,16 +70,16 @@ must_fail "duplicate tax_id case" \
   "INSERT INTO organization (name, tax_id) VALUES ('Otra', 'b12345678');"
 
 must_fail "duplicate identification_document" \
-  "INSERT INTO person (identification_document, email, first_name, last_name) VALUES ('12345678A', 'otra@example.com', 'Otra', 'Persona');"
+  "INSERT INTO person (organization_id, identification_document, email, first_name, last_name) VALUES ('11111111-1111-1111-1111-111111111111', '12345678A', 'otra@example.com', 'Otra', 'Persona');"
 
 must_fail "duplicate identification_document case" \
-  "INSERT INTO person (identification_document, email, first_name, last_name) VALUES ('12345678a', 'otra2@example.com', 'Otra', 'Persona');"
+  "INSERT INTO person (organization_id, identification_document, email, first_name, last_name) VALUES ('11111111-1111-1111-1111-111111111111', '12345678a', 'otra2@example.com', 'Otra', 'Persona');"
 
 must_fail "duplicate email" \
-  "INSERT INTO person (identification_document, email, first_name, last_name) VALUES ('99999999Z', 'ana@example.com', 'Otra', 'Persona');"
+  "INSERT INTO person (organization_id, identification_document, email, first_name, last_name) VALUES ('11111111-1111-1111-1111-111111111111', '99999999Z', 'ana@example.com', 'Otra', 'Persona');"
 
 must_fail "duplicate email case" \
-  "INSERT INTO person (identification_document, email, first_name, last_name) VALUES ('99999999Z', 'ANA@example.com', 'Otra', 'Persona');"
+  "INSERT INTO person (organization_id, identification_document, email, first_name, last_name) VALUES ('11111111-1111-1111-1111-111111111111', '99999999Z', 'ANA@example.com', 'Otra', 'Persona');"
 
 must_fail "duplicate contract_address" \
   "INSERT INTO course (organization_id, name, acronym, start_at, end_at, contract_address) VALUES ('11111111-1111-1111-1111-111111111111', 'Rust', 'RST', '2026-01-01 00:00:00+00', '2026-06-01 00:00:00+00', '0x1234567890abcdef1234567890abcdef12345678');"

@@ -3,9 +3,27 @@
 INSERT INTO organization (id, name, tax_id) VALUES
   ('11111111-1111-1111-1111-111111111111', 'Acme', 'B12345678');
 
-INSERT INTO person (id, identification_document, email, first_name, last_name) VALUES
-  ('22222222-2222-2222-2222-222222222222', '12345678A', 'ana@example.com', 'Ana', 'Lopez'),
-  ('33333333-3333-3333-3333-333333333333', '87654321B', 'bruno@example.com', 'Bruno', 'Diaz');
+INSERT INTO person (
+  id, organization_id, identification_document, email, first_name, last_name, invitation_status
+) VALUES
+  (
+    '22222222-2222-2222-2222-222222222222',
+    '11111111-1111-1111-1111-111111111111',
+    '12345678A',
+    'ana@example.com',
+    'Ana',
+    'Lopez',
+    'active'
+  ),
+  (
+    '33333333-3333-3333-3333-333333333333',
+    '11111111-1111-1111-1111-111111111111',
+    '87654321B',
+    'bruno@example.com',
+    'Bruno',
+    'Diaz',
+    'pending'
+  );
 
 INSERT INTO course (
   id, organization_id, name, acronym, start_at, end_at, contract_address

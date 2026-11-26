@@ -115,10 +115,11 @@ Abre <http://localhost:5191/> para el alumno o <http://localhost:5191/admin> par
 | --- | --- |
 | `desktop/` | Prototipo para profesor y alumno con Electron y React; las demos usan datos en memoria. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/student/dashboard` para el dashboard del alumno. |
 | `web/` | Web del alumno y demo de administración con Vite y React, en el puerto 5191. |
-| `api-router/` | API REST con NestJS entre los frontends y la SDK de lógica de negocio (pendiente). |
+| `api-router/` | API REST con NestJS entre los frontends y `atempo-sdk`. Auth0 permanece en `AuthService`; tras login, register y `me` llama a `afterAuth`. |
+| `sdk/` | Paquete `atempo-sdk`: capas shared, dominio, aplicación, infraestructura mock y composición. Expone `afterAuth({ email })`. No es un servicio HTTP. El CRUD HTTP y el GET del Resumen aún no están. |
 | `api-postgresql/` | API REST con NestJS entre la SDK y PostgreSQL. |
 | `api-rustfs/` | API REST con Express entre la SDK y RustFS (persistencia de objetos). |
-| `api-sqlite/` | Servicio Flask con Pydantic y SQLAlchemy Core entre la SDK prevista y SQLite. |
+| `api-sqlite/` | Servicio Flask con Pydantic y SQLAlchemy Core entre la SDK y SQLite. Aún no hay integración. |
 | `postgres/` | Core PostgreSQL y Drizzle Studio para ver sus tablas. No se abre desde el escritorio ni desde el API-router. |
 | `sqlite/` | SQLite operativo de fichaje y Datasette. Distinto del `atempo.sqlite` del escritorio. |
 | `rustfs/` | Justificantes (bucket `justifications`) y consola de RustFS. |
@@ -164,7 +165,7 @@ docker compose run --rm setup
 
 La primera vez, `setup` construye la imagen de Docker: tarda unos minutos. Las siguientes, unos segundos.
 
-`setup` instala delivery-workflow para Cursor, Codex y Claude Code en la raíz del proyecto, las dependencias Node de `desktop/`, `docs/storybook/`, `api-router/`, `api-postgresql/`, `api-rustfs/`, `blockend/` y `postgres/` en volúmenes Docker, y `api-sqlite/` en un entorno virtual Linux. Los paquetes Node, el entorno Python y los datos de las APIs viven en volúmenes; las dependencias Linux no llegan a tu carpeta.
+`setup` instala delivery-workflow para Cursor, Codex y Claude Code en la raíz del proyecto, las dependencias Node de `desktop/`, `docs/storybook/`, `sdk/`, `api-router/`, `api-postgresql/`, `api-rustfs/`, `blockend/` y `postgres/` en volúmenes Docker, y `api-sqlite/` en un entorno virtual Linux. Los paquetes Node, el entorno Python y los datos de las APIs viven en volúmenes; las dependencias Linux no llegan a tu carpeta.
 
 Desde entonces, git lanza `setup` después de `git pull`, de cambiar de rama o de un rebase si cambió `apm.yml`, `apm.lock.yaml`, un lockfile de pnpm, `api-sqlite/pyproject.toml`, el script de setup, el entrypoint o el `Dockerfile`. Si cambió el `Dockerfile` o el entrypoint, reconstruye la imagen antes de instalar:
 
@@ -411,13 +412,26 @@ docker compose run --rm storybook pnpm guide
 
 Ese comando es obligatorio: sin él, el markdown se queda desfasado. No se edita `docs/guia/` a mano.
 
+## SDK
+
+Paquete `atempo-sdk` en `sdk/`: lógica de dominio, sin HTTP. Tras `docker compose run --rm setup`, las comprobaciones van en el volumen Linux del paquete:
+
+```sh
+docker compose run --rm sdk pnpm typecheck
+docker compose run --rm sdk pnpm lint
+docker compose run --rm sdk pnpm test
+docker compose run --rm sdk pnpm build
+```
+
+Si `setup` aún no ha instalado `sdk/`, basta con `docker compose run --rm sdk pnpm install --frozen-lockfile` (y `pnpm build` si hace falta). Más contexto en [sdk/README.md](sdk/README.md) y [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
 ## API-router
 
 ```sh
 docker compose up api-router
 ```
 
-El servicio queda en <http://localhost:3000>. `GET /health` debe devolver `{ "status": "ok" }`. Compose lo arranca con `API_MOCK=true`: sirve además, con datos en memoria, los ocho endpoints del contrato API v1 que usa la pestaña Hoy del panel. La documentación interactiva está en <http://localhost:3000/docs>. Su contenedor monta solo `api-router/`, sus `node_modules` y la caché pnpm; el `.env` de la raíz no queda disponible dentro del servicio. Para pararlo, `Ctrl+C` o `docker compose stop api-router`.
+El servicio queda en <http://localhost:3000>. `GET /health` debe devolver `{ "status": "ok" }`. Compose lo arranca con `API_MOCK=true`: sirve además, con datos en memoria, los ocho endpoints del contrato API v1 que usa la pestaña Hoy del panel. La documentación interactiva está en <http://localhost:3000/docs>. El servicio `api-router` del proyecto `atempo` monta `./api-router` y `./sdk`, usa `file:../sdk` y recibe `API_POSTGRESQL_URL`; el `.env` de la raíz no queda disponible dentro del servicio. Para pararlo, `Ctrl+C` o `docker compose stop api-router`.
 
 Las comprobaciones se lanzan en Docker:
 
@@ -441,7 +455,7 @@ La API queda en <http://localhost:3001> y PostgreSQL en <http://localhost:5433> 
 
 ## API-sqlite
 
-`api-sqlite/` es el servicio de persistencia local previsto para la SDK. La SDK todavía está pendiente y no hay integración entre estos servicios. Su base SQLite es distinta de la base local de Electron.
+`api-sqlite/` es el servicio de persistencia local previsto para la SDK. `sdk/` (`atempo-sdk`) ya existe; aún no hay integración con este servicio. Su base SQLite es distinta de la base local de Electron.
 
 Para usar el servicio en Docker, primero ejecuta `docker compose run --rm setup` y después:
 
@@ -511,7 +525,7 @@ Reemplaza los valores por el login exacto del revisor solicitado y su ID numéri
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Las tres capas del escritorio y el entorno de instalación. |
 | [docs/STYLE.md](docs/STYLE.md) | Temas y enlace a la guía visual. |
 | [docs/guia](docs/guia/README.md) | Markdown generado desde Storybook. No se versiona. |
-| [docs/TREE.md](docs/TREE.md) | Carpetas de `desktop/`, `api-router/`, las APIs de persistencia y los almacenes. |
+| [docs/TREE.md](docs/TREE.md) | Carpetas de `desktop/`, `api-router/`, `sdk/`, las APIs de persistencia y los almacenes. |
 | [docs/POSTGRES.md](docs/POSTGRES.md) | Modelo del core PostgreSQL. |
 | [docs/SQLITE.md](docs/SQLITE.md) | Modelo del SQLite operativo. |
 | [docs/RUSTFS.md](docs/RUSTFS.md) | Modelo del bucket de justificantes. |

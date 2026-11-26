@@ -1,9 +1,11 @@
 import { generateKeyPairSync, sign } from 'node:crypto'
 import { INestApplication } from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
+import { AppError, err, type Sdk } from 'atempo-sdk'
 import request from 'supertest'
 import { App } from 'supertest/types'
 import { AppModule } from '../src/app.module'
+import { ATEMPO_SDK } from '../src/auth/atempo-sdk.token'
 import { configureApp } from '../src/configure-app'
 
 const auth0Config = {
@@ -41,6 +43,16 @@ function auth0Response(body: unknown, status = 200): Response {
   })
 }
 
+function postgresHealthUrls(fetchMock: jest.Mock): string[] {
+  return fetchMock.mock.calls
+    .map(([input]) => String(input))
+    .filter((url) => url.includes('/health'))
+}
+
+function spyAfterAuth(app: INestApplication<App>): jest.SpyInstance {
+  return jest.spyOn(app.get<Sdk>(ATEMPO_SDK), 'afterAuth')
+}
+
 describe('Authentication (e2e)', () => {
   let app: INestApplication<App>
   let fetchMock: jest.Mock
@@ -49,7 +61,15 @@ describe('Authentication (e2e)', () => {
   beforeEach(async () => {
     originalEnvironment = { ...process.env }
     Object.assign(process.env, auth0Config)
+    process.env.API_POSTGRESQL_URL = 'http://api-postgresql:3001'
     fetchMock = jest.spyOn(global, 'fetch') as unknown as jest.Mock
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes('/health')) {
+        return auth0Response({ status: 'ok' })
+      }
+      throw new Error(`Unexpected fetch: ${url}`)
+    })
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -70,7 +90,19 @@ describe('Authentication (e2e)', () => {
   })
 
   function mockJwks(): void {
-    fetchMock.mockResolvedValue(auth0Response({ keys: [signingKey] }))
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes('/.well-known/jwks.json')) {
+        return auth0Response({ keys: [signingKey] })
+      }
+      if (url.includes('/health')) {
+        return auth0Response({ status: 'ok' })
+      }
+      if (url.endsWith('/oauth/revoke')) {
+        return new Response(null, { status: 200 })
+      }
+      throw new Error(`Unexpected fetch: ${url}`)
+    })
   }
 
   it('POST /auth/login exchanges credentials and returns the Access Token', async () => {
@@ -96,6 +128,22 @@ describe('Authentication (e2e)', () => {
     })
   })
 
+  it('login calls afterAuth health when Auth0 succeeds', async () => {
+    fetchMock.mockResolvedValueOnce(
+      auth0Response({ access_token: 'issued-token', expires_in: 3600 }),
+    )
+
+    await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: 'profesor@atempo.test', password: 'test-password' })
+      .expect(200)
+      .expect({ accessToken: 'issued-token', expiresIn: 3600 })
+
+    expect(postgresHealthUrls(fetchMock)).toEqual([
+      'http://api-postgresql:3001/health',
+    ])
+  })
+
   it('POST /auth/login maps rejected credentials to 401 without exposing the provider body', async () => {
     fetchMock.mockResolvedValueOnce(
       auth0Response(
@@ -112,6 +160,44 @@ describe('Authentication (e2e)', () => {
         expect(body).toMatchObject({ code: 'INVALID_CREDENTIALS' })
         expect(JSON.stringify(body)).not.toContain('private detail')
       })
+  })
+
+  it('login 401 does not call postgres health', async () => {
+    fetchMock.mockResolvedValueOnce(
+      auth0Response(
+        { error: 'invalid_grant', error_description: 'private detail' },
+        403,
+      ),
+    )
+
+    await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: 'unknown@atempo.test', password: 'wrong-password' })
+      .expect(401)
+      .expect(({ body }) => {
+        expect(body).toMatchObject({ code: 'INVALID_CREDENTIALS' })
+      })
+
+    expect(postgresHealthUrls(fetchMock)).toEqual([])
+  })
+
+  it('login returns 503 POSTGRES_API_UNAVAILABLE', async () => {
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes('/oauth/token')) {
+        return auth0Response({ access_token: 'issued-token', expires_in: 3600 })
+      }
+      if (url.includes('/health')) {
+        return auth0Response({ status: 'error' }, 503)
+      }
+      throw new Error(`Unexpected fetch: ${url}`)
+    })
+
+    await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: 'profesor@atempo.test', password: 'test-password' })
+      .expect(503)
+      .expect(({ body }) => expect(body.code).toBe('POSTGRES_API_UNAVAILABLE'))
   })
 
   it('POST /auth/login treats invalid Auth0 client credentials as a provider failure', async () => {
@@ -201,6 +287,32 @@ describe('Authentication (e2e)', () => {
       })
   })
 
+  it('me calls afterAuth and keeps current body', async () => {
+    mockJwks()
+    const afterAuth = spyAfterAuth(app)
+    const token = createAccessToken({
+      iss: 'https://tenant.example.test/',
+      aud: auth0Config.AUTH0_AUDIENCE,
+      exp: Math.floor(Date.now() / 1000) + 300,
+      sub: 'auth0|test-user',
+      email: '  Profesor@ATEMPO.TEST ',
+    })
+
+    try {
+      await request(app.getHttpServer())
+        .get('/auth/me')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200)
+        .expect({ email: 'profesor@atempo.test' })
+
+      expect(afterAuth).toHaveBeenCalledWith({
+        email: '  Profesor@ATEMPO.TEST ',
+      })
+    } finally {
+      afterAuth.mockRestore()
+    }
+  })
+
   it('GET /auth/me rejects a signed token without an email claim', async () => {
     mockJwks()
     const token = createAccessToken({
@@ -215,6 +327,57 @@ describe('Authentication (e2e)', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(401)
       .expect(({ body }) => expect(body.code).toBe('INVALID_TOKEN'))
+  })
+
+  it('afterAuth VALIDATION is 400 not POSTGRES_API_UNAVAILABLE', async () => {
+    mockJwks()
+    const afterAuth = spyAfterAuth(app)
+    afterAuth.mockResolvedValue(
+      err(new AppError('VALIDATION', 'El correo es obligatorio.')),
+    )
+    const token = createAccessToken({
+      iss: 'https://tenant.example.test/',
+      aud: auth0Config.AUTH0_AUDIENCE,
+      exp: Math.floor(Date.now() / 1000) + 300,
+      sub: 'auth0|test-user',
+      email: 'profesor@atempo.test',
+    })
+
+    try {
+      await request(app.getHttpServer())
+        .get('/auth/me')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(400)
+        .expect(({ body }) => {
+          expect(body.code).toBe('VALIDATION')
+          expect(body.code).not.toBe('POSTGRES_API_UNAVAILABLE')
+        })
+    } finally {
+      afterAuth.mockRestore()
+    }
+  })
+
+  it('me without email does not call sdk', async () => {
+    mockJwks()
+    const afterAuth = spyAfterAuth(app)
+    const token = createAccessToken({
+      iss: 'https://tenant.example.test/',
+      aud: auth0Config.AUTH0_AUDIENCE,
+      exp: Math.floor(Date.now() / 1000) + 300,
+      sub: 'auth0|test-user',
+    })
+
+    try {
+      await request(app.getHttpServer())
+        .get('/auth/me')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(401)
+        .expect(({ body }) => expect(body.code).toBe('INVALID_TOKEN'))
+
+      expect(afterAuth).not.toHaveBeenCalled()
+    } finally {
+      afterAuth.mockRestore()
+    }
   })
 
   it('GET /auth/me rejects a missing Bearer token', async () => {

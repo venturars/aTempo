@@ -1,8 +1,10 @@
 # api-router
 
-Servicio REST con NestJS y TypeScript. Recibe las peticiones de los frontends (Electron y web), las adapta y las delegará en la **SDK (lógica de negocio)**. El router no implementa reglas de negocio.
+Servicio REST con NestJS y TypeScript. Recibe las peticiones de los frontends (Electron y web) y las adapta. Auth0 (`register`, `login`, `refresh`, `logout`, `me`) permanece en `AuthService`. Tras login, register o `me` correctos, el router llama a `afterAuth({ email })` de [`sdk/`](../sdk/) (`atempo-sdk`, `file:../sdk`). El router no implementa reglas de negocio; traduce HTTP y delega en la SDK.
 
-Expone `GET /health`, `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout` y `GET /auth/me`. Electron y web usan los mismos paths. Electron intercambia tokens en JSON; la web, con origen `ATEMPO_WEB_ORIGIN`, guarda access y refresh en cookies HttpOnly. La lógica de negocio vivirá en [`sdk/`](../sdk/) (paquete hermano, carpeta pendiente); este servicio la consumirá cuando exista.
+Admin HTTP (mock en memoria, `Authorization: Bearer` no vacío): `POST /organizations`; `GET` y `PATCH /organizations/:organizationId`; `POST` y `GET /organizations/:organizationId/people`; `GET`, `PATCH` y `DELETE /people/:personId`; `GET /organization/dashboard?fixture=complete|empty|incomplete` (por defecto `complete`). Mismo cuerpo de error que el contrato v1.
+
+Expone `GET /health`, `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout` y `GET /auth/me`. Electron y web usan los mismos paths. Electron intercambia tokens en JSON; la web, con origen `ATEMPO_WEB_ORIGIN`, guarda access y refresh en cookies HttpOnly. `GET /auth/me` con Bearer sigue `{ "email" }`; con cookie, `{ "email", "profile" }`. `afterAuth` usa el claim `email`; si no hay persona, el resultado es ok y no crea. `CONFIGURATION` o `PERSISTENCE` → 503 `POSTGRES_API_UNAVAILABLE`. `VALIDATION` → 400, no 503. Logout, refresh y Auth0 ko no llaman a la SDK.
 
 ## Mock del contrato API v1
 
@@ -44,7 +46,7 @@ Durante el desarrollo, Vite envía `/api/*` al router y quita el prefijo `/api`.
 
 ## Docker Compose
 
-Tras `docker compose run --rm setup`, el servicio forma parte del entorno Compose: desde la raíz, `docker compose up api-router` lo sirve en <http://localhost:3000>. `pnpm run atempo --router-only` reutiliza ese mismo servicio y puerto; `--port` permite elegir otro puerto cuando haga falta. `docker compose up api-router api-postgresql api-sqlite api-rustfs` inicia las cuatro APIs actuales; PostgreSQL y RustFS arrancan como dependencias de sus servicios. La base y los datos de persistencia permanecen en volúmenes separados.
+Tras `docker compose run --rm setup`, el servicio forma parte del entorno Compose: desde la raíz, `docker compose up api-router` lo sirve en <http://localhost:3000>. El proyecto Compose `atempo` monta `./api-router` y `./sdk` en ese servicio, instala `file:../sdk` y pasa `API_POSTGRESQL_URL=http://api-postgresql:3001`. `pnpm run atempo --router-only` reutiliza ese mismo servicio y puerto; `--port` permite elegir otro puerto cuando haga falta. `docker compose up api-router api-postgresql api-sqlite api-rustfs` inicia las cuatro APIs actuales; PostgreSQL y RustFS arrancan como dependencias de sus servicios. La base y los datos de persistencia permanecen en volúmenes separados.
 
 Las pruebas y comprobaciones se ejecutan con el volumen Linux del paquete: `docker compose run --rm api-router pnpm test` (sustituye `test` por `typecheck`, `lint` o `build`).
 
@@ -67,5 +69,5 @@ pnpm build
 
 - `pnpm typecheck` — comprobación de tipos.
 - `pnpm lint` — ESLint sobre `src/` y `test/`.
-- `pnpm test` — pruebas e2e de `/health`, Swagger y el mock del contrato.
+- `pnpm test` — pruebas e2e de `/health`, Swagger, auth, organizaciones, resumen y el mock del contrato (si `API_MOCK=true`).
 - `pnpm build` — compilación a `dist/`.

@@ -6,10 +6,10 @@ FROM node:24.22.3-trixie AS base
 
 # Electron 44 trae Node 24. pnpm sale de packageManager en desktop/, docs/storybook/, api-router/, blockend/ y postgres/.
 ARG PNPM_VERSION=10.33.0
-ARG APM_VERSION=0.35.0
+ARG APM_VERSION=0.39.0
 # Checksums de apm-linux-*.tar.gz en la release de APM. Cambian con APM_VERSION.
-ARG APM_SHA256_ARM64=ada8901ce1b29e5d188629eeed64e8499853a8cb5f047630ebedbde24008508e
-ARG APM_SHA256_X86_64=5aa23ce61eebae9411668f507772cdb5d87252c760078dc59b5acdc5188d785b
+ARG APM_SHA256_ARM64=2fd5ecb25cbfe7324935dbe506d2a66bf6538fc0dac3bb3aea9f53f04bc1caa6
+ARG APM_SHA256_X86_64=c91007b5ed708dd3f6dabfe3a3a1ed98305f775f0a5323249e7a6b6bb5fa22c0
 # Snapshot Debian de Python (base) y de las librerías de desktop-gui. Cambia la fecha y todas las versiones fijadas juntas.
 ARG DEBIAN_SNAPSHOT=20261116T000000Z
 # Lo pone Docker al construir: arm64 en Apple Silicon, amd64 en la mayoría de PCs.
@@ -54,7 +54,7 @@ RUN git config --system --add safe.directory '*'
 # Los node_modules de Linux viven en volúmenes, nunca en la carpeta del proyecto.
 # Compose crea esos volúmenes vacíos y de root: el entrypoint los deja de node en cada arranque.
 COPY docker/entrypoint.sh /usr/local/bin/atempo-entrypoint
-RUN mkdir -p /work/desktop/node_modules /work/docs/storybook/node_modules /work/api-router/node_modules /work/blockend/node_modules /work/postgres/node_modules \
+RUN mkdir -p /work/desktop/node_modules /work/docs/storybook/node_modules /work/sdk/node_modules /work/api-router/node_modules /work/blockend/node_modules /work/postgres/node_modules \
     /work/api-postgresql/node_modules /work/api-rustfs/node_modules /work/api-sqlite/.venv \
     /var/lib/atempo /pnpm-store \
   && chown -R node:node /work /var/lib/atempo /pnpm-store \
