@@ -15,7 +15,7 @@ import { query, type PostgresQuery } from '../pool'
 import type { IdRow } from './id-row'
 import { runParentDelete } from './run-parent-delete'
 
-export async function retrieveAllCourses(
+export async function retrieveAllCourseRows(
   run: PostgresQuery = query,
 ): Promise<Course[]> {
   const result = await run(LIST_COURSES)
@@ -67,7 +67,7 @@ export async function findCourseIdByAcronym(
   return row?.id ?? null
 }
 
-export async function addCourse(
+export async function addCourseRow(
   course: CourseCreate,
   run: PostgresQuery = query,
 ): Promise<Course | null> {
@@ -100,14 +100,14 @@ export async function updateCourseRow(
 
 export async function removeCourseEnrollments(
   id: string,
-  run: PostgresQuery = query,
+  run: PostgresQuery,
 ): Promise<void> {
   await run(DELETE_COURSE_ENROLLMENTS, [id])
 }
 
 export async function removeCourseById(
   id: string,
-  run: PostgresQuery = query,
+  run: PostgresQuery,
 ): Promise<boolean> {
   const result = await runParentDelete(run, DELETE_COURSE, [id], 'course')
   return (result.rowCount ?? 0) > 0

@@ -1,4 +1,4 @@
-import { deregisterPersonCourse as deregisterPersonCourseRow } from '../postgres/executors/person-course'
+import { deregisterPersonCourseRow } from '../postgres/executors/person-course'
 import { assertUuid } from '../types/assert'
 
 export type DeregisterPersonCourseInput = {

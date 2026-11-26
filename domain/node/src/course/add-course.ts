@@ -1,6 +1,6 @@
 import { fail } from '../errors'
 import { findOrganizationExists } from '../organization/find-organization-exists'
-import { addCourse as addCourseRow } from '../postgres/executors/course'
+import { addCourseRow } from '../postgres/executors/course'
 import {
   courseFromRow,
   assertCourseCreate,

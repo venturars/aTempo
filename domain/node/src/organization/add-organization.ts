@@ -1,5 +1,5 @@
 import { fail } from '../errors'
-import { addOrganization as addOrganizationRow } from '../postgres/executors/organization'
+import { addOrganizationRow } from '../postgres/executors/organization'
 import {
   assertOrganization,
   assertOrganizationCreate,

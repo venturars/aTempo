@@ -1,6 +1,7 @@
 import { fail } from '../errors'
 import { findPersonExists } from '../person/find-person-exists'
-import { addPersonRole as addPersonRoleRow } from '../postgres/executors/person-role'
+import { addPersonRoleRow } from '../postgres/executors/person-role'
+import { withTransaction } from '../postgres/pool'
 import { assertPersonRole, type PersonRole } from '../types/person-role'
 import { findPersonRoleAvailable } from './find-person-role-available'
 import { findStudentExclusive } from './find-student-exclusive'
@@ -17,20 +18,25 @@ export async function addPersonRole(
   input: AddPersonRoleInput,
 ): Promise<AddPersonRoleOutput> {
   const personRole = assertPersonRole(input.personRole)
-  await findPersonExists({ id: personRole.person_id })
-  await findStudentExclusive({
-    personId: personRole.person_id,
-    role: personRole.role,
-  })
-  await findPersonRoleAvailable({
-    personId: personRole.person_id,
-    role: personRole.role,
+
+  const created = await withTransaction(async (run) => {
+    await findPersonExists({ id: personRole.person_id }, run)
+    await findStudentExclusive(
+      { personId: personRole.person_id, role: personRole.role },
+      run,
+    )
+    await findPersonRoleAvailable(
+      { personId: personRole.person_id, role: personRole.role },
+      run,
+    )
+
+    const row = await addPersonRoleRow(personRole, run)
+    if (!row) {
+      fail('person_role', 'not_created')
+    }
+
+    return assertPersonRole(row)
   })
 
-  const row = await addPersonRoleRow(personRole)
-  if (!row) {
-    fail('person_role', 'not_created')
-  }
-
-  return { personRole: assertPersonRole(row) }
+  return { personRole: created }
 }

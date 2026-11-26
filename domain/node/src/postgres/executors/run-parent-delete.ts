@@ -9,6 +9,9 @@ const FOREIGN_KEY_VIOLATION = '23503'
  * Si choca con una clave foránea, todavía hay filas hijas que la usan: es un
  * conflicto, no una fila que falta. El error de pg no dice si vino de un
  * INSERT o de un DELETE; por eso se traduce aquí, donde sí se sabe.
+ *
+ * Los executors de borrado piden `run` sin valor por defecto: con `query`, el
+ * error llegaría ya traducido como «falta el padre» y aquí no se reconocería.
  */
 export async function runParentDelete(
   run: PostgresQuery,

@@ -1,5 +1,5 @@
 import { fail } from '../errors'
-import { addPerson as addPersonRow } from '../postgres/executors/person'
+import { addPersonRow } from '../postgres/executors/person'
 import {
   personFromRow,
   assertPersonCreate,

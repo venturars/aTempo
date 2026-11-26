@@ -13,7 +13,7 @@ export type PersonCourseLookup = {
   already: boolean
 }
 
-export async function retrieveAllPersonCourses(
+export async function retrieveAllPersonCourseRows(
   run: PostgresQuery = query,
 ): Promise<PersonCourse[]> {
   const result = await run(LIST_PERSON_COURSES)
@@ -31,7 +31,7 @@ export async function lookupPersonCourse(
   return (result.rows[0] as PersonCourseLookup | undefined) ?? null
 }
 
-export async function addPersonCourse(
+export async function addPersonCourseRow(
   personCourse: PersonCourse,
   run: PostgresQuery = query,
 ): Promise<PersonCourse | null> {
@@ -42,7 +42,7 @@ export async function addPersonCourse(
   return (result.rows[0] as PersonCourse | undefined) ?? null
 }
 
-export async function deregisterPersonCourse(
+export async function deregisterPersonCourseRow(
   personId: string,
   courseId: string,
   run: PostgresQuery = query,

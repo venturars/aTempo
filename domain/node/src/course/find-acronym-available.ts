@@ -1,6 +1,10 @@
 import { fail } from '../errors'
 import { findCourseIdByAcronym } from '../postgres/executors/course'
-import { assertUuid, normalizeUuid } from '../types/assert'
+import {
+  assertNonEmptyString,
+  assertUuid,
+  normalizeUuid,
+} from '../types/assert'
 
 export type FindAcronymAvailableInput = {
   organizationId: string
@@ -15,7 +19,8 @@ export async function findAcronymAvailable(
     input.organizationId,
     'course.organization_id',
   )
-  const foundId = await findCourseIdByAcronym(organizationId, input.acronym)
+  const acronym = assertNonEmptyString(input.acronym, 'course.acronym')
+  const foundId = await findCourseIdByAcronym(organizationId, acronym)
   if (!foundId) {
     return
   }

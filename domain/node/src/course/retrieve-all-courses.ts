@@ -1,4 +1,4 @@
-import { retrieveAllCourses as retrieveAllCourseRows } from '../postgres/executors/course'
+import { retrieveAllCourseRows } from '../postgres/executors/course'
 import { courseFromRow, type Course } from '../types/course'
 
 export type RetrieveAllCoursesOutput = {

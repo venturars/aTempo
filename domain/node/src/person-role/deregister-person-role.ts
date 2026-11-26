@@ -1,4 +1,4 @@
-import { deregisterPersonRole as deregisterPersonRoleRow } from '../postgres/executors/person-role'
+import { deregisterPersonRoleRow } from '../postgres/executors/person-role'
 import { assertUuid } from '../types/assert'
 import { assertRoleName, type RoleName } from '../types/role'
 

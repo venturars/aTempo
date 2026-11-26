@@ -1,4 +1,4 @@
-import { retrieveAllPersonCourses as retrieveAllPersonCourseRows } from '../postgres/executors/person-course'
+import { retrieveAllPersonCourseRows } from '../postgres/executors/person-course'
 import { assertPersonCourse, type PersonCourse } from '../types/person-course'
 
 export type RetrieveAllPersonCoursesOutput = {

@@ -1,4 +1,4 @@
-import { retrieveAllRoles as retrieveAllRoleRows } from '../postgres/executors/role'
+import { retrieveAllRoleRows } from '../postgres/executors/role'
 import { assertRole, type Role } from '../types/role'
 
 export type RetrieveAllRolesOutput = {

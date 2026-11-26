@@ -1,4 +1,4 @@
-import { retrieveAllPersons as retrieveAllPersonRows } from '../postgres/executors/person'
+import { retrieveAllPersonRows } from '../postgres/executors/person'
 import { personFromRow, type Person } from '../types/person'
 
 export type RetrieveAllPersonsOutput = {

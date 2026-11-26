@@ -6,7 +6,9 @@ import {
 } from '../queries/role'
 import { query, type PostgresQuery } from '../pool'
 
-export async function retrieveAllRoles(run: PostgresQuery = query): Promise<Role[]> {
+export async function retrieveAllRoleRows(
+  run: PostgresQuery = query,
+): Promise<Role[]> {
   const result = await run(LIST_ROLES)
   return result.rows as Role[]
 }
