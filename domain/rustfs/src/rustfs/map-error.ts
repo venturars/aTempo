@@ -1,5 +1,5 @@
 import { NoSuchBucket, NoSuchKey, NotFound } from '@aws-sdk/client-s3'
-import { DomainError, PersistenceError } from '../errors'
+import { DomainError, fail } from '../errors'
 
 function stringField(error: object, field: string): string | undefined {
   if (!(field in error)) {
@@ -115,8 +115,7 @@ export function rethrowS3(error: unknown): never {
     throw error
   }
 
-  throw new PersistenceError('error de RustFS', {
-    entity: 'rustfs',
+  fail('rustfs', 'unmapped', {
     cause: error instanceof Error ? error : undefined,
   })
 }

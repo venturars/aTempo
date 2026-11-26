@@ -91,7 +91,8 @@ describe('putJustification', () => {
     await expect(
       putJustification({ justification: validJustification }),
     ).rejects.toMatchObject({
-      code: 'CONFLICT',
+      id: 'justification.document_id.taken',
+      kind: 'CONFLICT',
       field: 'document_id',
     })
     await expect(

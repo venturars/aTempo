@@ -5,7 +5,7 @@ import type {
   HeadObjectCommand,
   PutObjectCommand,
 } from '@aws-sdk/client-s3'
-import { ConfigurationError } from '../errors'
+import { fail } from '../errors'
 
 export type RustfsS3Command =
   HeadBucketCommand | HeadObjectCommand | GetObjectCommand | PutObjectCommand
@@ -25,10 +25,7 @@ let sendOverride: S3Send | undefined
 function requiredEnv(name: RustfsEnvKey): string {
   const value = process.env[name]
   if (value === undefined || value === '') {
-    throw new ConfigurationError(`Falta ${name}`, {
-      entity: 'rustfs',
-      field: name,
-    })
+    fail(`rustfs.${name}`, 'missing_env')
   }
   return value
 }
@@ -46,10 +43,7 @@ function useSslFromEnv(): boolean {
   if (value === 'false' || value === '0') {
     return false
   }
-  throw new ConfigurationError(
-    'RUSTFS_USE_SSL tiene que ser true, false, 1 o 0',
-    { entity: 'rustfs', field: 'RUSTFS_USE_SSL' },
-  )
+  fail('rustfs.RUSTFS_USE_SSL', 'invalid_env')
 }
 
 /**
@@ -60,10 +54,7 @@ function useSslFromEnv(): boolean {
 function hostFromEnv(): string {
   const host = requiredEnv('RUSTFS_ENDPOINT').trim()
   if (host.includes('://') || host.includes('/') || host.includes(':')) {
-    throw new ConfigurationError(
-      'RUSTFS_ENDPOINT tiene que ser solo el host, sin esquema ni puerto (por ejemplo rustfs o 127.0.0.1)',
-      { entity: 'rustfs', field: 'RUSTFS_ENDPOINT' },
-    )
+    fail('rustfs.RUSTFS_ENDPOINT', 'invalid_env')
   }
   return host
 }
@@ -72,10 +63,7 @@ function portFromEnv(): number {
   const text = requiredEnv('RUSTFS_PORT').trim()
   const port = Number(text)
   if (!/^\d+$/.test(text) || port < 1 || port > 65535) {
-    throw new ConfigurationError(
-      'RUSTFS_PORT tiene que ser un número de 1 a 65535',
-      { entity: 'rustfs', field: 'RUSTFS_PORT' },
-    )
+    fail('rustfs.RUSTFS_PORT', 'invalid_env')
   }
   return port
 }

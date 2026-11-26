@@ -1,34 +1,31 @@
-import { ValidationError, labelParts } from '../errors'
+import { fail, type DomainLabel } from '../errors'
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 /** Comprueba que es un string. Acepta el string vacío. */
-export function assertString(value: string, label: string): string {
+export function assertString(value: string, label: DomainLabel): string {
   if (typeof value !== 'string') {
-    throw new ValidationError(`${label} debe ser un string`, {
-      ...labelParts(label),
-    })
+    fail(label, 'string')
   }
   return value
 }
 
 /** Comprueba que es un string con al menos un carácter. */
-export function assertNonEmptyString(value: string, label: string): string {
+export function assertNonEmptyString(
+  value: string,
+  label: DomainLabel,
+): string {
   if (typeof value !== 'string' || value.length === 0) {
-    throw new ValidationError(`${label} debe ser un string no vacío`, {
-      ...labelParts(label),
-    })
+    fail(label, 'empty')
   }
   return value
 }
 
-export function assertUuid(value: string, label: string): string {
+export function assertUuid(value: string, label: DomainLabel): string {
   assertNonEmptyString(value, label)
   if (!UUID_RE.test(value)) {
-    throw new ValidationError(`${label} debe ser un uuid`, {
-      ...labelParts(label),
-    })
+    fail(label, 'uuid')
   }
   return value
 }
@@ -37,20 +34,19 @@ export function normalizeUuid(value: string): string {
   return value.toLowerCase()
 }
 
-export function assertBytes(value: Uint8Array, label: string): Uint8Array {
+export function assertBytes(value: Uint8Array, label: DomainLabel): Uint8Array {
   if (!(value instanceof Uint8Array)) {
-    throw new ValidationError(`${label} debe ser bytes`, {
-      ...labelParts(label),
-    })
+    fail(label, 'bytes')
   }
   return value
 }
 
-export function assertObject<T extends object>(value: T, label: string): T {
+export function assertObject<T extends object>(
+  value: T,
+  label: DomainLabel,
+): T {
   if (value === null || typeof value !== 'object') {
-    throw new ValidationError(`${label} debe ser un objeto`, {
-      entity: label,
-    })
+    fail(label, 'object')
   }
   return value
 }

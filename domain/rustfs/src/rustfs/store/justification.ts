@@ -2,7 +2,7 @@ import type {
   GetObjectCommandOutput,
   PutObjectCommandOutput,
 } from '@aws-sdk/client-s3'
-import { ConflictError, PersistenceError } from '../../errors'
+import { fail } from '../../errors'
 import type {
   Justification,
   JustificationCreate,
@@ -43,10 +43,7 @@ async function readBody(body: unknown): Promise<Uint8Array> {
     }
   }
 
-  throw new PersistenceError('justification.body no se ha leído', {
-    entity: 'justification',
-    field: 'body',
-  })
+  fail('justification.body', 'not_read')
 }
 
 /**
@@ -89,8 +86,7 @@ async function assertJustificationsBucketIsNotMissing(): Promise<void> {
     await send(headJustificationsBucketCommand())
   } catch (error) {
     if (isMissingBucketOnHead(error)) {
-      throw new PersistenceError('el bucket justifications no existe', {
-        entity: 'rustfs',
+      fail('rustfs.bucket', 'missing_bucket', {
         cause: error instanceof Error ? error : undefined,
       })
     }
@@ -137,9 +133,7 @@ export async function insertJustification(
     }
   } catch (error) {
     if (isKeyTakenError(error)) {
-      throw new ConflictError('justification.document_id ya existe', {
-        entity: 'justification',
-        field: 'document_id',
+      fail('justification.document_id', 'taken', {
         cause: error instanceof Error ? error : undefined,
       })
     }
