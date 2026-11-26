@@ -20,10 +20,12 @@ Si arrancas el router aislado con `pnpm run atempo --router-only --port 3005`, p
 
 Abre <http://localhost:5191/admin> e inicia sesión como `profesor@atempo.test`. El panel incluye **Personas**, **Cursos** y **Mis clases**. En **Personas**, **Invitar persona** permite preparar una invitación pendiente para los datos de demostración. La activación de invitaciones y **Crear cuenta** están deshabilitados; no se envía correo ni se crea una cuenta web.
 
-1. En **Cursos**, pulsa **Crear curso**. Añade nombre, profesor y alumnos, y guarda.
-2. Abre el curso y pulsa **Programar sesión**. Selecciona fecha, inicio, fin y aula. El fin debe ser posterior al inicio en el mismo día.
-3. Abre la sesión para ver el profesor, el alumnado y la asistencia pendiente.
-4. Para probar **Mis clases**, asigna el curso a Ventura Rodríguez. Esa vista muestra sus cursos en modo lectura.
+1. En **Personas**, pulsa **Invitar persona**. Mientras rellenas el formulario la tabla se oculta. Pide los campos de `person`: nombre, apellidos, documento de identidad, correo y, si quieres, fecha de nacimiento y teléfono. Elige **Alumno** o **Profesor** y pulsa **Preparar invitación**. La fila muestra el documento e **Invitación pendiente**. El documento y el correo no se pueden repetir en la organización.
+2. Solo hay un admin por organización. Con **Editar** en tu propia cuenta decides con **También soy profesor** si también das clase; no puedes dejarlo mientras tengas cursos.
+3. En **Cursos**, pulsa **Crear curso**. Añade nombre, profesor y alumnos, y guarda.
+4. Abre el curso y pulsa **Programar sesión**. Selecciona fecha, inicio, fin y aula. El fin debe ser posterior al inicio en el mismo día.
+5. Abre la sesión para ver el profesor, el alumnado y la asistencia pendiente.
+6. Para probar **Mis clases**, asigna el curso a Ventura Rodríguez. Esa vista muestra sus cursos en modo lectura.
 
 ### Sesiones semanales
 

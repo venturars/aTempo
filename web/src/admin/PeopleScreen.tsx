@@ -71,12 +71,14 @@ export function PeopleScreen(): React.JSX.Element {
           {notice}
         </p>
       ) : null}
-      <div className="panel-card min-w-0 overflow-x-auto rounded-box">
+      {creating || editing ? null : (
+        <div className="panel-card min-w-0 overflow-x-auto rounded-box">
         <table className="table panel-table">
           <caption className="sr-only">Personas de la organización</caption>
           <thead>
             <tr>
               <th>Nombre</th>
+              <th>Documento</th>
               <th>Correo</th>
               <th>Rol</th>
               <th>Estado</th>
@@ -98,6 +100,7 @@ export function PeopleScreen(): React.JSX.Element {
                       </span>
                     ) : null}
                   </td>
+                  <td>{person.identificationDocument}</td>
                   <td>{person.email}</td>
                   <td>{personRole(person)}</td>
                   <td>
@@ -133,7 +136,8 @@ export function PeopleScreen(): React.JSX.Element {
               ))}
           </tbody>
         </table>
-      </div>
+        </div>
+      )}
     </>
   )
 }
