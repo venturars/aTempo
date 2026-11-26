@@ -268,11 +268,13 @@ api-router/
       health-response.dto.ts
     shared/
       cookies.ts             # lectura, atributos y borrado de cookies Auth0
+      atempo-sdk.token.ts
+      atempo-sdk.module.ts   # createSdk() global; ATEMPO_SDK
+      bearer.guard.ts        # Bearer no vacío (admin y mock-api)
     auth/
       auth.module.ts
       auth.controller.ts
       auth.service.ts        # Auth0; afterAuth tras login, register y me; 503 solo CONFIGURATION/PERSISTENCE; VALIDATION → 400
-      atempo-sdk.token.ts
       web-session.dto.ts     # perfil web público
       web-session.service.ts # allowlist web y perfil; tokens en cookies HttpOnly
       login-request.dto.ts
@@ -293,9 +295,6 @@ api-router/
       person.controller.ts
       organization-people.controller.ts
       person.service.ts
-    shared/
-      atempo-sdk.module.ts   # createSdk() global; ATEMPO_SDK
-      bearer.guard.ts        # Bearer no vacío (admin y mock-api)
     mock-api/
       mock-api.module.ts
       sessions.controller.ts # /sessions del contrato API v1

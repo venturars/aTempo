@@ -9,7 +9,7 @@ Esta base no se abre desde `desktop/` ni desde `api-router/`. Drizzle Studio con
 Seis tablas, nombres en inglés, claves UUID, tiempos `timestamptz`:
 
 - `organization` — `tax_id` obligatorio y único (NIF, CIF, NIF-IVA, NIE); también único en minúsculas (`organization_tax_id_lower_idx`)
-- `person` — `organization_id` obligatorio; `invitation_status` `pending` o `active`; `identification_document` y `email` únicos (índices en minúsculas); sin `role` en esta tabla (están en `person_role`); sin contraseña
+- `person` — `identification_document` y `email` únicos; ambos también únicos en minúsculas (`person_identification_document_lower_idx`, `person_email_lower_idx`); sin `role`; sin contraseña; sin `organization_id`
 - `course` — `start_at`, `end_at`, `contract_address` UNIQUE (`0x` + 40 hex del contrato Anvil de ese curso); `contract_address` también único en minúsculas (`course_contract_address_lower_idx`)
 - `person_course` — N:N; PK `(person_id, course_id)`
 - `role` — tres filas: `organization_admin`, `teacher`, `student`
