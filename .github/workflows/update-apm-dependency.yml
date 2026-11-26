@@ -79,28 +79,12 @@ jobs:
           echo "ref=$tag" >>"$GITHUB_OUTPUT"
           echo "Última release estable: $tag"
 
-      - name: Elegir una release instalable
-        id: compatible
+      - name: Actualizar la dependencia y regenerar los archivos de APM
+        id: update
         env:
           GH_TOKEN: ${{ github.token }}
           DEPENDENCY_REPO: venturars/delivery-workflow
-        run: |
-          releases=$(gh api \
-            --paginate \
-            --slurp \
-            "repos/$DEPENDENCY_REPO/releases?per_page=100")
-          tag=$(python3 .github/scripts/self-release.py select "$DEPENDENCY_REPO" <<<"$releases")
-          [[ -n "$tag" ]] || {
-            echo "Ninguna release estable se puede instalar: su apm.yml depende de $DEPENDENCY_REPO." >&2
-            exit 1
-          }
-          echo "ref=$tag" >>"$GITHUB_OUTPUT"
-          echo "Release instalable: $tag"
-
-      - name: Actualizar la dependencia y regenerar los archivos de APM
-        env:
-          DEPENDENCY_REPO: venturars/delivery-workflow
-          REF: ${{ steps.compatible.outputs.ref }}
+          REF: ${{ steps.release.outputs.ref }}
         run: |
           actual=$(python3 .github/scripts/self-release.py pin "$DEPENDENCY_REPO")
           if [[ "$actual" == "${DEPENDENCY_REPO}#${REF}" ]]; then
@@ -108,6 +92,14 @@ jobs:
             exit 0
           fi
           python3 .github/scripts/self-release.py set "$DEPENDENCY_REPO" "$REF"
+          # Si el apm.yml de la release pinnea otra etiqueta del mismo paquete, APM no
+          # puede instalar los dos commits. Entonces solo se escribe el pin y no se ejecuta apm update.
+          nested=$(python3 .github/scripts/self-release.py nested "$DEPENDENCY_REPO" "$REF")
+          echo "nested=${nested}" >>"$GITHUB_OUTPUT"
+          if [[ -n "$nested" ]]; then
+            echo "$REF pinnea $nested. Se escribe solo el pin y no se ejecuta apm update."
+            exit 0
+          fi
           # --force: el runner no tiene recibos de despliegue y el paquete local
           # comparte esos ficheros con la dependencia. Sin esto, APM rechaza la escritura.
           for TARGET in claude cursor codex; do
@@ -122,9 +114,10 @@ jobs:
           base: staging
           draft: true
           delete-branch: true
-          commit-message: "chore: update venturars/delivery-workflow to ${{ steps.compatible.outputs.ref }}"
-          title: "Update delivery-workflow to ${{ steps.compatible.outputs.ref }}"
+          commit-message: "chore: update venturars/delivery-workflow to ${{ steps.release.outputs.ref }}"
+          title: "Update delivery-workflow to ${{ steps.release.outputs.ref }}"
           body: |
-            Actualiza `venturars/delivery-workflow` a `${{ steps.compatible.outputs.ref }}`.
+            Actualiza `venturars/delivery-workflow` a `${{ steps.release.outputs.ref }}`.
 
             Incluye `apm.yml`, `apm.lock.yaml` y los archivos generados por APM.
+            ${{ steps.update.outputs.nested != '' && format('Aviso: `{0}` pinnea otra etiqueta del mismo paquete. Solo se ha escrito el pin en `apm.yml`; `apm.lock.yaml` y los archivos generados siguen en la versión anterior hasta que se publique una release sin esa autodependencia.', steps.update.outputs.nested) || '' }}
