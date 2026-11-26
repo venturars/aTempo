@@ -2,7 +2,7 @@
 
 ## API, SDK y persistencia
 
-Carpeta de la SDK: `domain/`, con `node/` (TypeScript). HTTP de PostgreSQL: `api-postgresql/`. Persistencia SQLite: `api-sqlite/`. Objetos S3-compatible: `api-rustfs/`. `api-router/` sigue en el repositorio.
+Carpeta de la SDK: `domain/`, con `node/` (TypeScript). Clases de error y fábrica `createErrorFactory`: `errors/` (`@atempo/errors`), que `domain/node/` enlaza con `link:../../errors` y que no conoce aTempo. HTTP de PostgreSQL: `api-postgresql/`. Persistencia SQLite: `api-sqlite/`. Objetos S3-compatible: `api-rustfs/`. `api-router/` sigue en el repositorio.
 
 Los frontends son Electron en `desktop/` y el portal web en `web/`. La web envía sus peticiones al API-router NestJS mediante el proxy de desarrollo Vite `/api`; Electron usa su integración Auth0 desde el proceso principal. El flujo de producto con PostgreSQL es Frontend → `api-postgresql` → `domain/node` → PostgreSQL. `api-postgresql` transforma HTTP. `domain/node` valida los tipos y las reglas del core y abre PostgreSQL. Nest no escribe SQL.
 

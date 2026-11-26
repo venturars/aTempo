@@ -1,6 +1,6 @@
 import { addCourse } from '../src/course/add-course'
 import { updateCourse } from '../src/course/update-course'
-import { ConflictError } from '../src/errors'
+import { ConflictError } from '@atempo/errors'
 import { addOrganization } from '../src/organization/add-organization'
 import { updateOrganization } from '../src/organization/update-organization'
 import { addPerson } from '../src/person/add-person'

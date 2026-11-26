@@ -1,6 +1,8 @@
 import { retrieveAllPersonsByRoleName } from '../postgres/executors/person'
-import { personFromRow, type Person } from '../types/person'
-import { assertRoleName, type RoleName } from '../types/role'
+import { personFromRow } from '../postgres/rows/person'
+import type { Person } from '../shared/types/person'
+import { assertRoleName } from '../shared/validation/role'
+import type { RoleName } from '../shared/types/role'
 
 export type RetrieveAllPersonsByRoleInput = {
   roleName: RoleName

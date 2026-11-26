@@ -1,9 +1,5 @@
 export type DomainErrorKind =
-  | 'VALIDATION'
-  | 'NOT_FOUND'
-  | 'CONFLICT'
-  | 'CONFIGURATION'
-  | 'PERSISTENCE'
+  'VALIDATION' | 'NOT_FOUND' | 'CONFLICT' | 'CONFIGURATION' | 'PERSISTENCE'
 
 export type DomainErrorOptions = {
   kind: DomainErrorKind

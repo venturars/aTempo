@@ -1,6 +1,7 @@
 import { deregisterPersonRoleRow } from '../postgres/executors/person-role'
-import { assertUuid } from '../types/assert'
-import { assertRoleName, type RoleName } from '../types/role'
+import { assertUuid } from '../shared/validation/assert'
+import { assertRoleName } from '../shared/validation/role'
+import type { RoleName } from '../shared/types/role'
 
 export type DeregisterPersonRoleInput = {
   personId: string

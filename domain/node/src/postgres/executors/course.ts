@@ -1,4 +1,8 @@
-import type { Course, CourseCreate, CourseUpdate } from '../../types/course'
+import type {
+  Course,
+  CourseCreate,
+  CourseUpdate,
+} from '../../shared/types/course'
 import {
   DELETE_COURSE,
   DELETE_COURSE_ENROLLMENTS,

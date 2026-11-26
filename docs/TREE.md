@@ -102,7 +102,7 @@ permanent-data.md
 domain/
   README.md
   node/
-    package.json
+    package.json            # @atempo/errors: link:../../errors; prepare compila errors/
     pnpm-lock.yaml
     .npmrc
     tsconfig.json
@@ -111,19 +111,23 @@ domain/
     README.md
     src/
       index.ts
-      errors/
-        index.ts
-        catalog.ts          # reasons, labels, mensajes
-        fail.ts             # fail(label, reason) y domainError()
-        domain-error.ts     # DomainError, id y subclases
-      types/
-        assert.ts
-        organization.ts
-        person.ts
-        course.ts
-        person-course.ts
-        role.ts
-        person-role.ts
+      shared/
+        errors.ts           # catálogo (reasons, labels, mensajes), domainError() y fail()
+        types/              # solo tipos: interface por entidad, RoleName y derivados
+          organization.ts
+          person.ts
+          course.ts
+          person-course.ts
+          role.ts
+          person-role.ts
+        validation/         # assert*, normalize*, is* y ROLE_NAMES
+          assert.ts         # genéricos: string, uuid, fecha, objeto
+          organization.ts
+          person.ts
+          course.ts
+          person-course.ts
+          role.ts
+          person-role.ts
       postgres/
         columns.ts          # Proyección ISO UTC y YYYY-MM-DD
         pool.ts             # Pool con DATABASE_URL, timeout 3 s, withTransaction
@@ -131,6 +135,7 @@ domain/
         check.ts            # check(): SELECT 1
         queries/            # SQL por entidad
         executors/          # Ejecutan las queries
+        rows/               # personFromRow y courseFromRow: forma de la fila leída
       organization/
       person/
       course/
@@ -147,6 +152,28 @@ domain/
       writes.spec.ts
       rules.spec.ts
       pool.spec.ts
+      errors.spec.ts
+      structure.spec.ts     # shared/types sin valores y API pública
+```
+
+# Árbol de `errors/`
+
+```text
+errors/
+  package.json              # @atempo/errors, main y types en dist/
+  pnpm-lock.yaml
+  .npmrc
+  tsconfig.json
+  tsconfig.build.json
+  eslint.config.mjs
+  README.md
+  src/
+    index.ts
+    errors.ts               # DomainError, subclases por kind y labelParts()
+    fail.ts                 # createErrorFactory(catalog): domainError() y fail()
+  test/
+    jest.json
+    errors.spec.ts
 ```
 
 # Árbol de `api-sqlite/`

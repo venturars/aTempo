@@ -1,5 +1,6 @@
 import { retrieveAllCourseRows } from '../postgres/executors/course'
-import { courseFromRow, type Course } from '../types/course'
+import { courseFromRow } from '../postgres/rows/course'
+import type { Course } from '../shared/types/course'
 
 export type RetrieveAllCoursesOutput = {
   courses: Course[]

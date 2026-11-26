@@ -1,4 +1,5 @@
-import { DomainError, domainError } from '../errors'
+import { DomainError } from '@atempo/errors'
+import { domainError } from '../shared/errors'
 
 /**
  * Cada clave foránea del esquema y la tabla padre a la que apunta. Un 23503

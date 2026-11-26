@@ -1,6 +1,9 @@
-import { fail } from '../errors'
+import { fail } from '../shared/errors'
 import { findPersonIdByIdentificationDocument } from '../postgres/executors/person'
-import { assertNonEmptyString, normalizeUuid } from '../types/assert'
+import {
+  assertNonEmptyString,
+  normalizeUuid,
+} from '../shared/validation/assert'
 
 export type FindIdentificationDocumentAvailableInput = {
   identificationDocument: string

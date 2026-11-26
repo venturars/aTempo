@@ -1,6 +1,9 @@
-import { fail } from '../errors'
+import { fail } from '../shared/errors'
 import { findOrganizationIdByTaxId } from '../postgres/executors/organization'
-import { assertNonEmptyString, normalizeUuid } from '../types/assert'
+import {
+  assertNonEmptyString,
+  normalizeUuid,
+} from '../shared/validation/assert'
 
 export type FindTaxIdAvailableInput = {
   taxId: string

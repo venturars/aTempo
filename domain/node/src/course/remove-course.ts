@@ -3,7 +3,7 @@ import {
   removeCourseById,
   removeCourseEnrollments,
 } from '../postgres/executors/course'
-import { assertUuid } from '../types/assert'
+import { assertUuid } from '../shared/validation/assert'
 
 export type RemoveCourseInput = {
   id: string

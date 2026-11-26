@@ -1,13 +1,12 @@
-import { fail } from '../errors'
+import { fail } from '../shared/errors'
 import { findOrganizationExists } from '../organization/find-organization-exists'
 import { addCourseRow } from '../postgres/executors/course'
 import {
-  courseFromRow,
   assertCourseCreate,
   normalizeContractAddress,
-  type Course,
-  type CourseCreate,
-} from '../types/course'
+} from '../shared/validation/course'
+import { courseFromRow } from '../postgres/rows/course'
+import type { Course, CourseCreate } from '../shared/types/course'
 import { findAcronymAvailable } from './find-acronym-available'
 import { findContractAddressAvailable } from './find-contract-address-available'
 

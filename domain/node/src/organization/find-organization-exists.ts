@@ -1,4 +1,4 @@
-import { fail } from '../errors'
+import { fail } from '../shared/errors'
 import { findOrganizationById } from '../postgres/executors/organization'
 
 export type FindOrganizationExistsInput = {

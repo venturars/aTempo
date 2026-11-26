@@ -1,4 +1,4 @@
-import type { PersonCourse } from '../../types/person-course'
+import type { PersonCourse } from '../../shared/types/person-course'
 import {
   DELETE_PERSON_COURSE,
   INSERT_PERSON_COURSE,

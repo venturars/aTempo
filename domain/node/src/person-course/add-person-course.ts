@@ -1,10 +1,11 @@
-import { fail } from '../errors'
+import { fail } from '../shared/errors'
 import { withTransaction } from '../postgres/pool'
 import {
   addPersonCourseRow,
   lookupPersonCourse,
 } from '../postgres/executors/person-course'
-import { assertPersonCourse, type PersonCourse } from '../types/person-course'
+import { assertPersonCourse } from '../shared/validation/person-course'
+import type { PersonCourse } from '../shared/types/person-course'
 
 export type AddPersonCourseInput = {
   personCourse: PersonCourse

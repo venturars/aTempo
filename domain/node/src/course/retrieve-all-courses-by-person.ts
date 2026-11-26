@@ -1,6 +1,7 @@
 import { retrieveAllCoursesByPersonId } from '../postgres/executors/course'
-import { assertUuid } from '../types/assert'
-import { courseFromRow, type Course } from '../types/course'
+import { assertUuid } from '../shared/validation/assert'
+import { courseFromRow } from '../postgres/rows/course'
+import type { Course } from '../shared/types/course'
 
 export type RetrieveAllCoursesByPersonInput = {
   personId: string

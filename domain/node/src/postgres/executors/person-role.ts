@@ -1,5 +1,5 @@
-import type { PersonRole } from '../../types/person-role'
-import type { RoleName } from '../../types/role'
+import type { PersonRole } from '../../shared/types/person-role'
+import type { RoleName } from '../../shared/types/role'
 import {
   DELETE_PERSON_ROLE,
   FIND_PERSON_ROLE,

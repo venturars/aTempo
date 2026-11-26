@@ -1,5 +1,6 @@
 import { retrieveAllPersonRows } from '../postgres/executors/person'
-import { personFromRow, type Person } from '../types/person'
+import { personFromRow } from '../postgres/rows/person'
+import type { Person } from '../shared/types/person'
 
 export type RetrieveAllPersonsOutput = {
   persons: Person[]

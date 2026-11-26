@@ -1,4 +1,4 @@
-import { fail } from '../errors'
+import { fail } from '../shared/errors'
 import { findPersonById } from '../postgres/executors/person'
 import { query, type PostgresQuery } from '../postgres/pool'
 

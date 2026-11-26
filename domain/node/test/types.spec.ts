@@ -1,32 +1,32 @@
-import { ValidationError } from '../src/errors'
+import { ValidationError } from '@atempo/errors'
 import {
   assertNonEmptyString,
   assertString,
   normalizeUuid,
-} from '../src/types/assert'
+} from '../src/shared/validation/assert'
 import {
   assertCourse,
   assertCourseCreate,
-  courseFromRow,
   normalizeContractAddress,
-  type CourseCreate,
-} from '../src/types/course'
+} from '../src/shared/validation/course'
+import { courseFromRow } from '../src/postgres/rows/course'
+import type { CourseCreate } from '../src/shared/types/course'
 import {
   assertOrganization,
   assertOrganizationCreate,
-  type OrganizationCreate,
-} from '../src/types/organization'
+} from '../src/shared/validation/organization'
+import type { OrganizationCreate } from '../src/shared/types/organization'
 import {
   assertPerson,
   assertPersonCreate,
   normalizeEmail,
-  personFromRow,
-  type Person,
-  type PersonCreate,
-} from '../src/types/person'
-import { assertPersonCourse } from '../src/types/person-course'
-import { assertPersonRole } from '../src/types/person-role'
-import { assertRole, type Role } from '../src/types/role'
+} from '../src/shared/validation/person'
+import { personFromRow } from '../src/postgres/rows/person'
+import type { Person, PersonCreate } from '../src/shared/types/person'
+import { assertPersonCourse } from '../src/shared/validation/person-course'
+import { assertPersonRole } from '../src/shared/validation/person-role'
+import { assertRole } from '../src/shared/validation/role'
+import type { Role } from '../src/shared/types/role'
 import {
   validCourse,
   validOrganization,

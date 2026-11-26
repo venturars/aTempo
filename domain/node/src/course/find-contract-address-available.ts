@@ -1,7 +1,7 @@
-import { fail } from '../errors'
+import { fail } from '../shared/errors'
 import { findCourseIdByContractAddress } from '../postgres/executors/course'
-import { normalizeUuid } from '../types/assert'
-import { normalizeContractAddress } from '../types/course'
+import { normalizeUuid } from '../shared/validation/assert'
+import { normalizeContractAddress } from '../shared/validation/course'
 
 export type FindContractAddressAvailableInput = {
   contractAddress: string

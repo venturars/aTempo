@@ -1,5 +1,6 @@
 import { retrieveAllPersonCourseRows } from '../postgres/executors/person-course'
-import { assertPersonCourse, type PersonCourse } from '../types/person-course'
+import { assertPersonCourse } from '../shared/validation/person-course'
+import type { PersonCourse } from '../shared/types/person-course'
 
 export type RetrieveAllPersonCoursesOutput = {
   personCourses: PersonCourse[]

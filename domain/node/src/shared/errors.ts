@@ -1,4 +1,8 @@
-import type { DomainErrorKind } from './domain-error'
+import {
+  createErrorFactory,
+  type DomainError,
+  type DomainErrorKind,
+} from '@atempo/errors'
 
 export const DOMAIN_ERROR_REASONS = {
   string: {
@@ -121,3 +125,25 @@ export const DOMAIN_ERROR_MESSAGES: { readonly [K in DomainErrorId]?: string } =
     'role.name.format':
       'role.name debe ser organization_admin, teacher o student',
   }
+
+const factory = createErrorFactory({
+  labels: DOMAIN_LABELS,
+  reasons: DOMAIN_ERROR_REASONS,
+  messages: DOMAIN_ERROR_MESSAGES,
+})
+
+export const domainError: (
+  label: DomainLabel,
+  reason: DomainErrorReason,
+  options?: { cause?: Error },
+) => DomainError = factory.domainError
+
+/**
+ * Lleva su tipo escrito: TypeScript solo estrecha después de una llamada que
+ * devuelve `never` si la función tiene un tipo explícito.
+ */
+export const fail: (
+  label: DomainLabel,
+  reason: DomainErrorReason,
+  options?: { cause?: Error },
+) => never = factory.fail

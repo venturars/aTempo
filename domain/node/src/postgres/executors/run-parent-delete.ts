@@ -1,5 +1,5 @@
 import type { QueryResult, QueryResultRow } from 'pg'
-import { domainError } from '../../errors'
+import { domainError } from '../../shared/errors'
 import type { PostgresQuery, PostgresQueryParam } from '../pool'
 
 const FOREIGN_KEY_VIOLATION = '23503'

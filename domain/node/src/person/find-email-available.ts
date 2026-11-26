@@ -1,7 +1,10 @@
-import { fail } from '../errors'
+import { fail } from '../shared/errors'
 import { findPersonIdByEmail } from '../postgres/executors/person'
-import { assertNonEmptyString, normalizeUuid } from '../types/assert'
-import { normalizeEmail } from '../types/person'
+import {
+  assertNonEmptyString,
+  normalizeUuid,
+} from '../shared/validation/assert'
+import { normalizeEmail } from '../shared/validation/person'
 
 export type FindEmailAvailableInput = {
   email: string

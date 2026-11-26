@@ -1,4 +1,4 @@
-import { fail } from '../errors'
+import { fail } from '../shared/errors'
 import { findCourseById } from '../postgres/executors/course'
 
 export type FindCourseExistsInput = {

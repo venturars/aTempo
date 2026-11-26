@@ -1,9 +1,5 @@
+import type { PersonCourse } from '../types/person-course'
 import { assertObject, assertUuid, normalizeUuid } from './assert'
-
-export type PersonCourse = {
-  person_id: string
-  course_id: string
-}
 
 export function assertPersonCourse(value: unknown): PersonCourse {
   const personCourse = assertObject(value, 'person_course')

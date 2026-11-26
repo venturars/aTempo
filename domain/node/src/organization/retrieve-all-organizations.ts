@@ -1,5 +1,6 @@
 import { retrieveAllOrganizationRows } from '../postgres/executors/organization'
-import { assertOrganization, type Organization } from '../types/organization'
+import { assertOrganization } from '../shared/validation/organization'
+import type { Organization } from '../shared/types/organization'
 
 export type RetrieveAllOrganizationsOutput = {
   organizations: Organization[]

@@ -1,7 +1,7 @@
-import { fail } from '../errors'
+import { fail } from '../shared/errors'
 import { query, type PostgresQuery } from '../postgres/pool'
 import { retrieveAllRolesByPersonId } from '../postgres/executors/role'
-import type { RoleName } from '../types/role'
+import type { RoleName } from '../shared/types/role'
 
 export type FindStudentExclusiveInput = {
   personId: string

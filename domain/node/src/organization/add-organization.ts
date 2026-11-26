@@ -1,11 +1,13 @@
-import { fail } from '../errors'
+import { fail } from '../shared/errors'
 import { addOrganizationRow } from '../postgres/executors/organization'
 import {
   assertOrganization,
   assertOrganizationCreate,
-  type Organization,
-  type OrganizationCreate,
-} from '../types/organization'
+} from '../shared/validation/organization'
+import type {
+  Organization,
+  OrganizationCreate,
+} from '../shared/types/organization'
 import { findTaxIdAvailable } from './find-tax-id-available'
 
 export type AddOrganizationInput = {

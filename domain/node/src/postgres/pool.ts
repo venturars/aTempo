@@ -4,7 +4,7 @@ import {
   type QueryResult,
   type QueryResultRow,
 } from 'pg'
-import { fail } from '../errors'
+import { fail } from '../shared/errors'
 import { rethrowPg } from './map-error'
 
 export type PostgresQueryParam = string | number | boolean | null

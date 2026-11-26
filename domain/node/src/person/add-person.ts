@@ -1,12 +1,8 @@
-import { fail } from '../errors'
+import { fail } from '../shared/errors'
 import { addPersonRow } from '../postgres/executors/person'
-import {
-  personFromRow,
-  assertPersonCreate,
-  normalizeEmail,
-  type Person,
-  type PersonCreate,
-} from '../types/person'
+import { assertPersonCreate, normalizeEmail } from '../shared/validation/person'
+import { personFromRow } from '../postgres/rows/person'
+import type { Person, PersonCreate } from '../shared/types/person'
 import { findEmailAvailable } from './find-email-available'
 import { findIdentificationDocumentAvailable } from './find-identification-document-available'
 

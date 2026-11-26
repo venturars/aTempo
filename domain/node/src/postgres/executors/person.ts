@@ -1,5 +1,9 @@
-import type { Person, PersonCreate, PersonUpdate } from '../../types/person'
-import type { RoleName } from '../../types/role'
+import type {
+  Person,
+  PersonCreate,
+  PersonUpdate,
+} from '../../shared/types/person'
+import type { RoleName } from '../../shared/types/role'
 import {
   DELETE_PERSON,
   DELETE_PERSON_COURSES,

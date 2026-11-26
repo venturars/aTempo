@@ -3,7 +3,7 @@ import {
   ConfigurationError,
   NotFoundError,
   PersistenceError,
-} from '../src/errors'
+} from '@atempo/errors'
 import { check } from '../src/postgres/check'
 import { query } from '../src/postgres/pool'
 import { assertMockSql, mockDriver, resetDriver } from './helpers'

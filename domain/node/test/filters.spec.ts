@@ -3,7 +3,7 @@ import { retrieveAllCoursesByPerson } from '../src/course/retrieve-all-courses-b
 import { retrieveAllPersonsByCourse } from '../src/person/retrieve-all-persons-by-course'
 import { retrieveAllPersonsByRole } from '../src/person/retrieve-all-persons-by-role'
 import { retrieveAllRolesByPerson } from '../src/role/retrieve-all-roles-by-person'
-import type { RoleName } from '../src/types/role'
+import type { RoleName } from '../src/shared/types/role'
 import {
   COURSE_ID,
   emptyResult,

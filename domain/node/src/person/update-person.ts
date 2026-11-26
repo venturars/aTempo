@@ -1,11 +1,7 @@
 import { updatePersonRow } from '../postgres/executors/person'
-import {
-  personFromRow,
-  assertPersonUpdate,
-  normalizeEmail,
-  type Person,
-  type PersonUpdate,
-} from '../types/person'
+import { assertPersonUpdate, normalizeEmail } from '../shared/validation/person'
+import { personFromRow } from '../postgres/rows/person'
+import type { Person, PersonUpdate } from '../shared/types/person'
 import { findEmailAvailable } from './find-email-available'
 import { findIdentificationDocumentAvailable } from './find-identification-document-available'
 

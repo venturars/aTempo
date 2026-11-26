@@ -11,10 +11,10 @@ import { removePerson } from '../src/person/remove-person'
 import { updatePerson } from '../src/person/update-person'
 import { addPersonRole } from '../src/person-role/add-person-role'
 import { deregisterPersonRole } from '../src/person-role/deregister-person-role'
-import type { CourseCreate } from '../src/types/course'
-import type { OrganizationCreate } from '../src/types/organization'
-import type { PersonCreate } from '../src/types/person'
-import type { RoleName } from '../src/types/role'
+import type { CourseCreate } from '../src/shared/types/course'
+import type { OrganizationCreate } from '../src/shared/types/organization'
+import type { PersonCreate } from '../src/shared/types/person'
+import type { RoleName } from '../src/shared/types/role'
 import {
   commandResult,
   COURSE_ID,

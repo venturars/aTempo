@@ -1,5 +1,6 @@
 import { retrieveAllRoleRows } from '../postgres/executors/role'
-import { assertRole, type Role } from '../types/role'
+import { assertRole } from '../shared/validation/role'
+import type { Role } from '../shared/types/role'
 
 export type RetrieveAllRolesOutput = {
   roles: Role[]

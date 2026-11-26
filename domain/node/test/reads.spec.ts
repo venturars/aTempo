@@ -8,7 +8,7 @@ import { retrieveAllPersons } from '../src/person/retrieve-all-persons'
 import { retrieveAllPersonRoles } from '../src/person-role/retrieve-all-person-roles'
 import { retrieveRoleByName } from '../src/role/retrieve-role-by-name'
 import { retrieveAllRoles } from '../src/role/retrieve-all-roles'
-import type { RoleName } from '../src/types/role'
+import type { RoleName } from '../src/shared/types/role'
 import {
   COURSE_ID,
   emptyResult,

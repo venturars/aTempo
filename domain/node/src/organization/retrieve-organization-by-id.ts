@@ -1,6 +1,7 @@
 import { findOrganizationById } from '../postgres/executors/organization'
-import { assertUuid } from '../types/assert'
-import { assertOrganization, type Organization } from '../types/organization'
+import { assertUuid } from '../shared/validation/assert'
+import { assertOrganization } from '../shared/validation/organization'
+import type { Organization } from '../shared/types/organization'
 
 export type RetrieveOrganizationByIdInput = {
   id: string

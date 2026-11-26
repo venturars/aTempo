@@ -1,4 +1,4 @@
-import type { Role, RoleName } from '../../types/role'
+import type { Role, RoleName } from '../../shared/types/role'
 import {
   GET_ROLE_BY_NAME,
   LIST_ROLES,

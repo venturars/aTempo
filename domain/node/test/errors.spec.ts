@@ -4,14 +4,13 @@ import {
   ConflictError,
   PersistenceError,
   ValidationError,
-  domainError,
-  fail,
-} from '../src/errors'
-import { assertPersonCreate } from '../src/types/person'
-import { assertRole } from '../src/types/role'
+} from '@atempo/errors'
+import { domainError, fail } from '../src/shared/errors'
+import { assertPersonCreate } from '../src/shared/validation/person'
+import { assertRole } from '../src/shared/validation/role'
 import { query } from '../src/postgres/pool'
 import { mockDriver, resetDriver, validPerson } from './helpers'
-import type { Role } from '../src/types/role'
+import type { Role } from '../src/shared/types/role'
 
 describe('catálogo de errores', () => {
   afterEach(() => {
@@ -39,6 +38,9 @@ describe('catálogo de errores', () => {
     )
     expect(domainError('person_role.student', 'exclusive').message).toBe(
       'un student no puede llevar otro rol',
+    )
+    expect(domainError('course.end_at', 'order').message).toBe(
+      'course.end_at debe ser posterior a course.start_at',
     )
   })
 

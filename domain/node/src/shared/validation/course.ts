@@ -1,4 +1,5 @@
 import { fail, type DomainLabel } from '../errors'
+import type { Course, CourseCreate, CourseUpdate } from '../types/course'
 import {
   assertCalendarDate,
   assertNonEmptyString,
@@ -12,20 +13,6 @@ const CONTRACT_ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/
 const INSTANT_RE =
   /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,9})?)?(Z|[+-]\d{2}:\d{2})$/
 
-export type Course = {
-  id: string
-  organization_id: string
-  name: string
-  acronym: string
-  start_at: string
-  end_at: string
-  contract_address: string
-}
-
-export type CourseCreate = Omit<Course, 'id'>
-
-export type CourseUpdate = Course
-
 export function assertCourseCreate(value: unknown): CourseCreate {
   return courseFields(value, false)
 }
@@ -36,33 +23,6 @@ export function assertCourse(value: unknown): Course {
 
 export function assertCourseUpdate(value: unknown): CourseUpdate {
   return courseWithId(value, false)
-}
-
-/**
- * Lee una fila de course que viene de PostgreSQL. El esquema ya garantiza
- * `end_at > start_at` y `to_char` ya da las fechas en ISO UTC, así que solo se
- * comprueba la forma. Una fecha que la entrada no aceptaría (un año de cinco
- * cifras) no rompe el listado entero.
- */
-export function courseFromRow(value: unknown): Course {
-  const row = assertObject(value, 'course')
-  const id = assertUuid(row.id, 'course.id')
-  const organizationId = assertUuid(
-    row.organization_id,
-    'course.organization_id',
-  )
-  return {
-    id: normalizeUuid(id),
-    organization_id: normalizeUuid(organizationId),
-    name: assertString(row.name, 'course.name'),
-    acronym: assertString(row.acronym, 'course.acronym'),
-    start_at: assertNonEmptyString(row.start_at, 'course.start_at'),
-    end_at: assertNonEmptyString(row.end_at, 'course.end_at'),
-    contract_address: assertNonEmptyString(
-      row.contract_address,
-      'course.contract_address',
-    ),
-  }
 }
 
 export function assertContractAddress(value: string): void {

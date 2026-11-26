@@ -1,4 +1,5 @@
 import { fail } from '../errors'
+import type { Person, PersonCreate, PersonUpdate } from '../types/person'
 import {
   assertCalendarDate,
   assertNonEmptyString,
@@ -8,20 +9,6 @@ import {
   assertUuid,
   normalizeUuid,
 } from './assert'
-
-export type Person = {
-  id: string
-  identification_document: string
-  email: string
-  first_name: string
-  last_name: string
-  birth_date: string | null
-  phone: string | null
-}
-
-export type PersonCreate = Omit<Person, 'id'>
-
-export type PersonUpdate = Person
 
 const BIRTH_DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/
 
@@ -57,28 +44,6 @@ export function assertPerson(value: unknown): Person {
 
 export function assertPersonUpdate(value: unknown): PersonUpdate {
   return personWithId(value, false)
-}
-
-/**
- * Lee una fila de person que viene de PostgreSQL. Solo se comprueba la forma:
- * un valor guardado que la entrada no aceptaría (un `birth_date` con un año de
- * cinco cifras, un documento vacío) no rompe el listado entero.
- */
-export function personFromRow(value: unknown): Person {
-  const row = assertObject(value, 'person')
-  const id = assertUuid(row.id, 'person.id')
-  return {
-    id: normalizeUuid(id),
-    identification_document: assertString(
-      row.identification_document,
-      'person.identification_document',
-    ),
-    email: assertString(row.email, 'person.email'),
-    first_name: assertString(row.first_name, 'person.first_name'),
-    last_name: assertString(row.last_name, 'person.last_name'),
-    birth_date: assertNullableString(row.birth_date, 'person.birth_date'),
-    phone: assertNullableString(row.phone, 'person.phone'),
-  }
 }
 
 function personWithId(value: unknown, allowEmptyNames: boolean): Person {

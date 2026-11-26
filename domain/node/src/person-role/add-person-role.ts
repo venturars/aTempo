@@ -1,8 +1,9 @@
-import { fail } from '../errors'
+import { fail } from '../shared/errors'
 import { findPersonExists } from '../person/find-person-exists'
 import { addPersonRoleRow } from '../postgres/executors/person-role'
 import { withTransaction } from '../postgres/pool'
-import { assertPersonRole, type PersonRole } from '../types/person-role'
+import { assertPersonRole } from '../shared/validation/person-role'
+import type { PersonRole } from '../shared/types/person-role'
 import { findPersonRoleAvailable } from './find-person-role-available'
 import { findStudentExclusive } from './find-student-exclusive'
 

@@ -1,7 +1,7 @@
-import { fail } from '../errors'
+import { fail } from '../shared/errors'
 import { personRoleExists } from '../postgres/executors/person-role'
 import { query, type PostgresQuery } from '../postgres/pool'
-import type { RoleName } from '../types/role'
+import type { RoleName } from '../shared/types/role'
 
 export type FindPersonRoleAvailableInput = {
   personId: string

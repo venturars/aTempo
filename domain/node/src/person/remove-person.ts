@@ -4,7 +4,7 @@ import {
   removePersonCourses,
   removePersonRoles,
 } from '../postgres/executors/person'
-import { assertUuid } from '../types/assert'
+import { assertUuid } from '../shared/validation/assert'
 
 export type RemovePersonInput = {
   id: string

@@ -1,5 +1,5 @@
 import { deregisterPersonCourseRow } from '../postgres/executors/person-course'
-import { assertUuid } from '../types/assert'
+import { assertUuid } from '../shared/validation/assert'
 
 export type DeregisterPersonCourseInput = {
   personId: string

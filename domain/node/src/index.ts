@@ -6,51 +6,51 @@ export {
   PersistenceError,
   ValidationError,
   type DomainErrorKind,
-  type DomainErrorId,
-  type DomainErrorReason,
-} from './errors'
+} from '@atempo/errors'
+export type { DomainErrorId, DomainErrorReason } from './shared/errors'
 
-export { normalizeUuid } from './types/assert'
+export type {
+  Organization,
+  OrganizationCreate,
+  OrganizationUpdate,
+} from './shared/types/organization'
+export type { Person, PersonCreate, PersonUpdate } from './shared/types/person'
+export type { Course, CourseCreate, CourseUpdate } from './shared/types/course'
+export type { PersonCourse } from './shared/types/person-course'
+export type { Role, RoleName } from './shared/types/role'
+export type { PersonRole } from './shared/types/person-role'
+
+export { normalizeUuid } from './shared/validation/assert'
 export {
   assertOrganization,
   assertOrganizationCreate,
   assertOrganizationUpdate,
-  type Organization,
-  type OrganizationCreate,
-  type OrganizationUpdate,
-} from './types/organization'
+} from './shared/validation/organization'
 export {
   assertBirthDate,
   assertPerson,
   assertPersonCreate,
   assertPersonUpdate,
-  personFromRow,
   normalizeEmail,
-  type Person,
-  type PersonCreate,
-  type PersonUpdate,
-} from './types/person'
+} from './shared/validation/person'
 export {
   assertCourse,
   assertCourseCreate,
   assertCourseDates,
   assertCourseUpdate,
   assertContractAddress,
-  courseFromRow,
   normalizeContractAddress,
-  type Course,
-  type CourseCreate,
-  type CourseUpdate,
-} from './types/course'
-export { assertPersonCourse, type PersonCourse } from './types/person-course'
+} from './shared/validation/course'
+export { assertPersonCourse } from './shared/validation/person-course'
 export {
   ROLE_NAMES,
   assertRole,
   assertRoleName,
-  type Role,
-  type RoleName,
-} from './types/role'
-export { assertPersonRole, type PersonRole } from './types/person-role'
+} from './shared/validation/role'
+export { assertPersonRole } from './shared/validation/person-role'
+
+export { personFromRow } from './postgres/rows/person'
+export { courseFromRow } from './postgres/rows/course'
 
 export { closePool } from './postgres/pool'
 export { check } from './postgres/check'

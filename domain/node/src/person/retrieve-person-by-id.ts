@@ -1,6 +1,7 @@
 import { findPersonById } from '../postgres/executors/person'
-import { assertUuid } from '../types/assert'
-import { personFromRow, type Person } from '../types/person'
+import { assertUuid } from '../shared/validation/assert'
+import { personFromRow } from '../postgres/rows/person'
+import type { Person } from '../shared/types/person'
 
 export type RetrievePersonByIdInput = {
   id: string

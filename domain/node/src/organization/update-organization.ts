@@ -2,9 +2,11 @@ import { updateOrganizationRow } from '../postgres/executors/organization'
 import {
   assertOrganization,
   assertOrganizationUpdate,
-  type Organization,
-  type OrganizationUpdate,
-} from '../types/organization'
+} from '../shared/validation/organization'
+import type {
+  Organization,
+  OrganizationUpdate,
+} from '../shared/types/organization'
 import { findTaxIdAvailable } from './find-tax-id-available'
 
 export type UpdateOrganizationInput = {

@@ -107,6 +107,7 @@ Abre <http://localhost:5191/> para el alumno o <http://localhost:5191/admin> par
 | `desktop/` | Prototipo para profesor y alumno con Electron y React; las demos usan datos en memoria. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/student/dashboard` para el dashboard del alumno. |
 | `web/` | Web del alumno y demo de administración con Vite y React, en el puerto 5191. |
 | `domain/` | SDK: `node/` (TypeScript, PostgreSQL). No es un servicio HTTP. |
+| `errors/` | Paquete local `@atempo/errors`: clases de error y fábrica `createErrorFactory`. Lo enlaza `domain/node/` con `link:../../errors`. No se publica en npm. |
 | `api-router/` | API REST con NestJS entre los frontends y la SDK de lógica de negocio (pendiente). |
 | `api-postgresql/` | API REST con NestJS. El flujo de producto es Frontend → `api-postgresql` → `domain/node` → PostgreSQL. |
 | `api-rustfs/` | API REST con Express entre `domain/node/` y RustFS (persistencia de objetos). |

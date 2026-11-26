@@ -2,7 +2,7 @@ import type {
   Organization,
   OrganizationCreate,
   OrganizationUpdate,
-} from '../../types/organization'
+} from '../../shared/types/organization'
 import {
   DELETE_ORGANIZATION,
   DELETE_ORGANIZATION_COURSES,

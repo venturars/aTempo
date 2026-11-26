@@ -1,12 +1,11 @@
 import { findOrganizationExists } from '../organization/find-organization-exists'
 import { updateCourseRow } from '../postgres/executors/course'
 import {
-  courseFromRow,
   assertCourseUpdate,
   normalizeContractAddress,
-  type Course,
-  type CourseUpdate,
-} from '../types/course'
+} from '../shared/validation/course'
+import { courseFromRow } from '../postgres/rows/course'
+import type { Course, CourseUpdate } from '../shared/types/course'
 import { findAcronymAvailable } from './find-acronym-available'
 import { findContractAddressAvailable } from './find-contract-address-available'
 

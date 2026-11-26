@@ -1,6 +1,6 @@
-import { fail } from '../errors'
+import { fail } from '../shared/errors'
 import { lookupPersonCourse } from '../postgres/executors/person-course'
-import type { PersonCourse } from '../types/person-course'
+import type { PersonCourse } from '../shared/types/person-course'
 
 export type FindPersonCourseAvailableInput = {
   personCourse: PersonCourse

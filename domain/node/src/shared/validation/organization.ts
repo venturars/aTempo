@@ -1,3 +1,8 @@
+import type {
+  Organization,
+  OrganizationCreate,
+  OrganizationUpdate,
+} from '../types/organization'
 import {
   assertNonEmptyString,
   assertObject,
@@ -5,16 +10,6 @@ import {
   assertUuid,
   normalizeUuid,
 } from './assert'
-
-export type Organization = {
-  id: string
-  name: string
-  tax_id: string
-}
-
-export type OrganizationCreate = Omit<Organization, 'id'>
-
-export type OrganizationUpdate = Organization
 
 export function assertOrganizationCreate(value: unknown): OrganizationCreate {
   return organizationFields(value, false)

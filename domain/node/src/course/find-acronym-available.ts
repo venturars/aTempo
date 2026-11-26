@@ -1,10 +1,10 @@
-import { fail } from '../errors'
+import { fail } from '../shared/errors'
 import { findCourseIdByAcronym } from '../postgres/executors/course'
 import {
   assertNonEmptyString,
   assertUuid,
   normalizeUuid,
-} from '../types/assert'
+} from '../shared/validation/assert'
 
 export type FindAcronymAvailableInput = {
   organizationId: string

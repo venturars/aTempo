@@ -1,10 +1,6 @@
+import type { PersonRole } from '../types/person-role'
 import { assertObject, assertUuid, normalizeUuid } from './assert'
-import { assertRoleName, type RoleName } from './role'
-
-export type PersonRole = {
-  person_id: string
-  role: RoleName
-}
+import { assertRoleName } from './role'
 
 export function assertPersonRole(value: unknown): PersonRole {
   const personRole = assertObject(value, 'person_role')
