@@ -1,7 +1,9 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { EventEmitter } from 'node:events'
+import { createServer } from 'node:net'
 import {
+  ensureWebPortAvailable,
   installDependencies,
   prepareDependencies,
   startProcess,
@@ -11,6 +13,18 @@ import {
   waitForWeb,
   waitForDocker
 } from './start-atempo.mjs'
+
+test('detecta un segundo arranque web antes de iniciar Docker', async () => {
+  const occupiedServer = createServer()
+  await new Promise((resolveListen) => occupiedServer.listen(0, 'localhost', resolveListen))
+  const occupiedPort = occupiedServer.address().port
+  try {
+    await assert.rejects(ensureWebPortAvailable(occupiedPort), /puerto web .* ya está ocupado/)
+  } finally {
+    await new Promise((resolveClose) => occupiedServer.close(resolveClose))
+  }
+  await ensureWebPortAvailable(occupiedPort)
+})
 
 test('envía al proxy web el puerto del router elegido', () => {
   const options = webProcessOptions(3005, { ATEMPO_API_ROUTER_PORT: '3004', NODE_ENV: 'development' })

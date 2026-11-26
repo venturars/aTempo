@@ -1,5 +1,6 @@
 import { spawn, spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
+import { createServer } from 'node:net'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { setTimeout as delay } from 'node:timers/promises'
@@ -12,6 +13,21 @@ const electronVite = join(desktopRoot, 'node_modules', 'electron-vite', 'bin', '
 const webPort = 5191
 // El proyecto Compose conserva este nombre aunque cambie el nombre del worktree.
 const composeProjectName = 'atempo'
+
+export async function ensureWebPortAvailable(port = webPort) {
+  // Detecta otra web abierta antes de preparar los contenedores.
+  await new Promise((resolveAvailable, rejectAvailable) => {
+    const server = createServer()
+    server.once('error', (error) => {
+      if (error.code === 'EADDRINUSE') {
+        rejectAvailable(new Error(`El puerto web ${port} ya está ocupado. Cierra la otra instancia de aTempo antes de arrancar otra.`))
+      } else {
+        rejectAvailable(error)
+      }
+    })
+    server.listen(port, 'localhost', () => server.close(resolveAvailable))
+  })
+}
 
 function readOptions(args) {
   let port = 3000
@@ -177,6 +193,7 @@ export async function waitForWeb(webProcess, {
 
 export async function main() {
   const { port, routerOnly } = readOptions(process.argv.slice(2))
+  if (!routerOnly) await ensureWebPortAvailable()
   const envFile = findEnvFile()
   if (!routerOnly) prepareDependencies()
 
