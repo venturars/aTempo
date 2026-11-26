@@ -123,15 +123,25 @@ sdk/
       person.ts            # OrganizationPerson = record + roles
       organization.ts
       person-repository.ts
+      course.ts
+      course-repository.ts
+      enrollment-repository.ts
+      contract-address.ts
     application/
       after-auth.ts
       create-organization.ts
+      create-course.ts
+      enroll-person-in-course.ts
+      unenroll-person-from-course.ts
+      list-course-people.ts
       invite-person.ts
       directory.spec.ts
       after-auth.spec.ts
+      enrollments.spec.ts
     infrastructure/
       postgres-health-client.ts
       in-memory-person-repository.ts
+      in-memory-course-repository.ts
     composition/
       create-sdk.ts
 ```
@@ -295,6 +305,11 @@ api-router/
       person.controller.ts
       organization-people.controller.ts
       person.service.ts
+    course/
+      course.module.ts
+      organization-courses.controller.ts
+      organization-course-people.controller.ts
+      course.service.ts
     mock-api/
       mock-api.module.ts
       sessions.controller.ts # /sessions del contrato API v1
@@ -309,6 +324,7 @@ api-router/
     auth.e2e-spec.ts
     auth-web.e2e-spec.ts
     organizations.e2e-spec.ts
+    courses.e2e-spec.ts
     jest-e2e.json
 ```
 

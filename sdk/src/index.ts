@@ -10,7 +10,27 @@ export type {
   CreateOrganizationInput,
   CreateOrganizationValue,
 } from './application/create-organization'
+export { createCreateCourse } from './application/create-course'
+export type {
+  CreateCourseDeps,
+  CreateCourseInput,
+} from './application/create-course'
 export { createDeletePerson } from './application/delete-person'
+export { createEnrollPersonInCourse } from './application/enroll-person-in-course'
+export type {
+  EnrollPersonInCourseDeps,
+  EnrollPersonInCourseInput,
+} from './application/enroll-person-in-course'
+export { createListCoursePeople } from './application/list-course-people'
+export type {
+  ListCoursePeopleDeps,
+  ListCoursePeopleInput,
+} from './application/list-course-people'
+export { createUnenrollPersonFromCourse } from './application/unenroll-person-from-course'
+export type {
+  UnenrollPersonFromCourseDeps,
+  UnenrollPersonFromCourseInput,
+} from './application/unenroll-person-from-course'
 export type {
   DeletePersonDeps,
   DeletePersonInput,
@@ -42,6 +62,7 @@ export type {
 export { createSdk } from './composition/create-sdk'
 export type { CreateSdkInput, Sdk } from './composition/create-sdk'
 export {
+  createEnrollmentAssignedCourseCount,
   fixedAssignedCourseCount,
   zeroAssignedCourseCount,
 } from './domain/assigned-course-count'
@@ -56,6 +77,14 @@ export {
 } from './domain/identifier'
 export type { IdentificationDocument, TaxId } from './domain/identifier'
 export type { InvitationStatus } from './domain/invitation-status'
+export type { Course } from './domain/course'
+export type { CourseRepository } from './domain/course-repository'
+export {
+  asContractAddress,
+  parseContractAddress,
+} from './domain/contract-address'
+export type { ContractAddress } from './domain/contract-address'
+export type { EnrollmentRepository } from './domain/enrollment-repository'
 export type { Organization } from './domain/organization'
 export type { OrganizationRepository } from './domain/organization-repository'
 export type { OrganizationPerson, Person } from './domain/person'
@@ -74,6 +103,7 @@ export {
 } from './domain/text'
 export type { NonEmptyText, Phone } from './domain/text'
 export type { PersonRepository } from './domain/person-repository'
+export { InMemoryCourseRepository } from './infrastructure/in-memory-course-repository'
 export { InMemoryPersonRepository } from './infrastructure/in-memory-person-repository'
 export {
   createPostgresHealthClient,
