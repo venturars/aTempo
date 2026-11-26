@@ -6,6 +6,7 @@ type MockAuthServer = {
   url: string
   close: () => Promise<void>
   setMeUnauthorized: (unauthorized: boolean) => void
+  setMeEmail: (email: string) => void
   requests: Array<{ method: string; path: string; authorization?: string; body?: unknown }>
 }
 
@@ -15,15 +16,9 @@ const refreshToken = 'mock-refresh-token-that-must-not-reach-the-renderer'
 type AuthBridge = {
   auth: {
     isConfigured: () => Promise<boolean>
-    login: (credentials: { email: string; password: string }) => Promise<{
-      sub: string
-      email: string
-    }>
-    register: (credentials: { email: string; password: string }) => Promise<{
-      sub: string
-      email: string
-    }>
-    me: () => Promise<{ sub: string; email: string } | null>
+    login: (credentials: { email: string; password: string }) => Promise<{ email: string }>
+    register: (credentials: { email: string; password: string }) => Promise<{ email: string }>
+    me: () => Promise<{ email: string } | null>
     logout: () => Promise<void>
   }
 }
@@ -42,6 +37,8 @@ function sendJson(response: ServerResponse, status: number, body: unknown): void
 async function createMockAuthServer(): Promise<MockAuthServer> {
   const requests: MockAuthServer['requests'] = []
   let unauthorized = false
+  let meEmailOverride: string | null = null
+  let lastLoginEmail: string | null = null
   const server: Server = createServer(async (request, response) => {
     const body = await readBody(request)
     requests.push({
@@ -55,6 +52,10 @@ async function createMockAuthServer(): Promise<MockAuthServer> {
       if ((body as { password?: string } | undefined)?.password === 'invalid') {
         sendJson(response, 401, { code: 'INVALID_CREDENTIALS' })
         return
+      }
+      const loginEmail = (body as { email?: string } | undefined)?.email
+      if (typeof loginEmail === 'string' && loginEmail.trim() !== '') {
+        lastLoginEmail = loginEmail.trim().toLowerCase()
       }
       sendJson(response, 200, { accessToken, refreshToken, expiresIn: 3600 })
       return
@@ -88,7 +89,9 @@ async function createMockAuthServer(): Promise<MockAuthServer> {
         sendJson(response, 401, { code: 'UNAUTHORIZED' })
         return
       }
-      sendJson(response, 200, { sub: 'auth0|sample-user' })
+      const email =
+        meEmailOverride ?? lastLoginEmail ?? 'profesor@atempo.test'
+      sendJson(response, 200, { email })
       return
     }
 
@@ -104,6 +107,9 @@ async function createMockAuthServer(): Promise<MockAuthServer> {
     requests,
     setMeUnauthorized: (value) => {
       unauthorized = value
+    },
+    setMeEmail: (email) => {
+      meEmailOverride = email
     },
     close: () =>
       new Promise<void>((resolve, reject) =>
@@ -164,7 +170,7 @@ test.describe('Auth0 desktop session bridge', () => {
           const user = await (window as unknown as { api: AuthBridge }).api.auth.me()
           return { user, methods: Object.keys((window as unknown as { api: AuthBridge }).api.auth) }
         })
-        expect(bridge.user).toEqual({ sub: 'auth0|sample-user', email: 'profesor@atempo.test' })
+        expect(bridge.user).toEqual({ email: 'profesor@atempo.test' })
         expect(bridge.methods).toEqual(['isConfigured', 'login', 'register', 'me', 'logout'])
         expect(JSON.stringify(bridge)).not.toContain(accessToken)
         expect(JSON.stringify(bridge)).not.toContain(refreshToken)
@@ -182,6 +188,25 @@ test.describe('Auth0 desktop session bridge', () => {
         await expect(page).toHaveURL(/#\/student\/dashboard$/)
         expect(router.requests.map(({ path }) => path)).toEqual(['/auth/login', '/auth/me'])
         expect(router.requests[1]?.authorization).toBe(`Bearer ${accessToken}`)
+      })
+    )
+  })
+
+  test('rejects login when the form email does not match the JWT email claim', async () => {
+    await withRouter(async (router) =>
+      withElectron(async (_app, page) => {
+        router.setMeEmail('otro@atempo.test')
+        await page.getByLabel('Correo', { exact: true }).fill('profesor@atempo.test')
+        await page.getByLabel('Contraseña', { exact: true }).fill('auth0-test-password')
+        await page.getByRole('button', { name: 'Entrar', exact: true }).click()
+
+        const alert = page.getByRole('alert')
+        await expect(alert).toBeVisible()
+        await expect(page.getByRole('heading', { level: 1, name: 'Hoy' })).toHaveCount(0)
+        expect(router.requests.map(({ path }) => path)).toEqual(['/auth/login', '/auth/me'])
+        await expect(
+          page.evaluate(() => (window as unknown as { api: AuthBridge }).api.auth.me())
+        ).resolves.toBeNull()
       })
     )
   })
@@ -225,7 +250,7 @@ test.describe('Auth0 desktop session bridge', () => {
             password: 'auth0-test-password'
           })
         )
-        expect(login).toEqual({ sub: 'auth0|sample-user', email: 'ada.lopez@clase.test' })
+        expect(login).toEqual({ email: 'ada.lopez@clase.test' })
 
         router.setMeUnauthorized(true)
         await expect(

@@ -4,7 +4,7 @@ aTempo registra la asistencia de los alumnos de una clase. Este repositorio tien
 
 La visión, los perfiles y las decisiones de producto están en [principles.md](principles.md).
 
-Para enseñar la aplicación entera con datos de ejemplo, sin Docker ni Auth0, sigue [DEMO.md](DEMO.md): `pnpm run demo:install`, `pnpm run demo:web` y `pnpm run demo:desktop`.
+La demo local de Electron puede funcionar con datos de ejemplo sin Auth0. La web del alumno y la administración requieren Auth0 y `api-router`; los pasos están en [DEMO.md](DEMO.md).
 
 ## Arranque rápido con Auth0
 
@@ -85,16 +85,20 @@ El lector del alumno ofrece lecturas simuladas y no usa cámara. Estos flujos no
 
 ## Probar la web del alumno y la administración
 
-Con Node 24 y pnpm 10.33.0:
+La web requiere un `.env` de Auth0 en la raíz, Docker y Node 24 con pnpm 10.33.0. Desde la raíz, arranca el router sin abrir Electron:
 
 ```sh
-cd web
-pnpm install --frozen-lockfile
-pnpm dev
+pnpm run atempo --router-only
 ```
 
-- Alumno: <http://localhost:5191/>. La cuenta de ejemplo y `/?reiniciar` están en [web/README.md](web/README.md).
-- Administración: <http://localhost:5191/admin>, con `miguel@neoland.example` / `neoland-2026` o **Crear cuenta** para dar de alta otra organización.
+En otra terminal, instala las dependencias web (la primera vez) y sirve Vite:
+
+```sh
+pnpm --dir web install --frozen-lockfile
+pnpm run demo:web
+```
+
+Abre <http://localhost:5191/> para el alumno o <http://localhost:5191/admin> para administración. Inicia sesión con `ada.lopez@clase.test` para Ada López o `profesor@atempo.test` para entrar al panel demo como Ventura Rodríguez. Las contraseñas son las de esas cuentas en Auth0. El alta de organización y la activación de invitaciones desde el login web todavía no están disponibles.
 
 ## Qué hay
 

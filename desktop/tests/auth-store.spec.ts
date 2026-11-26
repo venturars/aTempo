@@ -5,11 +5,8 @@ import { useSessionStore } from '../src/renderer/src/session/sessionStore'
 
 type AuthBridge = {
   isConfigured: () => Promise<boolean>
-  login: (credentials: { email: string; password: string }) => Promise<{
-    sub: string
-    email: string
-  }>
-  me: () => Promise<{ sub: string; email: string } | null>
+  login: (credentials: { email: string; password: string }) => Promise<{ email: string }>
+  me: () => Promise<{ email: string } | null>
   logout: () => Promise<void>
 }
 
@@ -25,7 +22,7 @@ function installAuthBridge(): void {
     login: async (credentials) => {
       loginRequest = credentials
       if (loginFailure !== null) throw loginFailure
-      return { sub: 'auth0|sample-user', email: credentials.email }
+      return { email: credentials.email.trim().toLowerCase() }
     },
     me: async () => null,
     logout: async () => {}
@@ -51,6 +48,15 @@ test.describe('Auth0 login store', () => {
   })
 
   test.afterEach(restoreWindow)
+
+  test('identifies the user by email only; the bridge does not expose sub', async () => {
+    const user = await (globalThis as unknown as { window: TestWindow }).window.api.auth.login({
+      email: 'profesor@atempo.test',
+      password: 'auth0-test-password'
+    })
+    expect(user).toEqual({ email: 'profesor@atempo.test' })
+    expect(user).not.toHaveProperty('sub')
+  })
 
   test('sends a known teacher account through the auth bridge and clears the form', async () => {
     useLoginStore.getState().setEmail(' PROFESOR@ATEMPO.TEST ')
