@@ -10,9 +10,11 @@ Con Node 24 y pnpm 10.33.0, desde la raíz:
 pnpm run atempo
 ```
 
-El comando instala las dependencias de `web/` y `desktop/` si faltan, levanta `api-router` (puerto 3004 por defecto), sirve Vite en `http://localhost:5191` y abre Electron. Vite reenvía `/api/*` al router quitando el prefijo `/api`. Para usar otro puerto de router, `pnpm run atempo --port 3005`. Para depurar solo la web, `pnpm run atempo --router-only` y en otra terminal `pnpm --dir web dev`.
+El comando instala las dependencias de `web/` y `desktop/` si faltan, arranca en el proyecto Compose `atempo` el router, las tres APIs de persistencia, PostgreSQL, RustFS y Datasette, sirve Vite en `http://localhost:5191` y abre Electron. Vite reenvía `/api/*` al mismo router quitando el prefijo `/api`. Los servicios Docker siguen activos al cerrar Electron. Para usar otro puerto de router, `pnpm run atempo --port 3005`. Para depurar solo la web, `pnpm run atempo --router-only` y en otra terminal `pnpm --dir web dev`.
 
 Auth0 debe estar configurado y disponible para entrar en la web. `profesor@atempo.test` corresponde a Ventura Rodríguez, administrador y profesor del seed; `ada.lopez@clase.test` corresponde a Ada, alumna. Las contraseñas se gestionan en Auth0 y no se guardan en el navegador.
+
+Si arrancas el router aislado con `pnpm run atempo --router-only --port 3005`, pasa el mismo puerto a la web: `$env:ATEMPO_API_ROUTER_PORT='3005'; pnpm --dir web dev` en PowerShell, o `ATEMPO_API_ROUTER_PORT=3005 pnpm --dir web dev` en macOS/Linux.
 
 ## Probar administración
 
@@ -48,6 +50,8 @@ Con Vite y el router en marcha, abre <http://localhost:5191/> e inicia sesión c
 El historial y los avisos de alumno de la demo permanecen en el almacenamiento local del navegador. `/?reiniciar` limpia esos datos locales y abre el inicio del alumno; para cerrar también la sesión Auth0, usa **Cerrar sesión**.
 
 Para registrar asistencia, abre **Hoy → Abrir lista** en Electron. Escanea su QR o escribe en la web las seis cifras que aparecen debajo. Ambos cambian cada 30 segundos. Consulta los pasos para probar con un móvil en [el PR #123](https://github.com/venturars/aTempo/pull/123).
+
+La entrada del alumno queda en el almacenamiento local de su navegador. No aparece en la lista del profesor de Electron, que conserva sus datos simulados por separado.
 
 ## Probar el historial y las rutas del alumno
 

@@ -14,7 +14,7 @@ Necesitas Node 24, pnpm 10.33.0, Docker disponible y un `.env` local con la conf
 pnpm run atempo
 ```
 
-El comando instala automáticamente las dependencias de `web/` y `desktop/` si faltan, crea el proyecto Compose `auth0-atempo`, instala las dependencias del router en su volumen Docker, sirve `api-router` en el puerto 3004, inicia la web en <http://localhost:5191> y abre Electron conectado al router. El puerto 3004 permite mantener otro router en el 3000; puedes cambiarlo con `pnpm run atempo --port 3005`. En un worktree dentro de `.worktrees/`, el script usa el `.env` de la copia principal si no hay uno en el worktree. El router queda arrancado al cerrar Electron. Usa las cuentas y contraseñas configuradas en Auth0 para este modo.
+El comando instala automáticamente las dependencias de `web/` y `desktop/` si faltan, prepara los volúmenes Docker de las APIs y arranca en el único proyecto Compose `atempo` el router, las APIs PostgreSQL, SQLite y RustFS, PostgreSQL, RustFS y Datasette. `init-db` prepara SQLite y termina con código 0. El router escucha en el puerto 3000, la web en <http://localhost:5191> y Electron usa ese mismo router. Puedes cambiar el puerto del router con `pnpm run atempo --port 3005`; la web y Electron usarán ese puerto. En un worktree dentro de `.worktrees/`, el script usa el `.env` de la copia principal si no hay uno en el worktree. Los servicios Docker quedan arrancados al cerrar Electron. `pnpm run atempo --router-only` arranca solo el router. Usa las cuentas y contraseñas configuradas en Auth0 para este modo.
 
 ## Desarrollo aislado de Electron
 
@@ -69,6 +69,8 @@ Las invitaciones activadas y los cambios de contraseña duran hasta que recargas
 
 Como profesor, entra en **Hoy** y pulsa **Abrir lista** para ver la lista de alumnos y pasar lista. El QR y el código de 6 cifras de debajo cambian cada 30 segundos. El QR es un enlace a la web del alumno, que el arranque integrado ya sirve en <http://localhost:5191>. Desde el móvil, `localhost` es el propio móvil. Para depurar el escaneo desde un móvil en la misma wifi, puedes arrancar la web y Electron por separado con la IP del ordenador:
 
+Configura `ATEMPO_WEB_ORIGIN=http://<ip-del-ordenador>:5191` en el `.env` de la raíz y arranca el router con `pnpm run atempo --router-only`. En otra terminal, ejecuta `pnpm --dir web dev --host 0.0.0.0` para que el móvil alcance Vite. El origen configurado debe coincidir con la dirección que abre el móvil. Arranca Electron desde `desktop/` con `VITE_STUDENT_SITE_URL` apuntando a esa misma dirección. El ejemplo siguiente usa la sintaxis de macOS/Linux; en PowerShell asigna `$env:VITE_STUDENT_SITE_URL` antes de ejecutar `pnpm dev`.
+
 ```sh
 VITE_STUDENT_SITE_URL=http://<ip-del-ordenador>:5191 pnpm dev
 ```
@@ -84,6 +86,8 @@ El correo admite mayúsculas y espacios laterales; la contraseña debe coincidir
 Las cuentas, las invitaciones activadas, la sesión, la asistencia y los cambios de ejemplo viven en memoria del renderer. Recargarlo o reiniciar completamente la aplicación vacía la sesión y restablece los datos de ejemplo. Para empezar desde cero, sal con **Cmd+Q** en macOS (cerrar solo la ventana no termina el proceso), detén `pnpm dev` con **Ctrl+C** y vuelve a ejecutarlo desde `desktop/`.
 
 El lector del alumno ofrece lecturas simuladas y no usa cámara. Estos flujos no se conectan al backend ni a un servicio de autenticación.
+
+La asistencia registrada en la web del alumno se guarda en el navegador y no aparece en la lista del profesor de Electron. La lista del escritorio mantiene sus datos simulados por separado.
 
 ### Desarrollo aislado de la web
 

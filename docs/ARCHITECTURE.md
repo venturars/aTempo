@@ -53,7 +53,7 @@ Servicio Express y TypeScript. La SDK delegará en él la lectura y escritura de
 
 ## Web y administración
 
-El paquete `web/` contiene el portal del alumno y el prototipo de administración bajo `/admin`. Comparten Vite, React, TanStack Router y el tema de `docs/storybook/src/system.css`. En desarrollo Vite proxifica `/api/*` al router, por defecto en `localhost:3004`. Auth0 es obligatorio para ambos accesos web.
+El paquete `web/` contiene el portal del alumno y el prototipo de administración bajo `/admin`. Comparten Vite, React, TanStack Router y el tema de `docs/storybook/src/system.css`. En desarrollo Vite proxifica `/api/*` al router del proyecto Compose `atempo`, por defecto en `localhost:3000`. Auth0 es obligatorio para ambos accesos web.
 
 `web/src/auth/webSession.ts` llama a `/api/auth/login`, `/api/auth/me`, `/api/auth/refresh` y `/api/auth/logout` con credenciales de origen incluidas. `sessionStore.ts` conserva solo el perfil y el correo en memoria. Los tokens van en cookies HttpOnly; el navegador no persiste tokens ni contraseñas. Solo `profesor@atempo.test` accede al área admin y solo `ada.lopez@clase.test` al portal del alumno. Auth0 aporta la identidad; el perfil se asigna desde ese correo para esta demo.
 
@@ -61,7 +61,7 @@ El paquete `web/` contiene el portal del alumno y el prototipo de administració
 
 El CRUD usa `PersonForm`, `CourseForm` y `SessionForm` tanto al crear como al editar. `DeleteConfirmation` muestra el efecto del borrado y exige confirmación. Las actualizaciones conservan IDs; los nuevos IDs no reutilizan los borrados durante ese arranque. Eliminar un alumno limpia sus matrículas; eliminar un curso elimina atómicamente sus sesiones programadas. Un profesor asignado debe reasignarse antes de borrarlo y la sesión admin actual no puede eliminar su propia cuenta. Estas reglas protegen las relaciones del mock; no implementan borrado de históricos de asistencia.
 
-La sesión web se restaura en otra pestaña del mismo origen mientras las cookies HttpOnly sigan válidas; al salir desde alumno o admin, el router revoca el refresh token y borra las cookies. El seed admin y los datos de gestión siguen siendo locales: recargar restablece el seed y descarta cambios de la demo. Vite proxifica `/api/*` al router del puerto 3004 por defecto y elimina el prefijo `/api`.
+La sesión web se restaura en otra pestaña del mismo origen mientras las cookies HttpOnly sigan válidas; al salir desde alumno o admin, el router revoca el refresh token y borra las cookies. El seed admin y los datos de gestión siguen siendo locales: recargar restablece el seed y descarta cambios de la demo. Vite proxifica `/api/*` al router del puerto 3000 por defecto y elimina el prefijo `/api`.
 
 Este store es un mock del prototipo, no una segunda SDK. El trabajo local de #90 se conserva por separado para una futura SDK frontend que consuma el API-router; la SDK de dominio mantiene las reglas de negocio y acceso a persistencia. Los endpoints administrativos aún no están acordados en el brief v1. Alcance, referencias y comprobaciones en [admin-prototype.md](admin-prototype.md); pasos para abrirlo en [web/README.md](../web/README.md#probar-administración).
 

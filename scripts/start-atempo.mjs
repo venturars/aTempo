@@ -11,10 +11,10 @@ const webVite = join(webRoot, 'node_modules', 'vite', 'bin', 'vite.js')
 const electronVite = join(desktopRoot, 'node_modules', 'electron-vite', 'bin', 'electron-vite.js')
 const webPort = 5191
 // El proyecto Compose conserva este nombre aunque cambie el nombre del worktree.
-const composeProjectName = 'auth0-atempo'
+const composeProjectName = 'atempo'
 
 function readOptions(args) {
-  let port = 3004
+  let port = 3000
   let routerOnly = false
 
   for (let index = 0; index < args.length; index++) {
@@ -129,6 +129,11 @@ export function stopProcess(child) {
   if (child && child.exitCode === null && child.signalCode === null) child.kill('SIGTERM')
 }
 
+export function webProcessOptions(port, environment = process.env) {
+  // El proxy web sigue el puerto publicado por Compose, incluso con --port.
+  return { cwd: webRoot, env: { ...environment, ATEMPO_API_ROUTER_PORT: String(port) } }
+}
+
 export async function superviseFrontends(webProcess, electronProcess) {
   try {
     // Cierra ambos procesos frontend al salir o fallar cualquiera de ellos.
@@ -181,15 +186,28 @@ export async function main() {
     ...process.env,
     ATEMPO_API_ROUTER_PORT: String(port)
   }
-  // El volumen de dependencias es nuevo al cambiar de nombre el proyecto Compose.
+  // Reutiliza las dependencias del router del proyecto Compose principal.
   runDocker([...composeArgs, 'run', '--rm', '--no-deps', 'api-router', 'pnpm', 'install', '--frozen-lockfile'], composeEnvironment)
-  runDocker([...composeArgs, 'up', '-d', 'api-router'], composeEnvironment)
+  if (!routerOnly) {
+    // Prepara los volúmenes de las APIs antes de iniciar sus servicios persistentes.
+    for (const service of ['api-postgresql', 'api-rustfs']) {
+      runDocker([...composeArgs, 'run', '--rm', '--no-deps', service, 'pnpm', 'install', '--frozen-lockfile'], composeEnvironment)
+    }
+    runDocker([
+      ...composeArgs, 'run', '--rm', '--no-deps', 'api-sqlite', 'sh', '-c',
+      'test -x .venv/bin/python || python3.13 -m venv .venv; .venv/bin/python -m pip install --disable-pip-version-check --no-cache-dir .'
+    ], composeEnvironment)
+  }
+  const services = routerOnly
+    ? ['api-router']
+    : ['api-router', 'api-postgresql', 'api-sqlite', 'api-rustfs', 'datasette']
+  runDocker([...composeArgs, 'up', '-d', '--wait', ...services], composeEnvironment)
   await waitForRouter(port)
   console.log(`api-router listo en http://localhost:${port}`)
 
   if (routerOnly) return
 
-  const webProcess = startProcess(process.execPath, [webVite, '--port', String(webPort), '--strictPort'], { cwd: webRoot })
+  const webProcess = startProcess(process.execPath, [webVite, '--port', String(webPort), '--strictPort'], webProcessOptions(port))
   let electronProcess
   try {
     await waitForWeb(webProcess)

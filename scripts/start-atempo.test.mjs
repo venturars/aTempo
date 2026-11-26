@@ -7,9 +7,17 @@ import {
   startProcess,
   superviseFrontends,
   stopProcess,
+  webProcessOptions,
   waitForWeb,
   waitForDocker
 } from './start-atempo.mjs'
+
+test('envía al proxy web el puerto del router elegido', () => {
+  const options = webProcessOptions(3005, { ATEMPO_API_ROUTER_PORT: '3004', NODE_ENV: 'development' })
+  assert.equal(options.env.ATEMPO_API_ROUTER_PORT, '3005')
+  assert.equal(options.env.NODE_ENV, 'development')
+  assert.match(options.cwd, /web$/)
+})
 
 test('prepara solo los paquetes sin ejecutable de desarrollo', () => {
   const installed = []
