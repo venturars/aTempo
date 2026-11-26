@@ -114,8 +114,10 @@ domain/
     src/
       index.ts
       errors/
-        domain-error.ts
         index.ts
+        catalog.ts          # reasons, labels, mensajes
+        fail.ts             # fail(label, reason) y domainError()
+        domain-error.ts     # DomainError, id y subclases
       types/
         assert.ts
         justification.ts
