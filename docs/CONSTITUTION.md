@@ -25,7 +25,7 @@ aTempo de escritorio es la aplicación del profesor. Sirve para registrar la asi
 - **TypeScript** escribe el servicio.
 - **pnpm** es el gestor de paquetes de `api-router/`. Las versiones van fijas, sin `^`.
 
-La SDK de lógica de negocio vivirá en `sdk/` (carpeta pendiente), al mismo nivel que `desktop/` y `api-router/`. El API-router no implementa reglas de negocio; solo delegará en esa SDK.
+La SDK de lógica de negocio es el paquete `atempo-sdk` en `sdk/`, al mismo nivel que `desktop/` y `api-router/`. Capas: shared (`Result`, `AppError`), dominio, aplicación, infraestructura mock y composición. Expone `afterAuth({ email })`: el health de `api-postgresql` se inyecta (`fetch`); si no hay persona en el mock, el resultado es ok y no crea. Auth0 permanece en `AuthService`. Tras login, register o `me` correctos, el router llama a `afterAuth`. `GET /auth/me` sigue `{ email }` (Bearer) o `{ email, profile }` (cookie). 503 `POSTGRES_API_UNAVAILABLE` solo si `afterAuth` falla con `CONFIGURATION` o `PERSISTENCE`; `VALIDATION` → 400. El CRUD HTTP de organización y personas sale de módulos Nest `organization/` y `person/` (controller → service → SDK). No hay GET del Resumen. El API-router no implementa reglas de negocio; las delega en esta SDK.
 
 ## 4. Stack de `api-postgresql/`
 
@@ -60,5 +60,5 @@ El API-router no accede a RustFS; la SDK consumirá este servicio cuando exista.
 ## 7. Dónde seguir
 
 - [STYLE.md](STYLE.md): los dos temas y el enlace a la guía visual.
-- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, flujo de `api-router/` y las APIs de persistencia, y los almacenes; se prevén la SDK y más APIs.
-- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/`, `api-postgresql/`, `api-rustfs/`, `api-sqlite/` y los almacenes; se prevén `sdk/` y más carpetas de APIs.
+- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, flujo de `api-router/` y `sdk/`, las APIs de persistencia y los almacenes.
+- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/`, `sdk/`, `api-postgresql/`, `api-rustfs/`, `api-sqlite/` y los almacenes.

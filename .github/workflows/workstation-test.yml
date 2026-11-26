@@ -36,7 +36,7 @@ jobs:
 
       - name: Verify Linux dependencies stay in Docker volumes
         run: |
-          for path in desktop/node_modules docs/storybook/node_modules api-router/node_modules \
+          for path in desktop/node_modules docs/storybook/node_modules sdk/node_modules api-router/node_modules \
             api-postgresql/node_modules api-rustfs/node_modules api-sqlite/.venv; do
             if [[ -d "$path" ]]; then
               contents="$(find "$path" -mindepth 1 -print -quit)"
@@ -46,7 +46,7 @@ jobs:
 
       - name: Check Node APIs
         run: |
-          for service in api-router api-postgresql api-rustfs; do
+          for service in sdk api-router api-postgresql api-rustfs; do
             docker compose run --rm "$service" pnpm typecheck
             docker compose run --rm "$service" pnpm lint
             docker compose run --rm "$service" pnpm test
