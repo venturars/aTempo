@@ -2,20 +2,20 @@ import { Module } from '@nestjs/common'
 import { HealthModule } from './health/health.module'
 import { AuthModule } from './auth/auth.module'
 import { MockApiModule } from './mock-api/mock-api.module'
-import { OrganizationDashboardModule } from './organization-dashboard/organization-dashboard.module'
-import { OrganizationsModule } from './organizations/organizations.module'
-import { SdkModule } from './sdk/sdk.module'
+import { OrganizationModule } from './organization/organization.module'
+import { PersonModule } from './person/person.module'
+import { AtempoSdkModule } from './shared/atempo-sdk.module'
 
 // AuthService llama a afterAuth de atempo-sdk tras login, register y me.
-// OrganizationsModule traduce el CRUD HTTP y delega en la misma instancia de SDK.
+// OrganizationModule y PersonModule: controller → service → la misma instancia de SDK.
 
 @Module({
   imports: [
-    SdkModule,
+    AtempoSdkModule,
     HealthModule,
     AuthModule,
-    OrganizationsModule,
-    OrganizationDashboardModule,
+    OrganizationModule,
+    PersonModule,
     ...(process.env.API_MOCK === 'true' ? [MockApiModule] : []),
   ],
 })

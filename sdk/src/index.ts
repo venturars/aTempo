@@ -20,10 +20,6 @@ export type {
   GetOrganizationDeps,
   GetOrganizationInput,
 } from './application/get-organization'
-export { createGetOrganizationDashboard } from './application/get-organization-dashboard'
-export type {
-  GetOrganizationDashboardInput,
-} from './application/get-organization-dashboard'
 export { createGetPerson } from './application/get-person'
 export type { GetPersonDeps, GetPersonInput } from './application/get-person'
 export { createInvitePerson } from './application/invite-person'
@@ -60,13 +56,6 @@ export {
 } from './domain/identifier'
 export type { IdentificationDocument, TaxId } from './domain/identifier'
 export type { InvitationStatus } from './domain/invitation-status'
-export type {
-  CourseMetric,
-  DashboardFixture,
-  OrganizationCourse,
-  OrganizationDashboard,
-  ReviewStudent,
-} from './domain/organization-dashboard'
 export type { Organization } from './domain/organization'
 export type { OrganizationRepository } from './domain/organization-repository'
 export type { OrganizationPerson, Person } from './domain/person'

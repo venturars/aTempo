@@ -4,7 +4,7 @@ import { createSdk } from 'atempo-sdk'
 import request from 'supertest'
 import { App } from 'supertest/types'
 import { AppModule } from '../src/app.module'
-import { ATEMPO_SDK } from '../src/auth/atempo-sdk.token'
+import { ATEMPO_SDK } from '../src/shared/atempo-sdk.token'
 import { configureApp } from '../src/configure-app'
 
 const auth = { Authorization: 'Bearer test-token' }
@@ -102,5 +102,12 @@ describe('Organizations HTTP (e2e)', () => {
       .expect(409)
 
     expect(response.body.code).toBe('CONFLICT')
+  })
+
+  it('does not expose organization dashboard', async () => {
+    await request(app.getHttpServer())
+      .get('/organization/dashboard')
+      .set(auth)
+      .expect(404)
   })
 })

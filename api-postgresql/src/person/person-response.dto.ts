@@ -4,9 +4,6 @@ export class PersonResponseDto {
   @ApiProperty({ format: 'uuid' })
   id!: string
 
-  @ApiProperty({ format: 'uuid' })
-  organization_id!: string
-
   @ApiProperty()
   identification_document!: string
 
@@ -24,7 +21,4 @@ export class PersonResponseDto {
 
   @ApiProperty({ type: String, nullable: true })
   phone!: string | null
-
-  @ApiProperty({ enum: ['pending', 'active'] })
-  invitation_status!: 'pending' | 'active'
 }

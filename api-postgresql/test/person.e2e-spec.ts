@@ -67,14 +67,12 @@ describe('Person (e2e)', () => {
     const rows: PersonResponseDto[] = [
       {
         id: '11111111-1111-1111-1111-111111111111',
-        organization_id: '33333333-3333-3333-3333-333333333333',
         identification_document: '12345678A',
         email: 'ada@example.test',
         first_name: 'Ada',
         last_name: 'López',
         birth_date: '2000-01-15',
         phone: '+34600000000',
-        invitation_status: 'active',
       },
     ]
 
@@ -119,14 +117,12 @@ describe('Person (e2e)', () => {
   it('GET /person/:id returns the row from the query layer', async () => {
     const row: PersonResponseDto = {
       id: UNKNOWN_UUID,
-      organization_id: '33333333-3333-3333-3333-333333333333',
       identification_document: '12345678Z',
       email: 'ana@example.test',
       first_name: 'Ana',
       last_name: 'Pérez',
       birth_date: null,
       phone: null,
-      invitation_status: 'pending',
     }
 
     await initApp({ findPersonById: async () => row })

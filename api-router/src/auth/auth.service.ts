@@ -12,7 +12,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common'
 import type { Sdk } from 'atempo-sdk'
-import { ATEMPO_SDK } from './atempo-sdk.token'
+import { ATEMPO_SDK } from '../shared/atempo-sdk.token'
 import { LoginResponseDto } from './login-response.dto'
 import { LogoutResponseDto } from './logout-response.dto'
 import { MeResponseDto } from './me-response.dto'

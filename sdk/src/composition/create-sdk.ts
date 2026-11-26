@@ -6,7 +6,6 @@ import { createGetPerson } from '../application/get-person'
 import { createInvitePerson } from '../application/invite-person'
 import { createListPeople } from '../application/list-people'
 import { createPatchOrganization } from '../application/patch-organization'
-import { createGetOrganizationDashboard } from '../application/get-organization-dashboard'
 import { createPatchPerson } from '../application/patch-person'
 import {
   AssignedCourseCount,
@@ -59,7 +58,6 @@ export function createSdk(input: CreateSdkInput = {}) {
     getPerson: createGetPerson({ persons }),
     patchPerson: createPatchPerson({ persons, assignedCourseCount }),
     deletePerson: createDeletePerson({ persons, assignedCourseCount }),
-    getOrganizationDashboard: createGetOrganizationDashboard(),
   }
 }
 

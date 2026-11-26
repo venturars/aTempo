@@ -123,19 +123,15 @@ sdk/
       person.ts            # OrganizationPerson = record + roles
       organization.ts
       person-repository.ts
-      organization-dashboard.ts
     application/
       after-auth.ts
       create-organization.ts
       invite-person.ts
-      get-organization-dashboard.ts
       directory.spec.ts
       after-auth.spec.ts
-      get-organization-dashboard.spec.ts
     infrastructure/
       postgres-health-client.ts
       in-memory-person-repository.ts
-      organization-dashboard-fixtures.ts
     composition/
       create-sdk.ts
 ```
@@ -288,16 +284,17 @@ api-router/
       refresh-request.dto.ts
       refresh-response.dto.ts
       me-response.dto.ts
-    sdk/
-      sdk.module.ts          # createSdk() global; ATEMPO_SDK
-    organizations/
-      organizations.module.ts
-      organizations.controller.ts
-      people.controller.ts
-    organization-dashboard/
-      organization-dashboard.module.ts
-      organization-dashboard.controller.ts  # GET /organization/dashboard
+    organization/
+      organization.module.ts
+      organization.controller.ts
+      organization.service.ts
+    person/
+      person.module.ts
+      person.controller.ts
+      organization-people.controller.ts
+      person.service.ts
     shared/
+      atempo-sdk.module.ts   # createSdk() global; ATEMPO_SDK
       bearer.guard.ts        # Bearer no vacío (admin y mock-api)
     mock-api/
       mock-api.module.ts
@@ -313,7 +310,6 @@ api-router/
     auth.e2e-spec.ts
     auth-web.e2e-spec.ts
     organizations.e2e-spec.ts
-    organization-dashboard.e2e-spec.ts
     jest-e2e.json
 ```
 

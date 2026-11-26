@@ -17,20 +17,18 @@ const MOCK_PERSON_COURSE = POSTGRES_MOCK_PERSON_COURSES[0]!
 
 type PersonRow = {
   id: string
-  organization_id: string
   identification_document: string
   email: string
   first_name: string
   last_name: string
   birth_date: string | null
   phone: string | null
-  invitation_status: 'pending' | 'active'
 }
 
 // birth_date se formatea en SQL: pg lo convierte en medianoche local y
 // toISOString() lo pasaría a UTC, restando un día en zonas al este de UTC.
-const PERSON_COLUMNS = `id, organization_id, identification_document, email, first_name, last_name,
-  to_char(birth_date, 'YYYY-MM-DD') AS birth_date, phone, invitation_status`
+const PERSON_COLUMNS = `id, identification_document, email, first_name, last_name,
+  to_char(birth_date, 'YYYY-MM-DD') AS birth_date, phone`
 
 @Injectable()
 export class PostgresService implements OnModuleDestroy {

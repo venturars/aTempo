@@ -5,7 +5,7 @@ import { AppError, err, type Sdk } from 'atempo-sdk'
 import request from 'supertest'
 import { App } from 'supertest/types'
 import { AppModule } from '../src/app.module'
-import { ATEMPO_SDK } from '../src/auth/atempo-sdk.token'
+import { ATEMPO_SDK } from '../src/shared/atempo-sdk.token'
 import { configureApp } from '../src/configure-app'
 
 const auth0Config = {

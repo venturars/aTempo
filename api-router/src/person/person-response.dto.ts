@@ -1,21 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import type {
-  InvitationStatus,
-  Organization,
-  Person,
-  PersonRole,
-} from 'atempo-sdk'
-
-export class OrganizationResponseDto {
-  @ApiProperty({ format: 'uuid' })
-  id!: string
-
-  @ApiProperty()
-  name!: string
-
-  @ApiProperty()
-  tax_id!: string
-}
+import type { InvitationStatus, Person, PersonRole } from 'atempo-sdk'
 
 export class PersonResponseDto {
   @ApiProperty({ format: 'uuid' })
@@ -50,24 +34,6 @@ export class PersonResponseDto {
 
   @ApiProperty({ enum: ['pending', 'active'] })
   invitation_status!: InvitationStatus
-}
-
-export class CreateOrganizationResponseDto {
-  @ApiProperty({ type: OrganizationResponseDto })
-  organization!: OrganizationResponseDto
-
-  @ApiProperty({ type: PersonResponseDto })
-  person!: PersonResponseDto
-}
-
-export function toOrganizationJson(
-  organization: Organization,
-): OrganizationResponseDto {
-  return {
-    id: organization.id,
-    name: organization.name,
-    tax_id: organization.taxId,
-  }
 }
 
 export function toPersonJson(person: Person): PersonResponseDto {

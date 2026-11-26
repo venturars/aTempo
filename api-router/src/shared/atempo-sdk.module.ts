@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common'
 import { createSdk } from 'atempo-sdk'
-import { ATEMPO_SDK } from '../auth/atempo-sdk.token'
+import { ATEMPO_SDK } from './atempo-sdk.token'
 
 @Global()
 @Module({
@@ -12,4 +12,4 @@ import { ATEMPO_SDK } from '../auth/atempo-sdk.token'
   ],
   exports: [ATEMPO_SDK],
 })
-export class SdkModule {}
+export class AtempoSdkModule {}
