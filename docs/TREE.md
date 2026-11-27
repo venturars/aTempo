@@ -96,6 +96,87 @@ docs/BLOCKEND.md
 permanent-data.md
 ```
 
+# Árbol de `data-access/`
+
+```text
+data-access/
+  README.md
+  postgres/                 # @atempo/data-access-postgres
+    package.json            # @atempo/errors: link:../../errors/node; prepare compila errors/node/
+    pnpm-lock.yaml
+    .npmrc
+    tsconfig.json
+    tsconfig.build.json
+    eslint.config.mjs
+    README.md
+    src/
+      index.ts
+      shared/
+        errors.ts           # catálogo (reasons, labels, mensajes), domainError() y fail()
+        types/              # solo tipos: interface por entidad, RoleName y derivados
+          organization.ts
+          person.ts
+          course.ts
+          person-course.ts
+          role.ts
+          person-role.ts
+        validation/         # assert*, normalize*, is* y ROLE_NAMES
+          assert.ts         # genéricos: string, uuid, fecha, objeto
+          organization.ts
+          person.ts
+          course.ts
+          person-course.ts
+          role.ts
+          person-role.ts
+      postgres/
+        columns.ts          # Proyección ISO UTC y YYYY-MM-DD
+        pool.ts             # Pool con DATABASE_URL, timeout 3 s, withTransaction
+        map-error.ts        # 23505/23503 a errores de dominio
+        check.ts            # check(): SELECT 1
+        queries/            # SQL por entidad
+        executors/          # Ejecutan las queries
+        rows/               # personFromRow y courseFromRow: forma de la fila leída
+      organization/
+      person/
+      course/
+      role/
+      person-course/
+      person-role/
+    test/
+      jest.json
+      helpers.ts
+      postgres.spec.ts
+      types.spec.ts
+      reads.spec.ts
+      filters.spec.ts
+      writes.spec.ts
+      rules.spec.ts
+      pool.spec.ts
+      errors.spec.ts
+      structure.spec.ts     # shared/types sin valores y API pública
+```
+
+# Árbol de `errors/`
+
+```text
+errors/
+  node/
+    package.json            # @atempo/errors, main y types en dist/
+    pnpm-lock.yaml
+    .npmrc
+    tsconfig.json
+    tsconfig.build.json
+    eslint.config.mjs
+    README.md
+    src/
+      index.ts
+      errors.ts             # DomainError, subclases por kind y labelParts()
+      fail.ts               # createErrorFactory(catalog): domainError() y fail()
+    test/
+      jest.json
+      errors.spec.ts
+```
+
 # Árbol de `sdk/`
 
 ```text

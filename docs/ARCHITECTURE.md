@@ -1,14 +1,18 @@
 # Arquitectura de aTempo
 
-## API-router, SDK y persistencia
+## API, SDK y persistencia
 
-Carpeta del router: `api-router/`. Persistencia relacional: `api-postgresql/` y `api-sqlite/`. Objetos en almacén S3-compatible: `api-rustfs/`.
+Carpeta de la SDK: `data-access/`, con `postgres/` (TypeScript, nombre npm `@atempo/data-access-postgres`). Clases de error y fábrica `createErrorFactory`: `errors/node/` (`@atempo/errors`), que `data-access/postgres/` enlaza con `link:../../errors/node` y que no conoce aTempo. HTTP de PostgreSQL: `api-postgresql/`. Persistencia SQLite: `api-sqlite/`. Objetos S3-compatible: `api-rustfs/`. `api-router/` sigue en el repositorio.
 
 Los frontends son Electron en `desktop/` y el portal web en `web/`. La web envía sus peticiones al API-router NestJS mediante el proxy de desarrollo Vite `/api`; Electron usa su integración Auth0 desde el proceso principal. El API-router transforma HTTP. Auth0 (`register`, `login`, `refresh`, `logout`, `me`) permanece en `AuthService`. Tras login, register o `me` correctos, el router llama a `afterAuth({ email })` de `atempo-sdk`. `GET /auth/me` sigue `{ email }` con Bearer y `{ email, profile }` con cookie web. `runAfterAuth` traduce `AppError`: `CONFIGURATION` o `PERSISTENCE` → 503 `POSTGRES_API_UNAVAILABLE`; `VALIDATION` → 400. Logout, refresh y Auth0 ko no llaman a la SDK. La **SDK (lógica de negocio)** es el paquete `atempo-sdk` en `sdk/`, hermano de `desktop/` y `api-router/` (`file:../sdk`). Capas: shared (`Result`, `AppError`), dominio, aplicación, infraestructura mock y composición. `afterAuth({ email })` normaliza el correo, comprueba `GET /health` de `api-postgresql` con `fetch` inyectable y busca la persona en el mock; si no hay persona, el resultado es ok y no crea. El router traduce HTTP en módulos Nest `organization/`, `person/` y `course/`: cada controller llama a su service y el service a `atempo-sdk`. CRUD mock: `POST /organizations`, `GET/PATCH /organizations/:organizationId`, `POST/GET /organizations/:organizationId/people`, `GET/PATCH/DELETE /people/:personId`, `POST/GET /organizations/:organizationId/courses`, `GET /organizations/:organizationId/courses/:courseId`, `GET /organizations/:organizationId/courses/:courseId/students`, `POST/GET /organizations/:organizationId/courses/:courseId/people`, `DELETE …/people/:personId`, con Bearer no vacío. No hay `GET /organization/dashboard` ni carpeta `api-router/src/sdk`. La UI del admin y el Resumen de Electron aún no consumen estas rutas. Compose del proyecto `atempo` monta `./api-router` y `./sdk` en el servicio `api-router` y pasa `API_POSTGRESQL_URL`. La SDK hablará con `api-postgresql/` para leer y escribir en PostgreSQL, con `api-sqlite/` para SQLite local y con `api-rustfs/` para objetos en RustFS; hoy solo el cliente de health de `afterAuth` apunta a Postgres. El API-router no habla con la base ni con RustFS. Redis, Postgres y el resto de microservicios del backend quedan fuera del escritorio.
 
+`sdk/` y `data-access/` son dos capas distintas. `sdk/` une el API-router con las `api-xxx`. `data-access/` une las `api-xxx` con la base de datos; `data-access/postgres/` aún no lo importa ningún servicio. `data-access/` es la carpeta de la SDK de PostgreSQL, hermana de `desktop/`, `sdk/` y `api-postgresql/`. Su flujo previsto es Frontend → `api-postgresql` → `data-access/postgres` → PostgreSQL: `api-postgresql` transforma HTTP y `data-access/postgres` valida los tipos y las reglas del core y abre PostgreSQL. Nest no escribe SQL. `data-access/postgres/` cubre tipos, lecturas, escrituras y reglas de `organization`, `person`, `course`, `person_course`, `role` y `person_role`, agrupados en cinco módulos de negocio: `organizations/` (`registerOrganization` crea la organización con su `organization_admin`, el único que puede haber), `people/`, `roles/` (`assignRole`, `revokeRole`, `changeRole`), `courses/` y `enrollment/` (`enrollPerson`, `unenrollPerson`). El SQL de `src/postgres/` sigue por tabla. `modify*` cambia solo los campos que recibe. `role` no se escribe. Un delete de persona, curso u organización borra las filas hijas en una transacción. `start_at` y `end_at` entran con zona horaria y salen en ISO UTC. Si un objeto no cumple esos campos o reglas, lanza y no escribe en la base. El CHECK y el trigger de PostgreSQL se quedan.
+
 `api-router/` expone `GET /health`, `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout` y `GET /auth/me`. Electron y web usan esos mismos paths. El login y el alta intercambian credenciales con Auth0 mediante Resource Owner Password Grant (`offline_access`). `/auth/refresh` renueva el access token; `/auth/logout` revoca el refresh token; `/auth/me` valida el Bearer mediante JWKS, emisor, audiencia y caducidad, o la cookie de access en la web. Con origen `ATEMPO_WEB_ORIGIN` (por defecto `http://localhost:5191`) el login fija cookies HttpOnly `atempo_access` y `atempo_refresh` (SameSite=Lax, Path=/, sin Max-Age, Secure en HTTPS) y no devuelve tokens en JSON. Las funciones de cookie viven en `api-router/src/shared/`. El navegador llama a los mismos endpoints con `credentials: 'include'` y usa `/auth/refresh` cuando `/auth/me` responde 401. La web llama al router a través del proxy Vite `/api`; Electron gestiona Auth0 desde su proceso principal. El secreto de cliente solo vive en el router. Con `API_MOCK=true`, el router sirve además, con datos en memoria, los ocho endpoints del contrato API v1 que usa la pestaña Hoy (`src/mock-api/`); requieren un encabezado `Authorization: Bearer` no vacío. Compose lo arranca así y lo publica solo en `127.0.0.1`. La pestaña Hoy llama al router desde main solo con `--api-transport=http`; sin ese flag usa el transporte mock, descrito en «Renderer». `api-postgresql/` expone `GET /health`, los listados `GET /person`, `GET /course`, `GET /organization`, `GET /person-role` y `GET /person-course`, `GET /person/:id` (una fila de `person` por UUID: 200, 404 o 503), `POST /person-course` (una matrícula: 201, 404, 409 o 503) y `DELETE /person-course/:personId/:courseId` (una matrícula: 204, 404 o 503); con `DATABASE_URL` consulta PostgreSQL y sin ella usa un mock de prueba. `api-rustfs/` solo expone `GET /health`, que confirma que el servicio HTTP responde; su conexión S3 se comprueba aparte. `api-sqlite/` solo expone `GET /health`, que ejecuta `SELECT 1`. La activación de invitaciones no llama a estas APIs. Compose publica las cuatro APIs en 3000–3003. Las APIs se conectan por la red interna a PostgreSQL (`postgres:5432`) y RustFS (`rustfs:9000`); los mismos servicios también sirven al almacén operativo. PostgreSQL se publica en el host por `5433` y RustFS por `9000`/`9001`. Los volúmenes compartidos `postgres-data` y `rustfs-data`, junto con `api-sqlite-data`, conservan sus datos.
 
-La documentación interactiva (OpenAPI y Swagger UI) de cada servicio vive en **`/docs`**. Compose publica `api-router/` en el puerto **3000**, `api-postgresql/` en el **3001**, `api-sqlite/` en el **3002** y `api-rustfs/` en el **3003**.
+Hoy `data-access/` existe y se prueba con un driver sustituido. `api-postgresql/` aún no lo importa: abre `pg` en `PostgresService`. `data-access/` no está en Docker Compose.
+
+La documentación interactiva (OpenAPI y Swagger UI) de cada servicio HTTP vive en **`/docs`**. Compose publica `api-router/` en el puerto **3000**, `api-postgresql/` en el **3001**, `api-sqlite/` en el **3002** y `api-rustfs/` en el **3003**.
 
 ```mermaid
 flowchart LR
@@ -16,40 +20,48 @@ flowchart LR
   web[FrontendWeb]
   router[APIRouterNest]
   sdk[sdk_atempoSdk]
+  apiPg[apiPostgresql]
+  postgresDataAccess[data_access_postgres]
+  postgres[(PostgreSQL)]
   sqliteApi[api_sqlite_Flask]
   serviceSqlite[(SQLite_del_servicio)]
-  apiPg[apiPostgresql]
-  postgres[(PostgreSQL)]
   objectApi[api_rustfs_Express]
   rustfs[(RustFS)]
-  electron --> router
-  web --> router
+  electron -->|login y API| router
+  web -->|login| router
   router --> sdk
-  sdk --> sqliteApi
-  sqliteApi --> serviceSqlite
   sdk --> apiPg
+  sdk --> sqliteApi
   sdk --> objectApi
   apiPg --> postgres
+  electron -.-> apiPg
+  web -.-> apiPg
+  apiPg -.-> postgresDataAccess
+  postgresDataAccess --> postgres
+  sqliteApi --> serviceSqlite
+  postgresDataAccess -.-> objectApi
   objectApi --> rustfs
 ```
 
 `sdk/` es el paquete de dominio `atempo-sdk`, hermano de `desktop/`, `api-router/`, `api-postgresql/`, `api-rustfs/` y `api-sqlite/`. El API-router lo consume: `AuthService` llama a `afterAuth` tras login, register y `me`. Los frontends usarán una SDK frontend distinta para llamar al router público; no consumirán directamente la SDK de dominio ni las APIs de persistencia. `api-postgresql/` ya está; `afterAuth` lee su `/health`. `api-rustfs/` espera a que la SDK lo use para objetos en RustFS.
 
+Las flechas discontinuas son el flujo previsto de `data-access/postgres/`: hoy los frontends no llaman a `api-postgresql/` y ese servicio no importa `data-access/postgres/`. `data-access/postgres/` hablará con `api-rustfs/` cuando esa persistencia entre en el paquete.
+
 ## api-sqlite
 
 Carpeta: `api-sqlite/`.
 
-Servicio Flask con modelos Pydantic y consultas mediante SQLAlchemy Core. La SDK delegará aquí la persistencia local. Hoy solo expone `GET /health`, que ejecuta `SELECT 1`; responde `200` si SQLite funciona y `503` si falla la conexión. Un cuerpo JSON inválido se rechaza antes de consultar la base. Swagger UI está en `/docs` y OpenAPI en `/docs-json`. Compose sirve en el puerto **3002** y ejecuta Flask escuchando en `0.0.0.0`. `SQLITE_DATABASE_URL` apunta a `sqlite:////var/lib/atempo/api-sqlite.sqlite`; el archivo persiste en el volumen `api-sqlite-data`. El entorno virtual Linux está en `api-sqlite-venv`; ambos son independientes de `.venv` y de la base de Electron.
+Servicio Flask con modelos Pydantic y consultas mediante SQLAlchemy Core. Hoy solo expone `GET /health`, que ejecuta `SELECT 1`; responde `200` si SQLite funciona y `503` si falla la conexión. Un cuerpo JSON inválido se rechaza antes de consultar la base. Swagger UI está en `/docs` y OpenAPI en `/docs-json`. Compose sirve en el puerto **3002** y ejecuta Flask escuchando en `0.0.0.0`. `SQLITE_DATABASE_URL` apunta a `sqlite:////var/lib/atempo/api-sqlite.sqlite`; el archivo persiste en el volumen `api-sqlite-data`. El entorno virtual Linux está en `api-sqlite-venv`; ambos son independientes de `.venv` y de la base de Electron.
 
 ## api-rustfs
 
 Carpeta: `api-rustfs/`.
 
-Servicio Express y TypeScript. La SDK delegará en él la lectura y escritura de objetos en RustFS. Hoy solo expone `GET /health`, que confirma que el servicio HTTP responde (igual que el health de `api-router/`). Swagger UI en **`/docs`** y OpenAPI en **`/docs-json`**, igual que en `api-router/`. Compose lo sirve en el puerto **3003** y conecta al servicio interno `rustfs:9000`. `/health` no comprueba RustFS; el workflow valida S3 aparte. El volumen compartido `rustfs-data` conserva los objetos. RustFS publica el puerto S3 `9000` y la consola `9001` en el host.
+Servicio Express y TypeScript. `data-access/postgres/` delegará en él la lectura y escritura de objetos en RustFS. Hoy solo expone `GET /health`, que confirma que el servicio HTTP responde (igual que `api-router/`). Swagger UI en **`/docs`** y OpenAPI en **`/docs-json`**, igual que en `api-router/`. Compose lo sirve en el puerto **3003** y conecta al servicio interno `rustfs:9000`. `/health` no comprueba RustFS; el workflow valida S3 aparte. El volumen compartido `rustfs-data` conserva los objetos. RustFS publica el puerto S3 `9000` y la consola `9001` en el host.
 
 ## api-postgresql
 
-`api-postgresql/` sirve NestJS en el puerto **3001**. Compose inicia PostgreSQL con el servicio interno `postgres` y espera a su healthcheck antes de arrancar la API. `GET /health` confirma la conexión. `ATEMPO_POSTGRES_PASSWORD` es obligatoria y `POSTGRES_PASSWORD` es su alternativa; ambas se leen desde `.env` ignorado por Git. Las APIs no montan el `.env`; Compose pasa solo las variables necesarias. PostgreSQL 17.12 comparte el volumen `postgres-data` y se publica en el host por `5433`; la API usa `postgres:5432`. Un volumen creado con PostgreSQL 16 requiere copia de seguridad y migración explícita antes de usarse con 17. CI usa un valor efímero.
+`api-postgresql/` sirve NestJS en el puerto **3001**. Compose inicia PostgreSQL con el servicio interno `postgres` y espera a su healthcheck antes de arrancar la API. `GET /health` confirma la conexión. `ATEMPO_POSTGRES_PASSWORD` es obligatoria y `POSTGRES_PASSWORD` es su alternativa; ambas se leen desde `.env` ignorado por Git. Las APIs no montan el `.env`; Compose pasa solo las variables necesarias. PostgreSQL 17.12 comparte el volumen `postgres-data` y se publica en el host por `5433`; la API usa `postgres:5432`. Un volumen creado con PostgreSQL 16 requiere copia de seguridad y migración explícita antes de usarse con 17. CI usa un valor efímero. Este servicio aún no importa `data-access/postgres/`.
 
 ## Web y administración
 
@@ -73,7 +85,7 @@ Son almacenes y cadena, no una capa del escritorio ni del API-router. Cada una t
 
 El modelo y los enlaces están en `docs/POSTGRES.md`, `docs/SQLITE.md`, `docs/RUSTFS.md`, `docs/BLOCKEND.md` y `permanent-data.md`.
 
-`api-postgresql/` comprueba la conexión con `GET /health`, ofrece cinco listados (incluidos `GET /organization` y `GET /person-course`), `GET /person/:id`, `POST /person-course` y `DELETE /person-course/:personId/:courseId`. `api-rustfs/` no abre RustFS en el health. El renderer y el API-router no abren estas bases. `afterAuth` en `sdk/` llama al health de Postgres con `fetch` inyectable; el resto de persistencia aún no pasa por la SDK.
+`api-postgresql/` comprueba la conexión con `GET /health`, ofrece cinco listados (incluidos `GET /organization` y `GET /person-course`), `GET /person/:id`, `POST /person-course` y `DELETE /person-course/:personId/:courseId`. `data-access/postgres/` trae el pool, las lecturas y las escrituras del core; este servicio aún no lo importa. `api-rustfs/` no abre RustFS en el health. El renderer y el API-router no abren estas bases. `afterAuth` en `sdk/` llama al health de Postgres con `fetch` inyectable; el resto de persistencia aún no pasa por la SDK.
 
 ## aTempo de escritorio
 

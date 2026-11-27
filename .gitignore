@@ -1,10 +1,17 @@
 # Dependencias
 node_modules/
 .pnpm-store/
-api-sqlite/.venv/
-api-sqlite/__pycache__/
-api-sqlite/**/__pycache__/
-api-sqlite/*.egg-info/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 api-sqlite/build/
 
 # Compilación de Electron y Vite
