@@ -378,7 +378,7 @@ desktop/
         navigation/
           BackButton.tsx        # volver a la pantalla anterior
         panel/
-          AccountMenu.tsx    # menú de la cuenta con «Salir», abajo en la barra lateral
+          AccountMenu.tsx    # menú de la cuenta con Ajustes, «Cambiar contraseña» y «Cerrar sesión», abajo en la barra lateral
           AttendanceStatus.tsx
           CorrectionReasonDialog.tsx # diálogo provisional de una corrección, con motivo opcional
           DateFilter.tsx

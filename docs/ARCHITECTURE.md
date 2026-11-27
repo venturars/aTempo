@@ -182,7 +182,7 @@ Con la lista cerrada (Hoy después de «Cerrar lista» y todas las sesiones pasa
 
 Las pantallas de detalle del panel (una sesión, la ficha de un alumno) tienen arriba un botón que vuelve a la anterior y dice a cuál: «Sesiones», «Hoy», «Estadísticas» o la fecha de la sesión (`navigation/BackButton.tsx`). Las secciones de la barra lateral no lo tienen.
 
-Abajo en la barra lateral, `AccountMenu` (`panel/AccountMenu.tsx`) enseña el avatar de 32 px, el nombre del profesor y «Profesor». Al pulsar esa fila se abre hacia arriba un menú con «Salir». Es un `details` `dropdown dropdown-top`: se cierra al pulsar otra vez, al pulsar fuera o con Escape, que devuelve el foco al nombre. `docs/storybook/src/system.css` oculta el `.dropdown-content` de un `details.dropdown` sin `[open]` y quita el marcador del `summary`.
+Abajo en la barra lateral, `AccountMenu` (`panel/AccountMenu.tsx`) enseña el avatar de 32 px, el nombre del profesor y «Profesor». Al pulsar esa fila se abre hacia arriba un menú con «Ajustes», «Cambiar contraseña» (sin Auth0) y «Cerrar sesión». Ajustes no está en la navegación de secciones: se abre desde este menú y, como las secciones, no tiene botón de volver. Es un `details` `dropdown dropdown-top`: se cierra al pulsar otra vez, al pulsar fuera o con Escape, que devuelve el foco al nombre. `docs/storybook/src/system.css` oculta el `.dropdown-content` de un `details.dropdown` sin `[open]` y quita el marcador del `summary`.
 
 El menú de estado se puede usar con teclado: al abrirlo, el foco pasa a la primera opción; Tab recorre las opciones; al elegir una o pulsar Escape, el foco vuelve al botón de la fila. Se cierra si el foco o un clic van a otro control, al desplazar y al cambiar el tamaño de la ventana.
 

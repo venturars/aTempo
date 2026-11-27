@@ -50,6 +50,7 @@ const tabs: { id: PanelTab; label: string }[] = [
   { id: 2, label: 'Estadísticas' },
   { id: 3, label: 'Ajustes' }
 ]
+const sections = tabs.filter((item) => item.id !== 3)
 
 // Nombre de la barra lateral. Si se abre la ruta del panel sin entrar, el de la cuenta de ejemplo.
 function useTeacherName(): string {
@@ -102,7 +103,7 @@ export function PanelScreen(): React.JSX.Element {
         </button>
         <nav aria-label="Secciones">
           <ul className="menu w-full px-2">
-            {tabs.map((item) => (
+            {sections.map((item) => (
               <li key={item.id}>
                 <button
                   type="button"
@@ -122,6 +123,7 @@ export function PanelScreen(): React.JSX.Element {
         </nav>
         <AccountMenu
           name={teacherName}
+          onOpenSettings={() => setTab(3)}
           onChangePassword={
             signedIn && !authConfigured
               ? () => {
