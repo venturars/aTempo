@@ -7,7 +7,7 @@ __pycache__/
 
 # Compilación de los paquetes Python. No es un build/ general: desktop/build/ se versiona
 api-sqlite/build/
-data-access/python/build/
+data-access/sqlite/build/
 errors/python/build/
 
 # Compilación de Electron y Vite

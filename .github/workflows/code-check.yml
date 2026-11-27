@@ -112,7 +112,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [data-access/python, errors/python]
+        package: [data-access/sqlite, errors/python]
     defaults:
       run:
         working-directory: ${{ matrix.package }}

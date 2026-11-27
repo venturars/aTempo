@@ -117,11 +117,11 @@ Abre <http://localhost:5191/> para el alumno o <http://localhost:5191/admin> par
 | `web/` | Web del alumno y demo de administración con Vite y React, en el puerto 5191. |
 | `api-router/` | API REST con NestJS entre los frontends y `atempo-sdk`. Auth0 permanece en `AuthService`; tras login, register y `me` llama a `afterAuth`. |
 | `sdk/` | Paquete `atempo-sdk`: capas shared, dominio, aplicación, infraestructura mock y composición. Expone `afterAuth({ email })`. No es un servicio HTTP. El CRUD HTTP y el GET del Resumen aún no están. |
-| `data-access/` | Acceso a datos de SQLite: `python/` (Python, SQLite de fichaje). No es un servicio HTTP. Ningún servicio lo importa todavía. |
-| `errors/` | `python/` es el paquete local `atempo-errors`: clases de error y fábrica `create_error_factory`. Lo enlaza `data-access/python/` con uv (`[tool.uv.sources]`). No se publica en PyPI. |
+| `data-access/` | Acceso a datos de SQLite: `sqlite/` (Python, `atempo-data-access-sqlite`, SQLite de fichaje). No es un servicio HTTP. Ningún servicio lo importa todavía. |
+| `errors/` | `python/` es el paquete local `atempo-errors`: clases de error y fábrica `create_error_factory`. Lo enlaza `data-access/sqlite/` con uv (`[tool.uv.sources]`). No se publica en PyPI. |
 | `api-postgresql/` | API REST con NestJS entre la SDK y PostgreSQL. |
 | `api-rustfs/` | API REST con Express entre la SDK y RustFS (persistencia de objetos). |
-| `api-sqlite/` | Servicio Flask con Pydantic y SQLAlchemy Core entre la SDK y SQLite. Delegará en `data-access/python/` el acceso a SQLite. Aún no hay integración. |
+| `api-sqlite/` | Servicio Flask con Pydantic y SQLAlchemy Core entre la SDK y SQLite. Delegará en `data-access/sqlite/` el acceso a SQLite. Aún no hay integración. |
 | `postgres/` | Core PostgreSQL y Drizzle Studio para ver sus tablas. No se abre desde el escritorio ni desde el API-router. |
 | `sqlite/` | SQLite operativo de fichaje y Datasette. Distinto del `atempo.sqlite` del escritorio. |
 | `rustfs/` | Justificantes (bucket `justifications`) y consola de RustFS. |
@@ -131,7 +131,7 @@ Abre <http://localhost:5191/> para el alumno o <http://localhost:5191/admin> par
 | `docs/` | Cómo se construye: constitución, arquitectura, estilo, árbol y modelo de cada almacén. |
 | `permanent-data.md` | Enlaces entre las cuatro bases. No es un quinto almacén. |
 
-Cada servicio tiene sus dependencias propias y no hay workspace en la raíz. Los paquetes JavaScript usan pnpm 10.33.0 y versiones fijas. `api-sqlite/`, `data-access/python/` y `errors/python/` usan Python y dependencias fijadas en su `pyproject.toml`; `data-access/python/` y `errors/python/` se instalan con uv 0.12.15 y su `uv.lock`. `postgres/`, `sqlite/`, `blockend/` y `rustfs/` se instalan y arrancan en el ordenador. Compose de la raíz orquesta los mismos procesos, cada uno con su perfil (`db`, `sqlite`, `blockend` y `rustfs`); no es requisito. Ninguno entra en el compose de instalación. El modelo de cada una está en `docs/` (nombres en MAYÚSCULAS) y el arranque nativo en su `README.md`.
+Cada servicio tiene sus dependencias propias y no hay workspace en la raíz. Los paquetes JavaScript usan pnpm 10.33.0 y versiones fijas. `api-sqlite/`, `data-access/sqlite/` y `errors/python/` usan Python y dependencias fijadas en su `pyproject.toml`; `data-access/sqlite/` y `errors/python/` se instalan con uv 0.12.15 y su `uv.lock`. `postgres/`, `sqlite/`, `blockend/` y `rustfs/` se instalan y arrancan en el ordenador. Compose de la raíz orquesta los mismos procesos, cada uno con su perfil (`db`, `sqlite`, `blockend` y `rustfs`); no es requisito. Ninguno entra en el compose de instalación. El modelo de cada una está en `docs/` (nombres en MAYÚSCULAS) y el arranque nativo en su `README.md`.
 
 | Almacén | Visor | URL |
 | --- | --- | --- |
@@ -457,7 +457,7 @@ La API queda en <http://localhost:3001> y PostgreSQL en <http://localhost:5433> 
 
 ## API-sqlite
 
-`api-sqlite/` es el servicio de persistencia local previsto para la SDK e importará `data-access/python/` para leer y escribir en SQLite. `sdk/` (`atempo-sdk`) y `data-access/` ya existen; ninguno está integrado con este servicio. Su base SQLite es distinta de la base local de Electron.
+`api-sqlite/` es el servicio de persistencia local previsto para la SDK e importará `data-access/sqlite/` para leer y escribir en SQLite. `sdk/` (`atempo-sdk`) y `data-access/` ya existen; ninguno está integrado con este servicio. Su base SQLite es distinta de la base local de Electron.
 
 Para usar el servicio en Docker, primero ejecuta `docker compose run --rm setup` y después:
 

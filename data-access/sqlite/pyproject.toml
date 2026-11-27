@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "atempo-data-access-sqlite"
+version = "0.1.0"
+description = "SDK Python de aTempo: session y attendance en SQLite"
+requires-python = ">=3.11"
+dependencies = [
+    "SQLAlchemy==2.0.44",
+    "atempo-errors",
+    "pydantic==2.14.4",
+]
+
+[tool.uv.sources]
+atempo-errors = { path = "../../errors/python", editable = true }
+
+[tool.setuptools.packages.find]
+include = ["data_access_sqlite*"]
+
+[tool.basedpyright]
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.11"
+extraPaths = ["."]

@@ -1,0 +1,41 @@
+from typing import TypedDict
+
+from data_access_sqlite.session.find_session_exists import find_session_exists
+from data_access_sqlite.shared.types.attendance import Attendance
+from data_access_sqlite.shared.validation.assert_values import read_input_field
+from data_access_sqlite.shared.validation.attendance import (
+    assert_checked_in_at_in_session,
+)
+from data_access_sqlite.shared.validation.model import validate_model
+from data_access_sqlite.sqlite.executors.attendance import update_attendance_row
+from data_access_sqlite.sqlite.pool import SqliteQuery, with_transaction
+from data_access_sqlite.sqlite.rows.attendance import attendance_from_row
+
+
+class UpdateAttendanceInput(TypedDict):
+    attendance: Attendance
+
+
+class UpdateAttendanceOutput(TypedDict):
+    attendance: Attendance | None
+
+
+def update_attendance(input: UpdateAttendanceInput) -> UpdateAttendanceOutput:
+    body = validate_model(
+        Attendance,
+        read_input_field(input, "attendance", "attendance"),
+    )
+
+    def run(tx: SqliteQuery) -> Attendance | None:
+        session = find_session_exists({"id": body.session_id}, tx)
+        assert_checked_in_at_in_session(
+            body.checked_in_at,
+            session["start_at"],
+            session["end_at"],
+        )
+        row = update_attendance_row(body.model_dump(), tx)
+        if row is None:
+            return None
+        return attendance_from_row(row)
+
+    return {"attendance": with_transaction(run)}

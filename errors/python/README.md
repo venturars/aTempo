@@ -20,11 +20,11 @@ factory = create_error_factory({
 factory.fail("thing.code", "taken")  # lanza ConflictError con id thing.code.taken
 ```
 
-El paquete que usa la fábrica envuelve `domain_error` y `fail` con su tipo escrito (sus `Literal` de labels y reasons), como hace `data-access/python/data_access_python/shared/errors.py`. Así el analizador de tipos rechaza una label o una reason fuera del catálogo.
+El paquete que usa la fábrica envuelve `domain_error` y `fail` con su tipo escrito (sus `Literal` de labels y reasons), como hace `data-access/sqlite/data_access_sqlite/shared/errors.py`. Así el analizador de tipos rechaza una label o una reason fuera del catálogo.
 
 ## Cómo se instala
 
-No se publica en PyPI. `data-access/python/` lo declara en `dependencies` y lo enlaza como editable con `[tool.uv.sources] atempo-errors = { path = "../../errors/python", editable = true }`. Su `uv.lock` lo registra como `editable = "../../errors/python"`, así que uv nunca lo busca en PyPI.
+No se publica en PyPI. `data-access/sqlite/` lo declara en `dependencies` y lo enlaza como editable con `[tool.uv.sources] atempo-errors = { path = "../../errors/python", editable = true }`. Su `uv.lock` lo registra como `editable = "../../errors/python"`, así que uv nunca lo busca en PyPI.
 
 ## Instalar y probar
 

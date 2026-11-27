@@ -154,11 +154,11 @@ sdk/
 ```text
 data-access/
   README.md
-  python/
-    pyproject.toml          # data-access-python; atempo-errors editable desde ../../errors/python
+  sqlite/
+    pyproject.toml          # atempo-data-access-sqlite; atempo-errors editable desde ../../errors/python
     uv.lock
     README.md
-    data_access_python/
+    data_access_sqlite/
       __init__.py           # API pública
       shared/
         errors.py           # catálogo (reasons, labels, mensajes), build_error() y fail()
