@@ -11,6 +11,21 @@ import { EnrollPersonDto } from './enroll-person.dto'
 export class CourseService {
   constructor(@Inject(ATEMPO_SDK) private readonly sdk: Sdk) {}
 
+  async list(organizationId: string): Promise<CourseResponseDto[]> {
+    return unwrapSdk(await this.sdk.listCourses({ organizationId })).map(
+      toCourseJson,
+    )
+  }
+
+  async get(
+    organizationId: string,
+    courseId: string,
+  ): Promise<CourseResponseDto> {
+    return toCourseJson(
+      unwrapSdk(await this.sdk.getCourse({ organizationId, courseId })),
+    )
+  }
+
   async create(
     organizationId: string,
     body: CreateCourseDto,
@@ -49,6 +64,15 @@ export class CourseService {
   ): Promise<PersonResponseDto[]> {
     return unwrapSdk(
       await this.sdk.listCoursePeople({ organizationId, courseId }),
+    ).map(toPersonJson)
+  }
+
+  async listStudents(
+    organizationId: string,
+    courseId: string,
+  ): Promise<PersonResponseDto[]> {
+    return unwrapSdk(
+      await this.sdk.listCourseStudents({ organizationId, courseId }),
     ).map(toPersonJson)
   }
 

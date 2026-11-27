@@ -15,6 +15,18 @@ export type {
   CreateCourseDeps,
   CreateCourseInput,
 } from './application/create-course'
+export { createGetCourse } from './application/get-course'
+export type { GetCourseDeps, GetCourseInput } from './application/get-course'
+export { createListCourses } from './application/list-courses'
+export type {
+  ListCoursesDeps,
+  ListCoursesInput,
+} from './application/list-courses'
+export { createListCourseStudents } from './application/list-course-students'
+export type {
+  ListCourseStudentsDeps,
+  ListCourseStudentsInput,
+} from './application/list-course-students'
 export { createDeletePerson } from './application/delete-person'
 export { createEnrollPersonInCourse } from './application/enroll-person-in-course'
 export type {
@@ -90,11 +102,8 @@ export type { OrganizationRepository } from './domain/organization-repository'
 export type { OrganizationPerson, Person } from './domain/person'
 export type { PersonRecord } from './domain/person-record'
 export type { PersonRole, PersonRoleAssignment } from './domain/person-role'
-export {
-  asUuid,
-  parseDateOnly,
-  parseUuid,
-} from './domain/scalars'
+export { isStudent } from './domain/roles'
+export { asUuid, parseDateOnly, parseUuid } from './domain/scalars'
 export type { DateOnly, Uuid } from './domain/scalars'
 export {
   asNonEmptyText,

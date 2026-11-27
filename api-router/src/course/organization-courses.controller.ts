@@ -1,7 +1,8 @@
-import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common'
 import {
   ApiBearerAuth,
   ApiCreatedResponse,
+  ApiOkResponse,
   ApiTags,
 } from '@nestjs/swagger'
 import { BearerGuard } from '../shared/bearer.guard'
@@ -23,5 +24,22 @@ export class OrganizationCoursesController {
     @Body() body: CreateCourseDto,
   ): Promise<CourseResponseDto> {
     return this.courses.create(organizationId, body)
+  }
+
+  @Get()
+  @ApiOkResponse({ type: CourseResponseDto, isArray: true })
+  list(
+    @Param('organizationId') organizationId: string,
+  ): Promise<CourseResponseDto[]> {
+    return this.courses.list(organizationId)
+  }
+
+  @Get(':courseId')
+  @ApiOkResponse({ type: CourseResponseDto })
+  get(
+    @Param('organizationId') organizationId: string,
+    @Param('courseId') courseId: string,
+  ): Promise<CourseResponseDto> {
+    return this.courses.get(organizationId, courseId)
   }
 }

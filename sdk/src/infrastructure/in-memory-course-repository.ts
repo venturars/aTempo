@@ -40,18 +40,26 @@ export class InMemoryCourseRepository
     return id ? (this.courses.get(id) ?? null) : null
   }
 
+  async listByOrganization(organizationId: Uuid): Promise<Course[]> {
+    return [...this.courses.values()]
+      .filter((course) => course.organizationId === organizationId)
+      .sort((a, b) => a.id.localeCompare(b.id))
+  }
+
   async save(course: Course): Promise<void> {
     const previous = this.courses.get(course.id)
     if (previous) {
-      this.byOrgAcronym.delete(`${previous.organizationId}\t${previous.acronym}`)
+      this.byOrgAcronym.delete(
+        `${previous.organizationId}\t${previous.acronym}`,
+      )
       this.byContractAddress.delete(previous.contractAddress.toLowerCase())
     }
     this.courses.set(course.id, course)
-    this.byOrgAcronym.set(`${course.organizationId}\t${course.acronym}`, course.id)
-    this.byContractAddress.set(
-      course.contractAddress.toLowerCase(),
+    this.byOrgAcronym.set(
+      `${course.organizationId}\t${course.acronym}`,
       course.id,
     )
+    this.byContractAddress.set(course.contractAddress.toLowerCase(), course.id)
   }
 
   async enroll(personId: Uuid, courseId: Uuid): Promise<void> {
@@ -93,7 +101,11 @@ export class InMemoryCourseRepository
     return this.enrollments.has(enrollmentKey(personId, courseId))
   }
 
-  private addToIndex(index: Map<string, Set<string>>, key: string, value: string) {
+  private addToIndex(
+    index: Map<string, Set<string>>,
+    key: string,
+    value: string,
+  ) {
     let set = index.get(key)
     if (!set) {
       set = new Set()

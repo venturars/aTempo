@@ -131,9 +131,12 @@ sdk/
       after-auth.ts
       create-organization.ts
       create-course.ts
+      list-courses.ts
+      get-course.ts
       enroll-person-in-course.ts
       unenroll-person-from-course.ts
       list-course-people.ts
+      list-course-students.ts
       invite-person.ts
       directory.spec.ts
       after-auth.spec.ts
@@ -333,6 +336,7 @@ api-router/
       course.module.ts
       organization-courses.controller.ts
       organization-course-people.controller.ts
+      organization-course-students.controller.ts
       course.service.ts
     mock-api/
       mock-api.module.ts
