@@ -5,7 +5,7 @@ import type {
   HeadObjectCommand,
   PutObjectCommand,
 } from '@aws-sdk/client-s3'
-import { fail } from '../errors'
+import { fail } from '../shared/errors'
 
 export type RustfsS3Command =
   HeadBucketCommand | HeadObjectCommand | GetObjectCommand | PutObjectCommand

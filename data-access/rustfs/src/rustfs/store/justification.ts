@@ -2,7 +2,7 @@ import type {
   GetObjectCommandOutput,
   PutObjectCommandOutput,
 } from '@aws-sdk/client-s3'
-import { fail } from '../../errors'
+import { fail } from '../../shared/errors'
 import type {
   Justification,
   JustificationCreate,

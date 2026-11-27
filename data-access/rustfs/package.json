@@ -11,9 +11,11 @@
     "lint": "eslint \"{src,test}/**/*.ts\"",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "jest --config ./test/jest.json",
-    "test:ci": "pnpm test"
+    "test:ci": "pnpm test",
+    "prepare": "pnpm --dir ../../errors/node install --frozen-lockfile && pnpm --dir ../../errors/node build"
   },
   "dependencies": {
+    "@atempo/errors": "link:../../errors/node",
     "@aws-sdk/client-s3": "3.943.0"
   },
   "devDependencies": {

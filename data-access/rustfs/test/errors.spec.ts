@@ -4,9 +4,8 @@ import {
   ConflictError,
   PersistenceError,
   ValidationError,
-  domainError,
-  fail,
-} from '../src/errors'
+} from '@atempo/errors'
+import { buildError, fail } from '../src/shared/errors'
 import {
   check,
   getJustification,
@@ -29,7 +28,7 @@ afterEach(() => {
 
 describe('catálogo de errores', () => {
   it('builds id, kind, entity and field from label and reason', () => {
-    const error = domainError('justification.document_id', 'taken')
+    const error = buildError('justification.document_id', 'taken')
     expect(error).toBeInstanceOf(ConflictError)
     expect(error).toMatchObject({
       id: 'justification.document_id.taken',
@@ -41,10 +40,10 @@ describe('catálogo de errores', () => {
   })
 
   it('uses catalog overrides for special messages', () => {
-    expect(domainError('rustfs.bucket', 'missing_bucket').message).toBe(
+    expect(buildError('rustfs.bucket', 'missing_bucket').message).toBe(
       'el bucket justifications no existe',
     )
-    expect(domainError('rustfs.RUSTFS_PORT', 'invalid_env').message).toBe(
+    expect(buildError('rustfs.RUSTFS_PORT', 'invalid_env').message).toBe(
       'RUSTFS_PORT tiene que ser un número de 1 a 65535',
     )
   })

@@ -1,10 +1,10 @@
-import { fail, type DomainLabel } from '../errors'
+import { fail, type ErrorLabel } from '../shared/errors'
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 /** Comprueba que es un string. Acepta el string vacío. */
-export function assertString(value: string, label: DomainLabel): string {
+export function assertString(value: string, label: ErrorLabel): string {
   if (typeof value !== 'string') {
     fail(label, 'string')
   }
@@ -12,17 +12,14 @@ export function assertString(value: string, label: DomainLabel): string {
 }
 
 /** Comprueba que es un string con al menos un carácter. */
-export function assertNonEmptyString(
-  value: string,
-  label: DomainLabel,
-): string {
+export function assertNonEmptyString(value: string, label: ErrorLabel): string {
   if (typeof value !== 'string' || value.length === 0) {
     fail(label, 'empty')
   }
   return value
 }
 
-export function assertUuid(value: string, label: DomainLabel): string {
+export function assertUuid(value: string, label: ErrorLabel): string {
   assertNonEmptyString(value, label)
   if (!UUID_RE.test(value)) {
     fail(label, 'uuid')
@@ -34,17 +31,14 @@ export function normalizeUuid(value: string): string {
   return value.toLowerCase()
 }
 
-export function assertBytes(value: Uint8Array, label: DomainLabel): Uint8Array {
+export function assertBytes(value: Uint8Array, label: ErrorLabel): Uint8Array {
   if (!(value instanceof Uint8Array)) {
     fail(label, 'bytes')
   }
   return value
 }
 
-export function assertObject<T extends object>(
-  value: T,
-  label: DomainLabel,
-): T {
+export function assertObject<T extends object>(value: T, label: ErrorLabel): T {
   if (value === null || typeof value !== 'object') {
     fail(label, 'object')
   }

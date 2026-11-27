@@ -5,10 +5,9 @@ export {
   NotFoundError,
   PersistenceError,
   ValidationError,
-  type DomainErrorId,
   type DomainErrorKind,
-  type DomainErrorReason,
-} from './errors'
+} from '@atempo/errors'
+export type { ErrorId, ErrorReasonName } from './shared/errors'
 
 export {
   assertBytes,

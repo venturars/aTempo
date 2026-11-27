@@ -5,7 +5,7 @@ import {
   justificationExists,
   putJustification,
 } from '../src'
-import { ConfigurationError } from '../src/errors'
+import { ConfigurationError } from '@atempo/errors'
 import { endpointFromEnv } from '../src/rustfs/client'
 import {
   DOCUMENT_ID,

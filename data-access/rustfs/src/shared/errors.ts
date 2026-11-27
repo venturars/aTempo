@@ -1,6 +1,10 @@
-import type { DomainErrorKind } from './domain-error'
+import {
+  createErrorFactory,
+  type DomainError,
+  type DomainErrorKind,
+} from '@atempo/errors'
 
-export const DOMAIN_ERROR_REASONS = {
+export const ERROR_REASONS = {
   string: {
     kind: 'VALIDATION',
     message: (label: string) => `${label} debe ser un string`,
@@ -51,9 +55,9 @@ export const DOMAIN_ERROR_REASONS = {
   { kind: DomainErrorKind; message: (label: string) => string }
 >
 
-export type DomainErrorReason = keyof typeof DOMAIN_ERROR_REASONS
+export type ErrorReasonName = keyof typeof ERROR_REASONS
 
-export const DOMAIN_LABELS = [
+export const ERROR_LABELS = [
   'justification',
   'justification.id',
   'justification.document_id',
@@ -69,17 +73,38 @@ export const DOMAIN_LABELS = [
   'rustfs.RUSTFS_SECRET_KEY',
 ] as const
 
-export type DomainLabel = (typeof DOMAIN_LABELS)[number]
+export type ErrorLabel = (typeof ERROR_LABELS)[number]
 
-export type DomainErrorId = `${DomainLabel}.${DomainErrorReason}`
+export type ErrorId = `${ErrorLabel}.${ErrorReasonName}`
 
-export const DOMAIN_ERROR_MESSAGES: { readonly [K in DomainErrorId]?: string } =
-  {
-    'rustfs.bucket.missing_bucket': 'el bucket justifications no existe',
-    'rustfs.RUSTFS_ENDPOINT.invalid_env':
-      'RUSTFS_ENDPOINT tiene que ser solo el host, sin esquema ni puerto (por ejemplo rustfs o 127.0.0.1)',
-    'rustfs.RUSTFS_PORT.invalid_env':
-      'RUSTFS_PORT tiene que ser un número de 1 a 65535',
-    'rustfs.RUSTFS_USE_SSL.invalid_env':
-      'RUSTFS_USE_SSL tiene que ser true, false, 1 o 0',
-  }
+export const ERROR_MESSAGES: { readonly [K in ErrorId]?: string } = {
+  'rustfs.bucket.missing_bucket': 'el bucket justifications no existe',
+  'rustfs.RUSTFS_ENDPOINT.invalid_env':
+    'RUSTFS_ENDPOINT tiene que ser solo el host, sin esquema ni puerto (por ejemplo rustfs o 127.0.0.1)',
+  'rustfs.RUSTFS_PORT.invalid_env':
+    'RUSTFS_PORT tiene que ser un número de 1 a 65535',
+  'rustfs.RUSTFS_USE_SSL.invalid_env':
+    'RUSTFS_USE_SSL tiene que ser true, false, 1 o 0',
+}
+
+const factory = createErrorFactory({
+  labels: ERROR_LABELS,
+  reasons: ERROR_REASONS,
+  messages: ERROR_MESSAGES,
+})
+
+export const buildError: (
+  label: ErrorLabel,
+  reason: ErrorReasonName,
+  options?: { cause?: Error },
+) => DomainError = factory.domainError
+
+/**
+ * Lleva su tipo escrito: TypeScript solo estrecha después de una llamada que
+ * devuelve `never` si la función tiene un tipo explícito.
+ */
+export const fail: (
+  label: ErrorLabel,
+  reason: ErrorReasonName,
+  options?: { cause?: Error },
+) => never = factory.fail

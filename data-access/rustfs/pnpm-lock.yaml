@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@atempo/errors':
+        specifier: link:../../errors/node
+        version: link:../../errors/node
       '@aws-sdk/client-s3':
         specifier: 3.943.0
         version: 3.943.0

@@ -1,5 +1,6 @@
 import { NoSuchBucket, NoSuchKey, NotFound } from '@aws-sdk/client-s3'
-import { DomainError, fail } from '../errors'
+import { DomainError } from '@atempo/errors'
+import { fail } from '../shared/errors'
 
 function stringField(error: object, field: string): string | undefined {
   if (!(field in error)) {
