@@ -49,7 +49,15 @@ describe('Web authentication cookies (e2e)', () => {
   beforeEach(async () => {
     originalEnvironment = { ...process.env }
     Object.assign(process.env, auth0Config)
+    process.env.API_POSTGRESQL_URL = 'http://api-postgresql:3001'
     fetchMock = jest.spyOn(global, 'fetch') as unknown as jest.Mock
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes('/health')) {
+        return auth0Response({ status: 'ok' })
+      }
+      throw new Error(`Unexpected fetch: ${url}`)
+    })
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -70,10 +78,25 @@ describe('Web authentication cookies (e2e)', () => {
   })
 
   function mockJwks(): void {
-    fetchMock.mockResolvedValue(auth0Response({ keys: [signingKey] }))
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes('/.well-known/jwks.json')) {
+        return auth0Response({ keys: [signingKey] })
+      }
+      if (url.includes('/health')) {
+        return auth0Response({ status: 'ok' })
+      }
+      if (url.endsWith('/oauth/revoke')) {
+        return new Response(null, { status: 200 })
+      }
+      throw new Error(`Unexpected fetch: ${url}`)
+    })
   }
 
-  function tokenClaims(subject: string, email: string): Record<string, unknown> {
+  function tokenClaims(
+    subject: string,
+    email: string,
+  ): Record<string, unknown> {
     return {
       iss: 'https://tenant.example.test/',
       aud: auth0Config.AUTH0_AUDIENCE,
@@ -122,7 +145,9 @@ describe('Web authentication cookies (e2e)', () => {
       expect(setCookie).toMatch(/Path=\//i)
       expect(setCookie).not.toMatch(/Max-Age/i)
       expect(JSON.stringify(response.body)).not.toContain(accessToken)
-      expect(JSON.stringify(response.body)).not.toContain('private-refresh-token')
+      expect(JSON.stringify(response.body)).not.toContain(
+        'private-refresh-token',
+      )
       expect(JSON.stringify(response.body)).not.toContain('test-password')
 
       const [url, options] = fetchMock.mock.calls[0]
@@ -168,7 +193,10 @@ describe('Web authentication cookies (e2e)', () => {
 
   it('POST /auth/login maps Auth0 credential rejection to a generic 401', async () => {
     fetchMock.mockResolvedValueOnce(
-      auth0Response({ error: 'invalid_grant', error_description: 'private detail' }, 403),
+      auth0Response(
+        { error: 'invalid_grant', error_description: 'private detail' },
+        403,
+      ),
     )
 
     await request(app.getHttpServer())
@@ -206,13 +234,10 @@ describe('Web authentication cookies (e2e)', () => {
       .send({ email: 'profesor@atempo.test', password: 'test-password' })
       .expect(200)
 
-    await agent
-      .get('/auth/me')
-      .expect(200)
-      .expect({
-        email: 'profesor@atempo.test',
-        profile: 'admin',
-      })
+    await agent.get('/auth/me').expect(200).expect({
+      email: 'profesor@atempo.test',
+      profile: 'admin',
+    })
   })
 
   it('GET /auth/me rejects a missing or unknown access cookie', async () => {
@@ -225,7 +250,10 @@ describe('Web authentication cookies (e2e)', () => {
   })
 
   it('POST /auth/refresh renews cookies without exposing tokens in JSON', async () => {
-    const loginToken = mockSuccessfulLogin('auth0|test-user', 'ada.lopez@clase.test')
+    const loginToken = mockSuccessfulLogin(
+      'auth0|test-user',
+      'ada.lopez@clase.test',
+    )
     const renewedAccessToken = createAccessToken(
       tokenClaims('auth0|test-user', 'ada.lopez@clase.test'),
     )
@@ -264,13 +292,10 @@ describe('Web authentication cookies (e2e)', () => {
     })
 
     mockJwks()
-    await agent
-      .get('/auth/me')
-      .expect(200)
-      .expect({
-        email: 'ada.lopez@clase.test',
-        profile: 'student',
-      })
+    await agent.get('/auth/me').expect(200).expect({
+      email: 'ada.lopez@clase.test',
+      profile: 'student',
+    })
   })
 
   it('POST /auth/login replaces and revokes the refresh token of the previous cookies', async () => {
@@ -296,13 +321,18 @@ describe('Web authentication cookies (e2e)', () => {
       const url = String(input)
       if (url.endsWith('/oauth/token')) {
         const tokenResponse = tokenResponses.shift()
-        if (tokenResponse === undefined) throw new Error('Unexpected token request')
+        if (tokenResponse === undefined)
+          throw new Error('Unexpected token request')
         return auth0Response(tokenResponse)
       }
       if (url.endsWith('/.well-known/jwks.json')) {
         return auth0Response({ keys: [signingKey] })
       }
-      if (url.endsWith('/oauth/revoke')) return new Response(null, { status: 200 })
+      if (url.includes('/health')) {
+        return auth0Response({ status: 'ok' })
+      }
+      if (url.endsWith('/oauth/revoke'))
+        return new Response(null, { status: 200 })
       throw new Error(`Unexpected Auth0 request: ${url}`)
     })
 
@@ -352,13 +382,10 @@ describe('Web authentication cookies (e2e)', () => {
     expect(response.headers['set-cookie']).toBeUndefined()
     expect(fetchMock.mock.calls).toHaveLength(callsBeforeLogout)
     mockJwks()
-    await agent
-      .get('/auth/me')
-      .expect(200)
-      .expect({
-        email: 'ada.lopez@clase.test',
-        profile: 'student',
-      })
+    await agent.get('/auth/me').expect(200).expect({
+      email: 'ada.lopez@clase.test',
+      profile: 'student',
+    })
   })
 
   it('POST /auth/logout clears the cookies and revokes the refresh token', async () => {

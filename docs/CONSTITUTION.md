@@ -20,7 +20,7 @@ aTempo de escritorio es la aplicación del profesor. Sirve para registrar la asi
 
 ## 3. Stack de `domain/`
 
-`domain/` es la SDK: carpeta en la raíz, hermana de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. Dentro hay un paquete TypeScript. No es un servicio HTTP: sin servidor, sin Swagger y sin Docker Compose.
+`domain/` es la SDK de PostgreSQL: carpeta en la raíz, hermana de `desktop/`, `sdk/` y `api-postgresql/`. Dentro hay un paquete TypeScript. No es un servicio HTTP: sin servidor, sin Swagger y sin Docker Compose.
 
 ### `domain/node/`
 
@@ -38,7 +38,7 @@ Fija los tipos del core (`organization`, `person`, `course`, `person_course`, `r
 - **TypeScript** escribe el servicio.
 - **pnpm** es el gestor de paquetes de `api-router/`. Las versiones van fijas, sin `^`.
 
-El API-router no implementa reglas de negocio.
+La SDK de lógica de negocio es el paquete `atempo-sdk` en `sdk/`, al mismo nivel que `desktop/` y `api-router/`. Capas: shared (`Result`, `AppError`), dominio, aplicación, infraestructura mock y composición. Expone `afterAuth({ email })`: el health de `api-postgresql` se inyecta (`fetch`); si no hay persona en el mock, el resultado es ok y no crea. Auth0 permanece en `AuthService`. Tras login, register o `me` correctos, el router llama a `afterAuth`. `GET /auth/me` sigue `{ email }` (Bearer) o `{ email, profile }` (cookie). 503 `POSTGRES_API_UNAVAILABLE` solo si `afterAuth` falla con `CONFIGURATION` o `PERSISTENCE`; `VALIDATION` → 400. El CRUD HTTP de organización y personas sale de módulos Nest `organization/` y `person/` (controller → service → SDK). Cursos y matrículas (`course/`) siguen el mismo patrón en memoria. No hay GET del Resumen. El API-router no implementa reglas de negocio; las delega en esta SDK.
 
 ## 5. Stack de `api-postgresql/`
 
@@ -73,5 +73,5 @@ El API-router no accede a RustFS; `domain/node/` lo consumirá cuando exista esa
 ## 8. Dónde seguir
 
 - [STYLE.md](STYLE.md): los dos temas y el enlace a la guía visual.
-- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, flujo Frontend → `api-postgresql` → `domain/node` → PostgreSQL, y los almacenes.
-- [TREE.md](TREE.md): árboles de `desktop/`, `domain/node/`, `errors/`, `api-router/`, `api-postgresql/`, `api-rustfs/`, `api-sqlite/` y los almacenes.
+- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, flujo de `api-router/` y `sdk/`, flujo previsto Frontend → `api-postgresql` → `domain/node` → PostgreSQL, las APIs de persistencia y los almacenes.
+- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/`, `sdk/`, `domain/node/`, `errors/`, `api-postgresql/`, `api-rustfs/`, `api-sqlite/` y los almacenes.

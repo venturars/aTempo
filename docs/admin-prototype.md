@@ -19,8 +19,8 @@ El recorrido verificable es **invitar a una persona → crear un curso → asign
 ### Comportamiento
 
 - La entrada `/admin` pide correo y contraseña y permite crear la cuenta de una organización con su primer admin, en memoria. Simula `POST /auth/register` y `POST /auth/login` del contrato v1 (#90) hasta que exista la API (#199).
-- La demo tiene una sola organización y un administrador con `roles: ['admin', 'teacher']`. Se usan identificadores estables para personas, cursos y sesiones; los nombres no son claves.
-- **Personas:** muestra profesores y alumnos, su rol y su estado activo o invitación pendiente. Invitar pide nombre, correo y rol profesor/alumno y permite añadir el rol administrador a profesores; crea una persona pendiente. La interfaz confirma que la invitación quedó preparada, sin afirmar que se envió un email. Las cuentas activas pertenecen al seed; la activación de invitaciones es trabajo de #129/#130 y no se duplica aquí.
+- Cada organización tiene un único administrador, quien creó la cuenta. El de la demo tiene `roles: ['admin', 'teacher']`. Se usan identificadores estables para personas, cursos y sesiones; los nombres no son claves.
+- **Personas:** muestra profesores y alumnos, su rol y su estado activo o invitación pendiente. Invitar pide los campos de `person` (nombre, apellidos, documento de identidad, correo y, opcionales, fecha de nacimiento y teléfono) y el rol profesor o alumno; crea una persona pendiente que al activar la invitación solo elige su contraseña (#234). Mientras el formulario está abierto, la tabla no se muestra. La tabla enseña el documento de cada persona. La interfaz confirma que la invitación quedó preparada, sin afirmar que se envió un email. Las cuentas activas pertenecen al seed; la activación de invitaciones es trabajo de #129/#130 y no se duplica aquí.
 - **Cursos:** permite crear un curso con nombre, un profesor de la organización y alumnos de la organización. El administrador que también es profesor aparece entre los profesores elegibles. Los alumnos no pueden recibir roles de profesor/admin. La selección de alumnos no contiene duplicados.
 - Preparar un curso puede incluir personas con invitación pendiente. Se conserva y muestra su estado; asignarlas no activa su cuenta. Esta es una decisión del prototipo que habrá que confirmar al definir el contrato de administración.
 - **Sesiones:** desde un curso se crea una sesión con fecha, hora inicial, hora final y aula. La hora final debe ser posterior a la inicial en ese mismo día. Se muestra como programada; todavía no se abre ni se pasa lista desde administración.
@@ -30,7 +30,7 @@ El recorrido verificable es **invitar a una persona → crear un curso → asign
 
 ### Ampliación CRUD local
 
-- **Editar personas:** reutilizar el formulario de invitación con nombre, correo y rol actuales. Mantener el ID y el estado activo/pendiente. El correo sigue siendo único dentro de la organización, excluyendo a la persona editada. Al editar a otro profesor se puede activar o desactivar su rol de administrador. La cuenta administradora de la sesión y las cuentas solo de administrador conservan sus roles y permiten editar nombre y correo. Cambiar profesor/alumno se rechaza si deja asignaciones incompatibles: primero hay que reasignar sus cursos o retirar sus matrículas.
+- **Editar personas:** reutilizar el formulario de invitación con nombre, correo y rol actuales. Mantener el ID y el estado activo/pendiente. El documento y el correo siguen siendo únicos dentro de la organización, excluyendo a la persona editada. Nadie más puede pasar a ser administrador. En su propia cuenta, el administrador edita sus datos y decide con **También soy profesor** si también da clase; no puede dejarlo mientras tenga cursos asignados. Cambiar profesor/alumno se rechaza si deja asignaciones incompatibles: primero hay que reasignar sus cursos o retirar sus matrículas.
 - **Eliminar personas:** pedir confirmación con el nombre y el efecto. Eliminar un alumno lo retira de todos los cursos de la organización en la misma operación. Un profesor asignado no se elimina hasta reasignar sus cursos. La cuenta administradora actual no puede eliminarse a sí misma. Cancelar la confirmación no cambia nada.
 - **Editar cursos:** reutilizar el formulario de creación con nombre, profesor y alumnado actuales. Conservar el ID y sus sesiones. El cambio de alumnado/profesor se refleja en los listados de sus sesiones programadas; esta demo no contiene sesiones cerradas ni histórico de asistencia.
 - **Eliminar cursos:** la confirmación identifica el curso y cuántas sesiones programadas se eliminarán con él. Al confirmar, borrar curso y esas sesiones de forma atómica. No eliminar personas. Volver a la lista de cursos; un enlace antiguo muestra el estado de elemento no disponible.
@@ -226,12 +226,12 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Abrir <http://localhost:5191/admin> y entrar con `miguel@neoland.example` / `neoland-2026`.
+Abrir <http://localhost:5191/admin> e iniciar sesión como `profesor@atempo.test`.
 
 1. En Personas, preparar una invitación de profesor y otra de alumno; deben aparecer pendientes.
 2. En Cursos, crear un curso y asignarle esas personas. Abrirlo y programar una sesión con fecha, inicio, fin y aula.
 3. Abrir la sesión: profesor y alumnado coinciden con el curso y la asistencia está pendiente.
-4. Crear un curso asignado a Miguel Rodríguez y comprobar que aparece en Mis clases; un curso de otro profesor no aparece ahí. Volver no borra los cambios.
+4. Crear un curso asignado a Ventura Rodríguez y comprobar que aparece en Mis clases; un curso de otro profesor no aparece ahí. Volver no borra los cambios.
 5. Probar tema claro/oscuro, ancho móvil y cancelar un formulario. Un correo duplicado o una hora final anterior/igual al inicio muestran error sin guardar.
 6. Cerrar sesión vuelve a la entrada de demo. Recargar restaura el seed. La sesión del alumno se conserva al entrar/salir del admin.
 

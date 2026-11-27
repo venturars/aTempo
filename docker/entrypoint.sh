@@ -9,6 +9,7 @@ if [ "$(id -u)" -eq 0 ]; then
   for dir in \
     /work/desktop/node_modules \
     /work/docs/storybook/node_modules \
+    /work/sdk/node_modules \
     /work/api-router/node_modules \
     /work/api-postgresql/node_modules \
     /work/api-rustfs/node_modules \
@@ -19,7 +20,7 @@ if [ "$(id -u)" -eq 0 ]; then
     /var/lib/atempo
   do
     if [ -d "$dir" ]; then
-      chown node:node "$dir"
+      chown -R node:node "$dir"
       chmod 755 "$dir"
     fi
   done

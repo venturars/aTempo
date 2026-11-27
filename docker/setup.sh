@@ -10,9 +10,13 @@ cd /work
 echo "APM: instalando lo que fijan apm.yml y apm.lock.yaml."
 apm install
 
-for folder in desktop docs/storybook api-router api-postgresql api-rustfs blockend postgres; do
+for folder in desktop docs/storybook sdk api-router api-postgresql api-rustfs blockend postgres; do
   echo "pnpm: instalando ${folder}."
   pnpm --dir "$folder" install --frozen-lockfile
+  if [[ "$folder" == sdk ]]; then
+    echo "pnpm: compilando sdk."
+    pnpm --dir sdk build
+  fi
 done
 
 # Este venv vive en un volumen Linux y queda separado del entorno local de Windows/macOS.

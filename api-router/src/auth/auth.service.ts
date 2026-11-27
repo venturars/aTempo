@@ -6,10 +6,13 @@ import {
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common'
+import type { Sdk } from 'atempo-sdk'
+import { ATEMPO_SDK } from '../shared/atempo-sdk.token'
 import { LoginResponseDto } from './login-response.dto'
 import { LogoutResponseDto } from './logout-response.dto'
 import { MeResponseDto } from './me-response.dto'
@@ -85,6 +88,8 @@ export class AuthService {
   private cachedKeys: Auth0RsaKey[] = []
   private cachedKeysUntil = 0
 
+  constructor(@Inject(ATEMPO_SDK) private readonly sdk: Sdk) {}
+
   async register(
     email: string,
     password: string,
@@ -138,6 +143,7 @@ export class AuthService {
       })
     }
 
+    // afterAuth se ejecuta en login, tras el alta en Auth0.
     const loginResult = await this.login(email, password)
     if (
       typeof loginResult.refreshToken !== 'string' ||
@@ -280,6 +286,8 @@ export class AuthService {
       })
     }
 
+    await this.runAfterAuth(email)
+
     return {
       accessToken: result.access_token,
       ...(typeof result.expires_in === 'number'
@@ -370,6 +378,8 @@ export class AuthService {
       throw this.invalidToken()
     }
 
+    await this.runAfterAuth(payload.email)
+
     return { email: normalizeAuthEmail(payload.email) }
   }
 
@@ -446,6 +456,26 @@ export class AuthService {
     this.cachedKeys = rawKeys.filter(isAuth0RsaKey)
     this.cachedKeysUntil = Date.now() + jwksCacheDurationMs
     return this.cachedKeys
+  }
+
+  // Login y register validan @IsEmail; GET /auth/me exige email no vacío en el JWT.
+  // VALIDATION de afterAuth no llega por HTTP; se mapea a 400 por si la SDK lo devuelve.
+  private async runAfterAuth(email: string): Promise<void> {
+    const result = await this.sdk.afterAuth({ email })
+    if (result.ok) return
+
+    if (result.error.code === 'VALIDATION') {
+      throw new BadRequestException({ code: 'VALIDATION' })
+    }
+
+    if (
+      result.error.code === 'CONFIGURATION' ||
+      result.error.code === 'PERSISTENCE'
+    ) {
+      throw new ServiceUnavailableException({
+        code: 'POSTGRES_API_UNAVAILABLE',
+      })
+    }
   }
 
   private invalidToken(): UnauthorizedException {
