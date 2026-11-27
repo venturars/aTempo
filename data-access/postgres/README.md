@@ -1,8 +1,8 @@
-# node
+# postgres
 
-SDK TypeScript de aTempo. Paquete librería dentro de `data-access/`. Tipos del core, lecturas, escrituras y reglas de PostgreSQL. No es un servicio HTTP. `role` es tabla semilla: no se escribe.
+SDK TypeScript de aTempo. Paquete librería dentro de `data-access/`, con nombre npm `@atempo/data-access-postgres`. Tipos del core, lecturas, escrituras y reglas de PostgreSQL. No es un servicio HTTP. `role` es tabla semilla: no se escribe.
 
-El flujo de producto es Frontend → `api-postgresql` → `data-access/node` → PostgreSQL. Este paquete abre la base. Nest no escribe SQL.
+El flujo de producto es Frontend → `api-postgresql` → `data-access/postgres` → PostgreSQL. Este paquete abre la base. Nest no escribe SQL.
 
 El código se agrupa por funcionalidad, no por tabla:
 
@@ -30,7 +30,7 @@ Las funciones públicas reciben y devuelven un objeto (RORO). Las queries viven 
 
 ## Instalar y probar
 
-Desde `data-access/node/`:
+Desde `data-access/postgres/`:
 
 ```sh
 pnpm install
@@ -44,7 +44,7 @@ pnpm build
 
 `pnpm test` sustituye el driver: PostgreSQL no tiene que estar en marcha. La CI lo lanza con `pnpm test:ci`. Los tests cubren `DATABASE_URL` ausente, ping ok, ping fallido, `find*` que lanza sin llamar al driver, listar u obtener una fila, listar por relación (`retrieveAllXByY`), add/modify/remove, `changeRole`, un remove que hace ROLLBACK a mitad, y las reglas (`end_at`, `contract_address`, student exclusivo, unicidades, matrícula o rol repetidos, ids que no existen, `birth_date` inválida).
 
-Antes de un INSERT o UPDATE, `data-access/node/` comprueba esas reglas. Si fallan, no escribe. El CHECK y el trigger de PostgreSQL se quedan. Un `23505` o `23503` de `pg` se traduce al mismo `id` de error. `enrollPerson` mira persona, curso, matrícula y rol en una sola consulta, dentro de la transacción del INSERT. Solo un student o un teacher se matricula: otro caso es `person_course.role_required`. `assignRole` comprueba persona, student exclusivo y rol repetido dentro de la transacción de su INSERT.
+Antes de un INSERT o UPDATE, `data-access/postgres/` comprueba esas reglas. Si fallan, no escribe. El CHECK y el trigger de PostgreSQL se quedan. Un `23505` o `23503` de `pg` se traduce al mismo `id` de error. `enrollPerson` mira persona, curso, matrícula y rol en una sola consulta, dentro de la transacción del INSERT. Solo un student o un teacher se matricula: otro caso es `person_course.role_required`. `assignRole` comprueba persona, student exclusivo y rol repetido dentro de la transacción de su INSERT.
 
 El email se recorta y pasa a minúsculas, igual que el login del escritorio. `contract_address` se guarda en hex minúsculas: `0xABC…` y `0xabc…` son la misma dirección. `start_at` y `end_at` entran con `Z` o un desfase (`+01:00`) y salen como ISO UTC (`2026-09-01T08:00:00.000Z`). Una hora sin zona (`2026-09-01T08:00`) se rechaza. `birth_date` sale como `YYYY-MM-DD`. Un remove de persona, curso u organización borra las filas hijas (`person_role`, `person_course` y, en organización, también sus cursos) en `BEGIN` / `COMMIT` sobre un mismo cliente del pool. Si el último DELETE falla, hay `ROLLBACK`. Borrar una organización quita todos sus cursos y matrículas. El esquema no usa `ON DELETE CASCADE`.
 

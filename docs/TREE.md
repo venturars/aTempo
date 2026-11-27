@@ -101,7 +101,7 @@ permanent-data.md
 ```text
 data-access/
   README.md
-  node/
+  postgres/                 # @atempo/data-access-postgres
     package.json            # @atempo/errors: link:../../errors/node; prepare compila errors/node/
     pnpm-lock.yaml
     .npmrc

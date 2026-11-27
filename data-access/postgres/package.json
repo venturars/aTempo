@@ -1,5 +1,5 @@
 {
-  "name": "atempo-node",
+  "name": "@atempo/data-access-postgres",
   "version": "1.0.0",
   "description": "SDK TypeScript de aTempo: tipos del core y PostgreSQL",
   "private": true,

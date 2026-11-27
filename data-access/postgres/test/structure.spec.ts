@@ -158,7 +158,7 @@ function readExportedNamesOfIndex(): string[] {
     .map((exported) => exported.getName())
 }
 
-describe('estructura de data-access/node', () => {
+describe('estructura de data-access/postgres', () => {
   it('shared/types exports no runtime values', () => {
     const files = listSharedTypeFiles()
     expect(files.sort()).toEqual([
