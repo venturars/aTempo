@@ -88,7 +88,9 @@ test.describe('with an English browser', () => {
     )
   })
 
+  // Las capturas se hacen en macOS, como las de Electron: en Linux cambian las fuentes.
   test('matches the student screens in English at 390 px', async ({ page }) => {
+    test.skip(process.platform !== 'darwin', 'Las capturas de referencia son de macOS.')
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto('/')
     await page.evaluate(() => document.fonts.ready)

@@ -148,7 +148,8 @@ test('keeps a pending class QR check-in through Ada login', async ({ page }) => 
   await page.clock.install({ time: scannedAt })
   const period = Math.floor(scannedAt.getTime() / 30_000)
   const code = codeForPeriod('ATEMPO-CLASE-1109', period)
-  const arrival = `${String(scannedAt.getHours()).padStart(2, '0')}:${String(scannedAt.getMinutes()).padStart(2, '0')}`
+  // La web corre en Europe/Madrid (playwright.admin.config.ts), sea cual sea la zona del ordenador.
+  const arrival = '10:00'
 
   await page.goto(`/student/check-in?code=ATEMPO-CLASE-1109-${code}`)
   await expect(page.getByText('Entra para registrar tu asistencia.')).toBeVisible()
