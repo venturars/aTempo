@@ -4,7 +4,7 @@ Paquetes librería de acceso a datos de aTempo. Carpeta en la raíz, hermana de 
 
 ## rustfs
 
-`data-access/rustfs/` es el SDK TypeScript de justificantes. Nombre npm: `atempo-domain-rustfs`. Cliente S3: `@aws-sdk/client-s3` 3.943.0.
+`data-access/rustfs/` es el SDK TypeScript de justificantes. Nombre npm: `@atempo/data-access-rustfs`. Cliente S3: `@aws-sdk/client-s3` 3.943.0.
 
 El flujo de producto es Frontend → `api-rustfs` → `data-access/rustfs` → RustFS. Este paquete abre el almacén. `api-rustfs` aún no importa el paquete; Express sigue con `minio`.
 

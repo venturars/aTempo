@@ -1,5 +1,5 @@
 {
-  "name": "atempo-domain-rustfs",
+  "name": "@atempo/data-access-rustfs",
   "version": "1.0.0",
   "description": "SDK TypeScript de aTempo: justificantes en RustFS",
   "private": true,

@@ -101,7 +101,7 @@ permanent-data.md
 ```text
 data-access/
   README.md
-  rustfs/                         # atempo-domain-rustfs; @aws-sdk/client-s3 3.943.0
+  rustfs/                         # @atempo/data-access-rustfs; @aws-sdk/client-s3 3.943.0
     package.json
     pnpm-lock.yaml
     .npmrc

@@ -49,7 +49,7 @@ El flujo de producto es Frontend → `api-rustfs` → `data-access/rustfs` → R
 
 ## 6. Stack de `data-access/rustfs/`
 
-- **Paquete librería** `atempo-domain-rustfs` en `data-access/rustfs/`. No es un servicio HTTP.
+- **Paquete librería** `@atempo/data-access-rustfs` en `data-access/rustfs/`. No es un servicio HTTP.
 - **TypeScript** escribe el SDK.
 - **@atempo/errors** (`errors/node/`) da las clases de error y `createErrorFactory`. Se enlaza con `link:../../errors/node` y no se publica en npm.
 - **`@aws-sdk/client-s3` 3.943.0** habla con RustFS (`forcePathStyle: true`, `region: "us-east-1"`). El paquete npm `minio` no entra en este SDK.

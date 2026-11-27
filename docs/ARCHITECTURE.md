@@ -51,7 +51,7 @@ Servicio Express y TypeScript. El flujo de producto es Frontend → `api-rustfs`
 
 ## data-access/rustfs
 
-Carpeta: `data-access/rustfs/`. Nombre npm: `atempo-domain-rustfs`.
+Carpeta: `data-access/rustfs/`. Nombre npm: `@atempo/data-access-rustfs`.
 
 Paquete librería TypeScript. Guarda y lee justificantes en RustFS con `@aws-sdk/client-s3` 3.943.0. No es un servicio HTTP. `api-rustfs` delegará en él; hoy no lo importa. El `S3Client` usa `forcePathStyle: true` y `region: "us-east-1"`. El endpoint se ensambla con `RUSTFS_ENDPOINT` (host), `RUSTFS_PORT`, `RUSTFS_USE_SSL`, `RUSTFS_ACCESS_KEY` y `RUSTFS_SECRET_KEY`. Si falta alguna, lanza `ConfigurationError`. El paquete npm `minio` no entra aquí.
 
