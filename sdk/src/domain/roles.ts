@@ -27,3 +27,7 @@ export function isOrganizationAdmin(roles: readonly PersonRole[]): boolean {
 export function isTeacher(roles: readonly PersonRole[]): boolean {
   return roles.includes('teacher')
 }
+
+export function isStudent(roles: readonly PersonRole[]): boolean {
+  return roles.includes('student')
+}
