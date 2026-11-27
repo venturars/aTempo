@@ -123,15 +123,28 @@ sdk/
       person.ts            # OrganizationPerson = record + roles
       organization.ts
       person-repository.ts
+      course.ts
+      course-repository.ts
+      enrollment-repository.ts
+      contract-address.ts
     application/
       after-auth.ts
       create-organization.ts
+      create-course.ts
+      list-courses.ts
+      get-course.ts
+      enroll-person-in-course.ts
+      unenroll-person-from-course.ts
+      list-course-people.ts
+      list-course-students.ts
       invite-person.ts
       directory.spec.ts
       after-auth.spec.ts
+      enrollments.spec.ts
     infrastructure/
       postgres-health-client.ts
       in-memory-person-repository.ts
+      in-memory-course-repository.ts
     composition/
       create-sdk.ts
 ```
@@ -295,6 +308,12 @@ api-router/
       person.controller.ts
       organization-people.controller.ts
       person.service.ts
+    course/
+      course.module.ts
+      organization-courses.controller.ts
+      organization-course-people.controller.ts
+      organization-course-students.controller.ts
+      course.service.ts
     mock-api/
       mock-api.module.ts
       sessions.controller.ts # /sessions del contrato API v1
@@ -309,6 +328,7 @@ api-router/
     auth.e2e-spec.ts
     auth-web.e2e-spec.ts
     organizations.e2e-spec.ts
+    courses.e2e-spec.ts
     jest-e2e.json
 ```
 
@@ -378,9 +398,9 @@ desktop/
         navigation/
           BackButton.tsx        # volver a la pantalla anterior
         panel/
-          AccountMenu.tsx    # menú de la cuenta con «Salir», abajo en la barra lateral
+          AccountMenu.tsx    # menú de la cuenta con Ajustes, «Cambiar contraseña» y «Cerrar sesión», abajo en la barra lateral
           AttendanceStatus.tsx
-          CorrectionReasonDialog.tsx # diálogo provisional del motivo de una corrección
+          CorrectionReasonDialog.tsx # diálogo provisional de una corrección, con motivo opcional
           DateFilter.tsx
           JustificationAccess.tsx
           MobileAttendance.tsx
@@ -394,7 +414,7 @@ desktop/
           avatar.tsx
           classCode.ts       # código y enlace del QR de cada periodo de 30 s
           markControl.tsx
-          markCorrection.tsx # motivo de un cambio con la lista cerrada
+          markCorrection.tsx # diálogo de un cambio con la lista cerrada, con motivo opcional
           marks.ts
           panelStore.ts
           riskHint.tsx
@@ -430,7 +450,7 @@ desktop/
     login.spec.ts
     teacher-login.spec.ts # acceso con la cuenta pública del profesor
     teacher-account.spec.ts # activar invitaciones y salir
-    teacher-corrections.spec.ts # cambios con la lista cerrada, motivo, registro y volver
+    teacher-corrections.spec.ts # cambios con la lista cerrada, con y sin motivo, registro y volver
     panel.spec.ts
     panel-api.spec.ts   # pestaña Hoy con el cliente mock: reglas y fixtures
     teacher-qr.spec.ts  # QR legible, código de 6 cifras, periodos del reloj, llegadas y dos temas a 390/1280 px

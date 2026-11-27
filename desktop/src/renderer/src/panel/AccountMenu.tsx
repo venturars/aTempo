@@ -5,10 +5,12 @@ import { Avatar } from './avatar'
 // se cierra al pulsar otra vez, al pulsar fuera o con Escape.
 export function AccountMenu({
   name,
+  onOpenSettings,
   onChangePassword,
   onLogOut
 }: {
   name: string
+  onOpenSettings: () => void
   onChangePassword?: () => void
   onLogOut: () => void
 }): React.JSX.Element {
@@ -39,6 +41,11 @@ export function AccountMenu({
         </span>
       </summary>
       <ul className="dropdown-content menu rounded-box z-10 mb-1 ml-3 w-52 bg-base-100 p-2 shadow-sm">
+        <li>
+          <button type="button" onClick={() => select(onOpenSettings)}>
+            Ajustes
+          </button>
+        </li>
         {onChangePassword ? (
           <li>
             <button type="button" onClick={() => select(onChangePassword)}>

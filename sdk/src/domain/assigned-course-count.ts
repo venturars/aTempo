@@ -1,3 +1,4 @@
+import type { EnrollmentRepository } from './enrollment-repository'
 import type { Uuid } from './scalars'
 
 export type AssignedCourseCount = {
@@ -16,6 +17,17 @@ export function fixedAssignedCourseCount(count: number): AssignedCourseCount {
   return {
     async countAssignedCourses() {
       return count
+    },
+  }
+}
+
+export function createEnrollmentAssignedCourseCount(
+  enrollments: EnrollmentRepository,
+): AssignedCourseCount {
+  return {
+    async countAssignedCourses({ personId }) {
+      const courseIds = await enrollments.listCourseIdsByPerson(personId)
+      return courseIds.length
     },
   }
 }

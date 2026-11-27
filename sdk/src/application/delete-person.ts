@@ -1,4 +1,5 @@
 import { AssignedCourseCount } from '../domain/assigned-course-count'
+import { EnrollmentRepository } from '../domain/enrollment-repository'
 import { PersonRepository } from '../domain/person-repository'
 import { isOrganizationAdmin, isTeacher } from '../domain/roles'
 import { parseUuid } from '../domain/scalars'
@@ -9,6 +10,7 @@ export type DeletePersonInput = { personId: string }
 
 export type DeletePersonDeps = {
   persons: PersonRepository
+  enrollments: EnrollmentRepository
   assignedCourseCount: AssignedCourseCount
 }
 
@@ -44,6 +46,7 @@ export function createDeletePerson(deps: DeletePersonDeps) {
         )
       }
     }
+    await deps.enrollments.deleteAllForPerson(parsedId.value)
     await deps.persons.delete(parsedId.value)
     return ok(undefined)
   }
