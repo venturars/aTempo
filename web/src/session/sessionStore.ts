@@ -1,22 +1,25 @@
 import { create } from 'zustand'
 import { storageKeys } from '../storageKeys'
 import { normalizeEmail } from '../student/studentExample'
+import { logoutWebSession } from '../auth/webSession'
 
 const themeKey = storageKeys.theme
-const sessionKey = storageKeys.session
+const legacySessionKey = storageKeys.session
+
+if (typeof localStorage !== 'undefined') localStorage.removeItem(legacySessionKey)
 
 export type ThemeName = 'atempo-oscuro' | 'atempo-claro'
 
 type SessionState = {
   email: string | null
-  startStudentSession: (email: string) => void
-  endStudentSession: () => void
-}
-
-function readEmail(): string | null {
-  if (typeof localStorage === 'undefined') return null
-  const email = localStorage.getItem(sessionKey)
-  return email === null || email === '' ? null : email
+  profile: 'student' | 'admin' | null
+  isLoading: boolean
+  isReady: boolean
+  isLoggingOut: boolean
+  logoutError: string
+  setSession: (email: string, profile: 'student' | 'admin') => void
+  setLoading: (isLoading: boolean) => void
+  endStudentSession: () => Promise<boolean>
 }
 
 export function readTheme(): ThemeName {
@@ -34,14 +37,38 @@ export function toggleTheme(): void {
 }
 
 export const useSessionStore = create<SessionState>((set) => ({
-  email: readEmail(),
-  startStudentSession: (email) => {
-    const normalized = normalizeEmail(email)
-    localStorage.setItem(sessionKey, normalized)
-    set({ email: normalized })
-  },
-  endStudentSession: () => {
-    localStorage.removeItem(sessionKey)
-    set({ email: null })
+  email: null,
+  profile: null,
+  isLoading: false,
+  isReady: false,
+  isLoggingOut: false,
+  logoutError: '',
+  setSession: (email, profile) =>
+    set({
+      email: normalizeEmail(email),
+      profile,
+      isLoading: false,
+      isReady: true,
+      logoutError: ''
+    }),
+  setLoading: (isLoading) => set({ isLoading, isReady: !isLoading }),
+  endStudentSession: async () => {
+    set({ isLoggingOut: true, logoutError: '' })
+    try {
+      await logoutWebSession()
+      set({
+        email: null,
+        profile: null,
+        isLoading: false,
+        isReady: true,
+        isLoggingOut: false,
+        logoutError: ''
+      })
+      return true
+    } catch {
+      // Conserva la sesión visible si el router no confirma que borró la cookie.
+      set({ isLoggingOut: false, logoutError: 'No se pudo cerrar la sesión. Inténtalo otra vez.' })
+      return false
+    }
   }
 }))

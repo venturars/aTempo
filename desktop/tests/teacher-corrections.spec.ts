@@ -19,7 +19,7 @@ test.describe('correction logic', () => {
 
   test('corrects a past session and keeps every change in order', () => {
     const state = (): ReturnType<typeof usePanelStore.getState> => usePanelStore.getState()
-    expect(state().correctSessionMark('2026-11-10', 'Diego Torres', 'presente', '', teacher)).toBe(
+    expect(state().correctSessionMark('2026-11-10', 'Diego Torres', 'ausente', 'x', teacher)).toBe(
       false
     )
     expect(state().correctSessionMark('2026-11-12', 'Diego Torres', 'presente', 'x', teacher)).toBe(
@@ -35,10 +35,14 @@ test.describe('correction logic', () => {
     expect(
       state().correctSessionMark('2026-11-10', 'Diego Torres', 'retraso', 'Error mío.', 'Lucía')
     ).toBe(true)
-    expect(state().sessionMarks['2026-11-10']['Diego Torres']).toBe('retraso')
-    expect(state().changes.map(({ from, to, by }) => [from, to, by])).toEqual([
-      ['ausente', 'presente', teacher],
-      ['presente', 'retraso', 'Lucía']
+    expect(state().correctSessionMark('2026-11-10', 'Diego Torres', 'ausente', ' ', teacher)).toBe(
+      true
+    )
+    expect(state().sessionMarks['2026-11-10']['Diego Torres']).toBe('ausente')
+    expect(state().changes.map(({ from, to, reason, by }) => [from, to, reason, by])).toEqual([
+      ['ausente', 'presente', 'Justificó.', teacher],
+      ['presente', 'retraso', 'Error mío.', 'Lucía'],
+      ['retraso', 'ausente', '', teacher]
     ])
   })
 })
@@ -107,7 +111,7 @@ async function center(locator: Locator): Promise<{ x: number; y: number }> {
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 }
 }
 
-test('changes a mark after closing the roll call only with a reason and shows the record', async () => {
+test('changes a mark after closing the roll call with a reason and shows the record', async () => {
   await withPanel(async (p) => {
     await closeRollCall(p)
 
@@ -124,9 +128,9 @@ test('changes a mark after closing the roll call only with a reason and shows th
 
     await torres.getByRole('button', { name: 'Ausente', exact: true }).click()
     await p.getByRole('menu').getByRole('button', { name: 'Tarde', exact: true }).click()
-    await dialog.getByRole('button', { name: 'Guardar', exact: true }).click()
-    await expect(dialog.getByText('Escribe el motivo del cambio.')).toBeVisible()
-    await expect(torres.getByRole('button', { name: 'Ausente', exact: true })).toBeVisible()
+    await expect(dialog.locator('label[for="correction-reason"]')).toHaveText(
+      'Motivo · recomendado'
+    )
 
     await dialog.getByLabel('Motivo').fill('Llegó a las 09:20 y el lector no lo registró.')
     await dialog.getByRole('button', { name: 'Guardar', exact: true }).click()
@@ -178,6 +182,36 @@ test('changes a mark after closing the roll call only with a reason and shows th
     await row(p, 'Diego Molero').getByRole('button', { name: 'Ausente', exact: true }).hover()
     await expect(note).toContainText('Sin justificante')
     await expect(note).not.toContainText('De Ausente')
+  })
+})
+
+test('changes a mark in a past session without a reason', async () => {
+  await withPanel(async (p) => {
+    await p
+      .getByRole('navigation', { name: 'Secciones' })
+      .getByRole('button', { name: 'Sesiones', exact: true })
+      .click()
+    await p.getByRole('button', { name: /Mar 10 nov/ }).click()
+
+    const torres = row(p, 'Diego Torres')
+    await torres.getByRole('button', { name: 'Ausente', exact: true }).click()
+    await p.getByRole('menu').getByRole('button', { name: 'Presente', exact: true }).click()
+    const dialog = p.getByRole('dialog', { name: 'Cambiar a Presente' })
+    await expect(dialog.locator('label[for="correction-reason"]')).toHaveText(
+      'Motivo · recomendado'
+    )
+    await dialog.getByRole('button', { name: 'Guardar', exact: true }).click()
+    await expect(dialog).toHaveCount(0)
+
+    const status = torres.getByRole('button', { name: 'Presente', exact: true })
+    await status.hover()
+    const note = p.getByRole('tooltip')
+    await expect(note).toContainText('De Ausente a Presente')
+    const change = note.locator('span.flex-col.gap-1').first()
+    await expect(change.locator(':scope > span')).toHaveText([
+      'De Ausente a Presente',
+      /^Ventura Rodriguez · /
+    ])
   })
 })
 
