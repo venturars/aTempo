@@ -1,7 +1,7 @@
 import type { AttendanceStatus } from './attendanceStatus'
 
 export type ClassEntry = {
-  label: string
+  date: string
   arrival: string | null
   status: AttendanceStatus
 }
@@ -30,12 +30,12 @@ export const exampleStudent: StudentAccount = {
   name: 'Ada López',
   email: 'ada.lopez@clase.test',
   history: [
-    { label: 'Mar 10 nov', arrival: '08:57', status: 'presente' },
-    { label: 'Lun 9 nov', arrival: '09:16', status: 'tarde' },
-    { label: 'Vie 6 nov', arrival: null, status: 'ausente' },
-    { label: 'Jue 5 nov', arrival: '09:02', status: 'presente' },
-    { label: 'Mar 3 nov', arrival: '08:59', status: 'presente' },
-    { label: 'Lun 2 nov', arrival: '09:13', status: 'tarde' }
+    { date: '2026-11-10', arrival: '08:57', status: 'presente' },
+    { date: '2026-11-09', arrival: '09:16', status: 'tarde' },
+    { date: '2026-11-06', arrival: null, status: 'ausente' },
+    { date: '2026-11-05', arrival: '09:02', status: 'presente' },
+    { date: '2026-11-03', arrival: '08:59', status: 'presente' },
+    { date: '2026-11-02', arrival: '09:13', status: 'tarde' }
   ]
 }
 

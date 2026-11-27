@@ -8,6 +8,7 @@ const demoKeys = [
   storageKeys.accounts,
   storageKeys.notices,
   storageKeys.pendingCheckIn,
+  storageKeys.lang,
   storageKeys.session
 ]
 

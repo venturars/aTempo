@@ -1,8 +1,11 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
+import type { TextKey } from '../../lang/messages'
+import { useText } from '../../lang/useText'
 import { RequireStudent } from '../../session/RequireStudent'
 import { flowTopBelowHeader } from '../flowLayout'
 import { registerReading, type CheckInResult } from '../studentAccounts'
+import { messageText, type StudentMessage } from '../studentMessage'
 
 // La pantalla tiene dos modos:
 //   scan → la cámara lee el QR. Es lo principal.
@@ -17,20 +20,14 @@ function browserCanScan(): boolean {
 }
 
 // Si la cámara falla, se dice qué ha pasado y qué puede hacer el alumno. El campo del código sigue ahí.
-const browserCannotScan =
-  'Este navegador no puede leer el QR. Puedes escanearlo con la cámara del móvil.'
+const browserCannotScan: TextKey = 'scan.camera.unsupported'
 
-function cameraProblemFor(caught: unknown): string {
+function cameraProblemFor(caught: unknown): TextKey {
   const name = caught instanceof DOMException ? caught.name : ''
-  if (name === 'NotAllowedError' || name === 'SecurityError') {
-    return 'No hay permiso para usar la cámara. Puedes activarlo en los ajustes del navegador.'
-  }
-  if (name === 'NotFoundError' || name === 'OverconstrainedError') {
-    return 'No encontramos ninguna cámara en este dispositivo.'
-  }
-  if (name === 'NotReadableError')
-    return 'Otra app está usando la cámara. Ciérrala y prueba otra vez.'
-  return 'No se pudo abrir la cámara.'
+  if (name === 'NotAllowedError' || name === 'SecurityError') return 'scan.camera.notAllowed'
+  if (name === 'NotFoundError' || name === 'OverconstrainedError') return 'scan.camera.notFound'
+  if (name === 'NotReadableError') return 'scan.camera.inUse'
+  return 'scan.camera.failed'
 }
 
 // Primero se comprueba la sesión: sin ella, se va al login sin pedir la cámara.
@@ -47,6 +44,7 @@ export function ScanScreen({
 }
 
 function ScanView({ startWithCode }: { startWithCode: boolean }): React.JSX.Element {
+  const t = useText()
   const navigate = useNavigate()
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -54,10 +52,10 @@ function ScanView({ startWithCode }: { startWithCode: boolean }): React.JSX.Elem
   const [canScan] = useState(browserCanScan)
   const [mode, setMode] = useState<Mode>(startWithCode || !canScan ? 'code' : 'scan')
   const [typedCode, setTypedCode] = useState('')
-  const [cameraProblem, setCameraProblem] = useState<string | null>(
+  const [cameraProblem, setCameraProblem] = useState<TextKey | null>(
     canScan ? null : browserCannotScan
   )
-  const [codeError, setCodeError] = useState<string | null>(null)
+  const [codeError, setCodeError] = useState<StudentMessage | null>(null)
   // El campo se enfoca solo cuando el alumno lo pide, para no abrir el teclado sin querer.
   const [focusCode, setFocusCode] = useState(startWithCode)
 
@@ -149,7 +147,11 @@ function ScanView({ startWithCode }: { startWithCode: boolean }): React.JSX.Elem
   return (
     <div className="flex min-h-screen flex-col">
       <header className="flex h-16 items-center px-4 sm:px-8">
-        <Link className="btn btn-ghost btn-circle" to="/student/dashboard" aria-label="Cerrar">
+        <Link
+          className="btn btn-ghost btn-circle"
+          to="/student/dashboard"
+          aria-label={t('common.close')}
+        >
           <svg
             width="20"
             height="20"
@@ -170,7 +172,7 @@ function ScanView({ startWithCode }: { startWithCode: boolean }): React.JSX.Elem
       >
         {mode === 'scan' ? (
           <>
-            <h1 className="text-2xl font-semibold tracking-tight">Escanea el QR</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">{t('scan.scanTitle')}</h1>
             <div className="panel-card relative aspect-square w-full max-w-xs overflow-hidden rounded-box sm:aspect-[4/3] sm:max-w-md">
               <video ref={videoRef} className="h-full w-full object-cover" muted playsInline />
               <ScanFrame />
@@ -183,21 +185,19 @@ function ScanView({ startWithCode }: { startWithCode: boolean }): React.JSX.Elem
                 setMode('code')
               }}
             >
-              Escribir el código
+              {t('scan.typeCode')}
             </button>
           </>
         ) : (
           <>
             <div className="flex flex-col gap-2">
-              <h1 className="text-2xl font-semibold tracking-tight">Escribe el código</h1>
-              <p className="max-w-xs text-base text-base-content/60">
-                Son las 6 cifras que hay debajo del QR.
-              </p>
+              <h1 className="text-2xl font-semibold tracking-tight">{t('scan.codeTitle')}</h1>
+              <p className="max-w-xs text-base text-base-content/60">{t('scan.codeHint')}</p>
             </div>
-            {cameraProblem !== null ? <CameraProblem text={cameraProblem} /> : null}
+            {cameraProblem !== null ? <CameraProblem text={t(cameraProblem)} /> : null}
             <form className="field w-full max-w-xs text-left" noValidate onSubmit={onSubmitCode}>
               <label className="sr-only" htmlFor="codigo-clase">
-                Código de la clase
+                {t('scan.codeLabel')}
               </label>
               <div className="field-row">
                 <input
@@ -216,12 +216,12 @@ function ScanView({ startWithCode }: { startWithCode: boolean }): React.JSX.Elem
                   }}
                 />
                 <button className="btn btn-primary" type="submit">
-                  Registrar
+                  {t('scan.register')}
                 </button>
               </div>
               {codeError !== null ? (
                 <p className="text-sm text-error" role="alert">
-                  {codeError}
+                  {messageText(codeError)}
                 </p>
               ) : null}
             </form>
@@ -235,7 +235,7 @@ function ScanView({ startWithCode }: { startWithCode: boolean }): React.JSX.Elem
                   setMode('scan')
                 }}
               >
-                Escanear el QR
+                {t('scan.scanAgain')}
               </button>
             ) : null}
           </>

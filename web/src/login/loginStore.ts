@@ -1,14 +1,15 @@
 import { create } from 'zustand'
 import { loginWebSession } from '../auth/webSession'
+import type { TextKey } from '../lang/messages'
 import { useSessionStore } from '../session/sessionStore'
 import { validateLogin } from './validateLogin'
 
 type LoginState = {
   email: string
   password: string
-  emailError: string
-  passwordError: string
-  loginError: string
+  emailError: TextKey | ''
+  passwordError: TextKey | ''
+  loginError: TextKey | ''
   isSubmitting: boolean
   setEmail: (email: string) => void
   setPassword: (password: string) => void
@@ -28,7 +29,11 @@ export const useLoginStore = create<LoginState>((set, get) => ({
     const { email, password } = get()
     const errors = validateLogin(email, password)
     if (errors.email !== '' || errors.password !== '') {
-      set({ emailError: errors.email, passwordError: errors.password, loginError: '' })
+      set({
+        emailError: errors.email,
+        passwordError: errors.password,
+        loginError: ''
+      })
       return false
     }
 
@@ -45,14 +50,11 @@ export const useLoginStore = create<LoginState>((set, get) => ({
         isSubmitting: false
       })
       return true
-    } catch (error) {
+    } catch {
       set({
         emailError: '',
         passwordError: '',
-        loginError:
-          error instanceof Error
-            ? error.message
-            : 'El correo o la contraseña no son correctos. Revísalos y prueba otra vez.',
+        loginError: 'login.errors.wrongCredentials',
         isSubmitting: false
       })
       return false

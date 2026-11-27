@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { TextKey } from '../lang/messages'
 import { useSessionStore } from '../session/sessionStore'
 import { storageKeys } from '../storageKeys'
 import {
@@ -11,7 +12,8 @@ import {
 } from './studentExample'
 import { clockTime, statusForArrival } from './attendanceStatus'
 import { isCodeValidNow, readClassCode } from './classCode'
-import { formatDay, minutesOfDay } from './studentDate'
+import { dateKey, dateKeyFromOldLabel, minutesOfDay } from './studentDate'
+import type { StudentMessage } from './studentMessage'
 
 const accountsKey = storageKeys.accounts
 
@@ -22,7 +24,10 @@ type StudentAccountsState = {
 }
 
 function copyExample(): StudentAccount {
-  return { ...exampleStudent, history: exampleStudent.history.map((entry) => ({ ...entry })) }
+  return {
+    ...exampleStudent,
+    history: exampleStudent.history.map((entry) => ({ ...entry }))
+  }
 }
 
 function readAccounts(): StudentAccount[] {
@@ -34,7 +39,7 @@ function readAccounts(): StudentAccount[] {
     if (!Array.isArray(parsed) || parsed.length === 0) return [copyExample()]
     // Descarta contraseñas que dejaron las versiones locales anteriores de la demo.
     const accounts = parsed.filter(isStudentAccount).map((account) => {
-      const safeAccount = { ...account }
+      const safeAccount = { ...account, history: readHistory(account.history) }
       delete safeAccount.password
       return safeAccount
     })
@@ -59,6 +64,24 @@ function isStudentAccount(value: unknown): value is StudentAccount & { password?
   )
 }
 
+function isStatus(value: unknown): value is ClassEntry['status'] {
+  return value === 'presente' || value === 'tarde' || value === 'ausente'
+}
+
+function readEntry(value: unknown): ClassEntry | null {
+  if (typeof value !== 'object' || value === null) return null
+  const entry = value as Record<string, unknown>
+  if (!isStatus(entry.status)) return null
+  const arrival = typeof entry.arrival === 'string' ? entry.arrival : null
+  if (typeof entry.date === 'string') return { date: entry.date, arrival, status: entry.status }
+  const date = typeof entry.label === 'string' ? dateKeyFromOldLabel(entry.label) : null
+  return date === null ? null : { date, arrival, status: entry.status }
+}
+
+function readHistory(history: unknown[]): ClassEntry[] {
+  return history.map(readEntry).filter((entry) => entry !== null)
+}
+
 function saveAccounts(accounts: StudentAccount[]): void {
   localStorage.setItem(accountsKey, JSON.stringify(accounts))
 }
@@ -73,7 +96,7 @@ export const useStudentAccountsStore = create<StudentAccountsState>((set, get) =
     const wanted = normalizeEmail(email)
     const accounts = get().accounts.map((account) => {
       if (normalizeEmail(account.email) !== wanted) return account
-      if (account.history.some((item) => item.label === entry.label)) return account
+      if (account.history.some((item) => item.date === entry.date)) return account
       return { ...account, history: [entry, ...account.history] }
     })
     saveAccounts(accounts)
@@ -96,14 +119,14 @@ export function useCurrentStudent(): StudentAccount {
 
 // Lo que pasa al leer el QR o escribir el código: o queda apuntada la entrada, o hay un aviso.
 export type CheckInResult =
-  { registered: true; arrival: string } | { registered: false; message: string }
+  { registered: true; arrival: string } | { registered: false; message: StudentMessage }
 
 // Por qué no vale un código: no es de esta clase, o sí lo es pero ya caducó.
 export type CodeProblem = 'wrong-class' | 'expired'
 
-const codeProblemMessage: Record<CodeProblem, string> = {
-  'wrong-class': 'Ese código no es de esta clase. Revísalo y prueba otra vez.',
-  expired: 'Ese código no vale ahora. Prueba con el que se ve en la pantalla de clase.'
+const codeProblemMessage: Record<CodeProblem, TextKey> = {
+  'wrong-class': 'scan.errors.wrongClass',
+  expired: 'scan.errors.expired'
 }
 
 function isClassDay(now: Date): boolean {
@@ -128,33 +151,48 @@ export function classCodeProblem(payload: string, now: Date): CodeProblem | null
 
 // Apunta la entrada de hoy con la hora `at`. Quien ya entró hoy no se apunta dos veces.
 export function registerArrival(at: Date): CheckInResult {
-  if (!isClassDay(at)) return { registered: false, message: 'Hoy no tienes clase.' }
-  if (classIsOver(at)) return { registered: false, message: 'La clase de hoy ya terminó.' }
+  if (!isClassDay(at))
+    return {
+      registered: false,
+      message: { key: 'checkIn.errors.noClassToday' }
+    }
+  if (classIsOver(at)) return { registered: false, message: { key: 'checkIn.errors.classOver' } }
 
   // Sin sesión no se apunta nada: la entrada siempre es de quien ha entrado.
   const email = useSessionStore.getState().email
-  if (email === null) return { registered: false, message: 'Entra para registrar tu asistencia.' }
+  const signInFirst: CheckInResult = {
+    registered: false,
+    message: { key: 'checkIn.errors.signInFirst' }
+  }
+  if (email === null) return signInFirst
   const account = useStudentAccountsStore.getState().findByEmail(email)
-  if (account === undefined)
-    return { registered: false, message: 'Entra para registrar tu asistencia.' }
-  const todayLabel = formatDay(at)
-  const previous = account.history.find((entry) => entry.label === todayLabel)
+  if (account === undefined) return signInFirst
+  const today = dateKey(at)
+  const previous = account.history.find((entry) => entry.date === today)
   if (previous) {
     return {
       registered: false,
-      message: `Ya estás dentro desde las ${previous.arrival ?? '—'}. Disfruta la clase.`
+      message:
+        previous.arrival === null
+          ? { key: 'checkIn.errors.alreadyInside' }
+          : {
+              key: 'checkIn.errors.alreadyInsideSince',
+              time: previous.arrival
+            }
     }
   }
 
   const arrival = clockTime(at)
   const status = statusForArrival(arrival, todayClass.start, lateMinutes)
-  useStudentAccountsStore.getState().recordEntry(email, { label: todayLabel, arrival, status })
+  useStudentAccountsStore.getState().recordEntry(email, { date: today, arrival, status })
   return { registered: true, arrival }
 }
 
 // El QR leído con la cámara o el código escrito en la pantalla de escanear.
 export function registerReading(payload: string, now = new Date()): CheckInResult {
   const problem = classCodeProblem(payload, now)
-  if (problem !== null) return { registered: false, message: codeProblemMessage[problem] }
+  if (problem !== null) {
+    return { registered: false, message: { key: codeProblemMessage[problem] } }
+  }
   return registerArrival(now)
 }

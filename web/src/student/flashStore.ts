@@ -1,9 +1,10 @@
 import { create } from 'zustand'
+import type { StudentMessage } from './studentMessage'
 
 // Un mensaje corto que confirma una acción después de cambiar de pantalla.
 type FlashState = {
-  message: string | null
-  showFlash: (message: string) => void
+  message: StudentMessage | null
+  showFlash: (message: StudentMessage) => void
   clearFlash: () => void
 }
 

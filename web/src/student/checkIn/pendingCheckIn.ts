@@ -14,8 +14,6 @@ export function rememberCheckIn(scannedAt: Date): void {
   localStorage.setItem(pendingCheckInKey, String(scannedAt.getTime()))
 }
 
-const scanTooOld = 'Pasaron más de 10 minutos desde que escaneaste el QR. Escanéalo otra vez.'
-
 // La hora del escaneo guardado, o null si no hay ninguno.
 function readScannedAt(): number | null {
   const raw = localStorage.getItem(pendingCheckInKey)
@@ -36,7 +34,7 @@ function completePendingCheckIn(now: Date): CheckInResult | null {
   localStorage.removeItem(pendingCheckInKey)
   if (scannedAt === null) return null
   if (now.getTime() - scannedAt > maxWaitMilliseconds) {
-    return { registered: false, message: scanTooOld }
+    return { registered: false, message: { key: 'checkIn.errors.scanTooOld' } }
   }
   return registerArrival(new Date(scannedAt))
 }

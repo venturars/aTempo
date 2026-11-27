@@ -1,5 +1,6 @@
 import { useId, useRef } from 'react'
 import { createPortal } from 'react-dom'
+import { useText } from '../../lang/useText'
 
 const hours = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, '0'))
 const minutes = Array.from({ length: 60 }, (_, index) => String(index).padStart(2, '0'))
@@ -38,6 +39,7 @@ export function TimeField({
   invalid: boolean
   onChange: (value: string) => void
 }): React.JSX.Element {
+  const t = useText()
   const popoverId = useId()
   const popover = useRef<HTMLDivElement>(null)
   const { hour, minute } = timeParts(value)
@@ -72,7 +74,7 @@ export function TimeField({
           type="button"
           popoverTarget={popoverId}
           aria-haspopup="dialog"
-          aria-label="Elegir hora"
+          aria-label={t('notice.chooseTime')}
         >
           <svg
             aria-hidden="true"
@@ -94,7 +96,7 @@ export function TimeField({
           ref={popover}
           popover="auto"
           role="dialog"
-          aria-label="Elegir hora"
+          aria-label={t('notice.chooseTime')}
           className="picker-panel"
           onToggle={(event) => {
             if (event.newState === 'open') scrollToPressed(event.currentTarget)
@@ -111,13 +113,18 @@ export function TimeField({
         >
           <div className="time-columns">
             <TimeColumn
-              title="Hora"
+              title={t('notice.hourColumn')}
               options={hours}
               selected={hour}
               start={firstVisibleHour}
               onChoose={chooseHour}
             />
-            <TimeColumn title="Min" options={minutes} selected={minute} onChoose={chooseMinute} />
+            <TimeColumn
+              title={t('notice.minuteColumn')}
+              options={minutes}
+              selected={minute}
+              onChoose={chooseMinute}
+            />
           </div>
         </div>,
         document.body

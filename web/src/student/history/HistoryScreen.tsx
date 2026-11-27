@@ -1,47 +1,46 @@
 import { Link } from '@tanstack/react-router'
-import { statusBadgeClass, statusLabel } from '../attendanceStatus'
+import { formatNumber, formatTime } from '../../lang/format'
+import type { TextKey } from '../../lang/messages'
+import { text, useText } from '../../lang/useText'
+import { statusBadgeClass, statusLabelKey } from '../attendanceStatus'
 import { StudentLayout } from '../StudentLayout'
 import { useCurrentStudent } from '../studentAccounts'
-import { weekdayName } from '../studentDate'
+import { dateFromKey, formatShortDate, weekdayName } from '../studentDate'
 import { type ClassEntry } from '../studentExample'
 import { readNoticesFor, type NoticeKind, type StudentNotice } from '../notice/studentNotices'
 
-const noticeLabel: Record<NoticeKind, string> = {
-  retraso: 'Tarde',
-  ausencia: 'Ausencia'
-}
-
-// «Mié 11 nov» pasa a «11 nov». Las etiquetas no guardan el año.
-function sessionDate(label: string): string {
-  const [, day, month] = label.split(' ')
-  return `${day} ${month}`
+const noticeLabelKey: Record<NoticeKind, TextKey> = {
+  retraso: 'history.noticeKind.late',
+  ausencia: 'history.noticeKind.absent'
 }
 
 // Llegar tarde cuenta como asistencia.
 function attendancePercent(history: ClassEntry[]): string {
   if (history.length === 0) return '—'
   const attended = history.filter((entry) => entry.status !== 'ausente').length
-  return `${Math.round((attended / history.length) * 100)} %`
+  const value = formatNumber(Math.round((attended / history.length) * 100))
+  return text('history.percent', { value })
 }
 
 export type HistoryFixture = 'carga' | 'vacio' | 'error'
 
 export function HistoryScreen({ fixture }: { fixture?: HistoryFixture }): React.JSX.Element {
+  const t = useText()
   return (
     <StudentLayout>
-      <h1 className="text-2xl font-semibold tracking-tight">Tu asistencia</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">{t('history.title')}</h1>
       {fixture === 'carga' ? (
         <p className="panel-card rounded-box flex items-center gap-3 p-5" role="status">
           <span className="loading loading-spinner motion-reduce:animate-none" aria-hidden="true" />
-          Cargando tu asistencia…
+          {t('history.loading')}
         </p>
       ) : fixture === 'error' ? (
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="alert alert-soft alert-error min-w-0 flex-1" role="alert">
-            No hemos podido cargar tu asistencia.
+            {t('history.loadError')}
           </p>
           <Link className="btn btn-ghost" to="/student/history" search={{}}>
-            Reintentar
+            {t('history.retry')}
           </Link>
         </div>
       ) : (
@@ -52,6 +51,7 @@ export function HistoryScreen({ fixture }: { fixture?: HistoryFixture }): React.
 }
 
 function HistoryContent({ empty }: { empty: boolean }): React.JSX.Element {
+  const t = useText()
   const student = useCurrentStudent()
   const history = empty ? [] : student.history
   const notices = empty ? [] : readNoticesFor(student.email)
@@ -60,50 +60,48 @@ function HistoryContent({ empty }: { empty: boolean }): React.JSX.Element {
 
   return (
     <>
-      <section className="panel-card rounded-box" aria-label="Totales">
+      <section className="panel-card rounded-box" aria-label={t('history.totals')}>
         <dl className="grid grid-cols-3 divide-x">
-          <Stat label="Asistencia" value={attendancePercent(history)} />
-          <Stat label="Retrasos" value={String(late)} />
-          <Stat label="Ausencias" value={String(absent)} />
+          <Stat label={t('history.attendance')} value={attendancePercent(history)} />
+          <Stat label={t('history.lateCount')} value={formatNumber(late)} />
+          <Stat label={t('history.absentCount')} value={formatNumber(absent)} />
         </dl>
       </section>
-      <TableCard title="Tus clases">
+      <TableCard title={t('history.classes')}>
         {history.length === 0 ? (
-          <p className="px-5 pb-5 text-sm text-base-content/60">
-            Aún no tienes clases. Nos vemos en la primera.
-          </p>
+          <p className="px-5 pb-5 text-sm text-base-content/60">{t('history.empty')}</p>
         ) : (
           <table className="table panel-table table-fixed">
             <TableColumns />
             <thead>
               <tr>
-                <th scope="col">Fecha</th>
-                <th scope="col">Llegada</th>
-                <th scope="col">Estado</th>
+                <th scope="col">{t('history.column.date')}</th>
+                <th scope="col">{t('history.column.arrival')}</th>
+                <th scope="col">{t('history.column.status')}</th>
               </tr>
             </thead>
             <tbody>
               {history.map((entry) => (
-                <HistoryRow key={entry.label} entry={entry} />
+                <HistoryRow key={entry.date} entry={entry} />
               ))}
             </tbody>
           </table>
         )}
       </TableCard>
       {notices.length > 0 ? (
-        <TableCard title="Tus avisos">
+        <TableCard title={t('history.notices')}>
           <table className="table panel-table table-fixed">
             <TableColumns />
             <thead>
               <tr>
-                <th scope="col">Fecha</th>
-                <th scope="col">Tipo</th>
-                <th scope="col">Detalle</th>
+                <th scope="col">{t('history.column.date')}</th>
+                <th scope="col">{t('history.column.kind')}</th>
+                <th scope="col">{t('history.column.detail')}</th>
               </tr>
             </thead>
             <tbody>
               {notices.map((notice, index) => (
-                <NoticeRow key={`${notice.day}-${index}`} notice={notice} />
+                <NoticeRow key={`${notice.date}-${index}`} notice={notice} />
               ))}
             </tbody>
           </table>
@@ -148,24 +146,31 @@ function TableColumns(): React.JSX.Element {
   )
 }
 
-function DateCell({ label }: { label: string }): React.JSX.Element {
+function DateCell({ date }: { date: string }): React.JSX.Element {
+  useText()
+  const day = dateFromKey(date)
   return (
     <td>
-      <span className="font-medium">{sessionDate(label)}</span>
-      <span className="ml-2 hidden text-base-content/50 sm:inline">{weekdayName(label)}</span>
+      <span className="font-medium">{formatShortDate(day)}</span>
+      <span className="ml-2 hidden text-base-content/50 sm:inline">{weekdayName(day)}</span>
     </td>
   )
 }
 
 function HistoryRow({ entry }: { entry: ClassEntry }): React.JSX.Element {
+  const t = useText()
   return (
     <tr>
-      <DateCell label={entry.label} />
+      <DateCell date={entry.date} />
       <td className="tabular-nums text-base-content/70">
-        {entry.arrival ?? <span className="text-base-content/35">—</span>}
+        {entry.arrival === null ? (
+          <span className="text-base-content/35">—</span>
+        ) : (
+          formatTime(entry.arrival)
+        )}
       </td>
       <td>
-        <span className={statusBadgeClass(entry.status)}>{statusLabel[entry.status]}</span>
+        <span className={statusBadgeClass(entry.status)}>{t(statusLabelKey[entry.status])}</span>
       </td>
     </tr>
   )
@@ -173,18 +178,23 @@ function HistoryRow({ entry }: { entry: ClassEntry }): React.JSX.Element {
 
 function noticeDetail(notice: StudentNotice): string {
   const parts: string[] = []
-  if (notice.arrival !== '') parts.push(`Llegada ${notice.arrival}`)
+  if (notice.arrival !== '') {
+    parts.push(text('history.arrivalDetail', { time: formatTime(notice.arrival) }))
+  }
   if (notice.reason !== '') parts.push(notice.reason)
   if (notice.attachmentName !== '') parts.push(notice.attachmentName)
   return parts.length === 0 ? '—' : parts.join(' · ')
 }
 
 function NoticeRow({ notice }: { notice: StudentNotice }): React.JSX.Element {
+  const t = useText()
   return (
     <tr>
-      <DateCell label={notice.day} />
+      <DateCell date={notice.date} />
       <td>
-        <span className="badge badge-sm badge-soft badge-neutral">{noticeLabel[notice.kind]}</span>
+        <span className="badge badge-sm badge-soft badge-neutral">
+          {t(noticeLabelKey[notice.kind])}
+        </span>
       </td>
       <td className="truncate text-base-content/70" title={noticeDetail(notice)}>
         {noticeDetail(notice)}

@@ -1,12 +1,15 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { destinationAfterSignIn, hasPendingCheckIn } from '../student/checkIn/pendingCheckIn'
+import { LanguagePicker } from '../lang/LanguagePicker'
+import { useText } from '../lang/useText'
 import { ThemeToggle } from '../shared/ThemeToggle'
 import { applyTheme, readTheme, useSessionStore, type ThemeName } from '../session/sessionStore'
 import { useLoginStore } from './loginStore'
 
 // Auth0 gestiona las invitaciones y altas fuera de este prototipo.
 export function LoginScreen(): React.JSX.Element {
+  const t = useText()
   const { invitation } = useSearch({ strict: false })
   const email = useLoginStore((state) => state.email)
   const password = useLoginStore((state) => state.password)
@@ -34,32 +37,32 @@ export function LoginScreen(): React.JSX.Element {
     else void navigate({ to: destinationAfterSignIn() })
   }
 
-  const invitationNotice =
-    invitation === undefined ? '' : 'La activación de invitaciones todavía no está disponible.'
-
   return (
     <main className="flex min-h-screen items-center justify-center p-4 md:p-8">
       <section className="page-enter panel-card flex w-full max-w-md flex-col gap-7 rounded-box p-6 md:p-10">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-lg font-semibold tracking-tight">aTempo</p>
-          <ThemeToggle dark={theme === 'atempo-oscuro'} onToggle={onTheme} />
+          <div className="ml-auto flex items-center gap-3">
+            <LanguagePicker size="xs" />
+            <ThemeToggle dark={theme === 'atempo-oscuro'} onToggle={onTheme} />
+          </div>
         </div>
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="flex flex-col gap-1">
-            <h1 className="text-2xl font-semibold tracking-tight">Hola de nuevo</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">{t('login.title')}</h1>
             {fromClassQr ? (
-              <p className="text-sm text-base-content/60">Entra para registrar tu asistencia.</p>
+              <p className="text-sm text-base-content/60">{t('login.fromClassQr')}</p>
             ) : null}
           </div>
         </div>
-        {invitationNotice !== '' ? (
+        {invitation !== undefined ? (
           <div className="alert alert-soft alert-info" role="status">
-            <span>{invitationNotice}</span>
+            <span>{t('login.invitationUnavailable')}</span>
           </div>
         ) : null}
         <form className="flex flex-col gap-5" noValidate onSubmit={(event) => void onSubmit(event)}>
           <div className="field">
-            <label htmlFor="email">Correo</label>
+            <label htmlFor="email">{t('login.email')}</label>
             <input
               id="email"
               className={emailError !== '' ? 'input input-error w-full' : 'input w-full'}
@@ -70,10 +73,10 @@ export function LoginScreen(): React.JSX.Element {
               disabled={isSubmitting}
               onChange={(event) => setEmail(event.target.value)}
             />
-            {emailError !== '' ? <p className="text-sm text-error">{emailError}</p> : null}
+            {emailError !== '' ? <p className="text-sm text-error">{t(emailError)}</p> : null}
           </div>
           <div className="field">
-            <label htmlFor="password">Contraseña</label>
+            <label htmlFor="password">{t('login.password')}</label>
             <input
               id="password"
               className={passwordError !== '' ? 'input input-error w-full' : 'input w-full'}
@@ -84,19 +87,19 @@ export function LoginScreen(): React.JSX.Element {
               disabled={isSubmitting}
               onChange={(event) => setPassword(event.target.value)}
             />
-            {passwordError !== '' ? <p className="text-sm text-error">{passwordError}</p> : null}
+            {passwordError !== '' ? <p className="text-sm text-error">{t(passwordError)}</p> : null}
           </div>
           <button className="btn btn-primary" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Entrando…' : 'Entrar'}
+            {isSubmitting ? t('login.submitting') : t('login.submit')}
           </button>
           {loginError !== '' ? (
             <div className="alert alert-soft alert-error" role="alert">
-              <span>{loginError}</span>
+              <span>{t(loginError)}</span>
             </div>
           ) : null}
         </form>
         <p className="text-center text-sm text-base-content/60">
-          Las cuentas nuevas y las invitaciones todavía no están disponibles.
+          {t('login.newAccountsUnavailable')}
         </p>
       </section>
     </main>

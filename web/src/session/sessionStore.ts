@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { TextKey } from '../lang/messages'
 import { storageKeys } from '../storageKeys'
 import { normalizeEmail } from '../student/studentExample'
 import { logoutWebSession } from '../auth/webSession'
@@ -16,7 +17,7 @@ type SessionState = {
   isLoading: boolean
   isReady: boolean
   isLoggingOut: boolean
-  logoutError: string
+  logoutError: TextKey | ''
   setSession: (email: string, profile: 'student' | 'admin') => void
   setLoading: (isLoading: boolean) => void
   endStudentSession: () => Promise<boolean>
@@ -67,7 +68,7 @@ export const useSessionStore = create<SessionState>((set) => ({
       return true
     } catch {
       // Conserva la sesión visible si el router no confirma que borró la cookie.
-      set({ isLoggingOut: false, logoutError: 'No se pudo cerrar la sesión. Inténtalo otra vez.' })
+      set({ isLoggingOut: false, logoutError: 'account.errors.logoutFailed' })
       return false
     }
   }

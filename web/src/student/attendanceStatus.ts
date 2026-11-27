@@ -1,11 +1,12 @@
+import type { TextKey } from '../lang/messages'
 import { minutesOfDay } from './studentDate'
 
 export type AttendanceStatus = 'presente' | 'tarde' | 'ausente'
 
-export const statusLabel: Record<AttendanceStatus, string> = {
-  presente: 'Presente',
-  tarde: 'Tarde',
-  ausente: 'Ausente'
+export const statusLabelKey: Record<AttendanceStatus, TextKey> = {
+  presente: 'attendance.status.present',
+  tarde: 'attendance.status.late',
+  ausente: 'attendance.status.absent'
 }
 
 const statusBadge: Record<AttendanceStatus, string> = {

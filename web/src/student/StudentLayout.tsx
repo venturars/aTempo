@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
+import { LanguagePicker } from '../lang/LanguagePicker'
+import { useText } from '../lang/useText'
 import { RequireStudent } from '../session/RequireStudent'
 import { ThemeToggle } from '../shared/ThemeToggle'
 import { applyTheme, readTheme, useSessionStore, type ThemeName } from '../session/sessionStore'
 import { useFlashStore } from './flashStore'
 import { flowTopBelowHeader } from './flowLayout'
 import { useCurrentStudent } from './studentAccounts'
+import { messageText } from './studentMessage'
 
 function initials(name: string): string {
   const parts = name
@@ -27,6 +30,7 @@ export function StudentLayout({
   children: React.ReactNode
   place?: 'center' | 'start'
 }): React.JSX.Element {
+  const t = useText()
   const student = useCurrentStudent()
   const endStudentSession = useSessionStore((state) => state.endStudentSession)
   const isLoggingOut = useSessionStore((state) => state.isLoggingOut)
@@ -59,12 +63,12 @@ export function StudentLayout({
             >
               aTempo
             </Link>
-            <nav className="flex items-stretch sm:-mx-3.5" aria-label="Principal">
+            <nav className="flex items-stretch sm:-mx-3.5" aria-label={t('account.mainNav')}>
               <Link className="nav-link" to="/student/notice">
-                Avisar
+                {t('account.notice')}
               </Link>
               <Link className="nav-link" to="/student/history">
-                Resumen
+                {t('account.history')}
               </Link>
             </nav>
             <div className="ml-auto flex items-center sm:pr-2">
@@ -73,20 +77,20 @@ export function StudentLayout({
             <details ref={accountMenu} className="dropdown dropdown-end flex items-center">
               <summary
                 className="avatar avatar-placeholder cursor-pointer rounded-full transition-shadow hover:ring-4 hover:ring-base-content/8"
-                aria-label="Cuenta"
+                aria-label={t('account.menu')}
               >
                 <div className={`w-9 rounded-full sm:w-10 ${avatarToneFor(student.name)}`}>
                   <span className="text-sm font-semibold">{initials(student.name)}</span>
                 </div>
               </summary>
-              <ul className="dropdown-content menu rounded-box top-full z-10 mt-1 w-52 bg-base-100 p-2 shadow-lg">
+              <ul className="dropdown-content menu rounded-box top-full z-10 mt-1 w-72 bg-base-100 p-2 shadow-lg">
+                <li className="menu-title">{t('language.title')}</li>
+                <li className="mb-1 px-2 pb-2">
+                  <LanguagePicker size="xs" />
+                </li>
                 <li>
-                  <button
-                    type="button"
-                    disabled={isLoggingOut}
-                    onClick={() => void onSignOut()}
-                  >
-                    {isLoggingOut ? 'Cerrando sesión…' : 'Cerrar sesión'}
+                  <button type="button" disabled={isLoggingOut} onClick={() => void onSignOut()}>
+                    {isLoggingOut ? t('common.signingOut') : t('common.signOut')}
                   </button>
                 </li>
               </ul>
@@ -96,7 +100,7 @@ export function StudentLayout({
         {logoutError !== '' ? (
           <div className={`${pageWidth} mt-4`}>
             <p className="alert alert-soft alert-error" role="alert">
-              {logoutError}
+              {t(logoutError)}
             </p>
           </div>
         ) : null}
@@ -157,6 +161,7 @@ function avatarToneFor(name: string): string {
 const flashSeconds = 4
 
 function FlashToast(): React.JSX.Element | null {
+  const t = useText()
   const message = useFlashStore((state) => state.message)
   const clearFlash = useFlashStore((state) => state.clearFlash)
 
@@ -170,7 +175,7 @@ function FlashToast(): React.JSX.Element | null {
 
   return (
     <div className="toast toast-center toast-bottom z-30">
-      <div key={message} className="toast-message" role="status">
+      <div key={`${message.key} ${message.time ?? ''}`} className="toast-message" role="status">
         <span className="toast-message-icon" aria-hidden="true">
           <svg
             width="12"
@@ -185,11 +190,11 @@ function FlashToast(): React.JSX.Element | null {
             <path d="M5 12.5l4.5 4.5L19 7.5" />
           </svg>
         </span>
-        <span className="toast-message-text">{message}</span>
+        <span className="toast-message-text">{messageText(message)}</span>
         <button
           className="btn btn-ghost btn-xs btn-square"
           type="button"
-          aria-label="Cerrar"
+          aria-label={t('common.close')}
           onClick={clearFlash}
         >
           <svg
