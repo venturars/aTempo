@@ -3,6 +3,11 @@ from data_access_python.attendance.add_attendance import (
     AddAttendanceOutput,
     add_attendance,
 )
+from data_access_python.attendance.remove_attendance import (
+    RemoveAttendanceInput,
+    RemoveAttendanceOutput,
+    remove_attendance,
+)
 from data_access_python.attendance.retrieve_all_attendances import (
     RetrieveAllAttendancesOutput,
     retrieve_all_attendances,
@@ -11,11 +16,6 @@ from data_access_python.attendance.retrieve_all_attendances_by_session import (
     RetrieveAllAttendancesBySessionInput,
     RetrieveAllAttendancesBySessionOutput,
     retrieve_all_attendances_by_session,
-)
-from data_access_python.attendance.remove_attendance import (
-    RemoveAttendanceInput,
-    RemoveAttendanceOutput,
-    remove_attendance,
 )
 from data_access_python.attendance.update_attendance import (
     UpdateAttendanceInput,

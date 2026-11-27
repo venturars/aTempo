@@ -8,11 +8,6 @@ from data_access_python.session.remove_session import (
     RemoveSessionOutput,
     remove_session,
 )
-from data_access_python.session.retrieve_session_by_id import (
-    RetrieveSessionByIdInput,
-    RetrieveSessionByIdOutput,
-    retrieve_session_by_id,
-)
 from data_access_python.session.retrieve_all_sessions import (
     RetrieveAllSessionsOutput,
     retrieve_all_sessions,
@@ -26,6 +21,11 @@ from data_access_python.session.retrieve_all_sessions_by_professor import (
     RetrieveAllSessionsByProfessorInput,
     RetrieveAllSessionsByProfessorOutput,
     retrieve_all_sessions_by_professor,
+)
+from data_access_python.session.retrieve_session_by_id import (
+    RetrieveSessionByIdInput,
+    RetrieveSessionByIdOutput,
+    retrieve_session_by_id,
 )
 from data_access_python.session.update_session import (
     UpdateSessionInput,

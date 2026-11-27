@@ -3,10 +3,10 @@ import unittest
 from atempo_errors import ValidationError
 
 from data_access_python.attendance.add_attendance import add_attendance
+from data_access_python.attendance.remove_attendance import remove_attendance
 from data_access_python.attendance.retrieve_all_attendances_by_session import (
     retrieve_all_attendances_by_session,
 )
-from data_access_python.attendance.remove_attendance import remove_attendance
 from data_access_python.session.add_session import add_session
 from data_access_python.session.remove_session import remove_session
 from data_access_python.session.retrieve_all_sessions_by_course import (
@@ -89,7 +89,7 @@ class FilterTests(unittest.TestCase):
     def test_lists_when_filter_ids_differ_only_by_case(self) -> None:
         matching = add_session({"session": valid_session_input})["session"]
         row = add_attendance({
-            "attendance": {**valid_attendance, "session_id": matching["id"]},
+            "attendance": {**valid_attendance, "session_id": matching.id},
         })["attendance"]
         self.assertEqual(
             retrieve_all_sessions_by_course({"course_id": COURSE_ID.upper()})["sessions"],
@@ -103,7 +103,7 @@ class FilterTests(unittest.TestCase):
         )
         self.assertEqual(
             retrieve_all_attendances_by_session({
-                "session_id": matching["id"].upper(),
+                "session_id": matching.id.upper(),
             })["attendances"],
             [row],
         )
@@ -111,11 +111,11 @@ class FilterTests(unittest.TestCase):
     def test_lists_attendances_by_session(self) -> None:
         session = add_session({"session": valid_session_input})["session"]
         row = add_attendance({
-            "attendance": {**valid_attendance, "session_id": session["id"]},
+            "attendance": {**valid_attendance, "session_id": session.id},
         })["attendance"]
         self.assertEqual(
             retrieve_all_attendances_by_session({
-                "session_id": session["id"],
+                "session_id": session.id,
             })["attendances"],
             [row],
         )

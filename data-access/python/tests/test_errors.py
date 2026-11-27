@@ -7,10 +7,12 @@ from atempo_errors import (
     PersistenceError,
     ValidationError,
 )
-from data_access_python.shared.errors import domain_error, fail
+
 from data_access_python.session.add_session import add_session
+from data_access_python.shared.errors import domain_error, fail
+from data_access_python.shared.types.attendance import Attendance
+from data_access_python.shared.validation.model import validate_model
 from data_access_python.sqlite.pool import query
-from data_access_python.shared.validation.attendance import assert_attendance
 
 from helpers import (
     OTHER_ID,
@@ -68,9 +70,9 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(error.id, "session.missing")
         self.assertEqual(error.kind, "NOT_FOUND")
 
-    def test_identifies_a_validation_from_assert_attendance(self) -> None:
+    def test_identifies_a_validation_from_the_attendance_model(self) -> None:
         with self.assertRaises(ValidationError) as caught:
-            assert_attendance({**valid_attendance, "status": "late"})
+            validate_model(Attendance, {**valid_attendance, "status": "late"})
         error = caught.exception
         self.assertEqual(error.id, "attendance.status.format")
         self.assertEqual(error.kind, "VALIDATION")
@@ -86,7 +88,7 @@ class CatalogTests(unittest.TestCase):
             ) VALUES (
               :session_id, :student_id, 'absent', NULL, NULL
             )""",
-            {"session_id": session["id"], "student_id": OTHER_ID},
+            {"session_id": session.id, "student_id": OTHER_ID},
         )
         with self.assertRaises(ConflictError) as caught:
             query(
@@ -95,7 +97,7 @@ class CatalogTests(unittest.TestCase):
                 ) VALUES (
                   :session_id, :student_id, 'absent', NULL, NULL
                 )""",
-                {"session_id": session["id"], "student_id": OTHER_ID},
+                {"session_id": session.id, "student_id": OTHER_ID},
             )
         error = caught.exception
         self.assertEqual(error.id, "attendance.taken")

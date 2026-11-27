@@ -1,14 +1,12 @@
 import ast
+import importlib
 import unittest
 from pathlib import Path
 
+from pydantic import BaseModel
+
 import data_access_python
-from data_access_python.shared.types.attendance import AttendanceStatus
-from data_access_python.shared.validation.attendance import (
-    ABSENT_STATUSES,
-    ATTENDANCE_STATUSES,
-    PRESENT_STATUSES,
-)
+from data_access_python.shared.types.contract import Contract
 
 PACKAGE = Path(__file__).resolve().parents[1] / "data_access_python"
 SHARED_TYPES = PACKAGE / "shared" / "types"
@@ -50,10 +48,6 @@ EXPECTED_PUBLIC_NAMES = [
     "ValidationError",
     "add_attendance",
     "add_session",
-    "assert_attendance",
-    "assert_session",
-    "assert_session_create",
-    "assert_session_update",
     "attendance_from_row",
     "check",
     "close_pool",
@@ -69,6 +63,7 @@ EXPECTED_PUBLIC_NAMES = [
     "session_from_row",
     "update_attendance",
     "update_session",
+    "validate_model",
 ]
 
 
@@ -80,16 +75,28 @@ def _is_type_alias(node: ast.Assign) -> bool:
     return isinstance(value, ast.Name) and value.id[0].isupper()
 
 
+def _models_of(path: Path) -> list[type]:
+    """Las clases que define un fichero de shared/types."""
+    module = importlib.import_module(
+        f"data_access_python.shared.types.{path.stem}",
+    )
+    names = [
+        node.name
+        for node in ast.parse(path.read_text(encoding="utf-8")).body
+        if isinstance(node, ast.ClassDef)
+    ]
+    return [getattr(module, name) for name in names]
+
+
 def _non_type_definitions(path: Path) -> list[str]:
-    """Lo que un fichero de shared/types define y no es un tipo."""
+    """Lo que un fichero de shared/types define y no es un modelo ni un tipo."""
     found: list[str] = []
+    for model in _models_of(path):
+        if not issubclass(model, BaseModel):
+            found.append(f"clase {model.__name__}")
     for node in ast.parse(path.read_text(encoding="utf-8")).body:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             found.append(f"función {node.name}")
-        elif isinstance(node, ast.ClassDef):
-            bases = {base.id for base in node.bases if isinstance(base, ast.Name)}
-            if "TypedDict" not in bases:
-                found.append(f"clase {node.name}")
         elif isinstance(node, ast.Assign):
             names = [t.id for t in node.targets if isinstance(t, ast.Name)]
             if names != ["__all__"] and not _is_type_alias(node):
@@ -103,20 +110,21 @@ class StructureTests(unittest.TestCase):
             with self.subTest(path=path.name):
                 self.assertEqual(_non_type_definitions(path), [])
 
-    def test_public_api_keeps_the_same_names(self) -> None:
+    def test_every_contract_is_strict_frozen_and_named(self) -> None:
+        for path in sorted(SHARED_TYPES.glob("*.py")):
+            for model in _models_of(path):
+                if model is Contract:
+                    continue
+                with self.subTest(model=model.__name__):
+                    self.assertTrue(issubclass(model, Contract))
+                    self.assertTrue(model.model_config.get("strict"))
+                    self.assertTrue(model.model_config.get("frozen"))
+                    self.assertTrue(model.model_config.get("title"))
+
+    def test_public_api_exports_these_names(self) -> None:
         self.assertEqual(sorted(data_access_python.__all__), EXPECTED_PUBLIC_NAMES)
         for name in EXPECTED_PUBLIC_NAMES:
             self.assertTrue(hasattr(data_access_python, name), name)
-
-    def test_present_and_absent_statuses_cover_every_attendance_status(self) -> None:
-        # ATTENDANCE_STATUSES sale de AttendanceStatus con get_args. Estas dos
-        # listas están escritas a mano: juntas tienen que dar todos los estados
-        # sin repetir ninguno.
-        self.assertEqual(
-            sorted(PRESENT_STATUSES + ABSENT_STATUSES),
-            sorted(ATTENDANCE_STATUSES),
-        )
-        self.assertEqual(set(ATTENDANCE_STATUSES), set(AttendanceStatus.__args__))
 
 
 if __name__ == "__main__":

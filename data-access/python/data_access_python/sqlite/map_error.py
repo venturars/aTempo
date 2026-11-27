@@ -1,8 +1,8 @@
 from typing import Never
 
+from atempo_errors import DomainError
 from sqlalchemy.exc import DBAPIError, IntegrityError
 
-from atempo_errors import DomainError
 from data_access_python.shared.errors import domain_error
 
 

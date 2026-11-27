@@ -1,4 +1,4 @@
-from data_access_python.sqlite.pool import SqliteQuery, query
+from data_access_python.sqlite.pool import SqliteParams, SqliteQuery, SqliteRow, query
 from data_access_python.sqlite.queries.session import (
     DELETE_SESSION,
     DELETE_SESSION_ATTENDANCES,
@@ -9,55 +9,54 @@ from data_access_python.sqlite.queries.session import (
     LIST_SESSIONS_BY_PROFESSOR,
     UPDATE_SESSION,
 )
-from data_access_python.shared.types.session import Session
 
 
-def retrieve_all_sessions(run: SqliteQuery = query) -> list[Session]:
+def retrieve_all_sessions(run: SqliteQuery = query) -> list[SqliteRow]:
     result = run(LIST_SESSIONS, None)
-    return result.rows  # type: ignore[return-value]
+    return result.rows
 
 
-def find_session_by_id(session_id: str, run: SqliteQuery = query) -> Session | None:
+def find_session_by_id(session_id: str, run: SqliteQuery = query) -> SqliteRow | None:
     result = run(GET_SESSION_BY_ID, {"id": session_id})
     if not result.rows:
         return None
-    return result.rows[0]  # type: ignore[return-value]
+    return result.rows[0]
 
 
 def retrieve_all_sessions_by_course_id(
     course_id: str,
     run: SqliteQuery = query,
-) -> list[Session]:
+) -> list[SqliteRow]:
     result = run(LIST_SESSIONS_BY_COURSE, {"course_id": course_id})
-    return result.rows  # type: ignore[return-value]
+    return result.rows
 
 
 def retrieve_all_sessions_by_professor_id(
     professor_id: str,
     run: SqliteQuery = query,
-) -> list[Session]:
+) -> list[SqliteRow]:
     result = run(LIST_SESSIONS_BY_PROFESSOR, {"professor_id": professor_id})
-    return result.rows  # type: ignore[return-value]
+    return result.rows
 
 
 def add_session(
-    session: Session,
+    session: SqliteParams,
     run: SqliteQuery = query,
-) -> Session | None:
-    result = run(INSERT_SESSION, dict(session))
+) -> SqliteRow | None:
+    result = run(INSERT_SESSION, session)
     if not result.rows:
         return None
-    return result.rows[0]  # type: ignore[return-value]
+    return result.rows[0]
 
 
 def update_session_row(
-    session: Session,
+    session: SqliteParams,
     run: SqliteQuery = query,
-) -> Session | None:
-    result = run(UPDATE_SESSION, dict(session))
+) -> SqliteRow | None:
+    result = run(UPDATE_SESSION, session)
     if not result.rows:
         return None
-    return result.rows[0]  # type: ignore[return-value]
+    return result.rows[0]
 
 
 def remove_session_attendances(session_id: str, run: SqliteQuery = query) -> None:

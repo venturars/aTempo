@@ -1,4 +1,4 @@
-from data_access_python.sqlite.pool import SqliteQuery, query
+from data_access_python.sqlite.pool import SqliteParams, SqliteQuery, SqliteRow, query
 from data_access_python.sqlite.queries.attendance import (
     DELETE_ATTENDANCE,
     FIND_ATTENDANCE,
@@ -7,20 +7,19 @@ from data_access_python.sqlite.queries.attendance import (
     LIST_ATTENDANCES_BY_SESSION,
     UPDATE_ATTENDANCE,
 )
-from data_access_python.shared.types.attendance import Attendance
 
 
-def retrieve_all_attendances(run: SqliteQuery = query) -> list[Attendance]:
+def retrieve_all_attendances(run: SqliteQuery = query) -> list[SqliteRow]:
     result = run(LIST_ATTENDANCES, None)
-    return result.rows  # type: ignore[return-value]
+    return result.rows
 
 
 def retrieve_all_attendances_by_session_id(
     session_id: str,
     run: SqliteQuery = query,
-) -> list[Attendance]:
+) -> list[SqliteRow]:
     result = run(LIST_ATTENDANCES_BY_SESSION, {"session_id": session_id})
-    return result.rows  # type: ignore[return-value]
+    return result.rows
 
 
 def attendance_exists(
@@ -36,23 +35,23 @@ def attendance_exists(
 
 
 def add_attendance(
-    attendance: Attendance,
+    attendance: SqliteParams,
     run: SqliteQuery = query,
-) -> Attendance | None:
-    result = run(INSERT_ATTENDANCE, dict(attendance))
+) -> SqliteRow | None:
+    result = run(INSERT_ATTENDANCE, attendance)
     if not result.rows:
         return None
-    return result.rows[0]  # type: ignore[return-value]
+    return result.rows[0]
 
 
 def update_attendance_row(
-    attendance: Attendance,
+    attendance: SqliteParams,
     run: SqliteQuery = query,
-) -> Attendance | None:
-    result = run(UPDATE_ATTENDANCE, dict(attendance))
+) -> SqliteRow | None:
+    result = run(UPDATE_ATTENDANCE, attendance)
     if not result.rows:
         return None
-    return result.rows[0]  # type: ignore[return-value]
+    return result.rows[0]
 
 
 def remove_attendance(

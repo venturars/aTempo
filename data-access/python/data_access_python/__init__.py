@@ -15,6 +15,11 @@ from data_access_python.attendance.add_attendance import (
     AddAttendanceOutput,
     add_attendance,
 )
+from data_access_python.attendance.remove_attendance import (
+    RemoveAttendanceInput,
+    RemoveAttendanceOutput,
+    remove_attendance,
+)
 from data_access_python.attendance.retrieve_all_attendances import (
     RetrieveAllAttendancesOutput,
     retrieve_all_attendances,
@@ -24,17 +29,11 @@ from data_access_python.attendance.retrieve_all_attendances_by_session import (
     RetrieveAllAttendancesBySessionOutput,
     retrieve_all_attendances_by_session,
 )
-from data_access_python.attendance.remove_attendance import (
-    RemoveAttendanceInput,
-    RemoveAttendanceOutput,
-    remove_attendance,
-)
 from data_access_python.attendance.update_attendance import (
     UpdateAttendanceInput,
     UpdateAttendanceOutput,
     update_attendance,
 )
-from data_access_python.shared.errors import DomainErrorId
 from data_access_python.session.add_session import (
     AddSessionInput,
     AddSessionOutput,
@@ -44,11 +43,6 @@ from data_access_python.session.remove_session import (
     RemoveSessionInput,
     RemoveSessionOutput,
     remove_session,
-)
-from data_access_python.session.retrieve_session_by_id import (
-    RetrieveSessionByIdInput,
-    RetrieveSessionByIdOutput,
-    retrieve_session_by_id,
 )
 from data_access_python.session.retrieve_all_sessions import (
     RetrieveAllSessionsOutput,
@@ -64,26 +58,27 @@ from data_access_python.session.retrieve_all_sessions_by_professor import (
     RetrieveAllSessionsByProfessorOutput,
     retrieve_all_sessions_by_professor,
 )
+from data_access_python.session.retrieve_session_by_id import (
+    RetrieveSessionByIdInput,
+    RetrieveSessionByIdOutput,
+    retrieve_session_by_id,
+)
 from data_access_python.session.update_session import (
     UpdateSessionInput,
     UpdateSessionOutput,
     update_session,
 )
-from data_access_python.sqlite.check import check
-from data_access_python.sqlite.pool import close_pool, reset_pool
+from data_access_python.shared.errors import DomainErrorId
 from data_access_python.shared.types.attendance import Attendance
-from data_access_python.shared.validation.attendance import assert_attendance
-from data_access_python.sqlite.rows.attendance import attendance_from_row
 from data_access_python.shared.types.session import (
     Session,
     SessionCreate,
     SessionUpdate,
 )
-from data_access_python.shared.validation.session import (
-    assert_session,
-    assert_session_create,
-    assert_session_update,
-)
+from data_access_python.shared.validation.model import validate_model
+from data_access_python.sqlite.check import check
+from data_access_python.sqlite.pool import close_pool, reset_pool
+from data_access_python.sqlite.rows.attendance import attendance_from_row
 from data_access_python.sqlite.rows.session import session_from_row
 
 __all__ = [
@@ -122,10 +117,6 @@ __all__ = [
     "UpdateSessionOutput",
     "ValidationError",
     "add_attendance",
-    "assert_attendance",
-    "assert_session",
-    "assert_session_create",
-    "assert_session_update",
     "attendance_from_row",
     "check",
     "close_pool",
@@ -142,4 +133,5 @@ __all__ = [
     "reset_pool",
     "update_attendance",
     "update_session",
+    "validate_model",
 ]

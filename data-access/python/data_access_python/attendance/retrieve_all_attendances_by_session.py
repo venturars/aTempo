@@ -1,10 +1,10 @@
 from typing import TypedDict
 
+from data_access_python.shared.types.attendance import Attendance
+from data_access_python.shared.validation.assert_values import read_input_uuid
 from data_access_python.sqlite.executors.attendance import (
     retrieve_all_attendances_by_session_id,
 )
-from data_access_python.shared.validation.assert_values import read_input_uuid
-from data_access_python.shared.types.attendance import Attendance
 from data_access_python.sqlite.rows.attendance import attendance_from_row
 
 

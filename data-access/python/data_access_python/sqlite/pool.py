@@ -15,11 +15,12 @@ from data_access_python.sqlite.map_error import rethrow_sqlite
 
 SqliteScalar = str | int | None
 SqliteParams = dict[str, SqliteScalar]
+SqliteRow = dict[str, SqliteScalar]
 T = TypeVar("T")
 
 
 class QueryResult:
-    def __init__(self, rows: list[dict[str, SqliteScalar]], rowcount: int) -> None:
+    def __init__(self, rows: list[SqliteRow], rowcount: int) -> None:
         self.rows = rows
         self.rowcount = rowcount
 

@@ -1,9 +1,9 @@
 from typing import TypedDict
 
+from data_access_python.shared.validation.assert_values import read_input_uuid
 from data_access_python.sqlite.executors.attendance import (
     remove_attendance as remove_attendance_row,
 )
-from data_access_python.shared.validation.assert_values import read_input_uuid
 
 
 class RemoveAttendanceInput(TypedDict):

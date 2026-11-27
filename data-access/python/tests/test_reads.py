@@ -6,8 +6,8 @@ from data_access_python.attendance.retrieve_all_attendances_by_session import (
     retrieve_all_attendances_by_session,
 )
 from data_access_python.session.add_session import add_session
-from data_access_python.session.retrieve_session_by_id import retrieve_session_by_id
 from data_access_python.session.retrieve_all_sessions import retrieve_all_sessions
+from data_access_python.session.retrieve_session_by_id import retrieve_session_by_id
 from data_access_python.sqlite.pool import query
 
 from helpers import (
@@ -36,12 +36,12 @@ class ReadTests(unittest.TestCase):
 
     def test_returns_a_session_after_create(self) -> None:
         created = add_session({"session": valid_session_input})["session"]
-        found = retrieve_session_by_id({"id": created["id"]})["session"]
+        found = retrieve_session_by_id({"id": created.id})["session"]
         self.assertEqual(found, created)
 
     def test_finds_a_session_when_the_id_differs_only_by_case(self) -> None:
         created = add_session({"session": valid_session_input})["session"]
-        found = retrieve_session_by_id({"id": created["id"].upper()})["session"]
+        found = retrieve_session_by_id({"id": created.id.upper()})["session"]
         self.assertEqual(found, created)
 
     def test_lists_sessions(self) -> None:
@@ -92,8 +92,8 @@ class StoredRowReadTests(unittest.TestCase):
         sessions = retrieve_all_sessions()["sessions"]
         self.assertEqual(len(sessions), 2)
         self.assertIn(created, sessions)
-        legacy = next(s for s in sessions if s["id"] == "LEGACY-1")
-        self.assertEqual(legacy["late_after_minutes"], -1)
+        legacy = next(s for s in sessions if s.id == "LEGACY-1")
+        self.assertEqual(legacy.late_after_minutes, -1)
 
     def test_lists_a_row_with_a_date_that_does_not_exist(self) -> None:
         insert_raw_session(
@@ -103,7 +103,7 @@ class StoredRowReadTests(unittest.TestCase):
             5,
         )
         [session] = retrieve_all_sessions()["sessions"]
-        self.assertEqual(session["start_at"], "2026-02-30T10:00:00.000Z")
+        self.assertEqual(session.start_at, "2026-02-30T10:00:00.000Z")
 
     def test_still_rejects_a_row_with_the_wrong_shape(self) -> None:
         insert_raw_session(
@@ -121,12 +121,12 @@ class StoredRowReadTests(unittest.TestCase):
             """INSERT INTO attendance (session_id, student_id, status,
             check_in_method, checked_in_at)
             VALUES (:session_id, 'legacy-student', 'absent', NULL, NULL)""",
-            {"session_id": created["id"]},
+            {"session_id": created.id},
         )
         [attendance] = retrieve_all_attendances_by_session(
-            {"session_id": created["id"]},
+            {"session_id": created.id},
         )["attendances"]
-        self.assertEqual(attendance["student_id"], "legacy-student")
+        self.assertEqual(attendance.student_id, "legacy-student")
 
 
 if __name__ == "__main__":

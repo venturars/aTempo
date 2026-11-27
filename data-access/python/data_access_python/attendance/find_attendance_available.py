@@ -1,9 +1,9 @@
 from typing import TypedDict
 
 from data_access_python.shared.errors import fail
-from data_access_python.sqlite.pool import SqliteQuery
-from data_access_python.sqlite.executors.attendance import attendance_exists
 from data_access_python.shared.validation.assert_values import read_input_field
+from data_access_python.sqlite.executors.attendance import attendance_exists
+from data_access_python.sqlite.pool import SqliteQuery
 
 
 class FindAttendanceAvailableInput(TypedDict):

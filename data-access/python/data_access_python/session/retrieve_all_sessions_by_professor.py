@@ -1,10 +1,10 @@
 from typing import TypedDict
 
+from data_access_python.shared.types.session import Session
+from data_access_python.shared.validation.assert_values import read_input_uuid
 from data_access_python.sqlite.executors.session import (
     retrieve_all_sessions_by_professor_id,
 )
-from data_access_python.shared.validation.assert_values import read_input_uuid
-from data_access_python.shared.types.session import Session
 from data_access_python.sqlite.rows.session import session_from_row
 
 

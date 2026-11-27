@@ -4,15 +4,14 @@ import time
 import unittest
 from types import MappingProxyType
 
-from sqlalchemy import event
-from sqlalchemy.exc import StatementError
-
 from atempo_errors import (
     ConfigurationError,
     ConflictError,
     PersistenceError,
     ValidationError,
 )
+from sqlalchemy import event
+from sqlalchemy.exc import StatementError
 
 from data_access_python.attendance.add_attendance import add_attendance
 from data_access_python.attendance.retrieve_all_attendances import (
@@ -113,7 +112,7 @@ class SqliteTests(unittest.TestCase):
         session = add_session({"session": valid_session_input})["session"]
         begins = count_begins(
             lambda: update_session({
-                "session": {**session, "expected_count": 21},
+                "session": {**session.model_dump(), "expected_count": 21},
             }),
         )
         self.assertEqual(begins, 1)
@@ -121,7 +120,7 @@ class SqliteTests(unittest.TestCase):
     def test_add_and_update_attendance_open_one_transaction(self) -> None:
         open_memory_db()
         session = add_session({"session": valid_session_input})["session"]
-        row = {**valid_attendance, "session_id": session["id"]}
+        row = {**valid_attendance, "session_id": session.id}
         self.assertEqual(
             count_begins(lambda: add_attendance({"attendance": row})),
             1,
@@ -139,7 +138,7 @@ class SqliteTests(unittest.TestCase):
         path = open_file_db()
         try:
             session = add_session({"session": valid_session_input})["session"]
-            body = {**valid_attendance, "session_id": session["id"]}
+            body = {**valid_attendance, "session_id": session.id}
             results: list[object] = []
             errors: list[BaseException] = []
 
@@ -190,7 +189,7 @@ class SqliteTests(unittest.TestCase):
             def hold(tx):
                 tx(
                     "SELECT id FROM session WHERE id = :id",
-                    {"id": session["id"]},
+                    {"id": session.id},
                 )
                 started.set()
                 if not release.wait(timeout=5):
@@ -236,7 +235,7 @@ class SqliteTests(unittest.TestCase):
             def hold(tx):
                 tx(
                     "SELECT id FROM session WHERE id = :id",
-                    {"id": session["id"]},
+                    {"id": session.id},
                 )
                 started.set()
                 if not release.wait(timeout=5):
@@ -253,7 +252,7 @@ class SqliteTests(unittest.TestCase):
                 try:
                     query(
                         "UPDATE session SET expected_count = 99 WHERE id = :id",
-                        {"id": session["id"]},
+                        {"id": session.id},
                     )
                 except BaseException as error:
                     errors.append(error)
@@ -323,11 +322,11 @@ class SqliteTests(unittest.TestCase):
     def test_deleting_a_session_with_attendances_is_a_conflict(self) -> None:
         open_memory_db()
         session = add_session({"session": valid_session_input})["session"]
-        add_attendance({"attendance": {**valid_attendance, "session_id": session["id"]}})
+        add_attendance({"attendance": {**valid_attendance, "session_id": session.id}})
         with self.assertRaisesRegex(ConflictError, "session todavía tiene asistencias"):
-            remove_session_by_id(session["id"])
+            remove_session_by_id(session.id)
         with self.assertRaisesRegex(ConflictError, "session todavía tiene asistencias"):
-            with_transaction(lambda run: remove_session_by_id(session["id"], run))
+            with_transaction(lambda run: remove_session_by_id(session.id, run))
 
     def test_missing_input_field_is_a_validation_error(self) -> None:
         open_memory_db()
@@ -363,7 +362,7 @@ class SqliteTests(unittest.TestCase):
     def test_input_can_be_any_mapping(self) -> None:
         open_memory_db()
         created = add_session(MappingProxyType({"session": valid_session_input}))  # type: ignore[arg-type]
-        self.assertEqual(created["session"]["course_id"], valid_session_input["course_id"])
+        self.assertEqual(created["session"].course_id, valid_session_input["course_id"])
 
 
 if __name__ == "__main__":

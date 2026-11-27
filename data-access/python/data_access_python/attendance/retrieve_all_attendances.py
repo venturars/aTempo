@@ -1,9 +1,9 @@
 from typing import TypedDict
 
+from data_access_python.shared.types.attendance import Attendance
 from data_access_python.sqlite.executors.attendance import (
     retrieve_all_attendances as retrieve_all_attendance_rows,
 )
-from data_access_python.shared.types.attendance import Attendance
 from data_access_python.sqlite.rows.attendance import attendance_from_row
 
 

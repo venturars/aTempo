@@ -3,15 +3,15 @@ import unittest
 from atempo_errors import ValidationError
 
 from data_access_python.attendance.add_attendance import add_attendance
+from data_access_python.attendance.remove_attendance import remove_attendance
 from data_access_python.attendance.retrieve_all_attendances import (
     retrieve_all_attendances,
 )
-from data_access_python.attendance.remove_attendance import remove_attendance
 from data_access_python.attendance.update_attendance import update_attendance
 from data_access_python.session.add_session import add_session
 from data_access_python.session.remove_session import remove_session
-from data_access_python.session.retrieve_session_by_id import retrieve_session_by_id
 from data_access_python.session.retrieve_all_sessions import retrieve_all_sessions
+from data_access_python.session.retrieve_session_by_id import retrieve_session_by_id
 from data_access_python.session.update_session import update_session
 
 from helpers import (
@@ -58,25 +58,25 @@ class WriteTests(unittest.TestCase):
                 "end_at": "2026-01-01T09:00:00Z",
             },
         })["session"]
-        self.assertEqual(created["start_at"], "2026-01-01T08:00:00.000Z")
-        self.assertEqual(created["end_at"], "2026-01-01T09:00:00.000Z")
-        found = retrieve_session_by_id({"id": created["id"]})["session"]
+        self.assertEqual(created.start_at, "2026-01-01T08:00:00.000Z")
+        self.assertEqual(created.end_at, "2026-01-01T09:00:00.000Z")
+        found = retrieve_session_by_id({"id": created.id})["session"]
         self.assertEqual(found, created)
 
     def test_creates_and_updates_a_session(self) -> None:
         created = add_session({"session": valid_session_input})["session"]
-        self.assertEqual(created["status"], "open")
+        self.assertEqual(created.status, "open")
         updated = update_session({
             "session": {
-                **created,
+                **created.model_dump(),
                 "status": "closed",
                 "closed_at": "2026-01-01T12:05:00.000Z",
             },
         })["session"]
         self.assertIsNotNone(updated)
         assert updated is not None
-        self.assertEqual(updated["status"], "closed")
-        self.assertEqual(updated["closed_at"], "2026-01-01T12:05:00.000Z")
+        self.assertEqual(updated.status, "closed")
+        self.assertEqual(updated.closed_at, "2026-01-01T12:05:00.000Z")
 
     def test_update_returns_none_when_missing(self) -> None:
         missing = update_session({
@@ -94,7 +94,7 @@ class WriteTests(unittest.TestCase):
         missing = update_attendance({
             "attendance": {
                 **valid_attendance,
-                "session_id": session["id"],
+                "session_id": session.id,
                 "student_id": OTHER_ID,
             },
         })["attendance"]
@@ -104,57 +104,57 @@ class WriteTests(unittest.TestCase):
         created = add_session({"session": valid_session_input})["session"]
         updated = update_session({
             "session": {
-                **created,
-                "id": created["id"].upper(),
+                **created.model_dump(),
+                "id": created.id.upper(),
                 "expected_count": 21,
             },
         })["session"]
         assert updated is not None
-        self.assertEqual(updated["id"], created["id"])
-        self.assertEqual(updated["expected_count"], 21)
+        self.assertEqual(updated.id, created.id)
+        self.assertEqual(updated.expected_count, 21)
         row = add_attendance({
             "attendance": {
                 **valid_attendance,
-                "session_id": created["id"],
+                "session_id": created.id,
             },
         })["attendance"]
         attendance = update_attendance({
             "attendance": {
-                **row,
-                "session_id": created["id"].upper(),
+                **row.model_dump(),
+                "session_id": created.id.upper(),
                 "student_id": STUDENT_ID.upper(),
                 "status": "present_late",
             },
         })["attendance"]
         assert attendance is not None
-        self.assertEqual(attendance["session_id"], created["id"])
-        self.assertEqual(attendance["student_id"], STUDENT_ID)
-        self.assertEqual(attendance["status"], "present_late")
+        self.assertEqual(attendance.session_id, created.id)
+        self.assertEqual(attendance.student_id, STUDENT_ID)
+        self.assertEqual(attendance.status, "present_late")
 
     def test_adds_updates_and_removes_attendance(self) -> None:
         session = add_session({"session": valid_session_input})["session"]
         created = add_attendance({
             "attendance": {
                 **valid_attendance,
-                "session_id": session["id"],
+                "session_id": session.id,
             },
         })["attendance"]
-        self.assertEqual(created["status"], "present")
+        self.assertEqual(created.status, "present")
         updated = update_attendance({
-            "attendance": {**created, "status": "present_late"},
+            "attendance": {**created.model_dump(), "status": "present_late"},
         })["attendance"]
         self.assertIsNotNone(updated)
         assert updated is not None
-        self.assertEqual(updated["status"], "present_late")
+        self.assertEqual(updated.status, "present_late")
         self.assertTrue(
             remove_attendance({
-                "session_id": session["id"],
+                "session_id": session.id,
                 "student_id": STUDENT_ID,
             })["deleted"],
         )
         self.assertFalse(
             remove_attendance({
-                "session_id": session["id"],
+                "session_id": session.id,
                 "student_id": STUDENT_ID,
             })["deleted"],
         )
@@ -162,10 +162,10 @@ class WriteTests(unittest.TestCase):
     def test_deletes_attendances_before_the_session(self) -> None:
         session = add_session({"session": valid_session_input})["session"]
         add_attendance({
-            "attendance": {**valid_attendance, "session_id": session["id"]},
+            "attendance": {**valid_attendance, "session_id": session.id},
         })
-        self.assertTrue(remove_session({"id": session["id"]})["deleted"])
-        self.assertIsNone(retrieve_session_by_id({"id": session["id"]})["session"])
+        self.assertTrue(remove_session({"id": session.id})["deleted"])
+        self.assertIsNone(retrieve_session_by_id({"id": session.id})["session"])
         self.assertEqual(retrieve_all_attendances()["attendances"], [])
 
     def test_delete_reports_false_when_the_session_is_missing(self) -> None:
@@ -173,17 +173,17 @@ class WriteTests(unittest.TestCase):
 
     def test_deletes_when_the_id_differs_only_by_case(self) -> None:
         session = add_session({"session": valid_session_input})["session"]
-        self.assertTrue(remove_session({"id": session["id"].upper()})["deleted"])
-        self.assertIsNone(retrieve_session_by_id({"id": session["id"]})["session"])
+        self.assertTrue(remove_session({"id": session.id.upper()})["deleted"])
+        self.assertIsNone(retrieve_session_by_id({"id": session.id})["session"])
 
     def test_removes_attendance_when_ids_differ_only_by_case(self) -> None:
         session = add_session({"session": valid_session_input})["session"]
         add_attendance({
-            "attendance": {**valid_attendance, "session_id": session["id"]},
+            "attendance": {**valid_attendance, "session_id": session.id},
         })
         self.assertTrue(
             remove_attendance({
-                "session_id": session["id"].upper(),
+                "session_id": session.id.upper(),
                 "student_id": STUDENT_ID.upper(),
             })["deleted"],
         )
