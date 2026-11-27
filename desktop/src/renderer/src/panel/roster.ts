@@ -46,6 +46,10 @@ function arrivalThatDay(name: string, day: string): string {
   return `${h}:${m}`
 }
 
+// La fecha de la sesión de Hoy. Da su título y sus llegadas de ejemplo. Las marcas de Hoy
+// se guardan con el id de la sesión de la API, no con este.
+export const todaySessionId = '2026-11-11'
+
 export const todayEntry = rosterNames.map((name) => {
   if (name === 'Meghan Martin') {
     return '—'
@@ -56,16 +60,43 @@ export const todayEntry = rosterNames.map((name) => {
   if (name === 'Victor Chang') {
     return '09:14'
   }
-  return arrivalThatDay(name, '11')
+  return arrivalThatDay(name, String(sessionDate(todaySessionId).getDate()))
 })
 
-// Título de una sesión a partir de su id: «Mar 10 nov» → «Mar 10 nov 2026».
-export function sessionTitle(id: string): string {
-  return `${id} 2026`
+// El id de una sesión es su fecha, «2026-11-10». Se lee como fecha local: con
+// new Date('2026-11-10') sería medianoche en UTC y, al oeste de Greenwich, el día anterior.
+export function sessionDate(id: string): Date {
+  const [year, month, day] = id.split('-').map(Number)
+  return new Date(year, month - 1, day)
 }
 
-// La sesión de Hoy. Los cambios se guardan con este id, como los de las sesiones pasadas.
-export const todaySessionId = 'Mié 11 nov'
+function capitalized(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+// Día corto de la semana: «Mar».
+export function sessionShortWeekday(id: string): string {
+  return capitalized(sessionDate(id).toLocaleDateString('es', { weekday: 'short' }))
+}
+
+// Día de la semana: «Martes».
+export function sessionWeekday(id: string): string {
+  return capitalized(sessionDate(id).toLocaleDateString('es', { weekday: 'long' }))
+}
+
+// Fecha de una sesión: «10 nov 2026».
+export function sessionDateLabel(id: string): string {
+  return sessionDate(id).toLocaleDateString('es', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  })
+}
+
+// Título de una sesión: «Mar 10 nov 2026».
+export function sessionTitle(id: string): string {
+  return `${sessionShortWeekday(id)} ${sessionDateLabel(id)}`
+}
 
 export const todayLabel = sessionTitle(todaySessionId)
 
@@ -97,7 +128,6 @@ export type RosterRow = {
 
 export type ClassSession = {
   id: string
-  title: string
   dow: string
   time: string
   room: string
@@ -107,17 +137,9 @@ export type ClassSession = {
 }
 
 export type HistoryEntry = RosterRow & {
-  title: string
+  sessionId: string
   dow: string
   sessionTime: string
-}
-
-const dowNames: Record<string, string> = {
-  Lun: 'Lunes',
-  Mar: 'Martes',
-  Mié: 'Miércoles',
-  Jue: 'Jueves',
-  Vie: 'Viernes'
 }
 
 const markRank: Record<Attendance | 'none', number> = {
@@ -142,15 +164,6 @@ export function compareStudentNames(a: string, b: string): number {
   return surname(a).localeCompare(surname(b), 'es') || a.localeCompare(b, 'es')
 }
 
-export function sessionDateLabel(id: string): string {
-  const day = Number(id.split(' ')[1])
-  return new Date(2026, 10, day).toLocaleDateString('es', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric'
-  })
-}
-
 export function compareStudents(
   a: { name: string; mark: Attendance | 'none' },
   b: { name: string; mark: Attendance | 'none' }
@@ -172,8 +185,7 @@ function buildSession(
   absent: string[],
   just: Record<string, JustKey>
 ): ClassSession {
-  const day = id.split(' ')[1] ?? ''
-  const dow = dowNames[id.split(' ')[0] ?? ''] ?? ''
+  const day = String(sessionDate(id).getDate())
   const rows = rosterNames.map((name) => {
     const lateTime = late[name]
     const isAbsent = absent.includes(name)
@@ -190,8 +202,7 @@ function buildSession(
 
   return {
     id,
-    title: `Nov ${day} 2026`,
-    dow,
+    dow: sessionWeekday(id),
     time: course.time,
     room: course.room,
     state: 'Cerrada',
@@ -210,27 +221,27 @@ function markCancelled(session: ClassSession): ClassSession {
 
 export const classSessions: ClassSession[] = [
   buildSession(
-    'Mar 10 nov',
+    '2026-11-10',
     { 'Diego Molero': '09:14', 'Miguel Rodriguez': '09:18', 'Victor Chang': '09:21' },
     ['Diego Torres'],
     { 'Diego Torres': 'pend' }
   ),
-  buildSession('Lun 9 nov', { 'Miguel Rodriguez': '09:16' }, ['Meghan Martin', 'Esther Patino'], {
+  buildSession('2026-11-09', { 'Miguel Rodriguez': '09:16' }, ['Meghan Martin', 'Esther Patino'], {
     'Meghan Martin': 'ok',
     'Esther Patino': 'no'
   }),
   buildSession(
-    'Vie 6 nov',
+    '2026-11-06',
     { 'Miguel Rodriguez': '09:23', 'Victor Chang': '09:17' },
     ['Luis Duque'],
     { 'Luis Duque': 'no' }
   ),
-  buildSession('Jue 5 nov', { 'Sergio Cortes': '09:19' }, ['Meghan Martin'], {
+  buildSession('2026-11-05', { 'Sergio Cortes': '09:19' }, ['Meghan Martin'], {
     'Meghan Martin': 'no'
   }),
-  markCancelled(buildSession('Mié 4 nov', { 'Manuel Diaz': '09:15' }, [], {})),
-  buildSession('Mar 3 nov', {}, [], {}),
-  buildSession('Lun 2 nov', { 'Ella Deyavorsky': '09:13' }, [], {})
+  markCancelled(buildSession('2026-11-04', { 'Manuel Diaz': '09:15' }, [], {})),
+  buildSession('2026-11-03', {}, [], {}),
+  buildSession('2026-11-02', { 'Ella Deyavorsky': '09:13' }, [], {})
 ]
 
 function initials(name: string): string {
@@ -306,7 +317,7 @@ export function studentHistory(name: string, book: SessionMarkBook = {}): Histor
       {
         ...row,
         mark: book[session.id]?.[name] ?? row.mark,
-        title: `${session.id} 2026`,
+        sessionId: session.id,
         dow: session.dow,
         sessionTime: session.time
       }

@@ -12,10 +12,10 @@ export function StudentHistory({ entries }: { entries: HistoryEntry[] }): React.
       </h2>
       <ul className="divide-y divide-base-content/4">
         {entries.map((entry) => (
-          <li key={entry.title} className="flex flex-col gap-2 py-3">
+          <li key={entry.sessionId} className="flex flex-col gap-2 py-3">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-sm font-medium">{sessionDateLabel(entry.title)}</p>
+                <p className="text-sm font-medium">{sessionDateLabel(entry.sessionId)}</p>
                 <p className="text-sm text-base-content/60">
                   {entry.dow} · {entry.sessionTime}
                 </p>
@@ -51,7 +51,7 @@ export function StudentHistory({ entries }: { entries: HistoryEntry[] }): React.
           </h2>
           {document ? (
             <p className="mt-2 text-sm text-base-content/70">
-              {sessionDateLabel(document.title)} ·{' '}
+              {sessionDateLabel(document.sessionId)} ·{' '}
               {document.just === 'ok' ? 'Aprobado' : 'Pendiente de revisión'}
             </p>
           ) : null}
