@@ -118,8 +118,8 @@ Abre <http://localhost:5191/> para el alumno o <http://localhost:5191/admin> par
 | `api-router/` | API REST con NestJS entre los frontends y `atempo-sdk`. Auth0 permanece en `AuthService`; tras login, register y `me` llama a `afterAuth`. |
 | `sdk/` | Paquete `atempo-sdk`: capas shared, dominio, aplicación, infraestructura mock y composición. Expone `afterAuth({ email })`. No es un servicio HTTP. El CRUD HTTP y el GET del Resumen aún no están. |
 | `api-postgresql/` | API REST con NestJS entre la SDK y PostgreSQL. |
-| `api-rustfs/` | API REST con Express entre la SDK y RustFS (persistencia de objetos). Aún no importa `domain/rustfs`. |
-| `domain/rustfs/` | SDK TypeScript (`atempo-domain-rustfs`) de justificantes con `@aws-sdk/client-s3` 3.943.0. No es un servicio HTTP. |
+| `api-rustfs/` | API REST con Express entre la SDK y RustFS (persistencia de objetos). Aún no importa `data-access/rustfs`. |
+| `data-access/rustfs/` | SDK TypeScript (`atempo-domain-rustfs`) de justificantes con `@aws-sdk/client-s3` 3.943.0. No es un servicio HTTP. |
 | `api-sqlite/` | Servicio Flask con Pydantic y SQLAlchemy Core entre la SDK y SQLite. Aún no hay integración. |
 | `postgres/` | Core PostgreSQL y Drizzle Studio para ver sus tablas. No se abre desde el escritorio ni desde el API-router. |
 | `sqlite/` | SQLite operativo de fichaje y Datasette. Distinto del `atempo.sqlite` del escritorio. |
@@ -130,7 +130,7 @@ Abre <http://localhost:5191/> para el alumno o <http://localhost:5191/admin> par
 | `docs/` | Cómo se construye: constitución, arquitectura, estilo, árbol y modelo de cada almacén. |
 | `permanent-data.md` | Enlaces entre las cuatro bases. No es un quinto almacén. |
 
-Cada servicio tiene sus dependencias propias y no hay workspace en la raíz. Los paquetes JavaScript usan pnpm 10.33.0 y versiones fijas. `api-sqlite/` usa Python y dependencias fijadas en `pyproject.toml`. `domain/rustfs/` se instala y se prueba en el ordenador. `postgres/`, `sqlite/`, `blockend/` y `rustfs/` se instalan y arrancan en el ordenador. Compose de la raíz orquesta los mismos procesos, cada uno con su perfil (`db`, `sqlite`, `blockend` y `rustfs`); no es requisito. Ninguno entra en el compose de instalación. El modelo de cada una está en `docs/` (nombres en MAYÚSCULAS) y el arranque nativo en su `README.md`.
+Cada servicio tiene sus dependencias propias y no hay workspace en la raíz. Los paquetes JavaScript usan pnpm 10.33.0 y versiones fijas. `api-sqlite/` usa Python y dependencias fijadas en `pyproject.toml`. `data-access/rustfs/` se instala y se prueba en el ordenador. `postgres/`, `sqlite/`, `blockend/` y `rustfs/` se instalan y arrancan en el ordenador. Compose de la raíz orquesta los mismos procesos, cada uno con su perfil (`db`, `sqlite`, `blockend` y `rustfs`); no es requisito. Ninguno entra en el compose de instalación. El modelo de cada una está en `docs/` (nombres en MAYÚSCULAS) y el arranque nativo en su `README.md`.
 
 | Almacén | Visor | URL |
 | --- | --- | --- |
@@ -166,7 +166,7 @@ docker compose run --rm setup
 
 La primera vez, `setup` construye la imagen de Docker: tarda unos minutos. Las siguientes, unos segundos.
 
-`setup` instala delivery-workflow para Cursor, Codex y Claude Code en la raíz del proyecto, las dependencias Node de `desktop/`, `docs/storybook/`, `sdk/`, `api-router/`, `api-postgresql/`, `api-rustfs/`, `blockend/` y `postgres/` en volúmenes Docker, y `api-sqlite/` en un entorno virtual Linux. `domain/rustfs/` se instala en el ordenador. Los paquetes Node, el entorno Python y los datos de las APIs viven en volúmenes; las dependencias Linux no llegan a tu carpeta.
+`setup` instala delivery-workflow para Cursor, Codex y Claude Code en la raíz del proyecto, las dependencias Node de `desktop/`, `docs/storybook/`, `sdk/`, `api-router/`, `api-postgresql/`, `api-rustfs/`, `blockend/` y `postgres/` en volúmenes Docker, y `api-sqlite/` en un entorno virtual Linux. `data-access/rustfs/` se instala en el ordenador. Los paquetes Node, el entorno Python y los datos de las APIs viven en volúmenes; las dependencias Linux no llegan a tu carpeta.
 
 Desde entonces, git lanza `setup` después de `git pull`, de cambiar de rama o de un rebase si cambió `apm.yml`, `apm.lock.yaml`, un lockfile de pnpm, `api-sqlite/pyproject.toml`, el script de setup, el entrypoint o el `Dockerfile`. Si cambió el `Dockerfile` o el entrypoint, reconstruye la imagen antes de instalar:
 
@@ -375,7 +375,7 @@ pnpm run test:visual --workers=1 --retries=0 --global-timeout=300000 --update-sn
 
 La suite del sistema visual sirve `docs/storybook/storybook-static` en `http://127.0.0.1:6006` y lo cierra al terminar, aunque falle. Necesita las dependencias de `docs/storybook/` instaladas en tu ordenador (`pnpm install` en esa carpeta), no solo en Docker, y el puerto 6006 libre: si tienes Storybook en Docker, páralo antes con `docker compose stop storybook`.
 
-Cada pull request a `staging` pasa lint, typecheck y el build de Storybook en GitHub Actions ([code-check.yml](.github/workflows/code-check.yml)), en cada paquete que cambia. Un paquete es cualquier carpeta con un `pnpm-lock.yaml`, así que uno nuevo entra solo. Si el paquete tiene el script `test:ci` (sus tests que no necesitan Docker), el job también lo ejecuta; hoy lo tiene `domain/rustfs`. Si cambia `desktop/`, `web/` o algo compartido (`.github/`, `Dockerfile`, `docker-compose.yml`), el job `admin-tests` instala Chromium y ejecuta los tests de administración de desktop con Playwright, sin abrir Electron (`playwright.admin.config.ts`, un solo worker, sin reintentos ni snapshots nuevos). Si no cambia ninguno, el job se salta y «Code: check / ci» pasa igual. Si una comprobación o esos tests fallan, «Code: check / ci» queda en rojo.
+Cada pull request a `staging` pasa lint, typecheck y el build de Storybook en GitHub Actions ([code-check.yml](.github/workflows/code-check.yml)), en cada paquete que cambia. Un paquete es cualquier carpeta con un `pnpm-lock.yaml`, así que uno nuevo entra solo. Si el paquete tiene el script `test:ci` (sus tests que no necesitan Docker), el job también lo ejecuta; hoy lo tiene `data-access/rustfs`. Si cambia `desktop/`, `web/` o algo compartido (`.github/`, `Dockerfile`, `docker-compose.yml`), el job `admin-tests` instala Chromium y ejecuta los tests de administración de desktop con Playwright, sin abrir Electron (`playwright.admin.config.ts`, un solo worker, sin reintentos ni snapshots nuevos). Si no cambia ninguno, el job se salta y «Code: check / ci» pasa igual. Si una comprobación o esos tests fallan, «Code: check / ci» queda en rojo.
 
 ### Ventana de Electron desde Docker (experimental)
 
@@ -497,17 +497,17 @@ La API queda en <http://localhost:3003>; RustFS está disponible en los puertos 
 
 ## Dominio RustFS
 
-`domain/rustfs/` es el SDK TypeScript de justificantes (`atempo-domain-rustfs`). Se instala y se prueba en el ordenador. No entra en Compose ni en `setup`.
+`data-access/rustfs/` es el SDK TypeScript de justificantes (`atempo-domain-rustfs`). Se instala y se prueba en el ordenador. No entra en Compose ni en `setup`.
 
 ```sh
-cd domain/rustfs
+cd data-access/rustfs
 pnpm install --frozen-lockfile
 pnpm typecheck
 pnpm lint
 pnpm test
 ```
 
-`pnpm test` sustituye el driver S3: RustFS no tiene que estar en marcha. Más detalle en [domain/README.md](domain/README.md) y [domain/rustfs/README.md](domain/rustfs/README.md).
+`pnpm test` sustituye el driver S3: RustFS no tiene que estar en marcha. Más detalle en [data-access/README.md](data-access/README.md) y [data-access/rustfs/README.md](data-access/rustfs/README.md).
 
 Las cuatro APIs pueden iniciarse juntas con `docker compose up api-router api-postgresql api-sqlite api-rustfs`; Compose inicia PostgreSQL y RustFS como dependencias. El workflow `.github/workflows/workstation-test.yml` valida setup, pruebas, HTTP y persistencia en un runner Ubuntu al abrir o actualizar una pull request hacia `staging`, sin secretos y con permisos de solo lectura. También ejecuta el paso «Check blockend» (`docker compose run --rm blockend pnpm test`), entre «Check Node APIs» y «Check SQLite API». Esos tests usan la red interna de Hardhat, así que el workflow no arranca Anvil.
 
@@ -541,7 +541,7 @@ Reemplaza los valores por el login exacto del revisor solicitado y su ID numéri
 | [docs/STYLE.md](docs/STYLE.md) | Temas y enlace a la guía visual. |
 | [docs/guia](docs/guia/README.md) | Markdown generado desde Storybook. No se versiona. |
 | [docs/TREE.md](docs/TREE.md) | Carpetas de `desktop/`, `api-router/`, `sdk/`, las APIs de persistencia y los almacenes. |
-| [domain/README.md](domain/README.md) | Paquetes librería de dominio; `domain/rustfs/` es el SDK de justificantes. |
+| [data-access/README.md](data-access/README.md) | Paquetes librería de acceso a datos; `data-access/rustfs/` es el SDK de justificantes. |
 | [docs/POSTGRES.md](docs/POSTGRES.md) | Modelo del core PostgreSQL. |
 | [docs/SQLITE.md](docs/SQLITE.md) | Modelo del SQLite operativo. |
 | [docs/RUSTFS.md](docs/RUSTFS.md) | Modelo del bucket de justificantes. |

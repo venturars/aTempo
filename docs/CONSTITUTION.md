@@ -45,16 +45,16 @@ Este servicio no implementa reglas de negocio. El API-router no habla con Postgr
 - **TypeScript** escribe el servicio.
 - **pnpm** es el gestor de paquetes de `api-rustfs/`. Las versiones van fijas, sin `^`.
 
-El flujo de producto es Frontend → `api-rustfs` → `domain/rustfs` → RustFS. `api-rustfs` aún no importa ese paquete; Express sigue con `minio`. El API-router no accede a RustFS.
+El flujo de producto es Frontend → `api-rustfs` → `data-access/rustfs` → RustFS. `api-rustfs` aún no importa ese paquete; Express sigue con `minio`. El API-router no accede a RustFS.
 
-## 6. Stack de `domain/rustfs/`
+## 6. Stack de `data-access/rustfs/`
 
-- **Paquete librería** `atempo-domain-rustfs` en `domain/rustfs/`. No es un servicio HTTP.
+- **Paquete librería** `atempo-domain-rustfs` en `data-access/rustfs/`. No es un servicio HTTP.
 - **TypeScript** escribe el SDK.
 - **`@aws-sdk/client-s3` 3.943.0** habla con RustFS (`forcePathStyle: true`, `region: "us-east-1"`). El paquete npm `minio` no entra en este SDK.
 - **pnpm** 10.33.0. Las versiones van fijas, sin `^`.
 
-El flujo de producto es Frontend → `api-rustfs` → `domain/rustfs` → RustFS. El paquete abre el almacén. `api-rustfs` aún no lo importa.
+El flujo de producto es Frontend → `api-rustfs` → `data-access/rustfs` → RustFS. El paquete abre el almacén. `api-rustfs` aún no lo importa.
 
 ## 7. Stack de `api-sqlite/`
 
@@ -69,6 +69,6 @@ El flujo de producto es Frontend → `api-rustfs` → `domain/rustfs` → RustFS
 ## 8. Dónde seguir
 
 - [STYLE.md](STYLE.md): los dos temas y el enlace a la guía visual.
-- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, flujo de `api-router/` y `sdk/`, las APIs de persistencia, `domain/rustfs/` y los almacenes.
-- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/`, `sdk/`, `api-postgresql/`, `api-rustfs/`, `domain/rustfs/`, `api-sqlite/` y los almacenes.
-- [domain/README.md](../domain/README.md): paquetes librería de dominio.
+- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, flujo de `api-router/` y `sdk/`, las APIs de persistencia, `data-access/rustfs/` y los almacenes.
+- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/`, `sdk/`, `api-postgresql/`, `api-rustfs/`, `data-access/rustfs/`, `api-sqlite/` y los almacenes.
+- [data-access/README.md](../data-access/README.md): paquetes librería de acceso a datos.

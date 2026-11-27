@@ -96,10 +96,10 @@ docs/BLOCKEND.md
 permanent-data.md
 ```
 
-# Árbol de `domain/`
+# Árbol de `data-access/`
 
 ```text
-domain/
+data-access/
   README.md
   rustfs/                         # atempo-domain-rustfs; @aws-sdk/client-s3 3.943.0
     package.json

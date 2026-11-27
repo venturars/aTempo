@@ -1,14 +1,14 @@
 # rustfs
 
-SDK TypeScript de justificantes de aTempo. Paquete librería dentro de `domain/`. Guarda y lee objetos S3 en RustFS. No es un servicio HTTP.
+SDK TypeScript de justificantes de aTempo. Paquete librería dentro de `data-access/`. Guarda y lee objetos S3 en RustFS. No es un servicio HTTP.
 
-El flujo de producto es Frontend → `api-rustfs` → `domain/rustfs` → RustFS. Este paquete abre el almacén. Express no importa este SDK todavía.
+El flujo de producto es Frontend → `api-rustfs` → `data-access/rustfs` → RustFS. Este paquete abre el almacén. Express no importa este SDK todavía.
 
 Las funciones públicas reciben y devuelven un objeto (RORO). El cliente S3, los comandos y el almacén viven en `src/rustfs/`. Los casos de uso validan parámetros, aplican reglas, persisten y sanean la respuesta. Un fallo de tipo o de regla lanza un error de dominio (`ValidationError`, `ConflictError`, `ConfigurationError` o `PersistenceError`). El campo `id` identifica el caso (`justification.document_id.taken`, `rustfs.unmapped`) y `kind` la familia (VALIDATION, NOT_FOUND, CONFLICT, CONFIGURATION o PERSISTENCE). Se busca en `src/errors/catalog.ts`. El paquete lanza con `fail(label, reason)`. El SDK no exporta el `S3Client` ni borra objetos.
 
 ## Instalar y probar
 
-Desde `domain/rustfs/`:
+Desde `data-access/rustfs/`:
 
 ```sh
 pnpm install
