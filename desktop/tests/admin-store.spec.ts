@@ -23,6 +23,30 @@ const validSession: CreateSessionInput = {
   room: 'Aula 4'
 }
 
+let documentNumber = 0
+
+// Los tests hablan de «nombre completo»: la primera palabra es el nombre y el resto, los apellidos.
+// Cada llamada usa un documento nuevo para que solo choque cuando el test lo busca.
+function personInput(input: {
+  name: string
+  email: string
+  role: string
+  identificationDocument?: string
+}): InvitePersonInput {
+  documentNumber += 1
+  const [firstName = '', ...lastNames] = input.name.trim().split(/\s+/)
+  return {
+    firstName,
+    lastName: lastNames.join(' ') || 'Prueba',
+    identificationDocument:
+      input.identificationDocument ?? `X${String(documentNumber).padStart(7, '0')}`,
+    email: input.email,
+    birthDate: '',
+    phone: '',
+    role: input.role as InvitePersonInput['role']
+  }
+}
+
 function valueOf<T>(result: MutationResult<T>): T {
   expect(result.ok).toBe(true)
   if (!result.ok) throw new Error(result.error)
@@ -44,18 +68,22 @@ test.beforeEach(() => {
 
 test('invites people, assigns pending people and creates a coherent scheduled session', () => {
   const teacher = valueOf(
-    useAdminStore.getState().invitePerson({
-      name: '  Elena Docente  ',
-      email: ' ELENA@CLASE.TEST ',
-      role: 'teacher'
-    })
+    useAdminStore.getState().invitePerson(
+      personInput({
+        name: '  Elena Docente  ',
+        email: ' ELENA@CLASE.TEST ',
+        role: 'teacher'
+      })
+    )
   )
   const student = valueOf(
-    useAdminStore.getState().invitePerson({
-      name: 'Bruno Alumno',
-      email: 'bruno@clase.test',
-      role: 'student'
-    })
+    useAdminStore.getState().invitePerson(
+      personInput({
+        name: 'Bruno Alumno',
+        email: 'bruno@clase.test',
+        role: 'student'
+      })
+    )
   )
   expect(teacher).toMatchObject({
     name: 'Elena Docente',
@@ -119,9 +147,7 @@ for (const input of [
   { name: 'Otro admin', email: 'otro@clase.test', role: 'admin' }
 ]) {
   test(`rejects invalid invitation ${JSON.stringify(input)} without writes`, () => {
-    expectRejectedWithoutWrite(() =>
-      useAdminStore.getState().invitePerson(input as InvitePersonInput)
-    )
+    expectRejectedWithoutWrite(() => useAdminStore.getState().invitePerson(personInput(input)))
   })
 }
 
@@ -172,7 +198,9 @@ for (const currentPersonId of [null, 'missing', 'person-student-ana', 'person-te
     expectRejectedWithoutWrite(() =>
       useAdminStore
         .getState()
-        .invitePerson({ name: 'Persona', email: 'persona@clase.test', role: 'student' })
+        .invitePerson(
+          personInput({ name: 'Persona', email: 'persona@clase.test', role: 'student' })
+        )
     )
     expectRejectedWithoutWrite(() => useAdminStore.getState().createCourse(validCourse))
     expectRejectedWithoutWrite(() => useAdminStore.getState().createSession(validSession))
@@ -220,7 +248,7 @@ test('logout preserves data; reset restores fresh seed and closes the demo', () 
   valueOf(
     useAdminStore
       .getState()
-      .invitePerson({ name: 'Nueva', email: 'nueva@clase.test', role: 'student' })
+      .invitePerson(personInput({ name: 'Nueva', email: 'nueva@clase.test', role: 'student' }))
   )
   const people = useAdminStore.getState().people
   useAdminStore.getState().exitDemo()
@@ -236,44 +264,74 @@ test('logout preserves data; reset restores fresh seed and closes the demo', () 
   expect(useAdminStore.getState().people).not.toBe(people)
 })
 
-test('edits people in place, normalizes email and preserves invitation and admin roles', () => {
+test('edits people in place with every person field normalized', () => {
   const invited = valueOf(
-    useAdminStore.getState().invitePerson({
-      name: 'Nueva',
-      email: 'nueva@clase.test',
-      role: 'student'
-    })
+    useAdminStore
+      .getState()
+      .invitePerson(personInput({ name: 'Nueva', email: 'nueva@clase.test', role: 'student' }))
   )
   const edited = valueOf(
     useAdminStore.getState().updatePerson(invited.id, {
-      name: '  Nombre corregido  ',
+      firstName: '  Nombre  ',
+      lastName: ' Corregido Ruiz ',
+      identificationDocument: ' 12.345.678-z ',
       email: ' NUEVA@CLASE.TEST ',
+      birthDate: '2000-05-01',
+      phone: ' +34 600 000 000 ',
       role: 'teacher'
     })
   )
-  expect(edited).toEqual({ ...invited, name: 'Nombre corregido', roles: ['teacher'] })
+  expect(edited).toEqual({
+    ...invited,
+    name: 'Nombre Corregido Ruiz',
+    firstName: 'Nombre',
+    lastName: 'Corregido Ruiz',
+    identificationDocument: '12345678Z',
+    email: 'nueva@clase.test',
+    birthDate: '2000-05-01',
+    phone: '+34 600 000 000',
+    roles: ['teacher']
+  })
   expect(useAdminStore.getState().people).toHaveLength(5)
-  const admin = valueOf(
-    useAdminStore.getState().updatePerson('person-admin', {
-      name: 'Miguel Docente',
-      email: 'MIGUEL@NEOLAND.EXAMPLE',
-      role: 'teacher'
-    })
+})
+
+test('there is a single admin: nobody else can become admin and the admin edits only their own account', () => {
+  const teacher = valueOf(
+    useAdminStore
+      .getState()
+      .updatePerson(
+        'person-teacher',
+        personInput({ name: 'Lucía García', email: 'lucia@neoland.example', role: 'teacher' })
+      )
   )
-  expect(admin.roles).toEqual(['admin', 'teacher'])
-  expect(admin.state).toBe('active')
-  const unchangedRoles = valueOf(
-    useAdminStore.getState().updatePerson('person-admin', {
-      name: 'Miguel',
-      email: 'miguel@neoland.example',
-      role: 'student'
-    })
+  expect(teacher.roles).toEqual(['teacher'])
+  expectRejectedWithoutWrite(() =>
+    useAdminStore
+      .getState()
+      .updatePerson(
+        'person-admin',
+        personInput({ name: 'Ventura Rodríguez', email: 'profesor@atempo.test', role: 'teacher' })
+      )
   )
-  expect(unchangedRoles.roles).toEqual(['admin', 'teacher'])
+  expect(
+    useAdminStore.getState().people.filter((person) => person.roles.includes('admin'))
+  ).toHaveLength(1)
   expectRejectedWithoutWrite(() => useAdminStore.getState().deletePerson('person-admin'))
 })
 
-test('a legitimate admin-only person can edit their details without gaining another role', () => {
+test('the admin decides whether they also teach, but keeps teaching while they have courses', () => {
+  const admin = useAdminStore.getState().people.find((person) => person.id === 'person-admin')!
+  const ownData = {
+    firstName: admin.firstName,
+    lastName: admin.lastName,
+    identificationDocument: admin.identificationDocument,
+    email: admin.email,
+    birthDate: admin.birthDate,
+    phone: admin.phone
+  }
+  expectRejectedWithoutWrite(() =>
+    useAdminStore.getState().updateAdmin({ ...ownData, teaches: false })
+  )
   const course = useAdminStore.getState().courses.find((item) => item.id === 'course-web')!
   valueOf(
     useAdminStore.getState().updateCourse(course.id, {
@@ -282,66 +340,110 @@ test('a legitimate admin-only person can edit their details without gaining anot
       studentIds: course.studentIds
     })
   )
-  useAdminStore.setState({
-    people: useAdminStore
-      .getState()
-      .people.map((person) =>
-        person.id === 'person-admin' ? { ...person, roles: ['admin'] } : person
-      )
-  })
-  const edited = valueOf(
-    useAdminStore.getState().updatePerson('person-admin', {
-      name: '  Administración  ',
-      email: ' ADMIN@NEOLAND.EXAMPLE ',
-      role: 'student'
-    })
+  const onlyAdmin = valueOf(useAdminStore.getState().updateAdmin({ ...ownData, teaches: false }))
+  expect(onlyAdmin).toMatchObject({ id: 'person-admin', roles: ['admin'], state: 'active' })
+  expectRejectedWithoutWrite(() =>
+    useAdminStore.getState().createCourse({ ...validCourse, teacherId: 'person-admin' })
   )
-  expect(edited).toMatchObject({
-    id: 'person-admin',
-    name: 'Administración',
-    email: 'admin@neoland.example',
-    roles: ['admin'],
-    state: 'active'
-  })
+  const teaching = valueOf(
+    useAdminStore.getState().updateAdmin({ ...ownData, firstName: ' Ventura José ', teaches: true })
+  )
+  expect(teaching).toMatchObject({ name: 'Ventura José Rodríguez', roles: ['admin', 'teacher'] })
+  valueOf(useAdminStore.getState().createCourse({ ...validCourse, teacherId: 'person-admin' }))
   expect(useAdminStore.getState().currentPersonId).toBe('person-admin')
-  valueOf(useAdminStore.getState().createCourse(validCourse))
 })
 
-test('rejects duplicate emails and role changes that would break existing assignments', () => {
+for (const [field, value] of [
+  ['firstName', ' '],
+  ['lastName', ''],
+  ['identificationDocument', '12/34'],
+  ['identificationDocument', ' 50.123.456-k '],
+  ['email', 'ana@'],
+  ['birthDate', '2999-01-01'],
+  ['birthDate', '2001-02-30'],
+  ['phone', '600-111'],
+  ['phone', '12345']
+] as const) {
+  test(`rejects an invitation with ${field} ${JSON.stringify(value)} without writes`, () => {
+    const input = personInput({ name: 'Persona Nueva', email: 'nueva@clase.test', role: 'student' })
+    expectRejectedWithoutWrite(() =>
+      useAdminStore.getState().invitePerson({ ...input, [field]: value })
+    )
+  })
+}
+
+test('accepts an invitation without birth date or phone', () => {
+  const person = valueOf(
+    useAdminStore
+      .getState()
+      .invitePerson(
+        personInput({ name: 'Sin Opcionales', email: 'sin@clase.test', role: 'student' })
+      )
+  )
+  expect(person).toMatchObject({ birthDate: '', phone: '', state: 'invited' })
+})
+
+test('rejects duplicate emails and documents and role changes that would break existing assignments', () => {
   expectRejectedWithoutWrite(() =>
-    useAdminStore.getState().updatePerson('person-student-ana', {
-      name: 'Ana',
-      email: ' LUIS@NEOLAND.EXAMPLE ',
-      role: 'student'
-    })
+    useAdminStore.getState().updatePerson(
+      'person-student-ana',
+      personInput({
+        name: 'Ana López',
+        email: 'ana@neoland.example',
+        role: 'student',
+        identificationDocument: '45678901-g'
+      })
+    )
   )
   expectRejectedWithoutWrite(() =>
-    useAdminStore.getState().updatePerson('person-student-ana', {
-      name: 'Ana',
-      email: 'ana@neoland.example',
-      role: 'teacher'
-    })
+    useAdminStore.getState().updatePerson(
+      'person-student-ana',
+      personInput({
+        name: 'Ana',
+        email: ' LUIS@NEOLAND.EXAMPLE ',
+        role: 'student'
+      })
+    )
   )
   expectRejectedWithoutWrite(() =>
-    useAdminStore.getState().updatePerson('person-teacher', {
-      name: 'Lucía',
-      email: 'lucia@neoland.example',
-      role: 'student'
-    })
+    useAdminStore.getState().updatePerson(
+      'person-student-ana',
+      personInput({
+        name: 'Ana',
+        email: 'ana@neoland.example',
+        role: 'teacher'
+      })
+    )
   )
   expectRejectedWithoutWrite(() =>
-    useAdminStore.getState().updatePerson('person-student-ana', {
-      name: '',
-      email: 'ana@neoland.example',
-      role: 'student'
-    })
+    useAdminStore.getState().updatePerson(
+      'person-teacher',
+      personInput({
+        name: 'Lucía',
+        email: 'lucia@neoland.example',
+        role: 'student'
+      })
+    )
   )
   expectRejectedWithoutWrite(() =>
-    useAdminStore.getState().updatePerson('person-student-ana', {
-      name: 'Ana',
-      email: 'invalid',
-      role: 'student'
-    })
+    useAdminStore.getState().updatePerson(
+      'person-student-ana',
+      personInput({
+        name: '',
+        email: 'ana@neoland.example',
+        role: 'student'
+      })
+    )
+  )
+  expectRejectedWithoutWrite(() =>
+    useAdminStore.getState().updatePerson(
+      'person-student-ana',
+      personInput({
+        name: 'Ana',
+        email: 'invalid',
+        role: 'student'
+      })
+    )
   )
 })
 
@@ -482,14 +584,10 @@ test('session edits keep their course and deleting one leaves courses and other 
 })
 
 test('new IDs never reuse deleted people, courses or sessions in the same run', () => {
-  const personInput: InvitePersonInput = {
-    name: 'Temporal',
-    email: 'temp@clase.test',
-    role: 'student'
-  }
-  const person = valueOf(useAdminStore.getState().invitePerson(personInput))
+  const temporal = personInput({ name: 'Temporal', email: 'temp@clase.test', role: 'student' })
+  const person = valueOf(useAdminStore.getState().invitePerson(temporal))
   valueOf(useAdminStore.getState().deletePerson(person.id))
-  expect(valueOf(useAdminStore.getState().invitePerson(personInput)).id).not.toBe(person.id)
+  expect(valueOf(useAdminStore.getState().invitePerson(temporal)).id).not.toBe(person.id)
   const course = valueOf(useAdminStore.getState().createCourse(validCourse))
   valueOf(useAdminStore.getState().deleteCourse(course.id))
   expect(valueOf(useAdminStore.getState().createCourse(validCourse)).id).not.toBe(course.id)
@@ -502,11 +600,14 @@ for (const currentPersonId of [null, 'missing', 'person-student-ana', 'person-te
   test(`guards all update and delete actions for ${currentPersonId}`, () => {
     useAdminStore.setState({ currentPersonId })
     expectRejectedWithoutWrite(() =>
-      useAdminStore.getState().updatePerson('person-student-ana', {
-        name: 'Ana',
-        email: 'ana@neoland.example',
-        role: 'student'
-      })
+      useAdminStore.getState().updatePerson(
+        'person-student-ana',
+        personInput({
+          name: 'Ana',
+          email: 'ana@neoland.example',
+          role: 'student'
+        })
+      )
     )
     expectRejectedWithoutWrite(() => useAdminStore.getState().deletePerson('person-student-ana'))
     expectRejectedWithoutWrite(() =>
@@ -535,11 +636,14 @@ test('unknown and foreign entity IDs cannot be updated or deleted', () => {
   })
   for (const id of ['missing', 'foreign']) {
     expectRejectedWithoutWrite(() =>
-      useAdminStore.getState().updatePerson(id, {
-        name: 'Persona',
-        email: 'persona@clase.test',
-        role: 'student'
-      })
+      useAdminStore.getState().updatePerson(
+        id,
+        personInput({
+          name: 'Persona',
+          email: 'persona@clase.test',
+          role: 'student'
+        })
+      )
     )
     expectRejectedWithoutWrite(() => useAdminStore.getState().deletePerson(id))
     expectRejectedWithoutWrite(() => useAdminStore.getState().updateCourse(id, validCourse))

@@ -4,25 +4,28 @@ El portal del alumno y el panel de administración comparten este paquete. Impor
 
 ## Iniciar la web
 
-Con Node 24 y pnpm 10.33.0, abre dos terminales desde la raíz:
+Con Node 24 y pnpm 10.33.0, desde la raíz:
 
 ```sh
-pnpm run atempo --router-only
-pnpm run demo:web
+pnpm run atempo
 ```
 
-El router escucha en el puerto 3004. Vite sirve `http://localhost:5191` y reenvía `/api/*` al router quitando el prefijo `/api`. Para usar otro puerto, configura `ATEMPO_API_ROUTER_PORT`. `pnpm run atempo` inicia el router junto con Electron.
+El comando instala las dependencias de `web/` y `desktop/` si faltan, arranca en el proyecto Compose `atempo` el router, las tres APIs de persistencia, PostgreSQL, RustFS y Datasette, sirve Vite en `http://localhost:5191` y abre Electron. Vite reenvía `/api/*` al mismo router quitando el prefijo `/api`. Los servicios Docker siguen activos al cerrar Electron. Para usar otro puerto de router, `pnpm run atempo --port 3005`. Para depurar solo la web, `pnpm run atempo --router-only` y en otra terminal `pnpm --dir web dev`.
 
 Auth0 debe estar configurado y disponible para entrar en la web. `profesor@atempo.test` corresponde a Ventura Rodríguez, administrador y profesor del seed; `ada.lopez@clase.test` corresponde a Ada, alumna. Las contraseñas se gestionan en Auth0 y no se guardan en el navegador.
+
+Si arrancas el router aislado con `pnpm run atempo --router-only --port 3005`, pasa el mismo puerto a la web: `$env:ATEMPO_API_ROUTER_PORT='3005'; pnpm --dir web dev` en PowerShell, o `ATEMPO_API_ROUTER_PORT=3005 pnpm --dir web dev` en macOS/Linux.
 
 ## Probar administración
 
 Abre <http://localhost:5191/admin> e inicia sesión como `profesor@atempo.test`. El panel incluye **Personas**, **Cursos** y **Mis clases**. En **Personas**, **Invitar persona** permite preparar una invitación pendiente para los datos de demostración. La activación de invitaciones y **Crear cuenta** están deshabilitados; no se envía correo ni se crea una cuenta web.
 
-1. En **Cursos**, pulsa **Crear curso**. Añade nombre, profesor y alumnos, y guarda.
-2. Abre el curso y pulsa **Programar sesión**. Selecciona fecha, inicio, fin y aula. El fin debe ser posterior al inicio en el mismo día.
-3. Abre la sesión para ver el profesor, el alumnado y la asistencia pendiente.
-4. Para probar **Mis clases**, asigna el curso a Ventura Rodríguez. Esa vista muestra sus cursos en modo lectura.
+1. En **Personas**, pulsa **Invitar persona**. Mientras rellenas el formulario la tabla se oculta. Pide los campos de `person`: nombre, apellidos, documento de identidad, correo y, si quieres, fecha de nacimiento y teléfono. Elige **Alumno** o **Profesor** y pulsa **Preparar invitación**. La fila muestra el documento e **Invitación pendiente**. El documento y el correo no se pueden repetir en la organización.
+2. Solo hay un admin por organización. Con **Editar** en tu propia cuenta decides con **También soy profesor** si también das clase; no puedes dejarlo mientras tengas cursos.
+3. En **Cursos**, pulsa **Crear curso**. Añade nombre, profesor y alumnos, y guarda.
+4. Abre el curso y pulsa **Programar sesión**. Selecciona fecha, inicio, fin y aula. El fin debe ser posterior al inicio en el mismo día.
+5. Abre la sesión para ver el profesor, el alumnado y la asistencia pendiente.
+6. Para probar **Mis clases**, asigna el curso a Ventura Rodríguez. Esa vista muestra sus cursos en modo lectura.
 
 ### Sesiones semanales
 
@@ -53,6 +56,8 @@ El historial y los avisos de alumno de la demo permanecen en el almacenamiento l
 La web del alumno sale en el idioma del navegador, o en español si el navegador no está en español ni en inglés. Se cambia en **Idioma**, en el menú de la cuenta, y en la cabecera del login; la elección se guarda en `localStorage` como `atempo-student-language`. Los textos viven en `src/locales/es.json` y `src/locales/en.json`, sin librería de traducción: el español es el original y la reserva. `src/language/` tiene el mismo módulo que el escritorio: `useText()` para los textos y `format.ts` para fechas, horas y números con `Intl`. La administración sigue en español; la traduce #248.
 
 Para registrar asistencia, abre **Hoy → Abrir lista** en Electron. Escanea su QR o escribe en la web las seis cifras que aparecen debajo. Ambos cambian cada 30 segundos. Consulta los pasos para probar con un móvil en [el PR #123](https://github.com/venturars/aTempo/pull/123).
+
+La entrada del alumno queda en el almacenamiento local de su navegador. No aparece en la lista del profesor de Electron, que conserva sus datos simulados por separado.
 
 ## Probar el historial y las rutas del alumno
 

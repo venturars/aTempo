@@ -248,7 +248,7 @@ test('opens the professor panel from the demo login and keeps attendance navigat
     await molero.getByText('Pendiente').click()
     await window.getByRole('button', { name: 'Presente' }).click()
     const reason = window.getByRole('dialog', { name: /^Cambiar / })
-    await reason.getByLabel('Motivo', { exact: true }).fill('Corrección en clase')
+    await reason.getByLabel('Motivo').fill('Corrección en clase')
     await reason.getByRole('button', { name: 'Guardar', exact: true }).click()
     await expect(molero.getByRole('button', { name: 'Presente', exact: true })).toBeVisible()
     await expect(molero.getByRole('button', { name: '—', exact: true })).toBeVisible()
@@ -271,7 +271,8 @@ test('opens the professor panel from the demo login and keeps attendance navigat
     await expect(window.getByRole('button', { name: 'Volver a Mar 10 nov 2026' })).toBeVisible()
     await expect(window.getByRole('heading', { level: 1, name: 'Diego Torres' })).toBeVisible()
 
-    await window.getByRole('button', { name: 'Ajustes' }).click()
+    await window.locator('aside details.dropdown > summary').click()
+    await window.getByRole('button', { name: 'Ajustes', exact: true }).click()
     await window.getByRole('button', { name: 'Claro' }).click()
     await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-claro')
     await window.getByRole('button', { name: 'Oscuro' }).click()
@@ -284,7 +285,8 @@ test('remembers the theme chosen in Ajustes after reloading', async () => {
     await window.getByLabel('Correo').fill('profesor@atempo.test')
     await window.getByLabel('Contraseña').fill('Profesor123!')
     await window.getByRole('button', { name: 'Entrar' }).click()
-    await window.getByRole('button', { name: 'Ajustes' }).click()
+    await window.locator('aside details.dropdown > summary').click()
+    await window.getByRole('button', { name: 'Ajustes', exact: true }).click()
     await window.getByRole('button', { name: 'Claro' }).click()
     await expect(window.locator('html')).toHaveAttribute('data-theme', 'atempo-claro')
 

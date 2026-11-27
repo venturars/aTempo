@@ -68,6 +68,12 @@ async function openTab(window: Page, label: string, title: string): Promise<void
   await expect(window.getByRole('heading', { level: 1, name: title })).toBeVisible()
 }
 
+async function openSettings(window: Page): Promise<void> {
+  await window.locator('aside details.dropdown > summary').click()
+  await window.getByRole('button', { name: 'Ajustes', exact: true }).click()
+  await expect(window.getByRole('heading', { level: 1, name: 'Ajustes' })).toBeVisible()
+}
+
 // El ratón sale de la barra lateral para que ningún botón quede en hover en la captura.
 async function expectScreen(window: Page, name: string): Promise<void> {
   const size = window.viewportSize()
@@ -375,7 +381,7 @@ test('matches the desktop panel screens with their snapshots', async () => {
     await expect(window.getByRole('status')).toContainText('Manuel Diaz')
     await expectScreen(window, 'panel-estadisticas.png')
 
-    await openTab(window, 'Ajustes', 'Ajustes')
+    await openSettings(window)
     await expectScreen(window, 'panel-ajustes.png')
   })
 })
@@ -440,12 +446,14 @@ test('goes back to Estadísticas from a student file', async () => {
     for (const [label, title] of [
       ['Dashboard', 'Hoy'],
       ['Sesiones', 'Sesiones'],
-      ['Ajustes', 'Ajustes'],
       ['Estadísticas', 'Estadísticas']
     ]) {
       await openTab(window, label, title)
       await expect(window.getByRole('button', { name: /^Volver a/ }), title).toHaveCount(0)
     }
+    await openSettings(window)
+    await expect(window.getByRole('button', { name: /^Volver a/ })).toHaveCount(0)
+    await openTab(window, 'Estadísticas', 'Estadísticas')
     await window
       .getByRole('region', { name: /^Asistencia por fecha/ })
       .getByRole('button', { name: 'Diego Torres', exact: true })
@@ -568,7 +576,7 @@ for (const theme of ['atempo-oscuro', 'atempo-claro']) {
       })
       await menu.getByRole('button', { name: 'Ausente', exact: true }).click()
       const reason = window.getByRole('dialog', { name: /^Cambiar / })
-      await reason.getByLabel('Motivo', { exact: true }).fill('Corrección en clase')
+      await reason.getByLabel('Motivo').fill('Corrección en clase')
       await reason.getByRole('button', { name: 'Guardar', exact: true }).click()
       await expect(reason).toHaveCount(0)
       const absent = window
@@ -602,7 +610,7 @@ for (const theme of ['atempo-oscuro', 'atempo-claro']) {
         'letter-spacing',
         /^(normal|0px)$/
       )
-      await openTab(window, 'Ajustes', 'Ajustes')
+      await openSettings(window)
       await expectInheritedType(headings(), inherited.tracking, inherited.family)
       await expect(window.locator('html')).toHaveAttribute('data-theme', theme)
       await openTab(window, 'Dashboard', 'Hoy')
