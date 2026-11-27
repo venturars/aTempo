@@ -242,6 +242,7 @@
     "sessions": {
       "date": "Date",
       "attendance": "Attendance",
+      "students": "Students",
       "cancelled": "Cancelled"
     },
     "student": {

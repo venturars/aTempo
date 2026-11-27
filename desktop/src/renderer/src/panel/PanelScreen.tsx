@@ -521,13 +521,27 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
     return (
       <section className="card w-full overflow-hidden bg-base-100 shadow-sm">
         <table className="table table-spread">
+          <colgroup span={5} />
           <thead>
             <tr>
-              <th>{t('panel.sessions.date')}</th>
-              <th>{t('panel.sessions.attendance')}</th>
-              <th>{t('panel.counts.present')}</th>
-              <th>{t('panel.counts.late')}</th>
-              <th>{t('panel.counts.absent')}</th>
+              <th colSpan={5} scope="colgroup" className="text-center">
+                {t('panel.sessions.students')}
+              </th>
+            </tr>
+            <tr>
+              <th scope="col">{t('panel.sessions.date')}</th>
+              <th scope="col" className="text-center">
+                {t('panel.sessions.attendance')}
+              </th>
+              <th scope="col" className="text-center">
+                {t('panel.counts.present')}
+              </th>
+              <th scope="col" className="text-center">
+                {t('panel.counts.late')}
+              </th>
+              <th scope="col" className="text-center">
+                {t('panel.counts.absent')}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -556,18 +570,20 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
                       <SessionDate id={session.id} strong />
                     </button>
                   </td>
-                  <td className="tabular-nums text-base-content/50">{attendance}</td>
-                  <td>
+                  <td className="text-center tabular-nums text-base-content/50">{attendance}</td>
+                  <td className="text-center">
                     {counts === null ? (
                       <span className="text-base-content/50">—</span>
                     ) : (
                       <SessionCount value={counts.p} tone="muted" />
                     )}
                   </td>
-                  <td>
+                  <td className="text-center">
                     {counts === null ? '—' : <SessionCount value={counts.r} tone="warning" />}
                   </td>
-                  <td>{counts === null ? '—' : <SessionCount value={counts.a} tone="error" />}</td>
+                  <td className="text-center">
+                    {counts === null ? '—' : <SessionCount value={counts.a} tone="error" />}
+                  </td>
                 </tr>
               )
             })}
@@ -888,7 +904,7 @@ function StatWell({
 function SessionDate({ id, strong = false }: { id: string; strong?: boolean }): React.JSX.Element {
   return (
     <>
-      <span className="text-base-content/60">{sessionShortWeekday(id)}</span>{' '}
+      <span className="inline-block w-8 text-base-content/60">{sessionShortWeekday(id)}</span>{' '}
       <span className={strong ? 'font-medium' : undefined}>{sessionDateLabel(id)}</span>
     </>
   )
