@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@atempo/errors':
-        specifier: link:../../errors
-        version: link:../../errors
+        specifier: link:../../errors/node
+        version: link:../../errors/node
       pg:
         specifier: 8.23.1
         version: 8.23.1

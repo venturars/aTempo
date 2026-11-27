@@ -26,7 +26,7 @@ aTempo de escritorio es la aplicación del profesor. Sirve para registrar la asi
 
 - **TypeScript** escribe el paquete.
 - **pg 8.23.1** abre PostgreSQL (`DATABASE_URL`, timeout 3 s).
-- **@atempo/errors** (`errors/` en la raíz) da las clases de error y `createErrorFactory`. Se enlaza con `link:../../errors` y no se publica en npm.
+- **@atempo/errors** (`errors/node/`) da las clases de error y `createErrorFactory`. Se enlaza con `link:../../errors/node` y no se publica en npm.
 - **pnpm** es el gestor de paquetes. Las versiones van fijas, sin `^`.
 
 Fija los tipos del core (`organization`, `person`, `course`, `person_course`, `role`, `person_role`), las lecturas, las escrituras y las reglas que copia de PostgreSQL: `end_at > start_at`, `contract_address` `0x`+40 hex, student exclusivo y unicidades. El email se guarda recortado y en minúsculas, igual que `normalizeEmail` del escritorio. `contract_address` se guarda en hex minúsculas. `start_at` y `end_at` entran con `Z` o un desfase (`+01:00`) y salen en ISO UTC; `birth_date` en `YYYY-MM-DD`. Un delete quita en la misma transacción las filas hijas (`person_role`, `person_course`, cursos de la organización): o se borra todo o no se borra nada. `role` no se escribe. Si un objeto no cumple esos campos o reglas, o si una matrícula, un rol o un id no existen o ya están, lanza y no escribe en PostgreSQL.
@@ -74,4 +74,4 @@ El API-router no accede a RustFS; `data-access/node/` lo consumirá cuando exist
 
 - [STYLE.md](STYLE.md): los dos temas y el enlace a la guía visual.
 - [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, flujo de `api-router/` y `sdk/`, flujo previsto Frontend → `api-postgresql` → `data-access/node` → PostgreSQL, las APIs de persistencia y los almacenes.
-- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/`, `sdk/`, `data-access/node/`, `errors/`, `api-postgresql/`, `api-rustfs/`, `api-sqlite/` y los almacenes.
+- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/`, `sdk/`, `data-access/node/`, `errors/node/`, `api-postgresql/`, `api-rustfs/`, `api-sqlite/` y los almacenes.

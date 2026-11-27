@@ -118,7 +118,7 @@ Abre <http://localhost:5191/> para el alumno o <http://localhost:5191/admin> par
 | `api-router/` | API REST con NestJS entre los frontends y `atempo-sdk`. Auth0 permanece en `AuthService`; tras login, register y `me` llama a `afterAuth`. |
 | `sdk/` | Paquete `atempo-sdk`: capas shared, dominio, aplicación, infraestructura mock y composición. Expone `afterAuth({ email })`. No es un servicio HTTP. El CRUD HTTP y el GET del Resumen aún no están. |
 | `data-access/` | SDK de PostgreSQL: `node/` (TypeScript). No es un servicio HTTP. Ningún servicio lo importa todavía. |
-| `errors/` | Paquete local `@atempo/errors`: clases de error y fábrica `createErrorFactory`. Lo enlaza `data-access/node/` con `link:../../errors`. No se publica en npm. |
+| `errors/` | `node/` es el paquete local `@atempo/errors`: clases de error y fábrica `createErrorFactory`. Lo enlaza `data-access/node/` con `link:../../errors/node`. No se publica en npm. |
 | `api-postgresql/` | API REST con NestJS entre la SDK y PostgreSQL. El flujo previsto con `data-access/node` es Frontend → `api-postgresql` → `data-access/node` → PostgreSQL. |
 | `api-rustfs/` | API REST con Express entre la SDK y RustFS (persistencia de objetos). |
 | `api-sqlite/` | Servicio Flask con Pydantic y SQLAlchemy Core entre la SDK y SQLite. Aún no hay integración. |

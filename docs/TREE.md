@@ -102,7 +102,7 @@ permanent-data.md
 data-access/
   README.md
   node/
-    package.json            # @atempo/errors: link:../../errors; prepare compila errors/
+    package.json            # @atempo/errors: link:../../errors/node; prepare compila errors/node/
     pnpm-lock.yaml
     .npmrc
     tsconfig.json
@@ -160,20 +160,21 @@ data-access/
 
 ```text
 errors/
-  package.json              # @atempo/errors, main y types en dist/
-  pnpm-lock.yaml
-  .npmrc
-  tsconfig.json
-  tsconfig.build.json
-  eslint.config.mjs
-  README.md
-  src/
-    index.ts
-    errors.ts               # DomainError, subclases por kind y labelParts()
-    fail.ts                 # createErrorFactory(catalog): domainError() y fail()
-  test/
-    jest.json
-    errors.spec.ts
+  node/
+    package.json            # @atempo/errors, main y types en dist/
+    pnpm-lock.yaml
+    .npmrc
+    tsconfig.json
+    tsconfig.build.json
+    eslint.config.mjs
+    README.md
+    src/
+      index.ts
+      errors.ts             # DomainError, subclases por kind y labelParts()
+      fail.ts               # createErrorFactory(catalog): domainError() y fail()
+    test/
+      jest.json
+      errors.spec.ts
 ```
 
 # Árbol de `sdk/`

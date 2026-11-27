@@ -12,10 +12,10 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "jest --config ./test/jest.json",
     "test:ci": "pnpm test",
-    "prepare": "pnpm --dir ../../errors install --frozen-lockfile && pnpm --dir ../../errors build"
+    "prepare": "pnpm --dir ../../errors/node install --frozen-lockfile && pnpm --dir ../../errors/node build"
   },
   "dependencies": {
-    "@atempo/errors": "link:../../errors",
+    "@atempo/errors": "link:../../errors/node",
     "pg": "8.23.1"
   },
   "devDependencies": {
