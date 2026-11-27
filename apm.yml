@@ -11,7 +11,7 @@ targets:
   - claude
 dependencies:
   apm:
-    - venturars/delivery-workflow#v1.2.3
+    - venturars/delivery-workflow#v2.0.0
   mcp: []
 includes: auto
 scripts: {}
