@@ -248,7 +248,7 @@ test('opens the professor panel from the demo login and keeps attendance navigat
     await molero.getByText('Pendiente').click()
     await window.getByRole('button', { name: 'Presente' }).click()
     const reason = window.getByRole('dialog', { name: /^Cambiar / })
-    await reason.getByLabel('Motivo', { exact: true }).fill('Corrección en clase')
+    await reason.getByLabel('Motivo').fill('Corrección en clase')
     await reason.getByRole('button', { name: 'Guardar', exact: true }).click()
     await expect(molero.getByRole('button', { name: 'Presente', exact: true })).toBeVisible()
     await expect(molero.getByRole('button', { name: '—', exact: true })).toBeVisible()

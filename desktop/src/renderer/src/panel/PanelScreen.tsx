@@ -561,7 +561,7 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
   const sessionId = selected.id
   const when = sessionTitle(sessionId)
 
-  // Una sesión pasada está cerrada: cambiar un estado pide un motivo.
+  // Una sesión pasada está cerrada: cambiar un estado abre el diálogo, con el motivo opcional.
   function pick(name: string, mark: Attendance): void {
     if (rows.find((row) => row.name === name)?.mark === mark) {
       return

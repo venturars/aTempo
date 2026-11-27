@@ -180,7 +180,7 @@ export class MockApiService {
     }
     record.updatedBy = sampleTeacherId
     record.updatedAt = new Date().toISOString()
-    record.reason = correction.reason.trim()
+    record.reason = correction.reason?.trim() || null
     return { ...record }
   }
 
