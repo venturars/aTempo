@@ -6,10 +6,10 @@ FROM node:24.22.3-trixie AS base
 
 # Electron 44 trae Node 24. pnpm sale de packageManager en desktop/, docs/storybook/, api-router/, blockend/ y postgres/.
 ARG PNPM_VERSION=10.33.0
-ARG APM_VERSION=0.39.0
+ARG APM_VERSION=0.39.1
 # Checksums de apm-linux-*.tar.gz en la release de APM. Cambian con APM_VERSION.
-ARG APM_SHA256_ARM64=01ba7e98b71469225298557dd06fb4ea9e8de61c739182d09b3e26c788c1d975
-ARG APM_SHA256_X86_64=3a84e9c14ab594c22e97f6ccc9be41bed14199fe4f4aa24a206d23b65919592d
+ARG APM_SHA256_ARM64=06e142d76368aa4d8b1e933979b8260b16eaa41abbccbb6173d34be51754f429
+ARG APM_SHA256_X86_64=e6ee846e6625d2ed6e29a73273550e65b8482e6598d2ab3c24a9a68dc6678c17
 # Snapshot Debian de Python (base) y de las librerías de desktop-gui. Cambia la fecha y todas las versiones fijadas juntas.
 ARG DEBIAN_SNAPSHOT=20261116T000000Z
 # Lo pone Docker al construir: arm64 en Apple Silicon, amd64 en la mayoría de PCs.
