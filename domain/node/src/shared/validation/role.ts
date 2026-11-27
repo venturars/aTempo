@@ -8,6 +8,12 @@ export const ROLE_NAMES = [
   'student',
 ] as const satisfies readonly RoleName[]
 
+// Fails to compile if a RoleName is missing from ROLE_NAMES.
+type MissingRoleName = Exclude<RoleName, (typeof ROLE_NAMES)[number]>
+export const ROLE_NAMES_COVER_ROLE_NAME: [MissingRoleName] extends [never]
+  ? true
+  : MissingRoleName = true
+
 export function isRoleName(value: string): value is RoleName {
   return (ROLE_NAMES as readonly string[]).includes(value)
 }

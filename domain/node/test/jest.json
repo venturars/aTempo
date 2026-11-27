@@ -4,6 +4,6 @@
   "testEnvironment": "node",
   "testMatch": ["<rootDir>/test/**/*.spec.ts"],
   "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
+    "^.+\\.ts$": "ts-jest"
   }
 }
