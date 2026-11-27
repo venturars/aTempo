@@ -19,26 +19,26 @@ test.describe('correction logic', () => {
 
   test('corrects a past session and keeps every change in order', () => {
     const state = (): ReturnType<typeof usePanelStore.getState> => usePanelStore.getState()
-    expect(state().correctSessionMark('Mar 10 nov', 'Diego Torres', 'ausente', 'x', teacher)).toBe(
+    expect(state().correctSessionMark('2026-11-10', 'Diego Torres', 'ausente', 'x', teacher)).toBe(
       false
     )
-    expect(state().correctSessionMark('Jue 12 nov', 'Diego Torres', 'presente', 'x', teacher)).toBe(
+    expect(state().correctSessionMark('2026-11-12', 'Diego Torres', 'presente', 'x', teacher)).toBe(
       false
     )
-    expect(state().correctSessionMark('Mié 4 nov', 'Diego Torres', 'ausente', 'x', teacher)).toBe(
+    expect(state().correctSessionMark('2026-11-04', 'Diego Torres', 'ausente', 'x', teacher)).toBe(
       false
     )
-    expect(state().correctSessionMark('Mar 10 nov', 'Nadie', 'ausente', 'x', teacher)).toBe(false)
+    expect(state().correctSessionMark('2026-11-10', 'Nadie', 'ausente', 'x', teacher)).toBe(false)
     expect(
-      state().correctSessionMark('Mar 10 nov', 'Diego Torres', 'presente', 'Justificó.', teacher)
+      state().correctSessionMark('2026-11-10', 'Diego Torres', 'presente', 'Justificó.', teacher)
     ).toBe(true)
     expect(
-      state().correctSessionMark('Mar 10 nov', 'Diego Torres', 'retraso', 'Error mío.', 'Lucía')
+      state().correctSessionMark('2026-11-10', 'Diego Torres', 'retraso', 'Error mío.', 'Lucía')
     ).toBe(true)
-    expect(state().correctSessionMark('Mar 10 nov', 'Diego Torres', 'ausente', ' ', teacher)).toBe(
+    expect(state().correctSessionMark('2026-11-10', 'Diego Torres', 'ausente', ' ', teacher)).toBe(
       true
     )
-    expect(state().sessionMarks['Mar 10 nov']['Diego Torres']).toBe('ausente')
+    expect(state().sessionMarks['2026-11-10']['Diego Torres']).toBe('ausente')
     expect(state().changes.map(({ from, to, reason, by }) => [from, to, reason, by])).toEqual([
       ['ausente', 'presente', 'Justificó.', teacher],
       ['presente', 'retraso', 'Error mío.', 'Lucía'],
