@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, Outlet, useNavigate } from '@tanstack/react-router'
 import { applyTheme, readTheme } from '../session/sessionStore'
-import { useText } from '../language/useText'
+import { useText } from '../lang/useText'
 import { ThemeToggle } from '../shared/ThemeToggle'
 import { AdminEntry } from './AdminEntry'
 import { useAdminStore } from './adminStore'

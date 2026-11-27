@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { TextKey } from '../language/messages'
+import type { TextKey } from '../lang/messages'
 import { storageKeys } from '../storageKeys'
 import { normalizeEmail } from '../student/studentExample'
 import { logoutWebSession } from '../auth/webSession'

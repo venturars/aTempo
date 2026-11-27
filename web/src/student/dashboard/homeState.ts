@@ -1,5 +1,5 @@
-import { formatTime } from '../../language/format'
-import { text } from '../../language/useText'
+import { formatTime } from '../../lang/format'
+import { text } from '../../lang/useText'
 import type { ClassEntry } from '../studentExample'
 import { todayClass } from '../studentExample'
 import { dateKey } from '../studentDate'

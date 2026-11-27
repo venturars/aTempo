@@ -1,6 +1,6 @@
-import { formatDate } from '../language/format'
-import type { TextKey } from '../language/messages'
-import { text } from '../language/useText'
+import { formatDate } from '../lang/format'
+import type { TextKey } from '../lang/messages'
+import { text } from '../lang/useText'
 
 // Antes de las 6 y desde las 21 es de noche. Hasta las 14 es por la mañana.
 // Devuelve la clave del saludo: la pantalla lo traduce con t().

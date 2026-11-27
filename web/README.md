@@ -53,7 +53,7 @@ El historial y los avisos de alumno de la demo permanecen en el almacenamiento l
 
 ## Idioma
 
-La web del alumno sale en el idioma del navegador, o en español si el navegador no está en español ni en inglés. Se cambia en **Idioma**, en el menú de la cuenta, y en la cabecera del login; la elección se guarda en `localStorage` como `atempo-student-language`. Los textos viven en `src/locales/es.json` y `src/locales/en.json`, sin librería de traducción: el español es el original y la reserva. `src/language/` tiene el mismo módulo que el escritorio: `useText()` para los textos y `format.ts` para fechas, horas y números con `Intl`. La administración sigue en español; la traduce #248.
+La web del alumno sale en el idioma del navegador, o en español si el navegador no está en español ni en inglés. Se cambia en **Idioma**, en el menú de la cuenta, y en la cabecera del login; la elección se guarda en `localStorage` como `atempo-student-lang`. Los textos viven en `src/locales/es.json` y `src/locales/en.json`, sin librería de traducción: el español es el original y la reserva. `src/lang/` tiene el mismo módulo que el escritorio: `useText()` para los textos y `format.ts` para fechas, horas y números con `Intl`. La administración sigue en español; la traduce #248.
 
 Para registrar asistencia, abre **Hoy → Abrir lista** en Electron. Escanea su QR o escribe en la web las seis cifras que aparecen debajo. Ambos cambian cada 30 segundos. Consulta los pasos para probar con un móvil en [el PR #123](https://github.com/venturars/aTempo/pull/123).
 

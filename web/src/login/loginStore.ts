@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { loginWebSession } from '../auth/webSession'
-import type { TextKey } from '../language/messages'
+import type { TextKey } from '../lang/messages'
 import { useSessionStore } from '../session/sessionStore'
 import { validateLogin } from './validateLogin'
 

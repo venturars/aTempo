@@ -5,7 +5,7 @@ import { languages, type Language } from './messages'
 // «device» sigue el idioma del navegador. Las otras opciones lo fijan.
 export type LanguageChoice = 'device' | Language
 
-const choiceKey = storageKeys.language
+const choiceKey = storageKeys.lang
 
 // La región de cada idioma cuando el navegador habla otro.
 const defaultRegion: Record<Language, string> = {
@@ -30,10 +30,10 @@ function regionFor(language: Language, deviceLocale: string): string {
   return sameLanguage && deviceLocale.includes('-') ? deviceLocale : defaultRegion[language]
 }
 
-function resolve(choice: LanguageChoice): { language: Language; region: string } {
+function resolve(choice: LanguageChoice): { lang: Language; region: string } {
   const deviceLocale = navigator.language
   const language = choice === 'device' ? (languageOf(deviceLocale) ?? 'es') : choice
-  return { language, region: regionFor(language, deviceLocale) }
+  return { lang: language, region: regionFor(language, deviceLocale) }
 }
 
 function readChoice(): LanguageChoice {
@@ -60,7 +60,7 @@ function saveChoice(choice: LanguageChoice): void {
 
 type LanguageState = {
   choice: LanguageChoice
-  language: Language
+  lang: Language
   region: string
   choose: (choice: LanguageChoice) => void
 }
@@ -73,12 +73,12 @@ export const useLanguageStore = create<LanguageState>((set) => ({
   choose: (choice) => {
     saveChoice(choice)
     const resolved = resolve(choice)
-    document.documentElement.lang = resolved.language
+    document.documentElement.lang = resolved.lang
     set({ choice, ...resolved })
   }
 }))
 
 // Los tests de los stores cargan este módulo en Node, que no tiene document.
 if (typeof document !== 'undefined') {
-  document.documentElement.lang = useLanguageStore.getState().language
+  document.documentElement.lang = useLanguageStore.getState().lang
 }

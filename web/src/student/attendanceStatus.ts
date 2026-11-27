@@ -1,4 +1,4 @@
-import type { TextKey } from '../language/messages'
+import type { TextKey } from '../lang/messages'
 import { minutesOfDay } from './studentDate'
 
 export type AttendanceStatus = 'presente' | 'tarde' | 'ausente'

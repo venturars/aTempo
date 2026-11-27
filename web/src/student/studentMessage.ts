@@ -1,6 +1,6 @@
-import { formatTime } from '../language/format'
-import type { TextKey } from '../language/messages'
-import { text } from '../language/useText'
+import { formatTime } from '../lang/format'
+import type { TextKey } from '../lang/messages'
+import { text } from '../lang/useText'
 
 // Un mensaje que se enseña más tarde, por ejemplo en el aviso que sale al cambiar de pantalla.
 // Guarda la clave del texto y, si la lleva, una hora «HH:MM». Se traduce al pintar.

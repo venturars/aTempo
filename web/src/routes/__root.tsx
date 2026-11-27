@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { createRootRoute, Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
 import { readWebSession } from '../auth/webSession'
-import { useText } from '../language/useText'
+import { useText } from '../lang/useText'
 import { LoginScreen } from '../login/LoginScreen'
 import { useSessionStore } from '../session/sessionStore'
 import { hasPendingCheckIn } from '../student/checkIn/pendingCheckIn'

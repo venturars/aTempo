@@ -1,4 +1,4 @@
-import type { TextKey } from '../language/messages'
+import type { TextKey } from '../lang/messages'
 
 // La clave del texto de cada error, o '' si el campo está bien. La pantalla lo traduce con t().
 export type LoginErrors = { email: TextKey | ''; password: TextKey | '' }

@@ -1,6 +1,6 @@
 import { useId, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { useText } from '../../language/useText'
+import { useText } from '../../lang/useText'
 
 const hours = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, '0'))
 const minutes = Array.from({ length: 60 }, (_, index) => String(index).padStart(2, '0'))

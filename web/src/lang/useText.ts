@@ -24,8 +24,8 @@ function pluralForm(entry: Plural, count: number, region: string): string {
 // El texto de una clave en el idioma elegido. {nombre} se rellena con values.nombre y,
 // si el texto es un plural, values.count elige la forma. Sin traducción, sale el español.
 export function text(key: TextKey, values: TextValues = {}): string {
-  const { language, region } = useLanguageStore.getState()
-  const entry = lookup(messages[language], key) ?? lookup(messages.es, key) ?? key
+  const { lang, region } = useLanguageStore.getState()
+  const entry = lookup(messages[lang], key) ?? lookup(messages.es, key) ?? key
   const template =
     typeof entry === 'string' ? entry : pluralForm(entry, Number(values.count ?? 0), region)
   return template.replace(/\{(\w+)\}/g, (hole, name: string) =>

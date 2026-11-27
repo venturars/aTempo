@@ -2,8 +2,8 @@ import { useId, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/style.css'
-import { calendarLocale } from '../../language/format'
-import { text, useText } from '../../language/useText'
+import { calendarLocale } from '../../lang/format'
+import { text, useText } from '../../lang/useText'
 import { formatDay } from '../studentDate'
 
 function startOfToday(): Date {

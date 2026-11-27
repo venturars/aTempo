@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { useText } from '../language/useText'
+import { useText } from '../lang/useText'
 import { useLoginStore } from '../login/loginStore'
 import { useSessionStore } from '../session/sessionStore'
 import { ThemeToggle } from '../shared/ThemeToggle'
