@@ -20,7 +20,6 @@ function browserCanScan(): boolean {
 }
 
 // Si la cámara falla, se dice qué ha pasado y qué puede hacer el alumno. El campo del código sigue ahí.
-// Se guarda la clave del texto; la pantalla lo traduce al pintarlo.
 const browserCannotScan: TextKey = 'scan.camera.unsupported'
 
 function cameraProblemFor(caught: unknown): TextKey {

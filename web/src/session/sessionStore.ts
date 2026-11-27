@@ -17,7 +17,6 @@ type SessionState = {
   isLoading: boolean
   isReady: boolean
   isLoggingOut: boolean
-  // La clave del texto del error, o '' si no hay. La pantalla lo traduce con t().
   logoutError: TextKey | ''
   setSession: (email: string, profile: 'student' | 'admin') => void
   setLoading: (isLoading: boolean) => void

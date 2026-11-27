@@ -51,7 +51,7 @@ export function moodFor(state: HomeState, now: Date): TempitoMood {
   }
 }
 
-// La línea gris bajo el saludo. Solo se llama al pintar, para que siga el idioma elegido.
+// La línea gris bajo el saludo.
 export function subtitleFor(state: HomeState): string {
   const course = todayClass.name
   switch (state.kind) {

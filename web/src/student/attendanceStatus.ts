@@ -3,7 +3,6 @@ import { minutesOfDay } from './studentDate'
 
 export type AttendanceStatus = 'presente' | 'tarde' | 'ausente'
 
-// La clave del texto de cada estado. El componente la traduce con t().
 export const statusLabelKey: Record<AttendanceStatus, TextKey> = {
   presente: 'attendance.status.present',
   tarde: 'attendance.status.late',

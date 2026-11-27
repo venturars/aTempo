@@ -10,7 +10,6 @@ export default defineConfig({
     baseURL: 'http://127.0.0.1:5193',
     headless: true,
     trace: 'retain-on-failure',
-    // Los tests buscan textos en español y fechas fijas, sea cual sea el ordenador.
     locale: 'es-ES',
     timezoneId: 'Europe/Madrid'
   },

@@ -88,7 +88,6 @@ export function DashboardScreen(): React.JSX.Element {
   )
 }
 
-// Cada frase lleva {name}, el nombre del alumno.
 const inClassPhrases: TextKey[] = [
   'dashboard.inClass.enjoy',
   'dashboard.inClass.inside',

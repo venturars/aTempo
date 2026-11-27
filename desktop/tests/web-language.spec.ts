@@ -4,10 +4,8 @@ import en from '../../web/src/locales/en.json'
 
 type Tree = { [key: string]: string | Tree }
 
-// Una mañana de clase fija: las capturas no dependen de la hora del ordenador.
 const classMorning = new Date('2026-11-11T08:40:00+01:00')
 
-// Cada texto de un JSON con su ruta: «account.history» → «Resumen».
 function leaves(tree: Tree, path = ''): Map<string, string | Tree> {
   const found = new Map<string, string | Tree>()
   for (const [key, value] of Object.entries(tree)) {
@@ -28,7 +26,6 @@ function holes(entry: string | Tree): string {
   return [...new Set(names)].sort().join(',')
 }
 
-// La web exige Auth0: el router se simula con la cuenta de Ada, como en web-auth0.spec.ts.
 async function mockStudentSession(context: BrowserContext): Promise<void> {
   let signedIn = false
   await context.route(/\/api\/auth\/(login|me|refresh|logout)$/, async (route: Route) => {
@@ -88,7 +85,6 @@ test.describe('with an English browser', () => {
     )
   })
 
-  // Las capturas se hacen en macOS, como las de Electron: en Linux cambian las fuentes.
   test('matches the student screens in English at 390 px', async ({ page }) => {
     test.skip(process.platform !== 'darwin', 'Las capturas de referencia son de macOS.')
     await page.setViewportSize({ width: 390, height: 844 })
@@ -97,7 +93,6 @@ test.describe('with an English browser', () => {
     await expect(page).toHaveScreenshot('web-language-login-en.png', { animations: 'disabled' })
     await signIn(page, 'Sign in')
     await expect(page.getByRole('link', { name: 'Summary' })).toBeVisible()
-    // Tempito se mueve fotograma a fotograma desde el código: se tapa en la captura.
     await expect(page).toHaveScreenshot('web-language-home-en.png', {
       animations: 'disabled',
       mask: [page.locator('svg.mascot')]

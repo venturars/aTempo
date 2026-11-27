@@ -14,8 +14,7 @@ const noticeLabelKey: Record<NoticeKind, TextKey> = {
   ausencia: 'history.noticeKind.absent'
 }
 
-// Llegar tarde cuenta como asistencia. «89 %» en español, «89%» en inglés.
-// Solo se llama al pintar, para que siga el idioma elegido.
+// Llegar tarde cuenta como asistencia.
 function attendancePercent(history: ClassEntry[]): string {
   if (history.length === 0) return '—'
   const attended = history.filter((entry) => entry.status !== 'ausente').length
@@ -147,9 +146,7 @@ function TableColumns(): React.JSX.Element {
   )
 }
 
-// date es «2026-11-11»: se ve «11 nov» y, en pantallas anchas, «Miércoles».
 function DateCell({ date }: { date: string }): React.JSX.Element {
-  // Vuelve a pintar la fecha al cambiar el idioma.
   useText()
   const day = dateFromKey(date)
   return (
@@ -179,7 +176,6 @@ function HistoryRow({ entry }: { entry: ClassEntry }): React.JSX.Element {
   )
 }
 
-// Solo se llama al pintar, para que siga el idioma elegido.
 function noticeDetail(notice: StudentNotice): string {
   const parts: string[] = []
   if (notice.arrival !== '') {

@@ -40,7 +40,6 @@ export function LoginScreen(): React.JSX.Element {
   return (
     <main className="flex min-h-screen items-center justify-center p-4 md:p-8">
       <section className="page-enter panel-card flex w-full max-w-md flex-col gap-7 rounded-box p-6 md:p-10">
-        {/* En un móvil estrecho, el idioma y el tema bajan a su propia línea. */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-lg font-semibold tracking-tight">aTempo</p>
           <div className="ml-auto flex items-center gap-3">

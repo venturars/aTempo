@@ -9,7 +9,6 @@ export type NoticeKind = 'retraso' | 'ausencia'
 export type StudentNotice = {
   email: string
   kind: NoticeKind
-  // El día del aviso, «2026-11-18». Igual que la fecha de las entradas del historial.
   date: string
   // «09:20» en un retraso. Vacío en una ausencia.
   arrival: string
@@ -18,8 +17,6 @@ export type StudentNotice = {
   attachmentName: string
 }
 
-// La fecha del aviso. Las versiones anteriores guardaban el día en español
-// («Mié 18 nov», en day); se pasa a su fecha. Devuelve null si no se entiende.
 function noticeDate(notice: Record<string, unknown>): string | null {
   if (typeof notice.date === 'string') return notice.date
   return typeof notice.day === 'string' ? dateKeyFromOldLabel(notice.day) : null

@@ -65,7 +65,6 @@ export function NoticeScreen(): React.JSX.Element {
   const [arrival, setArrival] = useState('')
   const [reason, setReason] = useState('')
   const [documentName, setDocumentName] = useState('')
-  // La clave del error, o '' si no hay. Se traduce al pintar.
   const [error, setError] = useState<TextKey | ''>('')
 
   function chooseKind(next: NoticeKind): void {
@@ -159,7 +158,6 @@ export function NoticeScreen(): React.JSX.Element {
 }
 
 // Si la hora está a medias, el campo da un valor vacío y el aviso pide la hora.
-// error llega ya traducido, o '' si no hay.
 function ArrivalField({
   arrival,
   error,

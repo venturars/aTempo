@@ -68,8 +68,6 @@ function isStatus(value: unknown): value is ClassEntry['status'] {
   return value === 'presente' || value === 'tarde' || value === 'ausente'
 }
 
-// Una entrada guardada. Las versiones anteriores guardaban el día en español
-// («Mar 10 nov», en label); se pasa a su fecha. La que no se entiende se descarta.
 function readEntry(value: unknown): ClassEntry | null {
   if (typeof value !== 'object' || value === null) return null
   const entry = value as Record<string, unknown>
@@ -120,7 +118,6 @@ export function useCurrentStudent(): StudentAccount {
 }
 
 // Lo que pasa al leer el QR o escribir el código: o queda apuntada la entrada, o hay un aviso.
-// El mensaje guarda la clave del texto; la pantalla lo traduce al pintarlo.
 export type CheckInResult =
   { registered: true; arrival: string } | { registered: false; message: StudentMessage }
 

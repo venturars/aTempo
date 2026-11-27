@@ -5,7 +5,6 @@ export type WebSession = {
   profile: WebProfile
 }
 
-// Códigos de error, no textos: quien los recibe enseña su propio mensaje traducido.
 const loginErrorCode = 'WEB_LOGIN_FAILED'
 
 // Ordena los inicios de sesión respecto al cierre para no perder una cookie recién creada.

@@ -21,8 +21,6 @@ function pluralForm(entry: Plural, count: number, region: string): string {
   return new Intl.PluralRules(region).select(count) === 'one' ? entry.one : entry.other
 }
 
-// El texto de una clave en el idioma elegido. {nombre} se rellena con values.nombre y,
-// si el texto es un plural, values.count elige la forma. Sin traducción, sale el español.
 export function text(key: TextKey, values: TextValues = {}): string {
   const { lang, region } = useLanguageStore.getState()
   const entry = lookup(messages[lang], key) ?? lookup(messages.es, key) ?? key
@@ -33,7 +31,6 @@ export function text(key: TextKey, values: TextValues = {}): string {
   )
 }
 
-// Para los componentes: devuelve text y vuelve a pintar el componente al cambiar el idioma.
 export function useText(): typeof text {
   useLanguageStore((state) => state.region)
   return text

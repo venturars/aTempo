@@ -19,7 +19,6 @@ function daysFromToday(day: Date): number {
 }
 
 // Ejemplos: «Hoy, mar 17 nov», «Mañana, mié 18 nov», «Jue 19 nov».
-// Solo se llama al pintar, para que siga el idioma elegido.
 function dayLabel(day: Date): string {
   const offset = daysFromToday(day)
   if (offset === 0) return text('notice.today', { day: formatDay(day, false) })

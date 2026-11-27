@@ -4,7 +4,6 @@ import type { TextKey } from '../lang/messages'
 import { useSessionStore } from '../session/sessionStore'
 import { validateLogin } from './validateLogin'
 
-// Los errores guardan la clave del texto, o '' si no hay. La pantalla los traduce con t().
 type LoginState = {
   email: string
   password: string

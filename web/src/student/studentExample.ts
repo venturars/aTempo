@@ -1,6 +1,5 @@
 import type { AttendanceStatus } from './attendanceStatus'
 
-// date es el día de la clase, «2026-11-10». La pantalla lo enseña como «Mar 10 nov».
 export type ClassEntry = {
   date: string
   arrival: string | null
