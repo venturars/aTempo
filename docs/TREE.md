@@ -96,6 +96,53 @@ docs/BLOCKEND.md
 permanent-data.md
 ```
 
+# Árbol de `data-access/`
+
+```text
+data-access/
+  README.md
+  rustfs/                         # @atempo/data-access-rustfs; @aws-sdk/client-s3 3.943.0
+    package.json
+    pnpm-lock.yaml
+    .npmrc
+    .prettierrc
+    eslint.config.mjs
+    tsconfig.json
+    tsconfig.build.json
+    README.md
+    src/
+      index.ts
+      shared/
+        errors.ts           # catálogo (reasons, labels, mensajes), buildError() y fail()
+        types/
+          justification.ts  # interface Justification y JustificationCreate; solo tipos
+        validation/
+          assert.ts         # assert* genéricos y normalizeUuid
+          justification.ts  # assertJustificationCreate y assertJustification
+      rustfs/
+        client.ts
+        map-error.ts
+        check.ts
+        commands/
+          justification.ts
+        store/
+          justification.ts
+      justification/
+        put-justification.ts
+        get-justification.ts
+        justification-exists.ts
+    test/
+      jest.json
+      helpers.ts
+      check.spec.ts
+      client.spec.ts
+      errors.spec.ts
+      types.spec.ts
+      writes.spec.ts
+      reads.spec.ts
+      structure.spec.ts   # shared/types sin valores; API pública
+```
+
 # Árbol de `sdk/`
 
 ```text
@@ -147,6 +194,27 @@ sdk/
       in-memory-course-repository.ts
     composition/
       create-sdk.ts
+```
+
+# Árbol de `errors/`
+
+```text
+errors/
+  node/
+    package.json            # @atempo/errors, main y types en dist/
+    pnpm-lock.yaml
+    .npmrc
+    tsconfig.json
+    tsconfig.build.json
+    eslint.config.mjs
+    README.md
+    src/
+      index.ts
+      errors.ts             # DomainError, subclases por kind y labelParts()
+      fail.ts               # createErrorFactory(catalog): domainError() y fail()
+    test/
+      jest.json
+      errors.spec.ts
 ```
 
 # Árbol de `api-sqlite/`

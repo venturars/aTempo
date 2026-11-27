@@ -39,15 +39,25 @@ Este servicio no implementa reglas de negocio. El API-router no habla con Postgr
 
 ## 5. Stack de `api-rustfs/`
 
-- **Express 5** expone REST hacia la SDK para persistencia de objetos en RustFS.
+- **Express 5** expone REST de persistencia de objetos en RustFS.
 - **Cliente npm `minio` (API S3)** habla con RustFS.
 - **swagger-ui-express** documenta la API y sirve Swagger UI en `/docs` para pruebas manuales.
 - **TypeScript** escribe el servicio.
 - **pnpm** es el gestor de paquetes de `api-rustfs/`. Las versiones van fijas, sin `^`.
 
-El API-router no accede a RustFS; la SDK consumirá este servicio cuando exista.
+El flujo de producto es Frontend → `api-rustfs` → `data-access/rustfs` → RustFS. `api-rustfs` aún no importa ese paquete; Express sigue con `minio`. El API-router no accede a RustFS.
 
-## 6. Stack de `api-sqlite/`
+## 6. Stack de `data-access/rustfs/`
+
+- **Paquete librería** `@atempo/data-access-rustfs` en `data-access/rustfs/`. No es un servicio HTTP.
+- **TypeScript** escribe el SDK.
+- **@atempo/errors** (`errors/node/`) da las clases de error y `createErrorFactory`. Se enlaza con `link:../../errors/node` y no se publica en npm.
+- **`@aws-sdk/client-s3` 3.943.0** habla con RustFS (`forcePathStyle: true`, `region: "us-east-1"`). El paquete npm `minio` no entra en este SDK.
+- **pnpm** 10.33.0. Las versiones van fijas, sin `^`.
+
+El flujo de producto es Frontend → `api-rustfs` → `data-access/rustfs` → RustFS. El paquete abre el almacén. `api-rustfs` aún no lo importa.
+
+## 7. Stack de `api-sqlite/`
 
 - **Flask** expone el servicio local de persistencia.
 - **Pydantic** valida los modelos de entrada y salida.
@@ -57,8 +67,9 @@ El API-router no accede a RustFS; la SDK consumirá este servicio cuando exista.
 
 `api-sqlite/` está detrás de la SDK: el `api-router` delega en la SDK y esta accede a las APIs de persistencia. La SQLite de este servicio es independiente de `desktop/atempo.sqlite`.
 
-## 7. Dónde seguir
+## 8. Dónde seguir
 
 - [STYLE.md](STYLE.md): los dos temas y el enlace a la guía visual.
-- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, flujo de `api-router/` y `sdk/`, las APIs de persistencia y los almacenes.
-- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/`, `sdk/`, `api-postgresql/`, `api-rustfs/`, `api-sqlite/` y los almacenes.
+- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, flujo de `api-router/` y `sdk/`, las APIs de persistencia, `data-access/rustfs/` y los almacenes.
+- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/`, `sdk/`, `api-postgresql/`, `api-rustfs/`, `data-access/rustfs/`, `errors/node/`, `api-sqlite/` y los almacenes.
+- [data-access/README.md](../data-access/README.md): paquetes librería de acceso a datos.
