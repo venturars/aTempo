@@ -1,6 +1,7 @@
 # Entorno de instalación de aTempo. El porqué está en docs/ARCHITECTURE.md.
 #   docker compose run --rm setup               instala APM y las dependencias
 #   docker compose up storybook                 sirve Storybook en http://localhost:6006
+#   docker compose run --rm sdk pnpm test       comprueba atempo-sdk en el volumen Linux
 #   docker compose run --rm desktop pnpm lint   comprueba desktop/ con las versiones del equipo
 #   docker compose up api-router api-postgresql api-sqlite api-rustfs  APIs en http://localhost:3000–3003
 #   docker compose up desktop-gui               abre la ventana de Electron (opcional, ver el README)
@@ -20,11 +21,20 @@ services:
       - desktop-node-modules:/work/desktop/node_modules
       - storybook-node-modules:/work/docs/storybook/node_modules
       - api-router-node-modules:/work/api-router/node_modules
+      - sdk-node-modules:/work/sdk/node_modules
       - api-postgresql-node-modules:/work/api-postgresql/node_modules
       - api-rustfs-node-modules:/work/api-rustfs/node_modules
       - api-sqlite-venv:/work/api-sqlite/.venv
       - blockend-node-modules:/work/blockend/node_modules
       - postgres-node-modules:/work/postgres/node_modules
+      - pnpm-store:/pnpm-store
+
+  sdk:
+    <<: *base
+    working_dir: /work/sdk
+    volumes:
+      - .:/work
+      - sdk-node-modules:/work/sdk/node_modules
       - pnpm-store:/pnpm-store
 
   storybook:
@@ -52,9 +62,13 @@ services:
       AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID:-}
       AUTH0_CLIENT_SECRET: ${AUTH0_CLIENT_SECRET:-}
       AUTH0_AUDIENCE: ${AUTH0_AUDIENCE:-}
+      ATEMPO_WEB_ORIGIN: ${ATEMPO_WEB_ORIGIN:-http://localhost:5191}
+      API_POSTGRESQL_URL: http://api-postgresql:3001
     volumes:
       - ./api-router:/work/api-router
+      - ./sdk:/work/sdk
       - api-router-node-modules:/work/api-router/node_modules
+      - sdk-node-modules:/work/sdk/node_modules
       - pnpm-store:/pnpm-store
 
   desktop:
@@ -356,13 +370,14 @@ services:
       - ./rustfs/test:/tests:ro
     entrypoint: ["/bin/sh", "/tests/run.sh"]
 
-# Cada proyecto tiene sus node_modules: desktop/, docs/storybook/, api-router/, blockend/ y postgres/ tienen cada uno su lockfile.
+# Cada proyecto tiene sus node_modules: desktop/, docs/storybook/, sdk/, api-router/, blockend/ y postgres/ tienen cada uno su lockfile.
 # pnpm-store es la caché de pnpm y sí se comparte.
 # Docker les pone delante el nombre de la carpeta: cada copia del repositorio tiene los suyos.
 volumes:
   desktop-node-modules:
   storybook-node-modules:
   api-router-node-modules:
+  sdk-node-modules:
   api-postgresql-node-modules:
   api-rustfs-node-modules:
   api-sqlite-venv:

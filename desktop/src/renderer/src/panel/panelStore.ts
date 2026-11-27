@@ -26,7 +26,7 @@ export type TodayStudent = {
   name: string
 }
 
-// Un cambio de estado con motivo. Se guarda quién, cuándo y por qué
+// Un cambio de estado. Se guarda quién, cuándo y por qué, si hay motivo
 // (principles.md, sección 11: las correcciones conservan su historial de auditoría).
 export type MarkChange = {
   // Id de la sesión: el de la API en Hoy, o el de roster.ts en Sesiones.
@@ -39,9 +39,9 @@ export type MarkChange = {
   at: number
 }
 
-// En Sesiones solo se corrige a Presente, Tarde o Ausente, y siempre con motivo.
-function canCorrect(from: Attendance, to: Attendance, reason: string): boolean {
-  return from !== to && to !== 'pendiente' && reason.trim() !== ''
+// En Sesiones solo se corrige a Presente, Tarde o Ausente. El motivo es opcional.
+function canCorrect(from: Attendance, to: Attendance): boolean {
+  return from !== to && to !== 'pendiente'
 }
 
 function signerName(): string {
@@ -480,14 +480,14 @@ export const usePanelStore = create<PanelState>((set, get) => {
     saveCorrection: async (reason) => {
       const pending = get().pendingCorrection
       const session = get().session
-      if (pending === null || session === null || reason.trim() === '' || get().busy) {
+      if (pending === null || session === null || get().busy) {
         return
       }
       set({ busy: true, todayError: null, correctionError: null })
       try {
         const record = await getApiClient().correctAttendance(session.id, pending.studentId, {
           ...pending.correction,
-          reason: reason.trim()
+          ...(reason.trim() === '' ? {} : { reason: reason.trim() })
         })
         const previous = get().records[pending.studentId]
         set((state) => ({
@@ -536,7 +536,7 @@ export const usePanelStore = create<PanelState>((set, get) => {
         .find((session) => session.id === sessionId && !session.cancel)
         ?.rows?.find((item) => item.name === name)
       const from = state.sessionMarks[sessionId]?.[name] ?? row?.mark
-      if (row === undefined || from === undefined || !canCorrect(from, mark, reason)) {
+      if (row === undefined || from === undefined || !canCorrect(from, mark)) {
         return false
       }
       set({

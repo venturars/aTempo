@@ -126,7 +126,7 @@ async function open(p: Page): Promise<void> {
 }
 async function giveReason(p: Page): Promise<void> {
   const dialog = p.getByRole('dialog', { name: /^Cambiar / })
-  await dialog.getByLabel('Motivo', { exact: true }).fill('Corrección en clase')
+  await dialog.getByLabel('Motivo').fill('Corrección en clase')
   await dialog.getByRole('button', { name: 'Guardar', exact: true }).click()
   await expect(dialog).toHaveCount(0)
 }
@@ -172,7 +172,7 @@ test('chooses a mark with the keyboard and returns focus to the row button', asy
     await expect(menu.getByRole('button', { name: 'Tarde', exact: true })).toBeFocused()
     await p.keyboard.press('Enter')
     await expect(p.getByRole('menu')).toHaveCount(0)
-    const reason = p.getByRole('dialog').getByLabel('Motivo', { exact: true })
+    const reason = p.getByRole('dialog').getByLabel('Motivo')
     await expect(reason).toBeFocused()
     await p.keyboard.type('Corrección en clase')
     await p.keyboard.press('Tab')

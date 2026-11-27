@@ -4,7 +4,7 @@ import { useText } from '../language/useText'
 import { markLabel } from './marks'
 import type { Attendance } from './roster'
 
-// Un cambio de estado pendiente de motivo, con la lista ya cerrada.
+// Un cambio de estado con la lista ya cerrada. El motivo es opcional.
 export type CorrectionDraft = {
   person: string
   when: string
@@ -46,10 +46,6 @@ function CorrectionForm({
 
   function save(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault()
-    if (reason.trim() === '') {
-      setError('panel.correction.reasonRequired')
-      return
-    }
     if (!draft.save(reason)) {
       setError(draft.failText)
       return
@@ -69,7 +65,10 @@ function CorrectionForm({
           </p>
         </div>
         <div className="flex flex-col gap-2">
-          <label htmlFor="correction-reason">{t('panel.correction.reason')}</label>
+          <label htmlFor="correction-reason">
+            {t('panel.correction.reason')}{' '}
+            <span className="field-optional">· {t('panel.correction.recommended')}</span>
+          </label>
           <textarea
             id="correction-reason"
             className={error !== null ? 'textarea textarea-error w-full' : 'textarea w-full'}

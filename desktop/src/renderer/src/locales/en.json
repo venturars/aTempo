@@ -269,7 +269,7 @@
       "changeTo": "Change to {mark}",
       "changeArrival": "Change arrival to {time}",
       "reason": "Reason",
-      "reasonRequired": "Write the reason for the change.",
+      "recommended": "recommended",
       "noSigner": "Sign in with your teacher account to save the change.",
       "notSaved": "The change could not be saved.",
       "sessionDay": "{weekday} {day} {month} {year}"

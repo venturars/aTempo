@@ -271,7 +271,11 @@ function MarkNote({
       {newestFirst.length > 0 ? (
         <span id={noteId} className="sr-only">
           {newestFirst
-            .map((change) => `${changeText(change)}. ${change.reason} ${change.by}.`)
+            .map((change) =>
+              [`${changeText(change)}.`, change.reason, `${change.by}.`]
+                .filter((part) => part !== '')
+                .join(' ')
+            )
             .join(' ')}
         </span>
       ) : null}
@@ -289,7 +293,7 @@ function MarkNote({
                 {newestFirst.map((change, index) => (
                   <span key={`${change.at}-${index}`} className="flex flex-col gap-1">
                     <span className="font-medium">{changeText(change)}</span>
-                    <span>{change.reason}</span>
+                    {change.reason !== '' ? <span>{change.reason}</span> : null}
                     <span className="tip-body">
                       {change.by} · {changeTime(change.at)}
                     </span>

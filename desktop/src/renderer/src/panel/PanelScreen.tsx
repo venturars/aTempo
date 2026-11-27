@@ -57,6 +57,7 @@ const tabs: { id: PanelTab; label: TextKey }[] = [
   { id: 2, label: 'panel.nav.stats' },
   { id: 3, label: 'panel.nav.settings' }
 ]
+const sections = tabs.filter((item) => item.id !== 3)
 
 // Nombre de la barra lateral. Si se abre la ruta del panel sin entrar, el de la cuenta de ejemplo.
 function useTeacherName(): string {
@@ -115,7 +116,7 @@ export function PanelScreen(): React.JSX.Element {
         </button>
         <nav aria-label={t('panel.nav.sections')}>
           <ul className="menu w-full px-2">
-            {tabs.map((item) => (
+            {sections.map((item) => (
               <li key={item.id}>
                 <button
                   type="button"
@@ -135,6 +136,7 @@ export function PanelScreen(): React.JSX.Element {
         </nav>
         <AccountMenu
           name={teacherName}
+          onOpenSettings={() => setTab(3)}
           onChangePassword={
             signedIn && !authConfigured
               ? () => {
@@ -582,7 +584,7 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
   const sessionId = selected.id
   const when = sessionTitle(sessionId)
 
-  // Una sesión pasada está cerrada: cambiar un estado pide un motivo.
+  // Una sesión pasada está cerrada: cambiar un estado abre el diálogo, con el motivo opcional.
   function pick(name: string, mark: Attendance): void {
     if (rows.find((row) => row.name === name)?.mark === mark) {
       return

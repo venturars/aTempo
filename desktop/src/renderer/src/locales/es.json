@@ -269,7 +269,7 @@
       "changeTo": "Cambiar a {mark}",
       "changeArrival": "Cambiar la entrada a las {time}",
       "reason": "Motivo",
-      "reasonRequired": "Escribe el motivo del cambio.",
+      "recommended": "recomendado",
       "noSigner": "Entra con tu cuenta de profesor para guardar el cambio.",
       "notSaved": "No se ha podido guardar el cambio.",
       "sessionDay": "{weekday} {day} {month} {year}"

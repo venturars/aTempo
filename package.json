@@ -3,8 +3,6 @@
   "private": true,
   "scripts": {
     "atempo": "node scripts/start-atempo.mjs",
-    "demo:install": "pnpm --dir web install --frozen-lockfile && pnpm --dir desktop install --frozen-lockfile",
-    "demo:web": "pnpm --dir web dev",
     "demo:desktop": "pnpm --dir desktop dev"
   }
 }

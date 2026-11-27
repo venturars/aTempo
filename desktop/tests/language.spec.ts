@@ -47,6 +47,15 @@ async function logIn(window: Page, email: string, password: string, submit: stri
   await window.getByRole('button', { name: submit, exact: true }).click()
 }
 
+// Ajustes está en el menú de la cuenta, no en las secciones.
+async function openSettings(window: Page, label: string): Promise<void> {
+  await window.locator('aside details.dropdown > summary').click()
+  await window
+    .locator('aside details.dropdown')
+    .getByRole('button', { name: label, exact: true })
+    .click()
+}
+
 test('es.json and en.json have the same keys, plurals and placeholders', () => {
   const spanish = leaves(es as Tree)
   const english = leaves(en as Tree)
@@ -91,7 +100,7 @@ test('changes the language from the login card', async () => {
 test('changes the language in Ajustes, keeps it and goes back to the system', async () => {
   await withApp('es-ES', async (window) => {
     await logIn(window, 'profesor@atempo.test', 'Profesor123!', 'Entrar')
-    await window.getByRole('button', { name: 'Ajustes' }).click()
+    await openSettings(window, 'Ajustes')
     const card = window.getByRole('region', { name: 'Idioma' })
     await card.getByRole('button', { name: 'English' }).click()
     await expect(window.locator('html')).toHaveAttribute('lang', 'en')
@@ -134,7 +143,7 @@ test('matches the main screens in English', async () => {
     await expect(window).toHaveScreenshot('language-today-en.png', { animations: 'disabled' })
     await window.getByRole('button', { name: 'Sessions' }).click()
     await expect(window).toHaveScreenshot('language-sessions-en.png', { animations: 'disabled' })
-    await window.getByRole('button', { name: 'Settings' }).click()
+    await openSettings(window, 'Settings')
     await expect(window).toHaveScreenshot('language-settings-en.png', { animations: 'disabled' })
   })
 })
