@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { PasswordInput } from '../login/PasswordInput'
 import { useTeacherAccountsStore } from '../login/teacherAccounts'
 
 export function ChangePasswordDialog({
@@ -39,22 +40,21 @@ export function ChangePasswordDialog({
         <h2 id="password-title" className="text-lg font-medium">
           Cambiar contraseña
         </h2>
-        <label className="flex flex-col gap-2">
-          Contraseña actual
-          <input
-            className="input w-full"
-            type="password"
+        {/* Etiquetas con htmlFor: dentro de un label, el botón de ojo se sumaría al nombre del campo. */}
+        <div className="flex flex-col gap-2">
+          <label htmlFor="current-password">Contraseña actual</label>
+          <PasswordInput
+            id="current-password"
             name="current"
             autoComplete="current-password"
             autoFocus
             required
           />
-        </label>
-        <label className="flex flex-col gap-2">
-          Nueva contraseña
-          <input
-            className="input w-full"
-            type="password"
+        </div>
+        <div className="flex flex-col gap-2">
+          <label htmlFor="next-password">Nueva contraseña</label>
+          <PasswordInput
+            id="next-password"
             name="next"
             autoComplete="new-password"
             aria-describedby="new-password-hint"
@@ -63,17 +63,16 @@ export function ChangePasswordDialog({
           <span id="new-password-hint" className="text-sm text-base-content/60">
             Al menos 8 caracteres.
           </span>
-        </label>
-        <label className="flex flex-col gap-2">
-          Repite la nueva contraseña
-          <input
-            className="input w-full"
-            type="password"
+        </div>
+        <div className="flex flex-col gap-2">
+          <label htmlFor="confirmation-password">Repite la nueva contraseña</label>
+          <PasswordInput
+            id="confirmation-password"
             name="confirmation"
             autoComplete="new-password"
             required
           />
-        </label>
+        </div>
         {error ? (
           <p className="text-sm text-error" role="alert">
             {error}

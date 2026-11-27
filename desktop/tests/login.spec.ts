@@ -149,9 +149,11 @@ function fieldColors(field: Locator): Promise<string[]> {
       return value
     }
     const card = input.closest('section')
+    // La contraseña lleva el campo en un contenedor .input con el botón de ojo dentro (#239).
+    const box = input.closest('.input') ?? input
     return [
-      getComputedStyle(input).backgroundColor,
-      getComputedStyle(input).boxShadow,
+      getComputedStyle(box).backgroundColor,
+      getComputedStyle(box).boxShadow,
       card === null ? '' : getComputedStyle(card).backgroundColor,
       token('--color-base-100')
     ]

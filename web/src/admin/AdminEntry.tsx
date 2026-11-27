@@ -3,6 +3,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { useLoginStore } from '../login/loginStore'
 import { useSessionStore } from '../session/sessionStore'
 import { ThemeToggle } from '../shared/ThemeToggle'
+import { PasswordInput } from '../shared/PasswordInput'
 
 export function AdminEntry({
   dark,
@@ -61,10 +62,9 @@ export function AdminEntry({
           </div>
           <div className="field">
             <label htmlFor="admin-password">Contraseña</label>
-            <input
+            <PasswordInput
               id="admin-password"
               className={passwordError ? 'input input-error w-full' : 'input w-full'}
-              type="password"
               autoComplete="current-password"
               value={password}
               aria-invalid={passwordError !== ''}

@@ -4,6 +4,7 @@ import { dashboardPathForProfile, useSessionStore } from '../session/sessionStor
 import { isInvitationUsed, useActivateStore } from './activateStore'
 import { findInvitation, type Invitation } from './invitations'
 import { useLoginStore } from './loginStore'
+import { PasswordInput } from './PasswordInput'
 import {
   markClass,
   markLabel,
@@ -307,22 +308,36 @@ function Field({
   error: string
   onChange: (value: string) => void
 }): React.JSX.Element {
+  const describedBy = error !== '' ? `${id}-error` : hint !== '' ? `${id}-hint` : undefined
   return (
     <div className="flex flex-col gap-2">
       <label className="text-base-content" htmlFor={id}>
         {label}
       </label>
-      <input
-        id={id}
-        className={error !== '' ? 'input input-error w-full' : 'input w-full'}
-        type={type}
-        name={id}
-        autoComplete={autoComplete}
-        value={value}
-        aria-invalid={error !== ''}
-        aria-describedby={error !== '' ? `${id}-error` : hint !== '' ? `${id}-hint` : undefined}
-        onChange={(event) => onChange(event.target.value)}
-      />
+      {type === 'password' ? (
+        <PasswordInput
+          id={id}
+          className={error !== '' ? 'input input-error w-full' : 'input w-full'}
+          name={id}
+          autoComplete={autoComplete}
+          value={value}
+          aria-invalid={error !== ''}
+          aria-describedby={describedBy}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      ) : (
+        <input
+          id={id}
+          className={error !== '' ? 'input input-error w-full' : 'input w-full'}
+          type={type}
+          name={id}
+          autoComplete={autoComplete}
+          value={value}
+          aria-invalid={error !== ''}
+          aria-describedby={describedBy}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      )}
       {error !== '' ? (
         <p id={`${id}-error`} className="text-sm text-base-content">
           {error}
