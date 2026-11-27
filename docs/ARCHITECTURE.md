@@ -65,6 +65,10 @@ La sesión web se restaura en otra pestaña del mismo origen mientras las cookie
 
 Este store es un mock del prototipo, no una segunda SDK. El trabajo local de #90 se conserva por separado para una futura SDK frontend que consuma el API-router; la SDK de dominio mantiene las reglas de negocio y expone ya el CRUD mock y el JSON del Resumen por HTTP en el router. La web del admin aún no sustituye `adminStore` por esas rutas. Alcance, referencias y comprobaciones en [admin-prototype.md](admin-prototype.md); pasos para abrirlo en [web/README.md](../web/README.md#probar-administración).
 
+## UI compartida
+
+`ui/` es el paquete `atempo-ui`, con los componentes React que comparten `desktop/`, `web/` y Storybook. Exporta su código TypeScript desde `src/index.ts`, sin paso de compilación, y declara `react` como `peerDependency`. Las apps lo instalan con `file:` y pnpm copia el paquete resolviendo React con el de cada app, así que no hay dos copias. Cada app añade `@source` de `ui/src` a su CSS para que Tailwind genere las clases del paquete. La historia de Storybook pinta el componente real. Hoy tiene la paginación: `pageItems(page, pageCount, siblings)` calcula los botones (primera, última, la actual con sus vecinas y huecos, siempre la misma cantidad), `usePagination(items, pageSize)` corta una lista en el cliente y baja a la última página que existe si la lista se acorta, y `Pagination` pinta un `nav` con `join` y `btn`, la página actual con `btn-primary` y `aria-current="page"`, y no pinta nada con una sola página. Sus textos tienen valores en español y se cambian por props. `desktop/` es la primera app que lo usa; `web/` todavía no.
+
 ## Almacenes
 
 Carpetas: `postgres/`, `sqlite/`, `rustfs/`, `blockend/`.
@@ -182,6 +186,8 @@ Con la lista cerrada (Hoy después de «Cerrar lista» y todas las sesiones pasa
 
 Las pantallas de detalle del panel (una sesión, la ficha de un alumno) tienen arriba un botón que vuelve a la anterior y dice a cuál: «Sesiones», «Hoy», «Estadísticas» o la fecha de la sesión (`navigation/BackButton.tsx`). Las secciones de la barra lateral no lo tienen.
 
+Sesiones enseña 20 sesiones por página con `usePagination` y `Pagination` de `atempo-ui`. Con más de una página, debajo de la tabla salen «desde–hasta de total sesiones» y los botones; con una sola, solo la tabla.
+
 Abajo en la barra lateral, `AccountMenu` (`panel/AccountMenu.tsx`) enseña el avatar de 32 px, el nombre del profesor y «Profesor». Al pulsar esa fila se abre hacia arriba un menú con «Ajustes», «Cambiar contraseña» (sin Auth0) y «Cerrar sesión». Ajustes no está en la navegación de secciones: se abre desde este menú y, como las secciones, no tiene botón de volver. Es un `details` `dropdown dropdown-top`: se cierra al pulsar otra vez, al pulsar fuera o con Escape, que devuelve el foco al nombre. `docs/storybook/src/system.css` oculta el `.dropdown-content` de un `details.dropdown` sin `[open]` y quita el marcador del `summary`.
 
 El menú de estado se puede usar con teclado: al abrirlo, el foco pasa a la primera opción; Tab recorre las opciones; al elegir una o pulsar Escape, el foco vuelve al botón de la fila. Se cierra si el foco o un clic van a otro control, al desplazar y al cambiar el tamaño de la ventana.
@@ -222,7 +228,7 @@ Docker instala lo que el proyecto necesita con versiones comunes para el equipo:
 - La imagen parte de `node:24.22.3-trixie`. El binario oficial de APM se comprueba con su SHA-256. Python 3.13 y su soporte de venv se instalan desde un snapshot Debian fijado.
 - `apt-snapshot-install` desactiva la caducidad (`Valid-Until`) solo en su `apt-get update` del snapshot; la firma se sigue comprobando. Los `Release` de `trixie-updates` y `trixie-security` caducan unos siete días después de publicarse: sin eso, la construcción fallaría pocos días después de fijar la fecha, o el mismo día con una fecha antigua.
 - Las correcciones de seguridad de Debian solo llegan al subir `DEBIAN_SNAPSHOT`. El workflow `debian-snapshot.yml` lee el `Dockerfile` de `staging` el día 1 de cada mes y abre una issue `chore` si la fecha tiene más de 30 días.
-- `setup` ejecuta `apm install`, instala con lockfiles los paquetes Node de escritorio, Storybook, `sdk/`, las APIs, `blockend/` y `postgres/` (volumen `sdk-node-modules` para `sdk/`), y prepara el venv de `api-sqlite/`.
+- `setup` ejecuta `apm install`, instala con lockfiles los paquetes Node de `ui/`, escritorio, Storybook, `sdk/`, las APIs, `blockend/` y `postgres/` (volumen `sdk-node-modules` para `sdk/` y `ui-node-modules` para `ui/`, que se instala antes que las apps), y prepara el venv de `api-sqlite/`.
 - Las skills y agentes de delivery-workflow quedan en la carpeta del proyecto para Cursor, Codex y Claude Code.
 - Los `node_modules` y el venv Python viven en volúmenes Docker separados por paquete; pnpm comparte su caché. Compose los crea vacíos y de root. `docker/entrypoint.sh` los deja del usuario `node` en cada arranque y el comando sigue con ese usuario. Las dependencias Linux no se mezclan con las del ordenador.
 - Compose sirve Storybook en 6006 y las APIs en 3000–3003. El servicio `api-router` monta `./api-router` y `./sdk`. Las APIs alcanzan PostgreSQL y RustFS mediante sus nombres de servicio, y esos almacenes también conservan los puertos host de desarrollo. Los datos de `api-sqlite`, PostgreSQL y RustFS viven en volúmenes independientes.

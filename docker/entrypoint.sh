@@ -10,6 +10,7 @@ if [ "$(id -u)" -eq 0 ]; then
     /work/desktop/node_modules \
     /work/docs/storybook/node_modules \
     /work/sdk/node_modules \
+    /work/ui/node_modules \
     /work/api-router/node_modules \
     /work/api-postgresql/node_modules \
     /work/api-rustfs/node_modules \

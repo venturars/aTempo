@@ -3,6 +3,7 @@
   themes: false;
 }
 @import '../../../../../docs/storybook/src/system.css';
+@source '../../../../../ui/src';
 
 /* Fuentes en el repo, bajo SIL OFL. Ver fonts/OFL.txt. */
 @font-face {

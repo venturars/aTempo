@@ -149,6 +149,30 @@ sdk/
       create-sdk.ts
 ```
 
+# Árbol de `ui/`
+
+```text
+ui/
+  README.md
+  package.json           # atempo-ui; código TypeScript sin compilar; react como peerDependency
+  pnpm-lock.yaml
+  tsconfig.json
+  vitest.config.ts       # Vitest con jsdom
+  eslint.config.mjs
+  .prettierrc.yaml
+  .prettierignore
+  src/
+    index.ts             # lo que importan las apps
+    pagination/
+      Pagination.tsx     # nav con join y btn; textos y tamaño por props
+      pageItems.ts       # botones de página con huecos; clampPage
+      usePagination.ts   # corta una lista en el cliente
+  test/
+    Pagination.test.tsx
+    pageItems.test.ts
+    usePagination.test.tsx
+```
+
 # Árbol de `api-sqlite/`
 
 ```text
