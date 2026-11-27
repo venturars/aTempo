@@ -10,7 +10,7 @@ from typing import Annotated
 
 from pydantic import BeforeValidator, ValidationInfo
 
-from data_access_python.shared.errors import DomainLabel, fail
+from data_access_python.shared.errors import ErrorLabel, fail
 from data_access_python.shared.validation.assert_values import (
     assert_instant,
     assert_int,
@@ -22,7 +22,7 @@ from data_access_python.shared.validation.assert_values import (
 )
 
 
-def field_label(info: ValidationInfo) -> DomainLabel:
+def field_label(info: ValidationInfo) -> ErrorLabel:
     """Arma la label del catálogo: `session` + `course_id` → `session.course_id`."""
     entity = info.config["title"] if info.config else ""
     return f"{entity}.{info.field_name}"  # type: ignore[return-value]

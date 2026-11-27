@@ -3,7 +3,7 @@ from collections.abc import Mapping
 from datetime import datetime, timezone
 from typing import Any
 
-from data_access_python.shared.errors import DomainLabel, fail
+from data_access_python.shared.errors import ErrorLabel, fail
 
 # Terminan en \Z y no en $: en Python, `$` también encaja antes de un salto de
 # línea final, y un uuid seguido de un salto de línea pasaría como válido.
@@ -16,54 +16,54 @@ INSTANT_RE = re.compile(
 )
 
 
-def assert_string(value: object, label: DomainLabel) -> str:
+def assert_string(value: object, label: ErrorLabel) -> str:
     """Comprueba que es un string. Acepta el string vacío."""
     if not isinstance(value, str):
         fail(label, "string")
     return value
 
 
-def assert_nullable_string(value: object, label: DomainLabel) -> str | None:
+def assert_nullable_string(value: object, label: ErrorLabel) -> str | None:
     if value is not None and not isinstance(value, str):
         fail(label, "nullable_string")
     return value
 
 
-def assert_row(value: object, label: DomainLabel) -> Mapping[str, object]:
+def assert_row(value: object, label: ErrorLabel) -> Mapping[str, object]:
     """Comprueba que una fila de SQLite es un mapping para leer sus columnas."""
     if not isinstance(value, Mapping):
         fail(label, "object")
     return value
 
 
-def assert_non_empty_string(value: object, label: DomainLabel) -> str:
+def assert_non_empty_string(value: object, label: ErrorLabel) -> str:
     if not isinstance(value, str) or value == "":
         fail(label, "empty")
     return value
 
 
-def read_input_field(input: object, key: str, label: DomainLabel) -> Any:
+def read_input_field(input: object, key: str, label: ErrorLabel) -> Any:
     """Lee un campo del objeto de entrada (RORO). Si falta, ValidationError."""
     if not isinstance(input, Mapping) or key not in input:
         fail(label, "required")
     return input[key]
 
 
-def assert_uuid(value: object, label: DomainLabel) -> str:
+def assert_uuid(value: object, label: ErrorLabel) -> str:
     text = assert_non_empty_string(value, label)
     if UUID_RE.fullmatch(text) is None:
         fail(label, "uuid")
     return text.lower()
 
 
-def read_input_uuid(input: object, key: str, label: DomainLabel) -> str:
+def read_input_uuid(input: object, key: str, label: ErrorLabel) -> str:
     """Lee un uuid del objeto de entrada (RORO) y lo devuelve en minúsculas."""
     return assert_uuid(read_input_field(input, key, label), label)
 
 
 def truncate_to_milliseconds(
     value: datetime,
-    label: DomainLabel = "fecha",
+    label: ErrorLabel = "fecha",
 ) -> datetime:
     try:
         utc = value.astimezone(timezone.utc)
@@ -72,7 +72,7 @@ def truncate_to_milliseconds(
     return utc.replace(microsecond=(utc.microsecond // 1000) * 1000)
 
 
-def normalize_instant(value: datetime, label: DomainLabel = "fecha") -> str:
+def normalize_instant(value: datetime, label: ErrorLabel = "fecha") -> str:
     utc = truncate_to_milliseconds(value, label)
     milliseconds = utc.microsecond // 1000
     return (
@@ -86,7 +86,7 @@ _SQLITE_INT_MIN = -2**63
 _SQLITE_INT_MAX = 2**63 - 1
 
 
-def assert_int(value: object, label: DomainLabel) -> int:
+def assert_int(value: object, label: ErrorLabel) -> int:
     if type(value) is not int:
         fail(label, "integer")
     if value < _SQLITE_INT_MIN or value > _SQLITE_INT_MAX:
@@ -94,13 +94,13 @@ def assert_int(value: object, label: DomainLabel) -> int:
     return value
 
 
-def assert_nullable_int(value: object, label: DomainLabel) -> int | None:
+def assert_nullable_int(value: object, label: ErrorLabel) -> int | None:
     if value is None:
         return None
     return assert_int(value, label)
 
 
-def assert_instant(value: object, label: DomainLabel) -> datetime:
+def assert_instant(value: object, label: ErrorLabel) -> datetime:
     text = assert_non_empty_string(value, label)
     if INSTANT_RE.fullmatch(text) is None:
         fail(label, "instant")
@@ -110,7 +110,7 @@ def assert_instant(value: object, label: DomainLabel) -> datetime:
         fail(label, "date", cause=error)
 
 
-def assert_nullable_instant(value: object, label: DomainLabel) -> datetime | None:
+def assert_nullable_instant(value: object, label: ErrorLabel) -> datetime | None:
     if value is None:
         return None
     return assert_instant(value, label)

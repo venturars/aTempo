@@ -125,29 +125,10 @@ DomainErrorReason = Literal[
     "not_sqlite",
 ]
 
-DOMAIN_LABELS = (
-    "session",
-    "session.id",
-    "session.course_id",
-    "session.professor_id",
-    "session.start_at",
-    "session.end_at",
-    "session.status",
-    "session.closed_at",
-    "session.late_after_minutes",
-    "session.expected_count",
-    "attendance",
-    "attendance.session_id",
-    "attendance.student_id",
-    "attendance.status",
-    "attendance.check_in_method",
-    "attendance.checked_in_at",
-    "sqlite",
-    "sqlite.SQLITE_DATABASE_URL",
-    "fecha",
-)
-
-DomainLabel = Literal[
+# Dónde falla algo: la entidad (`session`) o la entidad y su campo
+# (`session.end_at`). El id de un error es `label.reason`, por ejemplo
+# `session.end_at.order`.
+ErrorLabel = Literal[
     "session",
     "session.id",
     "session.course_id",
@@ -209,12 +190,12 @@ DOMAIN_ERROR_MESSAGES: dict[str, str] = {
 _factory = create_error_factory(DOMAIN_ERROR_REASONS, DOMAIN_ERROR_MESSAGES)
 
 
-def domain_error(label: DomainLabel, reason: DomainErrorReason) -> DomainError:
+def domain_error(label: ErrorLabel, reason: DomainErrorReason) -> DomainError:
     return _factory.domain_error(label, reason)
 
 
 def fail(
-    label: DomainLabel,
+    label: ErrorLabel,
     reason: DomainErrorReason,
     *,
     cause: BaseException | None = None,
