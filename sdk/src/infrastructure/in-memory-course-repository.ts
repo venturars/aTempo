@@ -62,6 +62,16 @@ export class InMemoryCourseRepository
     this.byContractAddress.set(course.contractAddress.toLowerCase(), course.id)
   }
 
+  async delete(courseId: Uuid): Promise<void> {
+    const previous = this.courses.get(courseId)
+    if (!previous) return
+    this.courses.delete(courseId)
+    this.byOrgAcronym.delete(
+      `${previous.organizationId}\t${previous.acronym}`,
+    )
+    this.byContractAddress.delete(previous.contractAddress.toLowerCase())
+  }
+
   async enroll(personId: Uuid, courseId: Uuid): Promise<void> {
     const key = enrollmentKey(personId, courseId)
     this.enrollments.set(key, undefined)

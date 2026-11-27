@@ -4,9 +4,9 @@
 
 Carpeta del router: `api-router/`. Persistencia relacional: `api-postgresql/` y `api-sqlite/`. Objetos en almacén S3-compatible: `api-rustfs/`.
 
-Los frontends son Electron en `desktop/` y el portal web en `web/`. La web envía sus peticiones al API-router NestJS mediante el proxy de desarrollo Vite `/api`; Electron usa su integración Auth0 desde el proceso principal. El API-router transforma HTTP. Auth0 (`register`, `login`, `refresh`, `logout`, `me`) permanece en `AuthService`. Tras login, register o `me` correctos, el router llama a `afterAuth({ email })` de `atempo-sdk`. `GET /auth/me` sigue `{ email }` con Bearer y `{ email, profile }` con cookie web. `runAfterAuth` traduce `AppError`: `CONFIGURATION` o `PERSISTENCE` → 503 `POSTGRES_API_UNAVAILABLE`; `VALIDATION` → 400. Logout, refresh y Auth0 ko no llaman a la SDK. La **SDK (lógica de negocio)** es el paquete `atempo-sdk` en `sdk/`, hermano de `desktop/` y `api-router/` (`file:../sdk`). Capas: shared (`Result`, `AppError`), dominio, aplicación, infraestructura mock y composición. `afterAuth({ email })` normaliza el correo, comprueba `GET /health` de `api-postgresql` con `fetch` inyectable y busca la persona en el mock; si no hay persona, el resultado es ok y no crea. El router traduce HTTP en módulos Nest `organization/`, `person/` y `course/`: cada controller llama a su service y el service a `atempo-sdk`. CRUD mock: `POST /organizations`, `GET/PATCH /organizations/:organizationId`, `POST/GET /organizations/:organizationId/people`, `GET/PATCH/DELETE /people/:personId`, `POST/GET /organizations/:organizationId/courses`, `GET /organizations/:organizationId/courses/:courseId`, `GET /organizations/:organizationId/courses/:courseId/students`, `POST/GET /organizations/:organizationId/courses/:courseId/people`, `DELETE …/people/:personId`, con Bearer no vacío. No hay `GET /organization/dashboard` ni carpeta `api-router/src/sdk`. La UI del admin y el Resumen de Electron aún no consumen estas rutas. Compose del proyecto `atempo` monta `./api-router` y `./sdk` en el servicio `api-router` y pasa `API_POSTGRESQL_URL`. La SDK hablará con `api-postgresql/` para leer y escribir en PostgreSQL, con `api-sqlite/` para SQLite local y con `api-rustfs/` para objetos en RustFS; hoy solo el cliente de health de `afterAuth` apunta a Postgres. El API-router no habla con la base ni con RustFS. Redis, Postgres y el resto de microservicios del backend quedan fuera del escritorio.
+Los frontends son Electron en `desktop/` y el portal web en `web/`. La web envía sus peticiones al API-router NestJS mediante el proxy de desarrollo Vite `/api`; Electron usa su integración Auth0 desde el proceso principal. El API-router transforma HTTP. Auth0 (`register`, `login`, `refresh`, `logout`, `me`) permanece en `AuthService`. Tras login, register o `me` correctos, el router llama a `afterAuth({ email })` de `atempo-sdk`. `GET /auth/me` sigue `{ email }` con Bearer y `{ email, profile }` con cookie web. `runAfterAuth` traduce `AppError`: `CONFIGURATION` o `PERSISTENCE` → 503 `POSTGRES_API_UNAVAILABLE`; `VALIDATION` → 400. Logout, refresh y Auth0 ko no llaman a la SDK. La **SDK (lógica de negocio)** es el paquete `atempo-sdk` en `sdk/`, hermano de `desktop/` y `api-router/` (`file:../sdk`). Capas: shared (`Result`, `AppError`), dominio, aplicación, infraestructura mock y composición. `afterAuth({ email })` normaliza el correo, comprueba `GET /health` de `api-postgresql` con `fetch` inyectable y busca la persona en el mock; si no hay persona, el resultado es ok y no crea. El router traduce HTTP en módulos Nest `organization/`, `person/` y `course/`: cada controller llama a su service y el service a `atempo-sdk`. CRUD mock: `POST /organizations`, `GET/PATCH /organizations/:organizationId`, `POST/GET /organizations/:organizationId/people`, `GET/PATCH/DELETE /people/:personId`, `POST/GET /organizations/:organizationId/courses`, `GET/PATCH/DELETE /organizations/:organizationId/courses/:courseId`, `GET /organizations/:organizationId/courses/:courseId/students`, `POST/GET /organizations/:organizationId/courses/:courseId/people`, `DELETE …/people/:personId`, con Bearer no vacío. No hay `GET /organization/dashboard` ni carpeta `api-router/src/sdk`. La UI del admin y el Resumen de Electron aún no consumen estas rutas. Compose del proyecto `atempo` monta `./api-router` y `./sdk` en el servicio `api-router` y pasa `API_POSTGRESQL_URL`. La SDK hablará con `api-postgresql/` para leer y escribir en PostgreSQL, con `api-sqlite/` para SQLite local y con `api-rustfs/` para objetos en RustFS; hoy solo el cliente de health de `afterAuth` apunta a Postgres. El API-router no habla con la base ni con RustFS. Redis, Postgres y el resto de microservicios del backend quedan fuera del escritorio.
 
-`api-router/` expone `GET /health`, `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout` y `GET /auth/me`. Electron y web usan esos mismos paths. El login y el alta intercambian credenciales con Auth0 mediante Resource Owner Password Grant (`offline_access`). `/auth/refresh` renueva el access token; `/auth/logout` revoca el refresh token; `/auth/me` valida el Bearer mediante JWKS, emisor, audiencia y caducidad, o la cookie de access en la web. Con origen `ATEMPO_WEB_ORIGIN` (por defecto `http://localhost:5191`) el login fija cookies HttpOnly `atempo_access` y `atempo_refresh` (SameSite=Lax, Path=/, sin Max-Age, Secure en HTTPS) y no devuelve tokens en JSON. Las funciones de cookie viven en `api-router/src/shared/`. El navegador llama a los mismos endpoints con `credentials: 'include'` y usa `/auth/refresh` cuando `/auth/me` responde 401. La web llama al router a través del proxy Vite `/api`; Electron gestiona Auth0 desde su proceso principal. El secreto de cliente solo vive en el router. Con `API_MOCK=true`, el router sirve además, con datos en memoria, los ocho endpoints del contrato API v1 que usa la pestaña Hoy (`src/mock-api/`); requieren un encabezado `Authorization: Bearer` no vacío. Compose lo arranca así y lo publica solo en `127.0.0.1`. La pestaña Hoy llama al router desde main solo con `--api-transport=http`; sin ese flag usa el transporte mock, descrito en «Renderer». `api-postgresql/` expone `GET /health`, los listados `GET /person`, `GET /course`, `GET /organization`, `GET /person-role` y `GET /person-course`, `GET /person/:id` (una fila de `person` por UUID: 200, 404 o 503), `POST /person-course` (una matrícula: 201, 404, 409 o 503) y `DELETE /person-course/:personId/:courseId` (una matrícula: 204, 404 o 503); con `DATABASE_URL` consulta PostgreSQL y sin ella usa un mock de prueba. `api-rustfs/` solo expone `GET /health`, que confirma que el servicio HTTP responde; su conexión S3 se comprueba aparte. `api-sqlite/` solo expone `GET /health`, que ejecuta `SELECT 1`. La activación de invitaciones no llama a estas APIs. Compose publica las cuatro APIs en 3000–3003. Las APIs se conectan por la red interna a PostgreSQL (`postgres:5432`) y RustFS (`rustfs:9000`); los mismos servicios también sirven al almacén operativo. PostgreSQL se publica en el host por `5433` y RustFS por `9000`/`9001`. Los volúmenes compartidos `postgres-data` y `rustfs-data`, junto con `api-sqlite-data`, conservan sus datos.
+`api-router/` expone `GET /health`, `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout` y `GET /auth/me`. Electron y web usan esos mismos paths. El login y el alta intercambian credenciales con Auth0 mediante Resource Owner Password Grant (`offline_access`). `/auth/refresh` renueva el access token; `/auth/logout` revoca el refresh token; `/auth/me` valida el Bearer mediante JWKS, emisor, audiencia y caducidad, o la cookie de access en la web. Con origen `ATEMPO_WEB_ORIGIN` (por defecto `http://localhost:5191`) el login fija cookies HttpOnly `atempo_access` y `atempo_refresh` (SameSite=Lax, Path=/, sin Max-Age, Secure en HTTPS) y no devuelve tokens en JSON. Las funciones de cookie viven en `api-router/src/shared/`. El navegador llama a los mismos endpoints con `credentials: 'include'` y usa `/auth/refresh` cuando `/auth/me` responde 401. La web llama al router a través del proxy Vite `/api`; Electron gestiona Auth0 desde su proceso principal. El secreto de cliente solo vive en el router. Con `API_MOCK=true`, el router sirve además, con datos en memoria, los ocho endpoints del contrato API v1 que usa la pestaña Hoy (`src/mock-api/`); requieren un encabezado `Authorization: Bearer` no vacío. Compose lo arranca así y lo publica solo en `127.0.0.1`. La pestaña Hoy llama al router desde main solo con `--api-transport=http`; sin ese flag usa el transporte mock, descrito en «Renderer». `api-postgresql/` expone `GET /health`, los listados `GET /person`, `GET /course`, `GET /organization`, `GET /person-role` y `GET /person-course`, `GET /person/:id` (una fila de `person` por UUID: 200, 404 o 503), `POST /course` (un curso: 201, 400, 404, 409 o 503), `GET /course/:id` (una fila de `course` por UUID: 200, 404 o 503), `PATCH /course/:id` (un curso: 200, 400, 404, 409 o 503), `POST /person-course` (una matrícula: 201, 404, 409 o 503) y `DELETE /person-course/:personId/:courseId` (una matrícula: 204, 404 o 503); con `DATABASE_URL` consulta PostgreSQL y sin ella usa un mock de prueba. `api-rustfs/` solo expone `GET /health`, que confirma que el servicio HTTP responde; su conexión S3 se comprueba aparte. `api-sqlite/` solo expone `GET /health`, que ejecuta `SELECT 1`. La activación de invitaciones no llama a estas APIs. Compose publica las cuatro APIs en 3000–3003. Las APIs se conectan por la red interna a PostgreSQL (`postgres:5432`) y RustFS (`rustfs:9000`); los mismos servicios también sirven al almacén operativo. PostgreSQL se publica en el host por `5433` y RustFS por `9000`/`9001`. Los volúmenes compartidos `postgres-data` y `rustfs-data`, junto con `api-sqlite-data`, conservan sus datos.
 
 La documentación interactiva (OpenAPI y Swagger UI) de cada servicio vive en **`/docs`**. Compose publica `api-router/` en el puerto **3000**, `api-postgresql/` en el **3001**, `api-sqlite/` en el **3002** y `api-rustfs/` en el **3003**.
 
@@ -73,7 +73,7 @@ Son almacenes y cadena, no una capa del escritorio ni del API-router. Cada una t
 
 El modelo y los enlaces están en `docs/POSTGRES.md`, `docs/SQLITE.md`, `docs/RUSTFS.md`, `docs/BLOCKEND.md` y `permanent-data.md`.
 
-`api-postgresql/` comprueba la conexión con `GET /health`, ofrece cinco listados (incluidos `GET /organization` y `GET /person-course`), `GET /person/:id`, `POST /person-course` y `DELETE /person-course/:personId/:courseId`. `api-rustfs/` no abre RustFS en el health. El renderer y el API-router no abren estas bases. `afterAuth` en `sdk/` llama al health de Postgres con `fetch` inyectable; el resto de persistencia aún no pasa por la SDK.
+`api-postgresql/` comprueba la conexión con `GET /health`, ofrece cinco listados (incluidos `GET /organization` y `GET /person-course`), `GET /person/:id`, `POST /course`, `GET /course/:id`, `PATCH /course/:id`, `DELETE /course/:id`, `POST /person-course` y `DELETE /person-course/:personId/:courseId`. `api-rustfs/` no abre RustFS en el health. El renderer y el API-router no abren estas bases. `afterAuth` en `sdk/` llama al health de Postgres con `fetch` inyectable; el resto de persistencia aún no pasa por la SDK.
 
 ## aTempo de escritorio
 
@@ -244,3 +244,131 @@ Se descartó trabajar dentro de un Dev Container:
 | Windows                        | WSL o Git Bash para el flujo                            | Resuelto: el contenedor es Linux                       |
 
 `.devcontainer/devcontainer.json` usa la misma imagen para quien pueda abrir un Dev Container. Es opcional.
+
+## Mapa de capas
+
+El relato de arriba fija el flujo y las rutas. Estas tablas solo nombran el rol de las carpetas que ya existen. Las cuatro capas de la guía se aplican en `sdk/`. El resto de partes deja el dominio en la SDK o en el relato de escritorio y web.
+
+### `sdk/`
+
+| Rol | Ruta o glob | Notas |
+| --- | --- | --- |
+| Presentación | — | Este paquete no expone HTTP |
+| Aplicación | `sdk/src/application/*.ts` | Una función fábrica por caso de uso |
+| Dominio | `sdk/src/domain/` | Tipos, reglas y puertos |
+| Infraestructura | `sdk/src/infrastructure/` | Repositorios en memoria y cliente de health |
+| Shared | `sdk/src/shared/` | `Result` y `AppError` |
+| Platform | — | No hay carpeta |
+| Raíz de composición | `sdk/src/composition/create-sdk.ts` | `sdk/src/index.ts` reexporta la API pública |
+| Pruebas | `sdk/src/**/*.spec.ts` | Jest |
+
+### `api-router/`
+
+| Rol | Ruta o glob | Notas |
+| --- | --- | --- |
+| Presentación | `api-router/src/**/*.controller.ts`, `api-router/src/**/*.dto.ts`, `api-router/src/contract/`, `api-router/src/shared/bearer.guard.ts` | Valida la forma, llama a un caso de uso de la SDK y traduce `AppError` |
+| Aplicación | — | Los casos de uso viven en `sdk/src/application/` |
+| Dominio | — | Vive en `sdk/src/domain/` |
+| Infraestructura | — | No abre PostgreSQL ni RustFS |
+| Shared | `api-router/src/shared/` | Cookie, token de la SDK y guard de Bearer |
+| Platform | — | No hay carpeta |
+| Raíz de composición | `api-router/src/main.ts`, `api-router/src/app.module.ts`, `api-router/src/shared/atempo-sdk.module.ts` | Crea la SDK con `createSdk()` |
+| Pruebas | `api-router/test/*.e2e-spec.ts` | Jest y supertest |
+
+El service Nest de cada módulo (`course.service.ts` y los de organización y persona) es adaptador de presentación: un método llama a un caso de uso.
+
+### `api-postgresql/`
+
+| Rol | Ruta o glob | Notas |
+| --- | --- | --- |
+| Presentación | `api-postgresql/src/**/*.controller.ts`, `api-postgresql/src/**/*.dto.ts` | HTTP y ValidationPipe |
+| Aplicación | `api-postgresql/src/**/*.service.ts` salvo `postgres/` | Pasa la petición al servicio `pg` |
+| Dominio | — | La constitución deja las reglas de negocio fuera de este servicio |
+| Infraestructura | `api-postgresql/src/postgres/` | `pg` con `DATABASE_URL`; mock si `usesMock()` |
+| Shared | — | No hay carpeta |
+| Platform | — | No hay carpeta |
+| Raíz de composición | `api-postgresql/src/main.ts`, `api-postgresql/src/app.module.ts`, `api-postgresql/src/configure-app.ts` | Puerto 3001 y Swagger en `/docs` |
+| Pruebas | `api-postgresql/test/*.e2e-spec.ts` | Jest y supertest; el e2e de curso sustituye `PostgresService` |
+
+### `api-sqlite/` y `api-rustfs/`
+
+| Rol | Ruta o glob | Notas |
+| --- | --- | --- |
+| Presentación | `api-sqlite/api_sqlite/`, `api-rustfs/src/health/` | Hoy solo `GET /health` |
+| Infraestructura | `api-sqlite/api_sqlite/database.py`, `api-rustfs/src/rustfs/` | SQLite del servicio y cliente S3 |
+| Pruebas | `api-sqlite/tests/`, `api-rustfs/test/` | Health |
+
+### Escritorio y web
+
+La sección «aTempo de escritorio» fija proceso principal (`desktop/src/main/`), preload (`desktop/src/preload/`) y renderer (`desktop/src/renderer/`). `web/src/` es el portal y el prototipo admin. Esas partes no usan las cuatro carpetas de `sdk/`.
+
+## Módulos
+
+- `sdk/`: un directorio (organización, persona, curso y matrícula) repartido por capas, no por `modules/<nombre>`. La API pública es `sdk/src/index.ts`.
+- `api-router/`: un módulo Nest por carpeta (`auth`, `organization`, `person`, `course`, `health`, `mock-api`). Cada controller es la API HTTP de ese módulo.
+- `api-postgresql/`: un módulo Nest por tabla (`person`, `course`, `organization`, `person-role`, `person-course`) más `health` y `postgres`.
+- Cómo se reconoce un módulo: la carpeta de primer nivel dentro de `src/` (o `api_sqlite/` en Flask).
+
+## Framework
+
+| Ruta impuesta | Rol | Restricción |
+| --- | --- | --- |
+| `api-router/src/**/*.controller.ts`, `api-postgresql/src/**/*.controller.ts` | Presentación | NestJS 11. El controller delega; no abre SQL ni reimplementa la SDK |
+| `api-router/src/main.ts`, `api-postgresql/src/main.ts` | Raíz | Arranque Nest |
+| `desktop/src/main/`, `desktop/src/preload/`, `desktop/src/renderer/` | Las tres capas ya descritas | Electron, React, TanStack Router |
+| `web/src/` | Presentación | Vite y React |
+| `api-sqlite/api_sqlite/` | Presentación e infraestructura del servicio Flask | Pydantic y SQLAlchemy Core |
+| `api-rustfs/src/` | Presentación e infraestructura Express | Cliente `minio` |
+
+## Intensidad y organización
+
+- Intensidad:
+  - `sdk` curso, persona y organización: completa. Ya hay reglas: texto no vacío, `end_at > start_at`, unicidad y formato de `contract_address` en curso; roles y unicidad en persona y organización.
+  - `api-router`: ligera en negocio. Traduce HTTP y llama a la SDK.
+  - `api-postgresql`: ligera. Persistencia de filas; las reglas de negocio quedan en la SDK.
+  - `api-sqlite` y `api-rustfs`: ligera. Hoy solo health.
+  - `desktop` y `web`: la guía de cuatro capas no se aplica encima del mapa que este documento ya tiene.
+- Organización: en `sdk`, por capa. En los Nest, por módulo de carpeta y, dentro, controller, service y dto.
+- Nombres de archivo: los que ya usa cada paquete (`create-course.ts`, `organization-courses.controller.ts`, `course.service.ts`).
+- Unidades por archivo: un caso de uso por archivo en `sdk/src/application/`.
+
+## Estilo de los casos de uso
+
+Funciones fábrica. `createCreateCourse` devuelve `createCourse`. El mismo patrón vale para el resto de casos de uso de `sdk/src/application/`. No hay clases de caso de uso.
+
+## Errores de dominio
+
+- Cómo se entregan: valor `Result` y `AppError` en la SDK. Nest lanza excepciones en el router y en `api-postgresql`.
+- Dónde vive el catálogo: `sdk/src/shared/app-error.ts`.
+- `kind` además de `VALIDATION`, `NOT_FOUND` y `CONFLICT`: `CONFIGURATION` y `PERSISTENCE`.
+- Qué se hace fuera del dominio: `api-router/src/contract/map-app-error.ts` pasa `VALIDATION` a 400, `CONFLICT` a 409, `NOT_FOUND` a 404 y `CONFIGURATION` o `PERSISTENCE` a 503. `api-postgresql` traduce `23505` a 409 y `23503` a 404 en el alta de matrícula, y el resto de fallos de conexión a 503. El dominio no nombra HTTP.
+
+## Verificación de fronteras
+
+No hay analizador de dependencias en el repositorio. La herramienta es dependency-cruiser, una por paquete, con la versión fijada y sin `^`, como el resto de `devDependencies`.
+
+### `sdk/`
+
+- Herramienta: dependency-cruiser
+- Comando: `docker compose run --rm sdk pnpm exec depcruise --config .dependency-cruiser.cjs src`
+- Contrato: `application` importa `domain` y `shared`. `domain` importa `shared`. `infrastructure` importa `domain` y `shared`. `shared` no importa otras capas. `composition` es la raíz y puede importarlas. `application` no importa `infrastructure`.
+
+### `api-router/`
+
+- Herramienta: dependency-cruiser
+- Comando: `docker compose run --rm api-router pnpm exec depcruise --config .dependency-cruiser.cjs src`
+- Contrato: el paquete depende de `atempo-sdk` y no importa `api-postgresql`, `pg`, `api-sqlite` ni `api-rustfs`.
+
+### `api-postgresql/`
+
+- Herramienta: dependency-cruiser
+- Comando: `docker compose run --rm api-postgresql pnpm exec depcruise --config .dependency-cruiser.cjs src`
+- Contrato: no importa `atempo-sdk` ni `api-router`. Los controllers no importan `pg`. `postgres/` no importa controllers.
+
+## Excepciones y decisiones
+
+| Fecha | Regla | Decisión | Motivo |
+| --- | --- | --- | --- |
+| 2026-11-27 | R-GEN-01 | `api-router` y `api-postgresql` no tienen carpeta de dominio | La constitución deja las reglas de negocio en la SDK |
+| 2026-11-27 | R-GEN-05 | Escritorio y web conservan el mapa ya escrito en este documento | Proceso principal, preload, renderer y el portal no siguen las cuatro carpetas de `sdk/` |
+| 2026-11-27 | R-EST-06 | dependency-cruiser queda por instalar en `sdk`, `api-router` y `api-postgresql` | El repositorio no tiene herramienta de fronteras; eslint no declara contratos de capas |

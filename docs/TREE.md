@@ -133,6 +133,8 @@ sdk/
       create-course.ts
       list-courses.ts
       get-course.ts
+      update-course.ts
+      delete-course.ts
       enroll-person-in-course.ts
       unenroll-person-from-course.ts
       list-course-people.ts
@@ -200,6 +202,8 @@ api-postgresql/
       course.controller.ts
       course.service.ts
       course-response.dto.ts
+      create-course.dto.ts
+      patch-course.dto.ts
     person-role/
       person-role.module.ts
       person-role.controller.ts
@@ -314,6 +318,7 @@ api-router/
       organization-course-people.controller.ts
       organization-course-students.controller.ts
       course.service.ts
+      patch-course.dto.ts
     mock-api/
       mock-api.module.ts
       sessions.controller.ts # /sessions del contrato API v1

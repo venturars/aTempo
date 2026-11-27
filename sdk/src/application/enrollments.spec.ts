@@ -399,6 +399,11 @@ describe('course enrolments', () => {
       organizationId: created.value.organization.id,
       courseId: 'no-uuid',
     })
+    const invalidUpdate = await sdk.updateCourse({
+      organizationId: created.value.organization.id,
+      courseId: 'no-uuid',
+      name: 'Francés A2',
+    })
     const missingOrg = await sdk.listCourses({
       organizationId: '00000000-0000-4000-8000-000000000001',
     })
@@ -409,11 +414,13 @@ describe('course enrolments', () => {
 
     expect(invalidOrg.ok).toBe(false)
     expect(invalidCourse.ok).toBe(false)
+    expect(invalidUpdate.ok).toBe(false)
     expect(missingOrg.ok).toBe(false)
     expect(missingCourse.ok).toBe(false)
     if (
       invalidOrg.ok ||
       invalidCourse.ok ||
+      invalidUpdate.ok ||
       missingOrg.ok ||
       missingCourse.ok
     ) {
@@ -421,7 +428,400 @@ describe('course enrolments', () => {
     }
     expect(invalidOrg.error.code).toBe('VALIDATION')
     expect(invalidCourse.error.code).toBe('VALIDATION')
+    expect(invalidUpdate.error.code).toBe('VALIDATION')
+    expect(invalidUpdate.error.message).toBe(
+      'El identificador no es un UUID válido.',
+    )
     expect(missingOrg.error.code).toBe('NOT_FOUND')
     expect(missingCourse.error.code).toBe('NOT_FOUND')
+  })
+
+  it('updates a course and keeps id and organization', async () => {
+    const sdk = createSdk()
+    const created = await sdk.createOrganization(admin)
+    expect(created.ok).toBe(true)
+    if (!created.ok) return
+    const course = await sdk.createCourse({
+      organizationId: created.value.organization.id,
+      ...courseInput,
+    })
+    expect(course.ok).toBe(true)
+    if (!course.ok) return
+
+    const updated = await sdk.updateCourse({
+      organizationId: created.value.organization.id,
+      courseId: course.value.id,
+      name: 'Francés A2',
+      acronym: 'A2',
+      startAt: '2026-02-01T09:00:00.000Z',
+      endAt: '2026-07-31T18:00:00.000Z',
+      contractAddress: '0x0000000000000000000000000000000000000002',
+    })
+    expect(updated.ok).toBe(true)
+    if (!updated.ok) return
+    expect(updated.value).toMatchObject({
+      id: course.value.id,
+      organizationId: created.value.organization.id,
+      name: 'Francés A2',
+      acronym: 'A2',
+      startAt: '2026-02-01T09:00:00.000Z',
+      endAt: '2026-07-31T18:00:00.000Z',
+      contractAddress: '0x0000000000000000000000000000000000000002',
+    })
+  })
+
+  it('rejects a duplicate acronym on update', async () => {
+    const sdk = createSdk()
+    const created = await sdk.createOrganization(admin)
+    expect(created.ok).toBe(true)
+    if (!created.ok) return
+    const organizationId = created.value.organization.id
+    const first = await sdk.createCourse({ organizationId, ...courseInput })
+    expect(first.ok).toBe(true)
+    if (!first.ok) return
+
+    const duplicateCreate = await sdk.createCourse({
+      organizationId,
+      ...courseInput,
+      contractAddress: '0x0000000000000000000000000000000000000002',
+    })
+    expect(duplicateCreate.ok).toBe(false)
+    if (duplicateCreate.ok) return
+    expect(duplicateCreate.error.code).toBe('CONFLICT')
+    expect(duplicateCreate.error.message).toBe(
+      'Ya existe un curso con esas siglas en la organización.',
+    )
+
+    const second = await sdk.createCourse({
+      organizationId,
+      ...courseInput,
+      name: 'Francés A2',
+      acronym: 'A2',
+      contractAddress: '0x0000000000000000000000000000000000000002',
+    })
+    expect(second.ok).toBe(true)
+    if (!second.ok) return
+
+    const duplicateUpdate = await sdk.updateCourse({
+      organizationId,
+      courseId: second.value.id,
+      acronym: 'B1',
+    })
+    expect(duplicateUpdate.ok).toBe(false)
+    if (duplicateUpdate.ok) return
+    expect(duplicateUpdate.error.code).toBe('CONFLICT')
+    expect(duplicateUpdate.error.message).toBe(
+      'Ya existe un curso con esas siglas en la organización.',
+    )
+  })
+
+  it('rejects a duplicate contract address ignoring case', async () => {
+    const sdk = createSdk()
+    const created = await sdk.createOrganization(admin)
+    expect(created.ok).toBe(true)
+    if (!created.ok) return
+    const organizationId = created.value.organization.id
+    const mixedAddress = '0x5fbdb2315678afecb367f032d93f642f64180aa3'
+    const first = await sdk.createCourse({
+      organizationId,
+      ...courseInput,
+      contractAddress: mixedAddress,
+    })
+    expect(first.ok).toBe(true)
+    if (!first.ok) return
+
+    const duplicateCreate = await sdk.createCourse({
+      organizationId,
+      ...courseInput,
+      name: 'Francés A2',
+      acronym: 'A2',
+      contractAddress: '0x5FBDB2315678AFECB367F032D93F642F64180AA3',
+    })
+    expect(duplicateCreate.ok).toBe(false)
+    if (duplicateCreate.ok) return
+    expect(duplicateCreate.error.code).toBe('CONFLICT')
+    expect(duplicateCreate.error.message).toBe(
+      'La dirección del contrato ya está en uso.',
+    )
+
+    const second = await sdk.createCourse({
+      organizationId,
+      ...courseInput,
+      name: 'Francés A2',
+      acronym: 'A2',
+      contractAddress: '0x0000000000000000000000000000000000000002',
+    })
+    expect(second.ok).toBe(true)
+    if (!second.ok) return
+
+    const duplicateUpdate = await sdk.updateCourse({
+      organizationId,
+      courseId: second.value.id,
+      contractAddress: '0x5FBDB2315678AFECB367F032D93F642F64180AA3',
+    })
+    expect(duplicateUpdate.ok).toBe(false)
+    if (duplicateUpdate.ok) return
+    expect(duplicateUpdate.error.code).toBe('CONFLICT')
+    expect(duplicateUpdate.error.message).toBe(
+      'La dirección del contrato ya está en uso.',
+    )
+  })
+
+  it('rejects a contract address that is not 0x plus 40 hex', async () => {
+    const sdk = createSdk()
+    const created = await sdk.createOrganization(admin)
+    expect(created.ok).toBe(true)
+    if (!created.ok) return
+    const course = await sdk.createCourse({
+      organizationId: created.value.organization.id,
+      ...courseInput,
+    })
+    expect(course.ok).toBe(true)
+    if (!course.ok) return
+
+    const updated = await sdk.updateCourse({
+      organizationId: created.value.organization.id,
+      courseId: course.value.id,
+      contractAddress: '0x123',
+    })
+    expect(updated.ok).toBe(false)
+    if (updated.ok) return
+    expect(updated.error.code).toBe('VALIDATION')
+    expect(updated.error.message).toBe(
+      'La dirección del contrato debe ser 0x seguido de 40 dígitos hexadecimales.',
+    )
+  })
+
+  it('rejects update of a course from another organization', async () => {
+    const sdk = createSdk()
+    const first = await sdk.createOrganization(admin)
+    expect(first.ok).toBe(true)
+    if (!first.ok) return
+    const second = await sdk.createOrganization({
+      ...admin,
+      name: 'Otra',
+      taxId: 'A12345678',
+      identificationDocument: '11111111C',
+      email: 'otra@atempo.test',
+    })
+    expect(second.ok).toBe(true)
+    if (!second.ok) return
+    const course = await sdk.createCourse({
+      organizationId: second.value.organization.id,
+      ...courseInput,
+    })
+    expect(course.ok).toBe(true)
+    if (!course.ok) return
+
+    const updated = await sdk.updateCourse({
+      organizationId: first.value.organization.id,
+      courseId: course.value.id,
+      name: 'Francés A2',
+    })
+    expect(updated.ok).toBe(false)
+    if (updated.ok) return
+    expect(updated.error.code).toBe('NOT_FOUND')
+    expect(updated.error.message).toBe('El curso no existe.')
+  })
+
+  it('rejects an empty name or acronym', async () => {
+    const sdk = createSdk()
+    const created = await sdk.createOrganization(admin)
+    expect(created.ok).toBe(true)
+    if (!created.ok) return
+    const course = await sdk.createCourse({
+      organizationId: created.value.organization.id,
+      ...courseInput,
+    })
+    expect(course.ok).toBe(true)
+    if (!course.ok) return
+
+    const emptyName = await sdk.updateCourse({
+      organizationId: created.value.organization.id,
+      courseId: course.value.id,
+      name: '   ',
+    })
+    const emptyAcronym = await sdk.updateCourse({
+      organizationId: created.value.organization.id,
+      courseId: course.value.id,
+      acronym: '',
+    })
+    expect(emptyName.ok).toBe(false)
+    expect(emptyAcronym.ok).toBe(false)
+    if (emptyName.ok || emptyAcronym.ok) return
+    expect(emptyName.error.code).toBe('VALIDATION')
+    expect(emptyName.error.message).toBe('El nombre es obligatorio.')
+    expect(emptyAcronym.error.code).toBe('VALIDATION')
+    expect(emptyAcronym.error.message).toBe('Las siglas es obligatorio.')
+  })
+
+  it('rejects an end date that is not after the start', async () => {
+    const sdk = createSdk()
+    const created = await sdk.createOrganization(admin)
+    expect(created.ok).toBe(true)
+    if (!created.ok) return
+    const course = await sdk.createCourse({
+      organizationId: created.value.organization.id,
+      ...courseInput,
+    })
+    expect(course.ok).toBe(true)
+    if (!course.ok) return
+
+    const inverted = await sdk.updateCourse({
+      organizationId: created.value.organization.id,
+      courseId: course.value.id,
+      endAt: '2025-12-31T18:00:00.000Z',
+    })
+    const invalid = await sdk.updateCourse({
+      organizationId: created.value.organization.id,
+      courseId: course.value.id,
+      startAt: 'not-a-date',
+    })
+    expect(inverted.ok).toBe(false)
+    expect(invalid.ok).toBe(false)
+    if (inverted.ok || invalid.ok) return
+    expect(inverted.error.code).toBe('VALIDATION')
+    expect(inverted.error.message).toBe(
+      'La fecha de fin debe ser posterior a la de inicio.',
+    )
+    expect(invalid.error.code).toBe('VALIDATION')
+    expect(invalid.error.message).toBe(
+      'La fecha de inicio debe ser una fecha ISO 8601.',
+    )
+  })
+
+  it('keeps the course when the patch is empty', async () => {
+    const sdk = createSdk()
+    const created = await sdk.createOrganization(admin)
+    expect(created.ok).toBe(true)
+    if (!created.ok) return
+    const course = await sdk.createCourse({
+      organizationId: created.value.organization.id,
+      ...courseInput,
+    })
+    expect(course.ok).toBe(true)
+    if (!course.ok) return
+
+    const empty = await sdk.updateCourse({
+      organizationId: created.value.organization.id,
+      courseId: course.value.id,
+    })
+    const sameKeys = await sdk.updateCourse({
+      organizationId: created.value.organization.id,
+      courseId: course.value.id,
+      name: 'Inglés B1 avanzado',
+      acronym: 'B1',
+      contractAddress: courseInput.contractAddress,
+    })
+    expect(empty.ok).toBe(true)
+    expect(sameKeys.ok).toBe(true)
+    if (!empty.ok || !sameKeys.ok) return
+    expect(empty.value).toMatchObject({
+      id: course.value.id,
+      organizationId: created.value.organization.id,
+      name: 'Inglés B1',
+      acronym: 'B1',
+      contractAddress: courseInput.contractAddress,
+    })
+    expect(sameKeys.value).toMatchObject({
+      id: course.value.id,
+      organizationId: created.value.organization.id,
+      name: 'Inglés B1 avanzado',
+      acronym: 'B1',
+      contractAddress: courseInput.contractAddress,
+    })
+  })
+
+  it('allows an acronym that only changes case', async () => {
+    const sdk = createSdk()
+    const created = await sdk.createOrganization(admin)
+    expect(created.ok).toBe(true)
+    if (!created.ok) return
+    const organizationId = created.value.organization.id
+    const first = await sdk.createCourse({ organizationId, ...courseInput })
+    expect(first.ok).toBe(true)
+    if (!first.ok) return
+
+    const second = await sdk.createCourse({
+      organizationId,
+      ...courseInput,
+      name: 'Inglés b1',
+      acronym: 'b1',
+      contractAddress: '0x0000000000000000000000000000000000000002',
+    })
+    expect(second.ok).toBe(true)
+    if (!second.ok) return
+
+    const updated = await sdk.updateCourse({
+      organizationId,
+      courseId: first.value.id,
+      acronym: 'B1',
+    })
+    expect(updated.ok).toBe(true)
+  })
+
+  it('deletes a course of its organization', async () => {
+    const sdk = createSdk()
+    const created = await sdk.createOrganization(admin)
+    expect(created.ok).toBe(true)
+    if (!created.ok) return
+    const organizationId = created.value.organization.id
+    const course = await sdk.createCourse({ organizationId, ...courseInput })
+    expect(course.ok).toBe(true)
+    if (!course.ok) return
+
+    const deleted = await sdk.deleteCourse({
+      organizationId,
+      courseId: course.value.id,
+    })
+    expect(deleted.ok).toBe(true)
+
+    const missing = await sdk.getCourse({
+      organizationId,
+      courseId: course.value.id,
+    })
+    expect(missing.ok).toBe(false)
+    if (missing.ok) return
+    expect(missing.error.code).toBe('NOT_FOUND')
+    expect(missing.error.message).toBe('El curso no existe.')
+  })
+
+  it('rejects update and delete of a course from another organization', async () => {
+    const sdk = createSdk()
+    const first = await sdk.createOrganization(admin)
+    expect(first.ok).toBe(true)
+    if (!first.ok) return
+
+    const second = await sdk.createOrganization({
+      ...admin,
+      name: 'Otra sede',
+      taxId: 'a-12.345.678',
+      identificationDocument: '87654321Z',
+      email: ' otra@atempo.test ',
+    })
+    expect(second.ok).toBe(true)
+    if (!second.ok) return
+
+    const foreign = await sdk.createCourse({
+      organizationId: second.value.organization.id,
+      ...courseInput,
+    })
+    expect(foreign.ok).toBe(true)
+    if (!foreign.ok) return
+
+    const organizationId = first.value.organization.id
+    const deleted = await sdk.deleteCourse({
+      organizationId,
+      courseId: foreign.value.id,
+    })
+    expect(deleted.ok).toBe(false)
+    if (deleted.ok) return
+    expect(deleted.error.code).toBe('NOT_FOUND')
+
+    const stillThere = await sdk.getCourse({
+      organizationId: second.value.organization.id,
+      courseId: foreign.value.id,
+    })
+    expect(stillThere.ok).toBe(true)
   })
 })
