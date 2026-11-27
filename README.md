@@ -117,6 +117,7 @@ Abre <http://localhost:5191/> para el alumno o <http://localhost:5191/admin> par
 | `web/` | Web del alumno y demo de administración con Vite y React, en el puerto 5191. |
 | `api-router/` | API REST con NestJS entre los frontends y `atempo-sdk`. Auth0 permanece en `AuthService`; tras login, register y `me` llama a `afterAuth`. |
 | `sdk/` | Paquete `atempo-sdk`: capas shared, dominio, aplicación, infraestructura mock y composición. Expone `afterAuth({ email })`. No es un servicio HTTP. El CRUD HTTP y el GET del Resumen aún no están. |
+| `ui/` | Paquete `atempo-ui`: componentes de interfaz compartidos por `desktop/`, `web/` y Storybook. Hoy tiene `Pagination`, `usePagination` y `pageItems`. |
 | `api-postgresql/` | API REST con NestJS entre la SDK y PostgreSQL. |
 | `api-rustfs/` | API REST con Express entre la SDK y RustFS (persistencia de objetos). |
 | `api-sqlite/` | Servicio Flask con Pydantic y SQLAlchemy Core entre la SDK y SQLite. Aún no hay integración. |
@@ -165,7 +166,7 @@ docker compose run --rm setup
 
 La primera vez, `setup` construye la imagen de Docker: tarda unos minutos. Las siguientes, unos segundos.
 
-`setup` instala delivery-workflow para Cursor, Codex y Claude Code en la raíz del proyecto, las dependencias Node de `desktop/`, `docs/storybook/`, `sdk/`, `api-router/`, `api-postgresql/`, `api-rustfs/`, `blockend/` y `postgres/` en volúmenes Docker, y `api-sqlite/` en un entorno virtual Linux. Los paquetes Node, el entorno Python y los datos de las APIs viven en volúmenes; las dependencias Linux no llegan a tu carpeta.
+`setup` instala delivery-workflow para Cursor, Codex y Claude Code en la raíz del proyecto, las dependencias Node de `ui/`, `desktop/`, `docs/storybook/`, `sdk/`, `api-router/`, `api-postgresql/`, `api-rustfs/`, `blockend/` y `postgres/` en volúmenes Docker, y `api-sqlite/` en un entorno virtual Linux. Los paquetes Node, el entorno Python y los datos de las APIs viven en volúmenes; las dependencias Linux no llegan a tu carpeta.
 
 Desde entonces, git lanza `setup` después de `git pull`, de cambiar de rama o de un rebase si cambió `apm.yml`, `apm.lock.yaml`, un lockfile de pnpm, `api-sqlite/pyproject.toml`, el script de setup, el entrypoint o el `Dockerfile`. Si cambió el `Dockerfile` o el entrypoint, reconstruye la imagen antes de instalar:
 
@@ -425,6 +426,18 @@ docker compose run --rm sdk pnpm build
 
 Si `setup` aún no ha instalado `sdk/`, basta con `docker compose run --rm sdk pnpm install --frozen-lockfile` (y `pnpm build` si hace falta). Más contexto en [sdk/README.md](sdk/README.md) y [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
+## UI
+
+Paquete `atempo-ui` en `ui/`: componentes React compartidos por las apps y por Storybook. Se publica como código TypeScript, sin compilar, y `react` es `peerDependency`: cada app lo instala con `file:../ui` (Storybook, con `file:../../ui`) y lo compila con su propio React. Cada app añade `@source` de `ui/src` a su CSS para que Tailwind genere sus clases.
+
+pnpm copia el paquete al instalar. Tras cambiar `ui/`, vuelve a instalar la app que lo usa (`pnpm install` en `desktop/`, o `docker compose run --rm storybook pnpm install`) para que vea el cambio. Las comprobaciones van en el volumen Linux del paquete:
+
+```sh
+docker compose run --rm ui pnpm typecheck
+docker compose run --rm ui pnpm lint
+docker compose run --rm ui pnpm test
+```
+
 ## API-router
 
 ```sh
@@ -525,7 +538,7 @@ Reemplaza los valores por el login exacto del revisor solicitado y su ID numéri
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Las tres capas del escritorio y el entorno de instalación. |
 | [docs/STYLE.md](docs/STYLE.md) | Temas y enlace a la guía visual. |
 | [docs/guia](docs/guia/README.md) | Markdown generado desde Storybook. No se versiona. |
-| [docs/TREE.md](docs/TREE.md) | Carpetas de `desktop/`, `api-router/`, `sdk/`, las APIs de persistencia y los almacenes. |
+| [docs/TREE.md](docs/TREE.md) | Carpetas de `desktop/`, `api-router/`, `sdk/`, `ui/`, las APIs de persistencia y los almacenes. |
 | [docs/POSTGRES.md](docs/POSTGRES.md) | Modelo del core PostgreSQL. |
 | [docs/SQLITE.md](docs/SQLITE.md) | Modelo del SQLite operativo. |
 | [docs/RUSTFS.md](docs/RUSTFS.md) | Modelo del bucket de justificantes. |
