@@ -1,4 +1,4 @@
-# domain
+# data-access
 
 SDK de PostgreSQL de aTempo. Carpeta en la raíz, hermana de `desktop/`, `sdk/` y `api-postgresql/`. No es un servicio HTTP.
 

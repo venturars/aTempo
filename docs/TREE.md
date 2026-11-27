@@ -96,10 +96,10 @@ docs/BLOCKEND.md
 permanent-data.md
 ```
 
-# Árbol de `domain/`
+# Árbol de `data-access/`
 
 ```text
-domain/
+data-access/
   README.md
   node/
     package.json            # @atempo/errors: link:../../errors; prepare compila errors/

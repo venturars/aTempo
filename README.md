@@ -117,9 +117,9 @@ Abre <http://localhost:5191/> para el alumno o <http://localhost:5191/admin> par
 | `web/` | Web del alumno y demo de administración con Vite y React, en el puerto 5191. |
 | `api-router/` | API REST con NestJS entre los frontends y `atempo-sdk`. Auth0 permanece en `AuthService`; tras login, register y `me` llama a `afterAuth`. |
 | `sdk/` | Paquete `atempo-sdk`: capas shared, dominio, aplicación, infraestructura mock y composición. Expone `afterAuth({ email })`. No es un servicio HTTP. El CRUD HTTP y el GET del Resumen aún no están. |
-| `domain/` | SDK de PostgreSQL: `node/` (TypeScript). No es un servicio HTTP. Ningún servicio lo importa todavía. |
-| `errors/` | Paquete local `@atempo/errors`: clases de error y fábrica `createErrorFactory`. Lo enlaza `domain/node/` con `link:../../errors`. No se publica en npm. |
-| `api-postgresql/` | API REST con NestJS entre la SDK y PostgreSQL. El flujo previsto con `domain/node` es Frontend → `api-postgresql` → `domain/node` → PostgreSQL. |
+| `data-access/` | SDK de PostgreSQL: `node/` (TypeScript). No es un servicio HTTP. Ningún servicio lo importa todavía. |
+| `errors/` | Paquete local `@atempo/errors`: clases de error y fábrica `createErrorFactory`. Lo enlaza `data-access/node/` con `link:../../errors`. No se publica en npm. |
+| `api-postgresql/` | API REST con NestJS entre la SDK y PostgreSQL. El flujo previsto con `data-access/node` es Frontend → `api-postgresql` → `data-access/node` → PostgreSQL. |
 | `api-rustfs/` | API REST con Express entre la SDK y RustFS (persistencia de objetos). |
 | `api-sqlite/` | Servicio Flask con Pydantic y SQLAlchemy Core entre la SDK y SQLite. Aún no hay integración. |
 | `postgres/` | Core PostgreSQL y Drizzle Studio para ver sus tablas. No se abre desde el escritorio ni desde el API-router. |
@@ -457,7 +457,7 @@ La API queda en <http://localhost:3001> y PostgreSQL en <http://localhost:5433> 
 
 ## API-sqlite
 
-`api-sqlite/` es el servicio de persistencia local previsto para la SDK. `sdk/` (`atempo-sdk`) y `domain/` ya existen; ninguno está integrado con este servicio. Su base SQLite es distinta de la base local de Electron.
+`api-sqlite/` es el servicio de persistencia local previsto para la SDK. `sdk/` (`atempo-sdk`) y `data-access/` ya existen; ninguno está integrado con este servicio. Su base SQLite es distinta de la base local de Electron.
 
 Para usar el servicio en Docker, primero ejecuta `docker compose run --rm setup` y después:
 

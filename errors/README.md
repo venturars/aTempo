@@ -28,7 +28,7 @@ fail('thing.code', 'taken') // lanza ConflictError con id thing.code.taken
 
 ## Cómo se instala
 
-No se publica en npm. `domain/node/` lo enlaza con `"@atempo/errors": "link:../../errors"`, y su `pnpm install` instala y compila este paquete con el script `prepare`. Los consumidores leen `dist/`.
+No se publica en npm. `data-access/node/` lo enlaza con `"@atempo/errors": "link:../../errors"`, y su `pnpm install` instala y compila este paquete con el script `prepare`. Los consumidores leen `dist/`.
 
 ## Instalar y probar
 
