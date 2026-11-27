@@ -35,6 +35,8 @@ import {
   dashboardDate,
   dashboardHeading,
   sessionCounts,
+  sessionDateLabel,
+  sessionShortWeekday,
   sessionTitle,
   studentHistory,
   studentSummary,
@@ -50,6 +52,7 @@ const tabs: { id: PanelTab; label: string }[] = [
   { id: 2, label: 'Estadísticas' },
   { id: 3, label: 'Ajustes' }
 ]
+const sections = tabs.filter((item) => item.id !== 3)
 
 // Nombre de la barra lateral. Si se abre la ruta del panel sin entrar, el de la cuenta de ejemplo.
 function useTeacherName(): string {
@@ -102,7 +105,7 @@ export function PanelScreen(): React.JSX.Element {
         </button>
         <nav aria-label="Secciones">
           <ul className="menu w-full px-2">
-            {tabs.map((item) => (
+            {sections.map((item) => (
               <li key={item.id}>
                 <button
                   type="button"
@@ -122,6 +125,7 @@ export function PanelScreen(): React.JSX.Element {
         </nav>
         <AccountMenu
           name={teacherName}
+          onOpenSettings={() => setTab(3)}
           onChangePassword={
             signedIn && !authConfigured
               ? () => {
@@ -498,13 +502,27 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
     return (
       <section className="card w-full overflow-hidden bg-base-100 shadow-sm">
         <table className="table table-spread">
+          <colgroup span={5} />
           <thead>
             <tr>
-              <th>Fecha</th>
-              <th>Asistencia</th>
-              <th>Presentes</th>
-              <th>Tarde</th>
-              <th>Ausentes</th>
+              <th colSpan={5} scope="colgroup" className="text-center">
+                Alumnos
+              </th>
+            </tr>
+            <tr>
+              <th scope="col">Fecha</th>
+              <th scope="col" className="text-center">
+                Asistencia
+              </th>
+              <th scope="col" className="text-center">
+                Presentes
+              </th>
+              <th scope="col" className="text-center">
+                Tarde
+              </th>
+              <th scope="col" className="text-center">
+                Ausentes
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -530,21 +548,23 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
                       disabled={!linked}
                       onClick={() => openClass(session.id)}
                     >
-                      <SessionDate label={sessionTitle(session.id)} strong />
+                      <SessionDate id={session.id} strong />
                     </button>
                   </td>
-                  <td className="tabular-nums text-base-content/50">{attendance}</td>
-                  <td>
+                  <td className="text-center tabular-nums text-base-content/50">{attendance}</td>
+                  <td className="text-center">
                     {counts === null ? (
                       <span className="text-base-content/50">—</span>
                     ) : (
                       <SessionCount value={counts.p} tone="muted" />
                     )}
                   </td>
-                  <td>
+                  <td className="text-center">
                     {counts === null ? '—' : <SessionCount value={counts.r} tone="warning" />}
                   </td>
-                  <td>{counts === null ? '—' : <SessionCount value={counts.a} tone="error" />}</td>
+                  <td className="text-center">
+                    {counts === null ? '—' : <SessionCount value={counts.a} tone="error" />}
+                  </td>
                 </tr>
               )
             })}
@@ -561,7 +581,7 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
   const sessionId = selected.id
   const when = sessionTitle(sessionId)
 
-  // Una sesión pasada está cerrada: cambiar un estado pide un motivo.
+  // Una sesión pasada está cerrada: cambiar un estado abre el diálogo, con el motivo opcional.
   function pick(name: string, mark: Attendance): void {
     if (rows.find((row) => row.name === name)?.mark === mark) {
       return
@@ -840,18 +860,11 @@ function StatWell({
   )
 }
 
-function SessionDate({
-  label,
-  strong = false
-}: {
-  label: string
-  strong?: boolean
-}): React.JSX.Element {
-  const [weekday, ...rest] = label.split(' ')
+function SessionDate({ id, strong = false }: { id: string; strong?: boolean }): React.JSX.Element {
   return (
     <>
-      <span className="text-base-content/60">{weekday}</span>{' '}
-      <span className={strong ? 'font-medium' : undefined}>{rest.join(' ')}</span>
+      <span className="inline-block w-8 text-base-content/60">{sessionShortWeekday(id)}</span>{' '}
+      <span className={strong ? 'font-medium' : undefined}>{sessionDateLabel(id)}</span>
     </>
   )
 }

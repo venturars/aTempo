@@ -1,0 +1,17 @@
+import type { Course } from './course'
+import type { ContractAddress } from './contract-address'
+import type { Uuid } from './scalars'
+import type { NonEmptyText } from './text'
+
+export type CourseRepository = {
+  findById(courseId: Uuid): Promise<Course | null>
+  findByOrganizationAndAcronym(
+    organizationId: Uuid,
+    acronym: NonEmptyText,
+  ): Promise<Course | null>
+  findByContractAddress(
+    contractAddress: ContractAddress,
+  ): Promise<Course | null>
+  listByOrganization(organizationId: Uuid): Promise<Course[]>
+  save(course: Course): Promise<void>
+}

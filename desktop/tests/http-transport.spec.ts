@@ -115,7 +115,7 @@ test('turns a contract error body into an ApiError', async () => {
       error: 'Bad Request',
       code: 'VALIDATION_FAILED',
       message: 'La petición no es válida.',
-      details: [{ field: 'reason', message: 'El motivo es obligatorio.' }]
+      details: [{ field: 'reason', message: 'El motivo tiene que ser texto.' }]
     }
   }))
   try {
@@ -127,7 +127,7 @@ test('turns a contract error body into an ApiError', async () => {
     ).rejects.toMatchObject({
       statusCode: 400,
       code: 'VALIDATION_FAILED',
-      details: [{ field: 'reason', message: 'El motivo es obligatorio.' }]
+      details: [{ field: 'reason', message: 'El motivo tiene que ser texto.' }]
     })
   } finally {
     await stub.close()
