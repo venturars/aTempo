@@ -500,19 +500,18 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
     return (
       <section className="card w-full overflow-hidden bg-base-100 shadow-sm">
         <table className="table table-spread">
-          <colgroup span={2} />
-          <colgroup span={3} />
+          <colgroup span={5} />
           <thead>
             <tr>
-              <th rowSpan={2}>Fecha</th>
-              <th rowSpan={2} className="text-center">
-                Asistencia
-              </th>
-              <th colSpan={3} scope="colgroup" className="text-center">
+              <th colSpan={5} scope="colgroup" className="text-center">
                 Alumnos
               </th>
             </tr>
             <tr>
+              <th scope="col">Fecha</th>
+              <th scope="col" className="text-center">
+                Asistencia
+              </th>
               <th scope="col" className="text-center">
                 Presentes
               </th>

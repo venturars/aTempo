@@ -196,10 +196,10 @@ test('groups the Sesiones counts under Alumnos and lines up the dates', async ()
     await expect(window.getByRole('heading', { level: 1, name: 'Sesiones' })).toBeVisible()
 
     const group = window.getByRole('columnheader', { name: 'Alumnos', exact: true })
-    await expect(group).toHaveAttribute('colspan', '3')
+    await expect(group).toHaveAttribute('colspan', '5')
     await expect(group).toHaveAttribute('scope', 'colgroup')
     const groupBox = await group.boundingBox()
-    for (const name of ['Presentes', 'Tarde', 'Ausentes']) {
+    for (const name of ['Fecha', 'Asistencia', 'Presentes', 'Tarde', 'Ausentes']) {
       const column = await window.getByRole('columnheader', { name, exact: true }).boundingBox()
       expect(groupBox).not.toBeNull()
       expect(column).not.toBeNull()
