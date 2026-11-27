@@ -11,7 +11,7 @@ Dos tablas:
 - `session` — `professor_id` (UUID de `person.id`), `late_after_minutes`, `expected_count`, `status` (`open` | `closing` | `closed`), `closed_at` solo en `closed`
 - `attendance` — PK `(session_id, student_id)`; una fila por alumno del roster; `status` (`present` | `present_late` | `absent` | `notified_absence`); `check_in_method` (`button` | `qr`); `checked_in_at`. `present` y `present_late` llevan método y hora de fichaje dentro de la sesión; `absent` y `notified_absence` van sin fichaje.
 
-`course_id`, `student_id` y `professor_id` son referencias lógicas al core, no FK entre bases.
+`course_id`, `student_id` y `professor_id` son referencias lógicas al core, no FK entre bases. `python` no comprueba la matrícula.
 
 `expected_count` vive **solo** aquí. No va al contrato.
 
@@ -19,7 +19,7 @@ No hay `absence_notice`, `session_seal`, `recorded_by`, `justification`, `docume
 
 ## Configuración
 
-El esquema está en `sqlite/schema.sql`. Fechas y UUID van como `TEXT`. El esquema solo acepta instantes ISO UTC con milisegundos (`2026-09-01T08:00:00.000Z`), para que el `CHECK (end_at > start_at)` compare bien. En asistencia, `present` y `present_late` exigen método y hora; `absent` y `notified_absence` los prohíben. `closed_at` queda vacío mientras la sesión no está `closed`.
+El esquema está en `sqlite/schema.sql`. Fechas y UUID van como `TEXT`. El esquema solo acepta instantes ISO UTC con milisegundos (`2026-09-01T08:00:00.000Z`) y el SDK guarda los UUID en minúsculas, para que el `CHECK (end_at > start_at)` y la PK de asistencia comparen bien. En asistencia, `present` y `present_late` exigen método y hora; `absent` y `notified_absence` los prohíben. `closed_at` queda vacío mientras la sesión no está `closed`.
 
 SQLite no añade un `CHECK` a una tabla que ya existe. `schema.sql` solo se aplica al crear el fichero (`sqlite/data/operational.sqlite` o el de `api-sqlite-data`). Un volumen o fichero anterior se queda con el esquema viejo: hay que borrarlo y dejar que se cree de nuevo. No hay un `02` como en PostgreSQL.
 

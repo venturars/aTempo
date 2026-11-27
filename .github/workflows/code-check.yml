@@ -103,6 +103,28 @@ jobs:
       - run: pnpm run --if-present typecheck
       - run: pnpm run --if-present build-storybook
 
+  # Paquetes Python con uv: «uv sync --locked» instala lo que dice uv.lock, también
+  # atempo-errors como editable desde ../../errors/python, y falla si el lock no está al día
+  python:
+    needs: select-packages
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [data-access/sqlite, errors/python]
+    defaults:
+      run:
+        working-directory: ${{ matrix.package }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.15"
+          python-version: "3.11"
+      - run: uv sync --locked
+      - run: uv run python -m unittest discover -s tests -v
+
   # Tests de administración de desktop (Playwright, sin Electron). Necesitan desktop/ y web/ a la vez,
   # por eso no caben en la matriz «check». Si «select-packages» dice admin=false, el job se salta y «ci» lo da por bueno.
   admin-tests:
@@ -150,7 +172,7 @@ jobs:
 
   # El resumen del resultado: falla si algún job falló o se canceló. Pasa si no había paquetes que comprobar.
   ci:
-    needs: [select-packages, check, admin-tests]
+    needs: [select-packages, check, admin-tests, python]
     if: always()
     runs-on: ubuntu-latest
     steps:
