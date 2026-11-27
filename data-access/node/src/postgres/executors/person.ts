@@ -19,6 +19,7 @@ import {
 } from '../queries/person'
 import { query, type PostgresQuery } from '../pool'
 import type { IdRow } from './id-row'
+import { requireRow } from './require-row'
 import { runParentDelete } from './run-parent-delete'
 
 export async function retrieveAllPersonRows(
@@ -75,7 +76,7 @@ export async function findPersonIdByIdentificationDocument(
 export async function addPersonRow(
   person: PersonCreate,
   run: PostgresQuery = query,
-): Promise<Person | null> {
+): Promise<Person> {
   const result = await run(INSERT_PERSON, [
     person.identification_document,
     person.email,
@@ -84,13 +85,13 @@ export async function addPersonRow(
     person.birth_date,
     person.phone,
   ])
-  return (result.rows[0] as Person | undefined) ?? null
+  return requireRow<Person>(result, 'person', 'not_created')
 }
 
 export async function updatePersonRow(
   person: PersonUpdate,
   run: PostgresQuery = query,
-): Promise<Person | null> {
+): Promise<Person> {
   const result = await run(UPDATE_PERSON, [
     person.id,
     person.identification_document,
@@ -100,7 +101,7 @@ export async function updatePersonRow(
     person.birth_date,
     person.phone,
   ])
-  return (result.rows[0] as Person | undefined) ?? null
+  return requireRow<Person>(result, 'person', 'not_updated')
 }
 
 export async function removePersonRoles(
@@ -120,7 +121,7 @@ export async function removePersonCourses(
 export async function removePersonById(
   id: string,
   run: PostgresQuery,
-): Promise<boolean> {
+): Promise<Person> {
   const result = await runParentDelete(run, DELETE_PERSON, [id], 'person')
-  return (result.rowCount ?? 0) > 0
+  return requireRow<Person>(result, 'person', 'missing')
 }

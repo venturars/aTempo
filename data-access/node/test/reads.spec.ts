@@ -1,14 +1,10 @@
-import { retrieveCourseById } from '../src/course/retrieve-course-by-id'
-import { retrieveAllCourses } from '../src/course/retrieve-all-courses'
-import { retrieveOrganizationById } from '../src/organization/retrieve-organization-by-id'
-import { retrieveAllOrganizations } from '../src/organization/retrieve-all-organizations'
-import { retrieveAllPersonCourses } from '../src/person-course/retrieve-all-person-courses'
-import { retrievePersonById } from '../src/person/retrieve-person-by-id'
-import { retrieveAllPersons } from '../src/person/retrieve-all-persons'
-import { retrieveAllPersonRoles } from '../src/person-role/retrieve-all-person-roles'
-import { retrieveRoleByName } from '../src/role/retrieve-role-by-name'
-import { retrieveAllRoles } from '../src/role/retrieve-all-roles'
-import type { RoleName } from '../src/shared/types/role'
+import { retrieveCourseById } from '../src/courses/retrieve-course-by-id'
+import { retrieveAllCourses } from '../src/courses/retrieve-all-courses'
+import { retrieveOrganizationById } from '../src/organizations/retrieve-organization-by-id'
+import { retrieveAllOrganizations } from '../src/organizations/retrieve-all-organizations'
+import { retrievePersonById } from '../src/people/retrieve-person-by-id'
+import { retrieveAllPersons } from '../src/people/retrieve-all-persons'
+import { retrieveAllRoles } from '../src/roles/retrieve-all-roles'
 import {
   COURSE_ID,
   emptyResult,
@@ -20,8 +16,6 @@ import {
   validCourse,
   validOrganization,
   validPerson,
-  validPersonCourse,
-  validPersonRole,
 } from './helpers'
 
 describe('lecturas', () => {
@@ -86,7 +80,9 @@ describe('lecturas', () => {
 
   it('lists persons', async () => {
     mockDriver(async () => rowsResult([validPerson]))
-    await expect(retrieveAllPersons()).resolves.toEqual({ persons: [validPerson] })
+    await expect(retrieveAllPersons()).resolves.toEqual({
+      persons: [validPerson],
+    })
   })
 
   it('projects course timestamps as UTC ISO and birth_date as a calendar date', async () => {
@@ -97,24 +93,7 @@ describe('lecturas', () => {
     expect(calls[1].sql).toContain("to_char(birth_date, 'YYYY-MM-DD')")
   })
 
-  it('does not query when role name is invented', async () => {
-    const calls = mockDriver()
-    await expect(
-      retrieveRoleByName({ name: 'admin' as RoleName }),
-    ).rejects.toThrow(
-      'role.name debe ser organization_admin, teacher o student',
-    )
-    expect(calls).toHaveLength(0)
-  })
-
-  it('gets a role by name', async () => {
-    mockDriver(async () => rowsResult([{ name: 'teacher' }]))
-    await expect(retrieveRoleByName({ name: 'teacher' })).resolves.toEqual({
-      role: { name: 'teacher' },
-    })
-  })
-
-  it('lists organizations, courses, roles and junctions', async () => {
+  it('lists organizations, courses and roles', async () => {
     mockDriver(async (sql) => {
       if (sql.includes('FROM organization')) {
         return rowsResult([validOrganization])
@@ -125,12 +104,6 @@ describe('lecturas', () => {
       if (sql.includes('FROM role')) {
         return rowsResult([{ name: 'student' }])
       }
-      if (sql.includes('FROM person_course')) {
-        return rowsResult([validPersonCourse])
-      }
-      if (sql.includes('FROM person_role')) {
-        return rowsResult([validPersonRole])
-      }
       return emptyResult()
     })
 
@@ -140,18 +113,14 @@ describe('lecturas', () => {
     await expect(retrieveOrganizationById({ id: ORG_ID })).resolves.toEqual({
       organization: validOrganization,
     })
-    await expect(retrieveAllCourses()).resolves.toEqual({ courses: [validCourse] })
+    await expect(retrieveAllCourses()).resolves.toEqual({
+      courses: [validCourse],
+    })
     await expect(retrieveCourseById({ id: COURSE_ID })).resolves.toEqual({
       course: validCourse,
     })
     await expect(retrieveAllRoles()).resolves.toEqual({
       roles: [{ name: 'student' }],
-    })
-    await expect(retrieveAllPersonCourses()).resolves.toEqual({
-      personCourses: [validPersonCourse],
-    })
-    await expect(retrieveAllPersonRoles()).resolves.toEqual({
-      personRoles: [validPersonRole],
     })
   })
 })

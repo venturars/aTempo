@@ -163,6 +163,7 @@ export function enrollmentFlags(
     person_exists?: boolean
     course_exists?: boolean
     already?: boolean
+    has_course_role?: boolean
   } = {},
 ): QueryResult<QueryResultRow> {
   return rowsResult([
@@ -170,6 +171,7 @@ export function enrollmentFlags(
       person_exists: true,
       course_exists: true,
       already: false,
+      has_course_role: true,
       ...overrides,
     },
   ])

@@ -1,10 +1,11 @@
-import { fail } from '../shared/errors'
 import { addPersonRow } from '../postgres/executors/person'
 import { assertPersonCreate, normalizeEmail } from '../shared/validation/person'
 import { personFromRow } from '../postgres/rows/person'
 import type { Person, PersonCreate } from '../shared/types/person'
-import { findEmailAvailable } from './find-email-available'
-import { findIdentificationDocumentAvailable } from './find-identification-document-available'
+import {
+  ensureEmailAvailable,
+  ensureIdentificationDocumentAvailable,
+} from './rules'
 
 export type AddPersonInput = {
   person: PersonCreate
@@ -19,15 +20,11 @@ export async function addPerson(
 ): Promise<AddPersonOutput> {
   const person = assertPersonCreate(input.person)
   const email = normalizeEmail(person.email)
-  await findIdentificationDocumentAvailable({
+  await ensureIdentificationDocumentAvailable({
     identificationDocument: person.identification_document,
   })
-  await findEmailAvailable({ email })
+  await ensureEmailAvailable({ email })
 
   const row = await addPersonRow({ ...person, email })
-  if (!row) {
-    fail('person', 'not_created')
-  }
-
   return { person: personFromRow(row) }
 }

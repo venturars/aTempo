@@ -1,6 +1,12 @@
 import { fail } from '../errors'
-import type { Person, PersonCreate, PersonUpdate } from '../types/person'
+import type {
+  Person,
+  PersonCreate,
+  PersonUpdate,
+  PersonChanges,
+} from '../types/person'
 import {
+  assertChanges,
   assertCalendarDate,
   assertNonEmptyString,
   assertNullableString,
@@ -40,6 +46,27 @@ export function assertPersonCreate(value: unknown): PersonCreate {
 
 export function assertPerson(value: unknown): Person {
   return personWithId(value, true)
+}
+
+const PERSON_CHANGEABLE_FIELDS = [
+  'identification_document',
+  'email',
+  'first_name',
+  'last_name',
+  'birth_date',
+  'phone',
+] as const
+
+/**
+ * Solo comprueba la forma de los cambios. Sus valores se validan con
+ * `assertPersonUpdate` al mezclarlos con la fila guardada.
+ */
+export function assertPersonChanges(value: unknown): PersonChanges {
+  return assertChanges(
+    value,
+    'person',
+    PERSON_CHANGEABLE_FIELDS,
+  ) as PersonChanges
 }
 
 export function assertPersonUpdate(value: unknown): PersonUpdate {

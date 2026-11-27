@@ -11,3 +11,6 @@ export interface Person {
 export type PersonCreate = Omit<Person, 'id'>
 
 export type PersonUpdate = Person
+
+/** Campos que cambia un modify. Lo que no viene se queda como está. */
+export type PersonChanges = Partial<PersonCreate>

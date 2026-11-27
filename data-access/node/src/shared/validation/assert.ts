@@ -81,3 +81,24 @@ export function assertObject(
   }
   return value as Record<string, unknown>
 }
+
+/**
+ * Comprueba que los cambios de un modify son un objeto con al menos un campo y
+ * que todos sus campos se pueden cambiar. El valor de cada campo se valida
+ * después, cuando se mezcla con la fila guardada.
+ */
+export function assertChanges(
+  value: unknown,
+  label: DomainLabel,
+  changeableFields: readonly string[],
+): Record<string, unknown> {
+  const changes = assertObject(value, label)
+  const fields = Object.keys(changes)
+  if (fields.length === 0) {
+    fail(label, 'no_changes')
+  }
+  if (fields.some((field) => !changeableFields.includes(field))) {
+    fail(label, 'unknown_field')
+  }
+  return changes
+}

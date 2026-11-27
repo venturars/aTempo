@@ -1,8 +1,8 @@
-import { retrieveAllCoursesByOrganization } from '../src/course/retrieve-all-courses-by-organization'
-import { retrieveAllCoursesByPerson } from '../src/course/retrieve-all-courses-by-person'
-import { retrieveAllPersonsByCourse } from '../src/person/retrieve-all-persons-by-course'
-import { retrieveAllPersonsByRole } from '../src/person/retrieve-all-persons-by-role'
-import { retrieveAllRolesByPerson } from '../src/role/retrieve-all-roles-by-person'
+import { retrieveAllCoursesByOrganization } from '../src/courses/retrieve-all-courses-by-organization'
+import { retrieveAllCoursesByPerson } from '../src/enrollment/retrieve-all-courses-by-person'
+import { retrieveAllPersonsByCourse } from '../src/enrollment/retrieve-all-persons-by-course'
+import { retrieveAllPersonsByRole } from '../src/roles/retrieve-all-persons-by-role'
+import { retrieveAllRolesByPerson } from '../src/roles/retrieve-all-roles-by-person'
 import type { RoleName } from '../src/shared/types/role'
 import {
   COURSE_ID,

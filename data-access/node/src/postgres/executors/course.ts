@@ -17,6 +17,7 @@ import {
 } from '../queries/course'
 import { query, type PostgresQuery } from '../pool'
 import type { IdRow } from './id-row'
+import { requireRow } from './require-row'
 import { runParentDelete } from './run-parent-delete'
 
 export async function retrieveAllCourseRows(
@@ -74,7 +75,7 @@ export async function findCourseIdByAcronym(
 export async function addCourseRow(
   course: CourseCreate,
   run: PostgresQuery = query,
-): Promise<Course | null> {
+): Promise<Course> {
   const result = await run(INSERT_COURSE, [
     course.organization_id,
     course.name,
@@ -83,13 +84,13 @@ export async function addCourseRow(
     course.end_at,
     course.contract_address,
   ])
-  return (result.rows[0] as Course | undefined) ?? null
+  return requireRow<Course>(result, 'course', 'not_created')
 }
 
 export async function updateCourseRow(
   course: CourseUpdate,
   run: PostgresQuery = query,
-): Promise<Course | null> {
+): Promise<Course> {
   const result = await run(UPDATE_COURSE, [
     course.id,
     course.organization_id,
@@ -99,7 +100,7 @@ export async function updateCourseRow(
     course.end_at,
     course.contract_address,
   ])
-  return (result.rows[0] as Course | undefined) ?? null
+  return requireRow<Course>(result, 'course', 'not_updated')
 }
 
 export async function removeCourseEnrollments(
@@ -112,7 +113,7 @@ export async function removeCourseEnrollments(
 export async function removeCourseById(
   id: string,
   run: PostgresQuery,
-): Promise<boolean> {
+): Promise<Course> {
   const result = await runParentDelete(run, DELETE_COURSE, [id], 'course')
-  return (result.rowCount ?? 0) > 0
+  return requireRow<Course>(result, 'course', 'missing')
 }

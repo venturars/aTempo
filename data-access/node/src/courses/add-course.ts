@@ -1,5 +1,4 @@
-import { fail } from '../shared/errors'
-import { findOrganizationExists } from '../organization/find-organization-exists'
+import { ensureOrganizationExists } from '../organizations/rules'
 import { addCourseRow } from '../postgres/executors/course'
 import {
   assertCourseCreate,
@@ -7,8 +6,7 @@ import {
 } from '../shared/validation/course'
 import { courseFromRow } from '../postgres/rows/course'
 import type { Course, CourseCreate } from '../shared/types/course'
-import { findAcronymAvailable } from './find-acronym-available'
-import { findContractAddressAvailable } from './find-contract-address-available'
+import { ensureAcronymAvailable, ensureContractAddressAvailable } from './rules'
 
 export type AddCourseInput = {
   course: CourseCreate
@@ -23,9 +21,9 @@ export async function addCourse(
 ): Promise<AddCourseOutput> {
   const course = assertCourseCreate(input.course)
   const contractAddress = normalizeContractAddress(course.contract_address)
-  await findOrganizationExists({ id: course.organization_id })
-  await findContractAddressAvailable({ contractAddress })
-  await findAcronymAvailable({
+  await ensureOrganizationExists({ id: course.organization_id })
+  await ensureContractAddressAvailable({ contractAddress })
+  await ensureAcronymAvailable({
     organizationId: course.organization_id,
     acronym: course.acronym,
   })
@@ -34,9 +32,5 @@ export async function addCourse(
     ...course,
     contract_address: contractAddress,
   })
-  if (!row) {
-    fail('course', 'not_created')
-  }
-
   return { course: courseFromRow(row) }
 }

@@ -15,6 +15,7 @@ import {
 } from '../queries/organization'
 import { query, type PostgresQuery } from '../pool'
 import type { IdRow } from './id-row'
+import { requireRow } from './require-row'
 import { runParentDelete } from './run-parent-delete'
 
 export async function retrieveAllOrganizationRows(
@@ -44,24 +45,24 @@ export async function findOrganizationIdByTaxId(
 export async function addOrganizationRow(
   organization: OrganizationCreate,
   run: PostgresQuery = query,
-): Promise<Organization | null> {
+): Promise<Organization> {
   const result = await run(INSERT_ORGANIZATION, [
     organization.name,
     organization.tax_id,
   ])
-  return (result.rows[0] as Organization | undefined) ?? null
+  return requireRow<Organization>(result, 'organization', 'not_created')
 }
 
 export async function updateOrganizationRow(
   organization: OrganizationUpdate,
   run: PostgresQuery = query,
-): Promise<Organization | null> {
+): Promise<Organization> {
   const result = await run(UPDATE_ORGANIZATION, [
     organization.id,
     organization.name,
     organization.tax_id,
   ])
-  return (result.rows[0] as Organization | undefined) ?? null
+  return requireRow<Organization>(result, 'organization', 'not_updated')
 }
 
 export async function removeOrganizationEnrollments(
@@ -81,12 +82,12 @@ export async function removeOrganizationCourses(
 export async function removeOrganizationById(
   id: string,
   run: PostgresQuery,
-): Promise<boolean> {
+): Promise<Organization> {
   const result = await runParentDelete(
     run,
     DELETE_ORGANIZATION,
     [id],
     'organization',
   )
-  return (result.rowCount ?? 0) > 0
+  return requireRow<Organization>(result, 'organization', 'missing')
 }

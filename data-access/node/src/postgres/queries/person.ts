@@ -56,4 +56,6 @@ export const DELETE_PERSON_ROLES = `DELETE FROM person_role WHERE person_id = $1
 
 export const DELETE_PERSON_COURSES = `DELETE FROM person_course WHERE person_id = $1::uuid`
 
-export const DELETE_PERSON = `DELETE FROM person WHERE id = $1::uuid`
+export const DELETE_PERSON = `DELETE FROM person WHERE id = $1::uuid
+RETURNING
+  ${PERSON_COLUMNS}`

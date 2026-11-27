@@ -16,9 +16,15 @@ jest.mock('pg', () => ({
   })),
 }))
 
-import { removePerson } from '../src/person/remove-person'
+import { removePerson } from '../src/people/remove-person'
 import { closePool, query, resetDb } from '../src/postgres/pool'
-import { commandResult, emptyResult, PERSON_ID } from './helpers'
+import {
+  commandResult,
+  emptyResult,
+  PERSON_ID,
+  rowsResult,
+  validPerson,
+} from './helpers'
 
 function clientSql(): string[] {
   return mockClientQuery.mock.calls.map((call) => String(call[0]))
@@ -81,13 +87,17 @@ describe('pool', () => {
       if (sql === 'BEGIN' || sql === 'COMMIT' || sql === 'ROLLBACK') {
         return emptyResult()
       }
+      if (sql.includes('DELETE FROM person WHERE')) {
+        return rowsResult([validPerson])
+      }
       return commandResult(1)
     })
     await expect(removePerson({ id: PERSON_ID })).resolves.toEqual({
-      deleted: true,
+      person: validPerson,
     })
     expect(clientSql()).toEqual([
       'BEGIN',
+      expect.stringContaining('FROM role'),
       expect.stringContaining('DELETE FROM person_role'),
       expect.stringContaining('DELETE FROM person_course'),
       expect.stringContaining('DELETE FROM person WHERE'),
@@ -110,6 +120,7 @@ describe('pool', () => {
     })
     expect(clientSql()).toEqual([
       'BEGIN',
+      expect.stringContaining('FROM role'),
       expect.stringContaining('DELETE FROM person_role'),
       expect.stringContaining('DELETE FROM person_course'),
       expect.stringContaining('DELETE FROM person WHERE'),

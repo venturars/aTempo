@@ -11,3 +11,6 @@ export interface Course {
 export type CourseCreate = Omit<Course, 'id'>
 
 export type CourseUpdate = Course
+
+/** Campos que cambia un modify. Lo que no viene se queda como está. */
+export type CourseChanges = Partial<CourseCreate>

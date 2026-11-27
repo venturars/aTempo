@@ -4,16 +4,9 @@ import {
   DELETE_PERSON_ROLE,
   FIND_PERSON_ROLE,
   INSERT_PERSON_ROLE,
-  LIST_PERSON_ROLES,
 } from '../queries/person-role'
 import { query, type PostgresQuery } from '../pool'
-
-export async function retrieveAllPersonRoleRows(
-  run: PostgresQuery = query,
-): Promise<PersonRole[]> {
-  const result = await run(LIST_PERSON_ROLES)
-  return result.rows as PersonRole[]
-}
+import { requireRow } from './require-row'
 
 export async function personRoleExists(
   personId: string,
@@ -27,19 +20,19 @@ export async function personRoleExists(
 export async function addPersonRoleRow(
   personRole: PersonRole,
   run: PostgresQuery = query,
-): Promise<PersonRole | null> {
+): Promise<PersonRole> {
   const result = await run(INSERT_PERSON_ROLE, [
     personRole.person_id,
     personRole.role,
   ])
-  return (result.rows[0] as PersonRole | undefined) ?? null
+  return requireRow<PersonRole>(result, 'person_role', 'not_created')
 }
 
-export async function deregisterPersonRoleRow(
+export async function removePersonRoleRow(
   personId: string,
   role: RoleName,
   run: PostgresQuery = query,
-): Promise<boolean> {
+): Promise<PersonRole> {
   const result = await run(DELETE_PERSON_ROLE, [personId, role])
-  return (result.rowCount ?? 0) > 0
+  return requireRow<PersonRole>(result, 'person_role', 'missing')
 }

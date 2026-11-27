@@ -1,17 +1,24 @@
-import { addCourse } from '../src/course/add-course'
-import { updateCourse } from '../src/course/update-course'
-import { ConflictError } from '@atempo/errors'
-import { addOrganization } from '../src/organization/add-organization'
-import { updateOrganization } from '../src/organization/update-organization'
-import { addPerson } from '../src/person/add-person'
-import { updatePerson } from '../src/person/update-person'
-import { addPersonRole } from '../src/person-role/add-person-role'
-import { addPersonCourse } from '../src/person-course/add-person-course'
+import { ConflictError, NotFoundError, ValidationError } from '@atempo/errors'
+import { addCourse } from '../src/courses/add-course'
+import { modifyCourse } from '../src/courses/modify-course'
+import { enrollPerson } from '../src/enrollment/enroll-person'
+import { registerOrganization } from '../src/organizations/register-organization'
+import { modifyOrganization } from '../src/organizations/modify-organization'
+import { addPerson } from '../src/people/add-person'
+import { modifyPerson } from '../src/people/modify-person'
+import { removePerson } from '../src/people/remove-person'
+import { assignRole } from '../src/roles/assign-role'
+import { changeRole } from '../src/roles/change-role'
+import { revokeRole } from '../src/roles/revoke-role'
+import type { RoleName } from '../src/shared/types/role'
 import {
+  commandResult,
+  COURSE_ID,
   emptyResult,
   enrollmentFlags,
   lookupById,
   mockDriver,
+  ORG_ID,
   OTHER_ID,
   PERSON_ID,
   resetDriver,
@@ -19,7 +26,6 @@ import {
   validCourse,
   validOrganization,
   validPerson,
-  validPersonCourse,
   validPersonRole,
 } from './helpers'
 
@@ -88,16 +94,24 @@ describe('reglas de negocio', () => {
   it('does not insert when tax_id already exists', async () => {
     const calls = mockDriver(async () => rowsResult([validOrganization]))
     await expect(
-      addOrganization({ organization: organizationCreate }),
+      registerOrganization({
+        organization: organizationCreate,
+        admin: personCreate,
+      }),
     ).rejects.toMatchObject({
       id: 'organization.tax_id.taken',
       message: 'organization.tax_id ya existe',
     })
     await expect(
-      addOrganization({ organization: organizationCreate }),
+      registerOrganization({
+        organization: organizationCreate,
+        admin: personCreate,
+      }),
     ).rejects.toBeInstanceOf(ConflictError)
     expect(wrote(calls)).toBe(false)
-    expect(calls).toHaveLength(2)
+    expect(
+      calls.filter((call) => call.sql.includes('lower(tax_id)')),
+    ).toHaveLength(2)
   })
 
   it('treats a stored tax_id as taken even if the row would fail assert', async () => {
@@ -105,7 +119,10 @@ describe('reglas de negocio', () => {
       rowsResult([{ id: validOrganization.id }]),
     )
     await expect(
-      addOrganization({ organization: organizationCreate }),
+      registerOrganization({
+        organization: organizationCreate,
+        admin: personCreate,
+      }),
     ).rejects.toThrow('organization.tax_id ya existe')
     expect(wrote(calls)).toBe(false)
   })
@@ -113,7 +130,10 @@ describe('reglas de negocio', () => {
   it('allows updating an organization that keeps its tax_id', async () => {
     const calls = mockDriver(async () => rowsResult([validOrganization]))
     await expect(
-      updateOrganization({ organization: validOrganization }),
+      modifyOrganization({
+        id: ORG_ID,
+        changes: { tax_id: validOrganization.tax_id },
+      }),
     ).resolves.toEqual({ organization: validOrganization })
     expect(wrote(calls)).toBe(true)
   })
@@ -130,11 +150,12 @@ describe('reglas de negocio', () => {
       ) {
         return rowsResult([{ id: validPerson.id }])
       }
-      return emptyResult()
+      return lookupById(sql) ?? emptyResult()
     })
     await expect(
-      updatePerson({
-        person: { ...validPerson, id: validPerson.id.toUpperCase() },
+      modifyPerson({
+        id: validPerson.id.toUpperCase(),
+        changes: { email: validPerson.email },
       }),
     ).resolves.toEqual({ person: validPerson })
     const update = calls.find((call) => call.sql.includes('UPDATE person'))
@@ -147,7 +168,10 @@ describe('reglas de negocio', () => {
     const other = { ...validOrganization, id: OTHER_ID }
     const calls = mockDriver(async () => rowsResult([other]))
     await expect(
-      updateOrganization({ organization: validOrganization }),
+      modifyOrganization({
+        id: ORG_ID,
+        changes: { tax_id: validOrganization.tax_id },
+      }),
     ).rejects.toThrow('organization.tax_id ya existe')
     expect(wrote(calls)).toBe(false)
   })
@@ -203,9 +227,12 @@ describe('reglas de negocio', () => {
       }
       return rowsResult([other])
     })
-    await expect(updateCourse({ course: validCourse })).rejects.toThrow(
-      'course.acronym ya existe en la organización',
-    )
+    await expect(
+      modifyCourse({
+        id: COURSE_ID,
+        changes: { acronym: validCourse.acronym },
+      }),
+    ).rejects.toThrow('course.acronym ya existe en la organización')
     expect(wrote(calls)).toBe(false)
   })
 
@@ -240,11 +267,12 @@ describe('reglas de negocio', () => {
       return emptyResult()
     })
     await expect(
-      addOrganization({
+      registerOrganization({
         organization: {
           ...organizationCreate,
           tax_id: validOrganization.tax_id.toLowerCase(),
         },
+        admin: personCreate,
       }),
     ).rejects.toThrow('organization.tax_id ya existe')
     expect(wrote(calls)).toBe(false)
@@ -261,11 +289,11 @@ describe('reglas de negocio', () => {
       if (sql.includes('lower(identification_document)')) {
         return rowsResult([{ id: validPerson.id }])
       }
-      return emptyResult()
+      return lookupById(sql) ?? emptyResult()
     })
-    await expect(updatePerson({ person: validPerson })).rejects.toThrow(
-      'person.email ya existe',
-    )
+    await expect(
+      modifyPerson({ id: PERSON_ID, changes: { email: validPerson.email } }),
+    ).rejects.toThrow('person.email ya existe')
     expect(wrote(calls)).toBe(false)
   })
 
@@ -274,11 +302,14 @@ describe('reglas de negocio', () => {
       if (sql.includes('lower(identification_document)')) {
         return rowsResult([{ id: OTHER_ID }])
       }
-      return emptyResult()
+      return lookupById(sql) ?? emptyResult()
     })
-    await expect(updatePerson({ person: validPerson })).rejects.toThrow(
-      'person.identification_document ya existe',
-    )
+    await expect(
+      modifyPerson({
+        id: PERSON_ID,
+        changes: { identification_document: '88888888X' },
+      }),
+    ).rejects.toThrow('person.identification_document ya existe')
     expect(wrote(calls)).toBe(false)
   })
 
@@ -296,9 +327,12 @@ describe('reglas de negocio', () => {
       }
       return emptyResult()
     })
-    await expect(updateCourse({ course: validCourse })).rejects.toThrow(
-      'course.contract_address ya existe',
-    )
+    await expect(
+      modifyCourse({
+        id: COURSE_ID,
+        changes: { acronym: validCourse.acronym },
+      }),
+    ).rejects.toThrow('course.contract_address ya existe')
     expect(wrote(calls)).toBe(false)
   })
 
@@ -352,9 +386,7 @@ describe('reglas de negocio', () => {
       return rowsResult([{ name: 'teacher' }])
     })
     await expect(
-      addPersonRole({
-        personRole: { person_id: PERSON_ID, role: 'student' },
-      }),
+      assignRole({ personId: PERSON_ID, role: 'student' }),
     ).rejects.toMatchObject({
       id: 'person_role.student.exclusive',
       message: 'un student no puede llevar otro rol',
@@ -371,9 +403,7 @@ describe('reglas de negocio', () => {
       return rowsResult([{ name: 'student' }])
     })
     await expect(
-      addPersonRole({
-        personRole: { person_id: PERSON_ID, role: 'teacher' },
-      }),
+      assignRole({ personId: PERSON_ID, role: 'teacher' }),
     ).rejects.toThrow('un student no puede llevar otro rol')
     expect(wrote(calls)).toBe(false)
   })
@@ -393,7 +423,7 @@ describe('reglas de negocio', () => {
       return rowsResult([{ name: 'organization_admin' }])
     })
     await expect(
-      addPersonRole({ personRole: validPersonRole }),
+      assignRole({ personId: PERSON_ID, role: 'teacher' }),
     ).resolves.toEqual({ personRole: validPersonRole })
   })
 
@@ -421,7 +451,7 @@ describe('reglas de negocio', () => {
   it('does not insert a course enrollment when the person does not exist', async () => {
     const calls = mockDriver(async () => emptyResult())
     await expect(
-      addPersonCourse({ personCourse: validPersonCourse }),
+      enrollPerson({ personId: PERSON_ID, courseId: COURSE_ID }),
     ).rejects.toMatchObject({ id: 'person.missing' })
     expect(wrote(calls)).toBe(false)
   })
@@ -434,9 +464,112 @@ describe('reglas de negocio', () => {
       return emptyResult()
     })
     await expect(
-      addPersonCourse({ personCourse: validPersonCourse }),
+      enrollPerson({ personId: PERSON_ID, courseId: COURSE_ID }),
     ).rejects.toThrow('course no existe')
     expect(wrote(calls)).toBe(false)
+  })
+
+  it('does not enroll a person who is neither student nor teacher', async () => {
+    const calls = mockDriver(async (sql) => {
+      if (sql.includes('AS person_exists')) {
+        return enrollmentFlags({ has_course_role: false })
+      }
+      return emptyResult()
+    })
+    await expect(
+      enrollPerson({ personId: PERSON_ID, courseId: COURSE_ID }),
+    ).rejects.toMatchObject({
+      id: 'person_course.role_required',
+      message: 'solo un student o un teacher se matricula en un curso',
+    })
+    await expect(
+      enrollPerson({ personId: PERSON_ID, courseId: COURSE_ID }),
+    ).rejects.toBeInstanceOf(ConflictError)
+    expect(wrote(calls)).toBe(false)
+  })
+
+  it('does not revoke the role of a person who is in a course', async () => {
+    const calls = mockDriver(async (sql) => {
+      if (sql.includes('AS has_courses')) {
+        return rowsResult([{ has_courses: true }])
+      }
+      return emptyResult()
+    })
+    await expect(
+      revokeRole({ personId: PERSON_ID, role: 'teacher' }),
+    ).rejects.toMatchObject({ id: 'person_role.role.enrolled' })
+    expect(calls.map((call) => call.sql)).not.toContainEqual(
+      expect.stringContaining('DELETE'),
+    )
+  })
+
+  it('does not assign or revoke organization_admin', async () => {
+    const calls = mockDriver(async () => commandResult(1))
+    await expect(
+      assignRole({ personId: PERSON_ID, role: 'organization_admin' }),
+    ).rejects.toMatchObject({ id: 'person_role.role.protected' })
+    await expect(
+      revokeRole({ personId: PERSON_ID, role: 'organization_admin' }),
+    ).rejects.toBeInstanceOf(ConflictError)
+    expect(calls).toHaveLength(0)
+  })
+
+  it('does not remove the organization_admin', async () => {
+    const calls = mockDriver(async (sql) => {
+      if (sql.includes('FROM role')) {
+        return rowsResult([{ name: 'organization_admin' }, { name: 'teacher' }])
+      }
+      return commandResult(1)
+    })
+    await expect(removePerson({ id: PERSON_ID })).rejects.toMatchObject({
+      id: 'person.protected',
+      message: 'el organization_admin no se puede borrar',
+    })
+    expect(calls.map((call) => call.sql)).not.toContainEqual(
+      expect.stringContaining('DELETE'),
+    )
+  })
+
+  it('does not remove a teacher who is in a course', async () => {
+    const calls = mockDriver(async (sql) => {
+      if (sql.includes('FROM role')) {
+        return rowsResult([{ name: 'teacher' }])
+      }
+      if (sql.includes('AS has_courses')) {
+        return rowsResult([{ has_courses: true }])
+      }
+      return commandResult(1)
+    })
+    await expect(removePerson({ id: PERSON_ID })).rejects.toMatchObject({
+      id: 'person.enrolled',
+      message: 'un teacher con cursos no se puede borrar',
+    })
+    expect(calls.map((call) => call.sql)).not.toContainEqual(
+      expect.stringContaining('DELETE'),
+    )
+  })
+
+  it('removes a student together with their enrollments', async () => {
+    const calls = mockDriver(async (sql) => {
+      if (sql.includes('FROM role')) {
+        return rowsResult([{ name: 'student' }])
+      }
+      if (sql.includes('DELETE FROM person WHERE')) {
+        return rowsResult([validPerson])
+      }
+      return commandResult(1)
+    })
+    await expect(removePerson({ id: PERSON_ID })).resolves.toEqual({
+      person: validPerson,
+    })
+    expect(calls.map((call) => call.sql)).toEqual([
+      'BEGIN',
+      expect.stringContaining('FROM role'),
+      expect.stringContaining('DELETE FROM person_role'),
+      expect.stringContaining('DELETE FROM person_course'),
+      expect.stringContaining('DELETE FROM person WHERE'),
+      'COMMIT',
+    ])
   })
 
   it('does not insert a repeated course enrollment', async () => {
@@ -447,16 +580,44 @@ describe('reglas de negocio', () => {
       return emptyResult()
     })
     await expect(
-      addPersonCourse({ personCourse: validPersonCourse }),
+      enrollPerson({ personId: PERSON_ID, courseId: COURSE_ID }),
     ).rejects.toThrow('person_course ya existe')
     expect(wrote(calls)).toBe(false)
   })
 
-  it('does not query when first_name is empty on update', async () => {
+  it('does not write when first_name is emptied on modify', async () => {
+    const calls = mockDriver(async (sql) => lookupById(sql) ?? emptyResult())
+    await expect(
+      modifyPerson({ id: PERSON_ID, changes: { first_name: '' } }),
+    ).rejects.toThrow('person.first_name debe ser un string no vacío')
+    expect(wrote(calls)).toBe(false)
+  })
+
+  it('checks course dates against the stored start_at on modify', async () => {
+    const calls = mockDriver(async (sql) => lookupById(sql) ?? emptyResult())
+    await expect(
+      modifyCourse({
+        id: COURSE_ID,
+        changes: { end_at: '2026-08-01T08:00:00.000Z' },
+      }),
+    ).rejects.toMatchObject({ id: 'course.end_at.order' })
+    expect(wrote(calls)).toBe(false)
+  })
+
+  it('does not query when modify changes are empty or unknown', async () => {
     const calls = mockDriver()
     await expect(
-      updatePerson({ person: { ...validPerson, first_name: '' } }),
-    ).rejects.toThrow('person.first_name debe ser un string no vacío')
+      modifyCourse({ id: COURSE_ID, changes: {} }),
+    ).rejects.toMatchObject({ id: 'course.no_changes' })
+    await expect(
+      modifyPerson({
+        id: PERSON_ID,
+        changes: { id: OTHER_ID } as Record<string, string>,
+      }),
+    ).rejects.toMatchObject({ id: 'person.unknown_field' })
+    await expect(
+      modifyOrganization({ id: 'no-es-uuid', changes: { name: 'Acme' } }),
+    ).rejects.toBeInstanceOf(ValidationError)
     expect(calls).toHaveLength(0)
   })
 
@@ -472,8 +633,107 @@ describe('reglas de negocio', () => {
       return rowsResult([{ '?column?': 1 }])
     })
     await expect(
-      addPersonRole({ personRole: validPersonRole }),
+      assignRole({ personId: PERSON_ID, role: 'teacher' }),
     ).rejects.toThrow('person_role ya existe')
     expect(wrote(calls)).toBe(false)
+  })
+
+  it('does not query when changeRole touches organization_admin or keeps the role', async () => {
+    const calls = mockDriver()
+    await expect(
+      changeRole({
+        personId: PERSON_ID,
+        from: 'organization_admin',
+        to: 'teacher',
+      }),
+    ).rejects.toMatchObject({
+      id: 'person_role.role.protected',
+      message:
+        'organization_admin solo lo tiene quien registra la organización',
+    })
+    await expect(
+      changeRole({
+        personId: PERSON_ID,
+        from: 'teacher',
+        to: 'organization_admin',
+      }),
+    ).rejects.toBeInstanceOf(ConflictError)
+    await expect(
+      changeRole({ personId: PERSON_ID, from: 'teacher', to: 'teacher' }),
+    ).rejects.toMatchObject({ id: 'person_role.role.unchanged' })
+    await expect(
+      changeRole({
+        personId: PERSON_ID,
+        from: 'teacher',
+        to: 'admin' as RoleName,
+      }),
+    ).rejects.toMatchObject({ id: 'person_role.role.format' })
+    expect(calls).toHaveLength(0)
+  })
+
+  it('does not change a role the person does not have', async () => {
+    const calls = mockDriver(async (sql) => lookupById(sql) ?? emptyResult())
+    await expect(
+      changeRole({ personId: PERSON_ID, from: 'teacher', to: 'student' }),
+    ).rejects.toBeInstanceOf(NotFoundError)
+    expect(wrote(calls)).toBe(false)
+  })
+
+  it('does not change the role of a person who is in a course', async () => {
+    const calls = mockDriver(async (sql) => {
+      if (sql.includes('AS has_courses')) {
+        return rowsResult([{ has_courses: true }])
+      }
+      if (sql.includes('FROM person_role')) {
+        return rowsResult([{ '?column?': 1 }])
+      }
+      return lookupById(sql) ?? emptyResult()
+    })
+    await expect(
+      changeRole({ personId: PERSON_ID, from: 'student', to: 'teacher' }),
+    ).rejects.toMatchObject({ id: 'person_role.role.enrolled' })
+    expect(calls.map((call) => call.sql)).not.toContainEqual(
+      expect.stringContaining('DELETE'),
+    )
+    expect(calls.at(-1)?.sql).toBe('ROLLBACK')
+  })
+
+  it('swaps student for teacher in one transaction', async () => {
+    const teacher = { person_id: PERSON_ID, role: 'teacher' as const }
+    let removed = false
+    const calls = mockDriver(async (sql) => {
+      if (sql.includes('AS has_courses')) {
+        return rowsResult([{ has_courses: false }])
+      }
+      if (sql.includes('DELETE FROM person_role')) {
+        removed = true
+        return rowsResult([{ person_id: PERSON_ID, role: 'student' }])
+      }
+      if (sql.includes('INSERT INTO person_role')) {
+        return rowsResult([teacher])
+      }
+      if (sql.includes('SELECT 1') && sql.includes('FROM person_role')) {
+        return removed ? emptyResult() : rowsResult([{ '?column?': 1 }])
+      }
+      if (sql.includes('FROM role')) {
+        return emptyResult()
+      }
+      return lookupById(sql) ?? emptyResult()
+    })
+    await expect(
+      changeRole({ personId: PERSON_ID, from: 'student', to: 'teacher' }),
+    ).resolves.toEqual({ personRole: teacher })
+    const statements = calls.map((call) => call.sql)
+    expect(statements[0]).toBe('BEGIN')
+    expect(statements.at(-1)).toBe('COMMIT')
+    const deleteAt = statements.findIndex((sql) =>
+      sql.includes('DELETE FROM person_role'),
+    )
+    const insertAt = statements.findIndex((sql) =>
+      sql.includes('INSERT INTO person_role'),
+    )
+    expect(deleteAt).toBeGreaterThan(0)
+    expect(insertAt).toBeGreaterThan(deleteAt)
+    expect(calls[deleteAt].params).toEqual([PERSON_ID, 'student'])
   })
 })

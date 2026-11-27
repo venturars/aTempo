@@ -7,3 +7,6 @@ export interface Organization {
 export type OrganizationCreate = Omit<Organization, 'id'>
 
 export type OrganizationUpdate = Organization
+
+/** Campos que cambia un modify. Lo que no viene se queda como está. */
+export type OrganizationChanges = Partial<OrganizationCreate>

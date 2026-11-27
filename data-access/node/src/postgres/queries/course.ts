@@ -53,4 +53,6 @@ RETURNING
 
 export const DELETE_COURSE_ENROLLMENTS = `DELETE FROM person_course WHERE course_id = $1::uuid`
 
-export const DELETE_COURSE = `DELETE FROM course WHERE id = $1::uuid`
+export const DELETE_COURSE = `DELETE FROM course WHERE id = $1::uuid
+RETURNING
+  ${COURSE_COLUMNS}`

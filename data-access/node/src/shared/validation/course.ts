@@ -1,6 +1,12 @@
 import { fail, type DomainLabel } from '../errors'
-import type { Course, CourseCreate, CourseUpdate } from '../types/course'
+import type {
+  Course,
+  CourseCreate,
+  CourseUpdate,
+  CourseChanges,
+} from '../types/course'
 import {
+  assertChanges,
   assertCalendarDate,
   assertNonEmptyString,
   assertObject,
@@ -19,6 +25,27 @@ export function assertCourseCreate(value: unknown): CourseCreate {
 
 export function assertCourse(value: unknown): Course {
   return courseWithId(value, true)
+}
+
+const COURSE_CHANGEABLE_FIELDS = [
+  'organization_id',
+  'name',
+  'acronym',
+  'start_at',
+  'end_at',
+  'contract_address',
+] as const
+
+/**
+ * Solo comprueba la forma de los cambios. Sus valores se validan con
+ * `assertCourseUpdate` al mezclarlos con la fila guardada.
+ */
+export function assertCourseChanges(value: unknown): CourseChanges {
+  return assertChanges(
+    value,
+    'course',
+    COURSE_CHANGEABLE_FIELDS,
+  ) as CourseChanges
 }
 
 export function assertCourseUpdate(value: unknown): CourseUpdate {

@@ -57,9 +57,39 @@ export const DOMAIN_ERROR_REASONS = {
     kind: 'CONFLICT',
     message: (label: string) => `${label} todavía tiene filas que lo usan`,
   },
+  no_changes: {
+    kind: 'VALIDATION',
+    message: (label: string) => `${label} no trae ningún cambio`,
+  },
+  unknown_field: {
+    kind: 'VALIDATION',
+    message: (label: string) =>
+      `${label} trae un campo que no se puede cambiar`,
+  },
+  unchanged: {
+    kind: 'VALIDATION',
+    message: (label: string) => `${label} no cambia`,
+  },
+  protected: {
+    kind: 'CONFLICT',
+    message: (label: string) => `${label} no se puede cambiar`,
+  },
+  enrolled: {
+    kind: 'CONFLICT',
+    message: (label: string) =>
+      `${label} no se puede cambiar mientras la persona esté en algún curso`,
+  },
+  role_required: {
+    kind: 'CONFLICT',
+    message: (label: string) => `${label} necesita una persona con otro rol`,
+  },
   not_created: {
     kind: 'PERSISTENCE',
     message: (label: string) => `${label} no se ha creado`,
+  },
+  not_updated: {
+    kind: 'PERSISTENCE',
+    message: (label: string) => `${label} no se ha actualizado`,
   },
   unmapped: {
     kind: 'PERSISTENCE',
@@ -120,6 +150,12 @@ export const DOMAIN_ERROR_MESSAGES: { readonly [K in DomainErrorId]?: string } =
     'course.contract_address.format':
       'course.contract_address debe ser 0x y 40 hex',
     'course.end_at.order': 'course.end_at debe ser posterior a course.start_at',
+    'person_course.role_required':
+      'solo un student o un teacher se matricula en un curso',
+    'person.protected': 'el organization_admin no se puede borrar',
+    'person.enrolled': 'un teacher con cursos no se puede borrar',
+    'person_role.role.protected':
+      'organization_admin solo lo tiene quien registra la organización',
     'person_role.role.format':
       'person_role.role debe ser organization_admin, teacher o student',
     'role.name.format':

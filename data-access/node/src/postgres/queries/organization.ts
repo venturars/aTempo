@@ -29,4 +29,6 @@ WHERE course_id IN (SELECT id FROM course WHERE organization_id = $1::uuid)`
 
 export const DELETE_ORGANIZATION_COURSES = `DELETE FROM course WHERE organization_id = $1::uuid`
 
-export const DELETE_ORGANIZATION = `DELETE FROM organization WHERE id = $1::uuid`
+export const DELETE_ORGANIZATION = `DELETE FROM organization WHERE id = $1::uuid
+RETURNING
+  ${ORGANIZATION_COLUMNS}`
