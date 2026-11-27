@@ -183,13 +183,15 @@ test('shows the claim panel beside the form', async () => {
     await expectTrimester(window)
     await expectLegend(window)
     await expectLoginFields(window)
-    // Sin aviso de invitación, la tarjeta empieza por «Correo».
     await expect(window.getByText('Entra con tu correo.')).toHaveCount(0)
-    const firstInCard = await window
-      .locator('section')
-      .filter({ has: window.locator('form') })
-      .evaluate((card) => card.firstElementChild?.querySelector('label')?.textContent ?? '')
-    expect(firstInCard).toBe('Correo')
+    const card = window.locator('section').filter({ has: window.locator('form') })
+    await expect(card.locator(':scope > :first-child').getByRole('group')).toHaveAccessibleName(
+      'Idioma'
+    )
+    const firstAfterLanguage = await card.evaluate(
+      (section) => section.children[1]?.querySelector('label')?.textContent ?? ''
+    )
+    expect(firstAfterLanguage).toBe('Correo')
     await expectPanelLeftOfForm(window)
     await expectNoAlert(window)
     await expectAbsentCopy(window)

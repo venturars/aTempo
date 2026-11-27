@@ -51,7 +51,7 @@ test.describe('teacher demo session logic', () => {
       useLoginStore.getState().setPassword(password)
       expect(useLoginStore.getState().submit()).toBe(false)
       expect(useSessionStore.getState()).toMatchObject({ profile: null, email: null })
-      expect(useLoginStore.getState().loginError).toBe(loginError)
+      expect(useLoginStore.getState().loginError).toBe('login.errors.noMatch')
       useLoginStore.getState().setEmail(demoEmail)
       useLoginStore.getState().setPassword(demoPassword)
       expect(useLoginStore.getState().submit()).toBe(true)
@@ -88,7 +88,7 @@ test.describe('teacher demo session logic', () => {
     expect(useSessionStore.getState()).toMatchObject({ profile: null, email: null })
     // Mismo aviso que un correo desconocido: no revela que la cuenta existe.
     expect(useLoginStore.getState().passwordError).toBe('')
-    expect(useLoginStore.getState().loginError).toBe(loginError)
+    expect(useLoginStore.getState().loginError).toBe('login.errors.noMatch')
   })
 
   for (const [name, email, password] of [

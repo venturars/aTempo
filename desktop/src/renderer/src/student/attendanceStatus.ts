@@ -1,9 +1,11 @@
+import type { TextKey } from '../lang/messages'
+
 export type AttendanceStatus = 'presente' | 'tarde' | 'ausente'
 
-export const statusLabel: Record<AttendanceStatus, string> = {
-  presente: 'Presente',
-  tarde: 'Tarde',
-  ausente: 'Ausente'
+export const statusLabelKey: Record<AttendanceStatus, TextKey> = {
+  presente: 'student.status.present',
+  tarde: 'student.status.late',
+  ausente: 'student.status.absent'
 }
 
 function minutesOfDay(time: string): number {

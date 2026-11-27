@@ -3,6 +3,9 @@ import { useNavigate } from '@tanstack/react-router'
 import { checkedInByStudent } from '../api/attendanceRules'
 import { getDemoControls } from '../api/client'
 import { clockTime } from '../api/isoTime'
+import { formatTime } from '../lang/format'
+import type { TextKey } from '../lang/messages'
+import { text, useText } from '../lang/useText'
 import { teacherDemoAccount } from '../login/teacherDemoAccount'
 import { BackButton } from '../navigation/BackButton'
 import { useSessionStore } from '../session/sessionStore'
@@ -34,23 +37,25 @@ import {
   course,
   dashboardDate,
   dashboardHeading,
+  percentLabel,
   sessionCounts,
   sessionDateLabel,
   sessionShortWeekday,
   sessionTitle,
   studentHistory,
   studentSummary,
+  timeRangeLabel,
   type Attendance,
   type ClassSession,
   type Phase,
   type RosterRow
 } from './roster'
 
-const tabs: { id: PanelTab; label: string }[] = [
-  { id: 0, label: 'Dashboard' },
-  { id: 1, label: 'Sesiones' },
-  { id: 2, label: 'Estadísticas' },
-  { id: 3, label: 'Ajustes' }
+const tabs: { id: PanelTab; label: TextKey }[] = [
+  { id: 0, label: 'panel.nav.dashboard' },
+  { id: 1, label: 'panel.nav.sessions' },
+  { id: 2, label: 'panel.nav.stats' },
+  { id: 3, label: 'panel.nav.settings' }
 ]
 const sections = tabs.filter((item) => item.id !== 3)
 
@@ -64,10 +69,15 @@ function useSigner(): string | null {
   return useSessionStore((state) => (state.profile === 'teacher' ? state.name : null))
 }
 
-const noSignerText = 'Entra con tu cuenta de profesor para guardar el cambio.'
-const notSavedText = 'No se ha podido guardar el cambio.'
+const noSignerText: TextKey = 'panel.correction.noSigner'
+const notSavedText: TextKey = 'panel.correction.notSaved'
+
+function shownTime(time: string): string {
+  return time === '—' ? time : formatTime(time)
+}
 
 export function PanelScreen(): React.JSX.Element {
+  const t = useText()
   const tab = usePanelStore((state) => state.tab)
   const classId = usePanelStore((state) => state.classId)
   const studentName = usePanelStore((state) => state.studentName)
@@ -103,7 +113,7 @@ export function PanelScreen(): React.JSX.Element {
         >
           aTempo
         </button>
-        <nav aria-label="Secciones">
+        <nav aria-label={t('panel.nav.sections')}>
           <ul className="menu w-full px-2">
             {sections.map((item) => (
               <li key={item.id}>
@@ -117,7 +127,7 @@ export function PanelScreen(): React.JSX.Element {
                   aria-current={tab === item.id ? 'page' : undefined}
                   onClick={() => setTab(item.id)}
                 >
-                  {item.label}
+                  {t(item.label)}
                 </button>
               </li>
             ))}
@@ -156,7 +166,9 @@ export function PanelScreen(): React.JSX.Element {
             <div className="flex items-start justify-between gap-3">
               <div className={tab === 0 ? 'flex min-w-0 items-baseline gap-3' : 'min-w-0'}>
                 <h1 className="text-xl font-medium">{title}</h1>
-                {tab === 0 ? <p className="text-sm text-base-content/60">{dashboardDate}</p> : null}
+                {tab === 0 ? (
+                  <p className="text-sm text-base-content/60">{dashboardDate()}</p>
+                ) : null}
               </div>
               {tab === 1 && selected !== null ? <JustificationAccess /> : null}
             </div>
@@ -164,7 +176,7 @@ export function PanelScreen(): React.JSX.Element {
         </header>
         {passwordChanged ? (
           <p className="text-sm text-success" role="status">
-            Contraseña actualizada.
+            {t('panel.password.changed')}
           </p>
         ) : null}
         {studentName !== null ? (
@@ -198,7 +210,7 @@ function pageTitle(tab: PanelTab, selected: ClassSession | null): string {
   if (tab === 0) {
     return dashboardHeading()
   }
-  return tabs[tab]?.label ?? 'Dashboard'
+  return text(tabs[tab]?.label ?? 'panel.nav.dashboard')
 }
 
 // La pantalla a la que vuelve el botón de arriba. Las secciones de la barra lateral no tienen.
@@ -214,12 +226,13 @@ function backLabel(
     return pageTitle(tab, null)
   }
   if (tab === 1 && selected !== null) {
-    return 'Sesiones'
+    return text('panel.nav.sessions')
   }
   return null
 }
 
 function TodayView(): React.JSX.Element {
+  const t = useText()
   const todayLoad = usePanelStore((state) => state.todayLoad)
   const todayError = usePanelStore((state) => state.todayError)
   const loadToday = usePanelStore((state) => state.loadToday)
@@ -242,7 +255,7 @@ function TodayView(): React.JSX.Element {
   const alert =
     todayError === null ? null : (
       <div role="alert" className="alert alert-error alert-soft">
-        <span>{todayError}</span>
+        <span>{t(todayError)}</span>
       </div>
     )
 
@@ -250,7 +263,7 @@ function TodayView(): React.JSX.Element {
     return (
       <section className="card bg-base-100 shadow-sm">
         <div className="card-body items-center">
-          <span className="loading loading-spinner" aria-label="Cargando la clase de hoy" />
+          <span className="loading loading-spinner" aria-label={t('panel.today.loading')} />
         </div>
       </section>
     )
@@ -263,7 +276,7 @@ function TodayView(): React.JSX.Element {
       <>
         {alert}
         <button type="button" className="btn w-fit" onClick={() => void loadToday()}>
-          Reintentar
+          {t('panel.today.retry')}
         </button>
       </>
     )
@@ -272,7 +285,7 @@ function TodayView(): React.JSX.Element {
     return (
       <section className="card bg-base-100 shadow-sm">
         <div className="card-body">
-          <p className="text-sm text-base-content/60">No tienes clases hoy.</p>
+          <p className="text-sm text-base-content/60">{t('panel.today.noClasses')}</p>
         </div>
       </section>
     )
@@ -286,6 +299,7 @@ function TodayView(): React.JSX.Element {
 }
 
 function TodayClass(): React.JSX.Element {
+  const t = useText()
   const session = usePanelStore((state) => state.session)
   const students = usePanelStore((state) => state.students)
   const records = usePanelStore((state) => state.records)
@@ -317,7 +331,9 @@ function TodayClass(): React.JSX.Element {
   const absent = roster.filter((row) => row.mark === 'ausente').length
   const courseName = session?.courseName ?? ''
   const courseTime =
-    session === null ? '' : `${clockTime(session.startsAt)}–${clockTime(session.endsAt)}`
+    session === null
+      ? ''
+      : `${formatTime(clockTime(session.startsAt))}–${formatTime(clockTime(session.endsAt))}`
 
   return (
     <section className="card overflow-hidden bg-base-100 shadow-sm">
@@ -334,7 +350,7 @@ function TodayClass(): React.JSX.Element {
               disabled={busy}
               onClick={() => void openSession()}
             >
-              Abrir lista
+              {t('panel.today.openList')}
             </button>
           ) : null}
           {phase === 'abierta' ? (
@@ -345,15 +361,15 @@ function TodayClass(): React.JSX.Element {
                 disabled={busy || !canSimulateArrival}
                 onClick={() => void simulateArrival()}
               >
-                Simular llegada
+                {t('panel.today.simulateArrival')}
               </button>
               <button type="button" className="btn btn-primary" disabled={busy} onClick={askClose}>
-                Cerrar lista
+                {t('panel.today.closeList')}
               </button>
             </div>
           ) : null}
           {phase === 'cancelada' ? (
-            <span className="badge badge-ghost">Clase cancelada</span>
+            <span className="badge badge-ghost">{t('panel.today.cancelled')}</span>
           ) : null}
           {phase === 'cerrada' ? (
             <button
@@ -362,7 +378,7 @@ function TodayClass(): React.JSX.Element {
               disabled={busy || !canReopen}
               onClick={() => void reopenSession()}
             >
-              Volver a abrir
+              {t('panel.today.reopen')}
             </button>
           ) : null}
         </div>
@@ -377,9 +393,9 @@ function TodayClass(): React.JSX.Element {
         ) : null}
         {phase === 'cerrada' ? (
           <div className="grid grid-cols-3 gap-3">
-            <StatWell value={String(present)} label="Presentes" />
-            <StatWell value={String(late)} label="Tarde" />
-            <StatWell value={String(absent)} label="Ausentes" />
+            <StatWell value={String(present)} label={t('panel.counts.present')} />
+            <StatWell value={String(late)} label={t('panel.counts.late')} />
+            <StatWell value={String(absent)} label={t('panel.counts.absent')} />
           </div>
         ) : null}
       </div>
@@ -415,6 +431,7 @@ function RosterTable({
   compact?: boolean
   embedded?: boolean
 }): React.JSX.Element {
+  const t = useText()
   const editable = isEditablePhase(phase)
   const started = editable
   return (
@@ -437,9 +454,9 @@ function RosterTable({
         {started ? (
           <thead>
             <tr>
-              <th>Alumno</th>
-              <th>Entrada</th>
-              <th>Estado</th>
+              <th>{t('panel.table.student')}</th>
+              <th>{t('panel.table.arrival')}</th>
+              <th>{t('panel.table.status')}</th>
             </tr>
           </thead>
         ) : null}
@@ -475,7 +492,7 @@ function RosterTable({
                     status={status}
                     arrivalAccepted={checkedIn}
                     person={name}
-                    when={dashboardDate}
+                    when={dashboardDate()}
                     changes={changes.filter((change) => change.student === name)}
                     onPick={(mark) => requestMark(studentId, mark)}
                   />
@@ -497,6 +514,7 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
   const changes = usePanelStore((state) => state.changes)
   const signer = useSigner()
   const [draft, setDraft] = useState<CorrectionDraft | null>(null)
+  const t = useText()
 
   if (selected === null) {
     return (
@@ -506,22 +524,22 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
           <thead>
             <tr>
               <th colSpan={5} scope="colgroup" className="text-center">
-                Alumnos
+                {t('panel.sessions.students')}
               </th>
             </tr>
             <tr>
-              <th scope="col">Fecha</th>
+              <th scope="col">{t('panel.sessions.date')}</th>
               <th scope="col" className="text-center">
-                Asistencia
+                {t('panel.sessions.attendance')}
               </th>
               <th scope="col" className="text-center">
-                Presentes
+                {t('panel.counts.present')}
               </th>
               <th scope="col" className="text-center">
-                Tarde
+                {t('panel.counts.late')}
               </th>
               <th scope="col" className="text-center">
-                Ausentes
+                {t('panel.counts.absent')}
               </th>
             </tr>
           </thead>
@@ -531,7 +549,7 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
               const counts = session.rows === null ? null : sessionCounts(rows)
               const linked = !session.cancel && counts !== null
               const attendance = session.cancel
-                ? 'Cancelada'
+                ? t('panel.sessions.cancelled')
                 : counts === null
                   ? '—'
                   : attendanceShare(counts)
@@ -601,12 +619,12 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
       <div className="card-body gap-4">
         <div className="flex flex-col gap-1">
           <h2 className="text-lg font-medium">{course.name}</h2>
-          <p className="text-sm text-base-content/60">{selected.time}</p>
+          <p className="text-sm text-base-content/60">{timeRangeLabel(selected.time)}</p>
         </div>
         <div className="grid grid-cols-3 gap-3">
-          <StatWell value={String(counts.p)} label="Presentes" />
-          <StatWell value={String(counts.r)} label="Tarde" />
-          <StatWell value={String(counts.a)} label="Ausentes" />
+          <StatWell value={String(counts.p)} label={t('panel.counts.present')} />
+          <StatWell value={String(counts.r)} label={t('panel.counts.late')} />
+          <StatWell value={String(counts.a)} label={t('panel.counts.absent')} />
         </div>
       </div>
       <AttendanceTable
@@ -684,6 +702,7 @@ function SortHeader({
 }
 
 function StudentFile({ name }: { name: string }): React.JSX.Element {
+  const t = useText()
   const sessionMarks = usePanelStore((state) => state.sessionMarks)
   const summary = studentSummary(name, sessionMarks)
   const history = studentHistory(name, sessionMarks)
@@ -692,9 +711,13 @@ function StudentFile({ name }: { name: string }): React.JSX.Element {
     <section className="card overflow-hidden bg-base-100 shadow-sm">
       <div className="card-body">
         <div className="grid grid-cols-3 gap-3">
-          <StatWell value={summary.pct} label="Asistencia" />
-          <StatWell value={String(summary.late)} label="Tarde" muteZero={false} />
-          <StatWell value={String(summary.abs)} label="Ausencias" muteZero={false} />
+          <StatWell value={summary.pct} label={t('panel.student.attendance')} />
+          <StatWell value={String(summary.late)} label={t('panel.counts.late')} muteZero={false} />
+          <StatWell
+            value={String(summary.abs)}
+            label={t('panel.student.absences')}
+            muteZero={false}
+          />
         </div>
       </div>
       <div className="border-t border-base-content/4 px-5 py-2">
@@ -717,6 +740,7 @@ function AttendanceTable({
   onOpen: (name: string) => void
   onMark: (name: string, mark: Attendance) => void
 }): React.JSX.Element {
+  const t = useText()
   const [sort, setSort] = useState<Sort>({ key: 'name', dir: 1 })
   const ordered = [...rows].sort((a, b) => compareRows(a, b, sort))
 
@@ -731,9 +755,24 @@ function AttendanceTable({
       <table className="table table-roster table-spread">
         <thead>
           <tr>
-            <SortHeader label="Alumno" column="name" sort={sort} onChoose={choose} />
-            <SortHeader label="Entrada" column="time" sort={sort} onChoose={choose} />
-            <SortHeader label="Estado" column="mark" sort={sort} onChoose={choose} />
+            <SortHeader
+              label={t('panel.table.student')}
+              column="name"
+              sort={sort}
+              onChoose={choose}
+            />
+            <SortHeader
+              label={t('panel.table.arrival')}
+              column="time"
+              sort={sort}
+              onChoose={choose}
+            />
+            <SortHeader
+              label={t('panel.table.status')}
+              column="mark"
+              sort={sort}
+              onChoose={choose}
+            />
           </tr>
         </thead>
         <tbody>
@@ -752,7 +791,7 @@ function AttendanceTable({
                   </button>
                 </div>
               </td>
-              <td className="tabular-nums text-base-content/50">{row.time}</td>
+              <td className="tabular-nums text-base-content/50">{shownTime(row.time)}</td>
               <td>
                 <MarkControl
                   status={row.mark}
@@ -772,6 +811,7 @@ function AttendanceTable({
 }
 
 function CloseDialog(): React.JSX.Element | null {
+  const t = useText()
   const open = usePanelStore((state) => state.confirmClose)
   const cancelClose = usePanelStore((state) => state.cancelClose)
   const closeSession = usePanelStore((state) => state.closeSession)
@@ -809,15 +849,15 @@ function CloseDialog(): React.JSX.Element | null {
     >
       <div className="modal-box popover-in">
         <h2 id="close-title" className="text-lg font-medium">
-          Cerrar la lista
+          {t('panel.close.title')}
         </h2>
-        <p className="py-3">Los pendientes pasarán a ausentes.</p>
+        <p className="py-3">{t('panel.close.body')}</p>
         <div className="modal-action">
           <button ref={backRef} type="button" className="btn" onClick={cancelClose}>
-            Volver
+            {t('common.back')}
           </button>
           <button type="button" className="btn btn-error" onClick={() => void closeSession()}>
-            Cerrar lista
+            {t('panel.today.closeList')}
           </button>
         </div>
       </div>
@@ -874,7 +914,7 @@ function attendanceShare(counts: { p: number; r: number; a: number }): string {
   if (total === 0) {
     return '—'
   }
-  return `${Math.round(((counts.p + counts.r) / total) * 100)} %`
+  return percentLabel(Math.round(((counts.p + counts.r) / total) * 100))
 }
 
 function SessionCount({
@@ -912,7 +952,7 @@ function TimeField({
   const opened = useRef('')
 
   if (!enabled) {
-    return <span className="tabular-nums text-base-content/50">{time}</span>
+    return <span className="tabular-nums text-base-content/50">{shownTime(time)}</span>
   }
   if (draft === null) {
     return (
@@ -927,7 +967,7 @@ function TimeField({
           setDraft(opened.current)
         }}
       >
-        {time}
+        {shownTime(time)}
       </button>
     )
   }

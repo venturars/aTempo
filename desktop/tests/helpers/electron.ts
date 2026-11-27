@@ -85,6 +85,7 @@ export async function launchHiddenElectron(flags: string[] = []): Promise<Electr
       executablePath: wrapper,
       env: {
         ...process.env,
+        TZ: 'Europe/Madrid',
         ATEMPO_PID_FILE: path.join(directory, 'pid'),
         ATEMPO_ELECTRON_BINARY: executable,
         ATEMPO_NATIVE_AUDIT: path.join(directory, 'native.jsonl')

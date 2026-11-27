@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useText } from '../lang/useText'
 import { usePanelStore } from './panelStore'
 import { studentRisk } from './roster'
 
@@ -9,6 +10,7 @@ const riskClass = {
 } as const
 
 export function RiskHint({ name }: { name: string }): React.JSX.Element | null {
+  useText()
   const sessionMarks = usePanelStore((state) => state.sessionMarks)
   const risk = studentRisk(name, sessionMarks)
   const anchorRef = useRef<HTMLSpanElement>(null)

@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { TextKey } from '../lang/messages'
 import { afterPendingLogout, useSessionStore } from '../session/sessionStore'
 import { normalizeEmail, useStudentAccountsStore } from '../student/studentAccounts'
 import { exampleStudent } from '../student/studentExample'
@@ -7,12 +8,20 @@ import { useTeacherAccountsStore } from './teacherAccounts'
 import { validateLogin } from './validateLogin'
 
 // Mismo aviso para cualquier fallo: así no se sabe qué correos tienen cuenta.
-const loginErrorText = 'El correo o la contraseña no coinciden.'
-const authLoginErrorText = 'El correo o la contraseña no son válidos.'
-const secureStorageErrorText = 'Este dispositivo no puede proteger la sesión de forma segura.'
+const loginErrorKey: TextKey = 'login.errors.noMatch'
+const authLoginErrorKey: TextKey = 'login.errors.invalid'
+const secureStorageErrorKey: TextKey = 'login.errors.secureStorage'
+
+type LoginForm = {
+  email: string
+  password: string
+  emailError: TextKey | ''
+  passwordError: TextKey | ''
+  loginError: TextKey | ''
+}
 
 // El formulario vacío: al arrancar, al entrar y al salir de la pantalla.
-const emptyLoginForm = {
+const emptyLoginForm: LoginForm = {
   email: '',
   password: '',
   emailError: '',
@@ -20,12 +29,7 @@ const emptyLoginForm = {
   loginError: ''
 }
 
-type LoginState = {
-  email: string
-  password: string
-  emailError: string
-  passwordError: string
-  loginError: string
+type LoginState = LoginForm & {
   isSubmitting: boolean
   setEmail: (email: string) => void
   setPassword: (password: string) => void
@@ -63,7 +67,7 @@ export const useLoginStore = create<LoginState>((set, get) => ({
 
     if (teacher !== undefined) {
       if (password !== teacher.password) {
-        set({ emailError: '', passwordError: '', loginError: loginErrorText })
+        set({ emailError: '', passwordError: '', loginError: loginErrorKey })
         return false
       }
 
@@ -77,7 +81,7 @@ export const useLoginStore = create<LoginState>((set, get) => ({
 
     if (account !== undefined) {
       if (account.password !== password) {
-        set({ emailError: '', passwordError: '', loginError: loginErrorText })
+        set({ emailError: '', passwordError: '', loginError: loginErrorKey })
         return false
       }
 
@@ -86,7 +90,7 @@ export const useLoginStore = create<LoginState>((set, get) => ({
       return true
     }
 
-    set({ emailError: '', passwordError: '', loginError: loginErrorText })
+    set({ emailError: '', passwordError: '', loginError: loginErrorKey })
     return false
   },
   submitWithAuth: async () => {
@@ -101,7 +105,7 @@ export const useLoginStore = create<LoginState>((set, get) => ({
     const normalizedEmail = normalizeEmail(email)
     const isTeacher = normalizedEmail === teacherDemoAccount.email
     if (!isTeacher && normalizedEmail !== exampleStudent.email) {
-      set({ emailError: '', passwordError: '', loginError: authLoginErrorText })
+      set({ emailError: '', passwordError: '', loginError: authLoginErrorKey })
       return false
     }
 
@@ -119,13 +123,13 @@ export const useLoginStore = create<LoginState>((set, get) => ({
     } catch (error) {
       const message = error instanceof Error ? error.message : ''
       const loginError =
-        message === 'SECURE_STORAGE_UNAVAILABLE' ? secureStorageErrorText : authLoginErrorText
+        message === 'SECURE_STORAGE_UNAVAILABLE' ? secureStorageErrorKey : authLoginErrorKey
       set({ emailError: '', passwordError: '', loginError, isSubmitting: false })
       return false
     }
   },
   setSubmitting: (isSubmitting) => set({ isSubmitting }),
-  showLoginError: () => set({ emailError: '', passwordError: '', loginError: authLoginErrorText }),
+  showLoginError: () => set({ emailError: '', passwordError: '', loginError: authLoginErrorKey }),
   reset: () => {
     set({ ...emptyLoginForm, isSubmitting: false })
   }

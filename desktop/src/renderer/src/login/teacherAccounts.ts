@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { TextKey } from '../lang/messages'
 import { normalizeEmail } from '../student/studentAccounts'
 import { teacherDemoAccount } from './teacherDemoAccount'
 import { useSessionStore } from '../session/sessionStore'
@@ -13,7 +14,7 @@ export type TeacherAccount = {
 type TeacherAccountsState = {
   accounts: TeacherAccount[]
   findByEmail: (email: string) => TeacherAccount | undefined
-  changePassword: (current: string, next: string, confirmation: string) => string
+  changePassword: (current: string, next: string, confirmation: string) => TextKey | ''
   addAccount: (name: string, email: string, password: string) => TeacherAccount
 }
 
@@ -27,12 +28,12 @@ export const useTeacherAccountsStore = create<TeacherAccountsState>((set, get) =
   changePassword: (current, next, confirmation) => {
     const { profile, email } = useSessionStore.getState()
     const account = profile === 'teacher' && email !== null ? get().findByEmail(email) : undefined
-    if (!account) return 'Entra con tu cuenta de profesor para cambiar la contraseña.'
-    if (account.password !== current) return 'La contraseña actual no coincide.'
+    if (!account) return 'login.changePassword.notTeacher'
+    if (account.password !== current) return 'login.changePassword.currentMismatch'
     const error = validateActivation(next)
     if (error) return error
-    if (next === current) return 'Elige una contraseña distinta de la actual.'
-    if (next !== confirmation) return 'Las contraseñas nuevas no coinciden.'
+    if (next === current) return 'login.changePassword.sameAsCurrent'
+    if (next !== confirmation) return 'login.changePassword.confirmationMismatch'
     set((state) => ({
       accounts: state.accounts.map((entry) =>
         entry === account ? { ...entry, password: next } : entry

@@ -9,6 +9,7 @@ import {
   useRouterState
 } from '@tanstack/react-router'
 import { routeTree } from './routeTree.gen'
+import { useText } from './lang/useText'
 import { teacherDemoAccount } from './login/teacherDemoAccount'
 import { useSessionStore } from './session/sessionStore'
 import { applySavedTheme } from './theme'
@@ -27,6 +28,7 @@ declare module '@tanstack/react-router' {
 const ownLogout = ['/teacher/panel', '/student/dashboard']
 
 export function AuthSessionBootstrap(): React.JSX.Element {
+  const t = useText()
   const [authConfigured, setAuthConfigured] = useState(false)
   const profile = useSessionStore((state) => state.profile)
   const pathname = useRouterState({ router, select: (state) => state.location.pathname })
@@ -85,7 +87,7 @@ export function AuthSessionBootstrap(): React.JSX.Element {
       <RouterProvider router={router} />
       {authConfigured && profile !== null && !ownLogout.includes(pathname) ? (
         <button className="btn btn-ghost fixed right-4 top-4 z-50" type="button" onClick={logOut}>
-          Cerrar sesión
+          {t('common.logOut')}
         </button>
       ) : null}
     </>

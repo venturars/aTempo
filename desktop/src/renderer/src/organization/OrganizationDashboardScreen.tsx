@@ -1,17 +1,49 @@
+import { formatDateRange, formatNumber } from '../lang/format'
+import type { TextKey } from '../lang/messages'
+import { useText } from '../lang/useText'
 import {
   organizationExample,
   type CourseMetric,
   type OrganizationDashboard,
+  type PendingKind,
   type ReviewStudent
 } from './organizationExample'
 
-const upcomingAreas = ['Cursos y calendario', 'Alumnos', 'Profesores', 'Juegos', 'Configuración']
+const upcomingAreas: TextKey[] = [
+  'organization.navigation.areas.coursesAndCalendar',
+  'organization.navigation.areas.students',
+  'organization.navigation.areas.teachers',
+  'organization.navigation.areas.games',
+  'organization.navigation.areas.settings'
+]
+
+const pendingTexts: Record<PendingKind, { label: TextKey; description: TextKey }> = {
+  justifications: {
+    label: 'organization.pending.justifications.label',
+    description: 'organization.pending.justifications.description'
+  },
+  corrections: {
+    label: 'organization.pending.corrections.label',
+    description: 'organization.pending.corrections.description'
+  },
+  openSessions: {
+    label: 'organization.pending.openSessions.label',
+    description: 'organization.pending.openSessions.description'
+  }
+}
+
+function periodLabel(period: OrganizationDashboard['period']): string {
+  const from = new Date(`${period.from}T00:00:00`)
+  const to = new Date(`${period.to}T00:00:00`)
+  return formatDateRange(from, to, { day: 'numeric', month: 'long', year: 'numeric' })
+}
 
 type DashboardProps = { model?: OrganizationDashboard }
 
 export function OrganizationDashboardScreen({
   model = organizationExample
 }: DashboardProps): React.JSX.Element {
+  const t = useText()
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[220px_minmax(0,1fr)]">
       <OrganizationNavigation organization={model.organization} />
@@ -19,14 +51,14 @@ export function OrganizationDashboardScreen({
         <OrganizationHeader model={model} />
         <main className="mx-auto flex max-w-[1440px] flex-col gap-6 p-5 md:p-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
-            <h1 className="text-2xl font-semibold">Resumen</h1>
-            <p className="badge badge-ghost h-auto py-2 text-meta">Prototipo · Datos ficticios</p>
+            <h1 className="text-2xl font-semibold">{t('organization.summary')}</h1>
+            <p className="badge badge-ghost h-auto py-2 text-meta">
+              {t('organization.prototypeBadge')}
+            </p>
           </div>
           {model.provisional ? (
             <div role="alert" className="alert alert-soft alert-warning">
-              <span>
-                Los resultados pueden cambiar: hay justificantes y correcciones pendientes.
-              </span>
+              <span>{t('organization.provisionalNotice')}</span>
             </div>
           ) : null}
           <ReviewSummary model={model} />
@@ -38,9 +70,7 @@ export function OrganizationDashboardScreen({
             <PendingOverview model={model} />
             <DataQuality model={model} />
           </div>
-          <p className="text-meta text-base-content/60">
-            Vista informativa. Los avisos no aplican sanciones.
-          </p>
+          <p className="text-meta text-base-content/60">{t('organization.footnote')}</p>
         </main>
       </div>
     </div>
@@ -48,6 +78,7 @@ export function OrganizationDashboardScreen({
 }
 
 function OrganizationNavigation({ organization }: { organization: string }): React.JSX.Element {
+  const t = useText()
   return (
     <aside className="flex flex-col gap-3 bg-base-100 p-5 lg:min-h-screen lg:gap-6 lg:p-6">
       <div className="flex items-center gap-3">
@@ -60,10 +91,12 @@ function OrganizationNavigation({ organization }: { organization: string }): Rea
         <p className="text-xl font-semibold">aTempo</p>
       </div>
       <div className="hidden border-b border-base-300 pb-5 lg:block">
-        <p className="text-xs font-medium uppercase text-base-content/60">Tu organización</p>
+        <p className="text-xs font-medium uppercase text-base-content/60">
+          {t('organization.navigation.yourOrganization')}
+        </p>
         <p className="mt-2 text-sm font-medium">{organization}</p>
       </div>
-      <nav aria-label="Administración de la organización">
+      <nav aria-label={t('organization.navigation.label')}>
         <ul className="grid grid-cols-2 gap-x-2 gap-y-1 lg:flex lg:flex-col lg:gap-3">
           <li>
             <span
@@ -71,18 +104,20 @@ function OrganizationNavigation({ organization }: { organization: string }): Rea
               className="flex items-center gap-3 rounded-field bg-primary/10 px-2 py-1 text-sm font-medium text-primary lg:px-3 lg:py-3"
             >
               <span className="size-2 rounded-full bg-primary" aria-hidden="true" />
-              Resumen
+              {t('organization.summary')}
             </span>
           </li>
           {upcomingAreas.map((area) => (
             <li key={area} className="flex flex-col gap-1 rounded-field px-2 py-1 lg:px-3 lg:py-3">
-              <span className="text-sm text-base-content/70">{area}</span>
-              <span className="hidden text-xs text-base-content/50 lg:block">Próximamente</span>
+              <span className="text-sm text-base-content/70">{t(area)}</span>
+              <span className="hidden text-xs text-base-content/50 lg:block">
+                {t('organization.navigation.comingSoon')}
+              </span>
             </li>
           ))}
         </ul>
         <p className="mt-2 px-2 text-xs text-base-content/50 lg:hidden">
-          Las demás áreas estarán disponibles próximamente.
+          {t('organization.navigation.moreAreasSoon')}
         </p>
       </nav>
     </aside>
@@ -90,18 +125,19 @@ function OrganizationNavigation({ organization }: { organization: string }): Rea
 }
 
 function OrganizationHeader({ model }: { model: OrganizationDashboard }): React.JSX.Element {
+  const t = useText()
   const hasPendingNotices = model.pending.some((item) => item.count > 0)
 
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 border-b border-base-300 bg-base-100 px-5 py-4 md:px-8">
       <div>
         <p className="font-medium">{model.organization}</p>
-        <p className="mt-1 text-meta text-base-content/60">{model.period}</p>
+        <p className="mt-1 text-meta text-base-content/60">{periodLabel(model.period)}</p>
       </div>
       <div className="flex flex-wrap items-center gap-5">
         {hasPendingNotices ? (
           <span className="badge badge-warning badge-soft h-auto py-2 text-meta">
-            Avisos pendientes
+            {t('organization.header.pendingNotices')}
           </span>
         ) : null}
         <div className="flex items-center gap-3">
@@ -113,7 +149,7 @@ function OrganizationHeader({ model }: { model: OrganizationDashboard }): React.
           </span>
           <div>
             <p className="text-sm font-medium">{model.profile.name}</p>
-            <p className="text-meta text-base-content/60">{model.profile.role}</p>
+            <p className="text-meta text-base-content/60">{t(model.profile.role)}</p>
           </div>
         </div>
       </div>
@@ -122,40 +158,45 @@ function OrganizationHeader({ model }: { model: OrganizationDashboard }): React.
 }
 
 function ReviewSummary({ model }: { model: OrganizationDashboard }): React.JSX.Element {
+  const t = useText()
   return (
     <section aria-labelledby="review-summary" className="card bg-base-100">
       <div className="card-body grid gap-6 p-6 md:grid-cols-[minmax(180px,0.7fr)_minmax(0,1fr)] md:gap-8">
         <div className="stat min-w-0 p-0">
           <h2 id="review-summary" className="stat-title text-sm text-base-content/70">
-            Estudiantes a revisar
+            {t('organization.review.heading')}
           </h2>
           <p className="stat-value my-2 text-6xl font-medium">{model.reviewStudentCount}</p>
-          <p className="text-meta text-base-content/60">Cada estudiante cuenta una sola vez.</p>
+          <p className="text-meta text-base-content/60">{t('organization.review.countedOnce')}</p>
         </div>
         <div className="border-t border-base-300 pt-5 md:border-t-0 md:border-l md:pt-0 md:pl-8">
-          <h3 className="text-sm font-medium">Patrones que merecen atención</h3>
+          <h3 className="text-sm font-medium">{t('organization.review.patternsHeading')}</h3>
           <ul className="mt-4 flex flex-col gap-3 text-sm">
             <li className="flex items-start gap-3">
               <span className="mt-1 size-2 shrink-0 rounded-full bg-error" aria-hidden="true" />
               <span>
-                <strong className="font-medium">Ausencias recurrentes</strong>
+                <strong className="font-medium">
+                  {t('organization.review.recurringAbsences')}
+                </strong>
                 <br />
                 <span className="text-base-content/70">
-                  Al menos 3 no justificadas en las últimas 5 sesiones.
+                  {t('organization.review.recurringAbsencesRule')}
                 </span>
               </span>
             </li>
             <li className="flex items-start gap-3">
               <span className="mt-1 size-2 shrink-0 rounded-full bg-warning" aria-hidden="true" />
               <span>
-                <strong className="font-medium">Retrasos recurrentes</strong>
+                <strong className="font-medium">{t('organization.review.recurringDelays')}</strong>
                 <br />
-                <span className="text-base-content/70">Al menos 4 en las últimas 6 sesiones.</span>
+                <span className="text-base-content/70">
+                  {t('organization.review.recurringDelaysRule')}
+                </span>
               </span>
             </li>
           </ul>
           <p className="mt-4 text-meta text-base-content/60">
-            Los justificantes aprobados se excluyen del patrón.
+            {t('organization.review.excusedExcluded')}
           </p>
         </div>
       </div>
@@ -164,47 +205,54 @@ function ReviewSummary({ model }: { model: OrganizationDashboard }): React.JSX.E
 }
 
 function MetricValue({ metric }: { metric: CourseMetric }): React.JSX.Element {
+  const t = useText()
   if (
     metric.base === null ||
     metric.base <= 0 ||
     metric.count === null ||
     metric.percentage === null
   ) {
-    return <span className="text-sm text-base-content/60">Sin datos</span>
+    return <span className="text-sm text-base-content/60">{t('organization.metric.noData')}</span>
   }
   return (
     <div className="flex flex-col gap-1 tabular-nums">
-      <span className="font-medium">{metric.percentage}</span>
+      <span className="font-medium">
+        {t('organization.metric.percentage', {
+          value: formatNumber(metric.percentage, { maximumFractionDigits: 1 })
+        })}
+      </span>
       <span className="text-meta text-base-content/60">
-        {metric.count} de {metric.base}
+        {t('organization.metric.countOfBase', {
+          count: formatNumber(metric.count),
+          base: formatNumber(metric.base)
+        })}
       </span>
     </div>
   )
 }
 
 function CourseOverview({ model }: { model: OrganizationDashboard }): React.JSX.Element {
+  const t = useText()
   return (
     <section aria-labelledby="courses-heading" className="card min-w-0 bg-base-100">
       <div className="card-body gap-4 p-6">
         <div>
           <h2 id="courses-heading" className="text-base font-medium">
-            Asistencia por curso
+            {t('organization.courses.heading')}
           </h2>
-          <p className="mt-1 text-meta text-base-content/60">{model.period}</p>
+          <p className="mt-1 text-meta text-base-content/60">{periodLabel(model.period)}</p>
         </div>
         {model.courses.length === 0 ? (
-          <p className="py-6 text-sm text-base-content/70">Sin datos de cursos en este periodo.</p>
+          <p className="py-6 text-sm text-base-content/70">{t('organization.courses.empty')}</p>
         ) : (
           <div className="min-w-0 overflow-x-auto">
             <table className="table w-full">
-              <caption className="sr-only">
-                Ausencias y retrasos por curso en el periodo visible
-              </caption>
+              <caption className="sr-only">{t('organization.courses.caption')}</caption>
               <thead>
                 <tr>
-                  <th scope="col">Curso</th>
-                  <th scope="col">Ausencias</th>
-                  <th scope="col">Retrasos</th>
+                  <th scope="col">{t('organization.courses.columns.course')}</th>
+                  <th scope="col">{t('organization.courses.columns.absences')}</th>
+                  <th scope="col">{t('organization.courses.columns.delays')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -217,14 +265,14 @@ function CourseOverview({ model }: { model: OrganizationDashboard }): React.JSX.
                       </span>
                       {course.provisional ? (
                         <span className="mt-2 block text-meta font-normal text-warning">
-                          Datos pendientes de confirmar
+                          {t('organization.pendingConfirmation')}
                         </span>
                       ) : null}
                     </th>
                     <td>
                       <MetricValue metric={course.absences} />
                       <span className="mt-1 block whitespace-nowrap text-meta text-base-content/60">
-                        {course.justifiedAbsences} justificadas
+                        {t('organization.courses.justified', { count: course.justifiedAbsences })}
                       </span>
                     </td>
                     <td>
@@ -237,14 +285,8 @@ function CourseOverview({ model }: { model: OrganizationDashboard }): React.JSX.
           </div>
         )}
         <div className="border-t border-base-300 pt-4 text-meta leading-relaxed text-base-content/60">
-          <p>
-            Ausencias sobre registros alumno-sesión esperados. Las justificadas se incluyen en la
-            tabla.
-          </p>
-          <p className="mt-2">
-            Retrasos sobre asistencias con entrada: desde el minuto 11, con 10 minutos de
-            tolerancia. Se usa el inicio efectivo si el profesor avisó.
-          </p>
+          <p>{t('organization.courses.absencesNote')}</p>
+          <p className="mt-2">{t('organization.courses.delaysNote')}</p>
         </div>
       </div>
     </section>
@@ -252,6 +294,7 @@ function CourseOverview({ model }: { model: OrganizationDashboard }): React.JSX.
 }
 
 function StudentRow({ student }: { student: ReviewStudent }): React.JSX.Element {
+  const t = useText()
   return (
     <li className="flex gap-3 py-4 first:pt-0 last:pb-0">
       <span
@@ -266,7 +309,7 @@ function StudentRow({ student }: { student: ReviewStudent }): React.JSX.Element 
         </div>
         <p className="mt-1 text-meta text-base-content/60">{student.course}</p>
         {student.provisional ? (
-          <p className="mt-1 text-meta text-warning">Datos pendientes de confirmar</p>
+          <p className="mt-1 text-meta text-warning">{t('organization.pendingConfirmation')}</p>
         ) : null}
         <ul className="mt-2 flex flex-col gap-1">
           {student.patterns.map((pattern) => (
@@ -275,7 +318,12 @@ function StudentRow({ student }: { student: ReviewStudent }): React.JSX.Element 
                 className={`size-1.5 shrink-0 rounded-full ${pattern.kind === 'absence' ? 'bg-error' : 'bg-warning'}`}
                 aria-hidden="true"
               />
-              {pattern.label}
+              {t(
+                pattern.kind === 'absence'
+                  ? 'organization.students.absencePattern'
+                  : 'organization.students.delayPattern',
+                { count: pattern.count, sessions: pattern.sessions }
+              )}
             </li>
           ))}
         </ul>
@@ -285,18 +333,17 @@ function StudentRow({ student }: { student: ReviewStudent }): React.JSX.Element 
 }
 
 function ReviewStudents({ model }: { model: OrganizationDashboard }): React.JSX.Element {
+  const t = useText()
   return (
     <section aria-labelledby="students-heading" className="card bg-base-100">
       <div className="card-body gap-5 p-6">
         <div>
           <h2 id="students-heading" className="text-base font-medium">
-            Estudiantes a acompañar
+            {t('organization.students.heading')}
           </h2>
         </div>
         {model.students.length === 0 ? (
-          <p className="py-6 text-sm text-base-content/70">
-            No hay estudiantes a revisar en este periodo.
-          </p>
+          <p className="py-6 text-sm text-base-content/70">{t('organization.students.empty')}</p>
         ) : (
           <ul className="divide-y divide-base-300">
             {model.students.map((student) => (
@@ -310,18 +357,21 @@ function ReviewStudents({ model }: { model: OrganizationDashboard }): React.JSX.
 }
 
 function PendingOverview({ model }: { model: OrganizationDashboard }): React.JSX.Element {
+  const t = useText()
   return (
     <section aria-labelledby="pending-heading" className="card bg-base-100">
       <div className="card-body gap-5 p-6">
         <h2 id="pending-heading" className="text-base font-medium">
-          Pendientes de la organización
+          {t('organization.pending.heading')}
         </h2>
         <ul className="grid gap-4 sm:grid-cols-3">
           {model.pending.map((item) => (
-            <li key={item.label} className="border-l-2 border-base-300 pl-3">
+            <li key={item.kind} className="border-l-2 border-base-300 pl-3">
               <p className="text-2xl font-medium tabular-nums">{item.count}</p>
-              <p className="mt-2 text-sm font-medium">{item.label}</p>
-              <p className="mt-1 text-meta text-base-content/60">{item.description}</p>
+              <p className="mt-2 text-sm font-medium">{t(pendingTexts[item.kind].label)}</p>
+              <p className="mt-1 text-meta text-base-content/60">
+                {t(pendingTexts[item.kind].description)}
+              </p>
             </li>
           ))}
         </ul>
@@ -331,17 +381,18 @@ function PendingOverview({ model }: { model: OrganizationDashboard }): React.JSX
 }
 
 function DataQuality({ model }: { model: OrganizationDashboard }): React.JSX.Element {
+  const t = useText()
   return (
     <section aria-labelledby="quality-heading" className="card bg-base-100">
       <div className="card-body gap-3 p-6">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 id="quality-heading" className="text-base font-medium">
-            Calidad de los datos
+            {t('organization.quality.heading')}
           </h2>
         </div>
-        {model.quality.map((message) => (
-          <p key={message} className="text-meta leading-relaxed text-base-content/70">
-            {message}
+        {model.quality.map((note) => (
+          <p key={note.key} className="text-meta leading-relaxed text-base-content/70">
+            {t(note.key, note.values)}
           </p>
         ))}
       </div>

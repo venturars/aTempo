@@ -1,3 +1,5 @@
+import { useText } from '../lang/useText'
+
 // Vuelve a la pantalla anterior y dice a cuál: «‹ Sesiones».
 export function BackButton({
   to,
@@ -6,11 +8,12 @@ export function BackButton({
   to: string
   onClick: () => void
 }): React.JSX.Element {
+  const t = useText()
   return (
     <button
       type="button"
       className="btn btn-ghost btn-sm -ml-2 w-fit gap-1 px-2 font-normal text-base-content/70"
-      aria-label={`Volver a ${to}`}
+      aria-label={t('app.backTo', { screen: to })}
       onClick={onClick}
     >
       <svg viewBox="0 0 16 16" className="size-4" fill="none" aria-hidden="true">

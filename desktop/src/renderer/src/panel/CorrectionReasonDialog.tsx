@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { clockTime } from '../api/isoTime'
+import { formatDate, formatTime } from '../lang/format'
+import { text, useText } from '../lang/useText'
 import { markOf } from './apiValues'
 import { markLabel } from './marks'
-import { usePanelStore, type PendingCorrection } from './panelStore'
+import { correctionErrorText, usePanelStore, type PendingCorrection } from './panelStore'
 
 export function CorrectionReasonDialog(): React.JSX.Element | null {
   const pending = usePanelStore((state) => state.pendingCorrection)
@@ -16,12 +18,18 @@ function sessionDay(startsAt: string | undefined): string {
   if (startsAt === undefined) return ''
   const [year, month, day] = startsAt.slice(0, 10).split('-').map(Number)
   const date = new Date(year, month - 1, day)
-  const weekday = date.toLocaleDateString('es', { weekday: 'short' }).replace('.', '')
-  const monthName = date.toLocaleDateString('es', { month: 'short' }).replace('.', '')
-  return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} ${day} ${monthName} ${year}`
+  const weekday = formatDate(date, { weekday: 'short' }).replace('.', '')
+  const monthName = formatDate(date, { month: 'short' }).replace('.', '')
+  return text('panel.correction.sessionDay', {
+    weekday: `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)}`,
+    day,
+    month: monthName,
+    year
+  })
 }
 
 function ReasonDialog({ pending }: { pending: PendingCorrection }): React.JSX.Element {
+  const t = useText()
   const busy = usePanelStore((state) => state.busy)
   const startsAt = usePanelStore((state) => state.session?.startsAt)
   const error = usePanelStore((state) => state.correctionError)
@@ -32,8 +40,9 @@ function ReasonDialog({ pending }: { pending: PendingCorrection }): React.JSX.El
   const { status, checkedInAt } = pending.correction
   const title =
     checkedInAt === undefined
-      ? `Cambiar a ${markLabel[markOf(status)]}`
-      : `Cambiar la entrada a las ${clockTime(checkedInAt)}`
+      ? t('panel.correction.changeTo', { mark: markLabel(markOf(status)) })
+      : t('panel.correction.changeArrival', { time: formatTime(clockTime(checkedInAt)) })
+  const message = error === null ? null : correctionErrorText(error)
 
   useEffect(() => {
     const previous = document.activeElement
@@ -82,30 +91,31 @@ function ReasonDialog({ pending }: { pending: PendingCorrection }): React.JSX.El
         </div>
         <div className="flex flex-col gap-2">
           <label htmlFor="correction-reason">
-            Motivo <span className="field-optional">· recomendado</span>
+            {t('panel.correction.reason')}{' '}
+            <span className="field-optional">· {t('panel.correction.recommended')}</span>
           </label>
           <textarea
             id="correction-reason"
             ref={fieldRef}
-            className={error === null ? 'textarea w-full' : 'textarea textarea-error w-full'}
+            className={message === null ? 'textarea w-full' : 'textarea textarea-error w-full'}
             rows={3}
             value={reason}
-            aria-invalid={error !== null}
-            aria-describedby={error === null ? undefined : 'correction-reason-error'}
+            aria-invalid={message !== null}
+            aria-describedby={message === null ? undefined : 'correction-reason-error'}
             onChange={(event) => setReason(event.target.value)}
           />
-          {error === null ? null : (
+          {message === null ? null : (
             <p id="correction-reason-error" role="alert" className="text-sm">
-              {error}
+              {message}
             </p>
           )}
         </div>
         <div className="modal-action mt-0">
           <button type="button" className="btn" disabled={busy} onClick={cancelCorrection}>
-            Cancelar
+            {t('common.cancel')}
           </button>
           <button type="submit" className="btn btn-primary" disabled={busy}>
-            Guardar
+            {t('common.save')}
           </button>
         </div>
       </form>

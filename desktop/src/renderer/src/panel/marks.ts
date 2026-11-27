@@ -1,14 +1,20 @@
+import type { TextKey } from '../lang/messages'
+import { text } from '../lang/useText'
 import type { Attendance } from './roster'
 
 export type MarkName = Attendance | 'cancelada' | 'sin-registro'
 
-export const markLabel: Record<MarkName, string> = {
-  presente: 'Presente',
-  retraso: 'Tarde',
-  ausente: 'Ausente',
-  pendiente: 'Pendiente',
-  cancelada: 'Cancelada',
-  'sin-registro': 'Sin registro'
+const markLabelKey: Record<MarkName, TextKey> = {
+  presente: 'panel.marks.present',
+  retraso: 'panel.marks.late',
+  ausente: 'panel.marks.absent',
+  pendiente: 'panel.marks.pending',
+  cancelada: 'panel.marks.cancelled',
+  'sin-registro': 'panel.marks.noRecord'
+}
+
+export function markLabel(mark: MarkName): string {
+  return text(markLabelKey[mark])
 }
 
 export const markBadge: Record<MarkName, string> = {

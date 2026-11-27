@@ -15,15 +15,15 @@ function weekMarks(presentCount: number, otherMarks: AttendanceMark[]): Attendan
 }
 
 export const weekDays: TrimesterDay[] = [
-  { name: 'lunes', label: 'L', marks: weekMarks(10, ['retraso', 'ausencia']) },
-  { name: 'martes', label: 'M', marks: weekMarks(10, ['ausencia', 'ausencia']) },
-  { name: 'miércoles', label: 'X', marks: weekMarks(10, ['retraso', 'ausencia']) },
-  { name: 'jueves', label: 'J', marks: weekMarks(11, ['ausencia']) },
-  { name: 'viernes', label: 'V', marks: weekMarks(11, ['retraso']) }
+  { date: '2026-11-09', marks: weekMarks(10, ['retraso', 'ausencia']) },
+  { date: '2026-11-10', marks: weekMarks(10, ['ausencia', 'ausencia']) },
+  { date: '2026-11-11', marks: weekMarks(10, ['retraso', 'ausencia']) },
+  { date: '2026-11-12', marks: weekMarks(11, ['ausencia']) },
+  { date: '2026-11-13', marks: weekMarks(11, ['retraso']) }
 ]
 
 // El porcentaje sale del mismo gráfico, para que cuadren: Presente entre todas las marcas.
 const allMarks = weekDays.flatMap((day) => day.marks)
 const presentMarks = allMarks.filter((mark) => mark === 'presente').length
 
-export const weekPresence = `${Math.round((presentMarks / allMarks.length) * 100)} % presentes`
+export const weekPresencePercent = Math.round((presentMarks / allMarks.length) * 100)

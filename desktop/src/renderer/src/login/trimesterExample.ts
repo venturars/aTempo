@@ -1,10 +1,15 @@
+import { formatDate } from '../lang/format'
+import type { TextKey } from '../lang/messages'
+import { classDate } from '../student/classDate'
+
 export type AttendanceMark = 'presente' | 'retraso' | 'ausencia'
 
 export type TrimesterDay = {
-  name: 'lunes' | 'martes' | 'miércoles' | 'jueves' | 'viernes'
-  label: 'L' | 'M' | 'X' | 'J' | 'V'
+  date: string
   marks: AttendanceMark[]
 }
+
+const exampleWeekDates = ['2026-11-09', '2026-11-10', '2026-11-11', '2026-11-12', '2026-11-13']
 
 const markClasses: Record<AttendanceMark, string> = {
   presente: 'status status-success',
@@ -12,10 +17,10 @@ const markClasses: Record<AttendanceMark, string> = {
   ausencia: 'status status-error'
 }
 
-const markLabels: Record<AttendanceMark, string> = {
-  presente: 'Presente',
-  retraso: 'Tarde',
-  ausencia: 'Ausencia'
+const markLabelKeys: Record<AttendanceMark, TextKey> = {
+  presente: 'login.marks.present',
+  retraso: 'login.marks.late',
+  ausencia: 'login.marks.absence'
 }
 
 function sessionMarks(): AttendanceMark[] {
@@ -29,18 +34,23 @@ function sessionMarks(): AttendanceMark[] {
   return marks
 }
 
-export const trimesterDays: TrimesterDay[] = [
-  { name: 'lunes', label: 'L', marks: sessionMarks() },
-  { name: 'martes', label: 'M', marks: sessionMarks() },
-  { name: 'miércoles', label: 'X', marks: sessionMarks() },
-  { name: 'jueves', label: 'J', marks: sessionMarks() },
-  { name: 'viernes', label: 'V', marks: sessionMarks() }
-]
+export const trimesterDays: TrimesterDay[] = exampleWeekDates.map((date) => ({
+  date,
+  marks: sessionMarks()
+}))
 
 export function markClass(mark: AttendanceMark): string {
   return markClasses[mark]
 }
 
-export function markLabel(mark: AttendanceMark): string {
-  return markLabels[mark]
+export function markLabelKey(mark: AttendanceMark): TextKey {
+  return markLabelKeys[mark]
+}
+
+export function dayName(day: TrimesterDay): string {
+  return formatDate(classDate(day.date), { weekday: 'long' })
+}
+
+export function dayInitial(day: TrimesterDay): string {
+  return formatDate(classDate(day.date), { weekday: 'narrow' })
 }

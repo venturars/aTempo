@@ -1,7 +1,8 @@
 import { useId, useRef, useState } from 'react'
 import { DayPicker, type DateRange } from 'react-day-picker'
-import { es } from 'react-day-picker/locale'
 import 'react-day-picker/style.css'
+import { calendarLocale, formatDate } from '../lang/format'
+import { useText } from '../lang/useText'
 import { usePanelStore } from './panelStore'
 
 const parseDate = (date: string): Date => new Date(`${date}T12:00:00`)
@@ -29,6 +30,7 @@ export function DateFilter({
   available: string[]
   onChange: (dates: string[]) => void
 }): React.JSX.Element {
+  const t = useText()
   const id = useId()
   const popover = useRef<HTMLDivElement>(null)
   const setAppliedMode = usePanelStore((state) => state.setStatsDateMode)
@@ -36,9 +38,11 @@ export function DateFilter({
   const [range, setRange] = useState<DateRange | undefined>()
   const ordered = [...dates].sort()
   const format = (date: string): string =>
-    parseDate(date).toLocaleDateString('es', { day: 'numeric', month: 'short' })
+    formatDate(parseDate(date), { day: 'numeric', month: 'short' })
   const label =
-    dates.length === 1 ? format(ordered[0]) : `${format(ordered[0])} – ${format(ordered.at(-1)!)}`
+    dates.length === 1
+      ? format(ordered[0])
+      : t('dateFilter.range', { start: format(ordered[0]), end: format(ordered.at(-1)!) })
   const month = parseDate(available.at(-1)!)
 
   function preset(next: string[]): void {
@@ -53,7 +57,7 @@ export function DateFilter({
         type="button"
         popoverTarget={id}
         aria-haspopup="dialog"
-        aria-label={`${label}. Elegir fechas`}
+        aria-label={t('dateFilter.triggerLabel', { dates: label })}
         className="badge badge-sm badge-soft date-trigger"
         style={{ anchorName: '--attendance-dates' }}
         onClick={() => preset(dates)}
@@ -77,14 +81,14 @@ export function DateFilter({
         ref={popover}
         popover="auto"
         role="dialog"
-        aria-label="Elegir fechas"
+        aria-label={t('dateFilter.chooseDates')}
         className="dropdown date-popover"
         style={{ positionAnchor: '--attendance-dates' }}
       >
         <div className="flex justify-center py-1">
           <DayPicker
             className="react-day-picker"
-            locale={es}
+            locale={calendarLocale()}
             mode="range"
             hideNavigation
             disableNavigation
@@ -101,14 +105,14 @@ export function DateFilter({
         </div>
         <div className="date-presets px-3 py-2">
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => preset(available)}>
-            Todo el historial
+            {t('dateFilter.allHistory')}
           </button>
           <button
             type="button"
             className="btn btn-ghost btn-sm"
             onClick={() => preset(available.slice(-3))}
           >
-            Últimas 3 sesiones
+            {t('dateFilter.lastThreeSessions')}
           </button>
         </div>
         <div className="flex items-center justify-end gap-3 px-3 py-3">
@@ -122,7 +126,7 @@ export function DateFilter({
               popover.current?.hidePopover()
             }}
           >
-            Aplicar
+            {t('dateFilter.apply')}
           </button>
         </div>
       </div>

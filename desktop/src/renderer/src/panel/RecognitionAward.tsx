@@ -1,3 +1,4 @@
+import { useText } from '../lang/useText'
 import { RecognitionIcon } from './RecognitionIcon'
 
 export function RecognitionAward({
@@ -13,6 +14,7 @@ export function RecognitionAward({
   names: string[]
   onSelect: (name: string) => void
 }): React.JSX.Element {
+  const t = useText()
   return (
     <article className="card bg-base-100 shadow-sm">
       <div className="card-body gap-4">
@@ -44,7 +46,7 @@ export function RecognitionAward({
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-base-content/60">Nadie en estas fechas</p>
+          <p className="text-sm text-base-content/60">{t('panel.recognition.nobody')}</p>
         )}
       </div>
     </article>

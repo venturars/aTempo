@@ -1,8 +1,10 @@
 import { useRef } from 'react'
+import { useText } from '../lang/useText'
 import { classSessions, compareStudentNames, sessionDateLabel } from './roster'
 import { usePanelStore } from './panelStore'
 
 export function JustificationAccess(): React.JSX.Element {
+  const t = useText()
   const dialog = useRef<HTMLDialogElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)
   const openStudent = usePanelStore((state) => state.openStudent)
@@ -33,7 +35,9 @@ export function JustificationAccess(): React.JSX.Element {
         aria-haspopup="dialog"
         onClick={() => dialog.current?.showModal()}
       >
-        Justificantes{pending ? ` · ${pending}` : ''}
+        {pending
+          ? t('history.justifications.buttonWithPending', { pending })
+          : t('history.justifications.title')}
       </button>
       <dialog
         ref={dialog}
@@ -44,10 +48,10 @@ export function JustificationAccess(): React.JSX.Element {
         <div className="modal-box">
           <div className="flex items-center justify-between gap-3">
             <h2 id="justifications-title" className="text-lg font-medium">
-              Justificantes
+              {t('history.justifications.title')}
             </h2>
             <button type="button" className="btn btn-sm" onClick={close}>
-              Cerrar
+              {t('common.close')}
             </button>
           </div>
           {documents.length ? (
@@ -73,14 +77,16 @@ export function JustificationAccess(): React.JSX.Element {
                         document.just === 'pend' ? '' : 'badge-success'
                       }`}
                     >
-                      {document.just === 'pend' ? 'Pendiente' : 'Aprobado'}
+                      {document.just === 'pend'
+                        ? t('history.justifications.pending')
+                        : t('history.justifications.approved')}
                     </span>
                   </button>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="mt-4 text-sm text-base-content/60">No hay justificantes.</p>
+            <p className="mt-4 text-sm text-base-content/60">{t('history.justifications.empty')}</p>
           )}
         </div>
       </dialog>

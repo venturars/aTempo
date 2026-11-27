@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { formatDateTime } from '../lang/format'
+import { text, useText } from '../lang/useText'
 import { markBadge, markLabel } from './marks'
 import type { MarkChange } from './panelStore'
 import { course, type Attendance, type JustKey } from './roster'
@@ -29,6 +31,7 @@ export function MarkControl({
   changes?: MarkChange[]
   onPick: (mark: Attendance) => void
 }): React.JSX.Element {
+  useText()
   const buttonRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLUListElement>(null)
   const [menu, setMenu] = useState<{ top: number; left: number } | null>(null)
@@ -124,7 +127,7 @@ export function MarkControl({
           aria-describedby={changes.length > 0 ? noteId : undefined}
           onClick={toggle}
         >
-          {markLabel[status]}
+          {markLabel(status)}
           <svg viewBox="0 0 16 16" className="size-3 opacity-70" fill="none" aria-hidden="true">
             <path
               d="M4 6.5 8 10.5 12 6.5"
@@ -158,7 +161,7 @@ export function MarkControl({
                         onPick(mark)
                       }}
                     >
-                      <span className={markBadge[mark]}>{markLabel[mark]}</span>
+                      <span className={markBadge[mark]}>{markLabel(mark)}</span>
                     </button>
                   </li>
                 ))}
@@ -171,7 +174,7 @@ export function MarkControl({
 }
 
 function changeTime(at: number): string {
-  return new Date(at).toLocaleString('es', {
+  return formatDateTime(new Date(at), {
     day: 'numeric',
     month: 'short',
     hour: '2-digit',
@@ -180,7 +183,10 @@ function changeTime(at: number): string {
 }
 
 function changeText(change: MarkChange): string {
-  return `De ${markLabel[change.from]} a ${markLabel[change.to]}`
+  return text('panel.marks.change', {
+    from: markLabel(change.from),
+    to: markLabel(change.to)
+  })
 }
 
 // La nota que sale al pasar por encima del estado (o al llevarle el foco): los cambios hechos
@@ -200,12 +206,17 @@ function MarkNote({
   changes: MarkChange[]
   children: React.ReactNode
 }): React.JSX.Element {
+  const t = useText()
   const anchorRef = useRef<HTMLSpanElement>(null)
   const hide = useRef<number | null>(null)
   const [box, setBox] = useState<{ top: number; left: number } | null>(null)
   const filed = excuse === 'ok' || excuse === 'pend'
   const header =
-    excuse === 'ok' ? 'Con justificante' : excuse === 'pend' ? 'Por revisar' : 'Sin justificante'
+    excuse === 'ok'
+      ? t('panel.marks.withNote')
+      : excuse === 'pend'
+        ? t('panel.marks.toReview')
+        : t('panel.marks.withoutNote')
   const newestFirst = [...changes].reverse()
 
   // Si la fila se va (por ejemplo, al cambiar de pantalla), no queda un cierre pendiente.
@@ -297,10 +308,10 @@ function MarkNote({
                         className="mt-1 w-fit cursor-pointer border-0 bg-transparent p-0 text-sm font-medium underline"
                         onClick={() => downloadSampleNote(name, when)}
                       >
-                        Descargar
+                        {t('panel.marks.download')}
                       </button>
                     ) : (
-                      <span className="tip-body">No hay documento.</span>
+                      <span className="tip-body">{t('panel.marks.noDocument')}</span>
                     )}
                   </span>
                 ) : null}
@@ -314,21 +325,21 @@ function MarkNote({
 }
 
 function downloadSampleNote(name: string, when: string): void {
-  const text = [
-    'Justificante de muestra',
+  const note = [
+    text('panel.marks.sampleNoteTitle'),
     name,
     when,
     course.name,
-    'No es un documento real.'
+    text('panel.marks.sampleNoteWarning')
   ].join('\n')
-  const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' }))
+  const url = URL.createObjectURL(new Blob([note], { type: 'text/plain' }))
   const link = document.createElement('a')
   const slug = `${name}-${when}`
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
   link.href = url
-  link.download = `justificante-${slug}.txt`
+  link.download = text('panel.marks.sampleNoteFile', { slug })
   link.click()
   URL.revokeObjectURL(url)
 }

@@ -1,18 +1,19 @@
 import { create } from 'zustand'
+import type { TextKey } from '../lang/messages'
 import { useSessionStore } from '../session/sessionStore'
 import { useStudentAccountsStore } from '../student/studentAccounts'
 import { findInvitation, type Invitation } from './invitations'
 import { useTeacherAccountsStore } from './teacherAccounts'
 import { validateActivation } from './validateActivation'
 
-const emptyActivateForm = {
+const emptyActivateForm: { password: string; passwordError: TextKey | '' } = {
   password: '',
   passwordError: ''
 }
 
 type ActivateState = {
   password: string
-  passwordError: string
+  passwordError: TextKey | ''
   setPassword: (password: string) => void
   submit: (code: string) => boolean
   reset: () => void
