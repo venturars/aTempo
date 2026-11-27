@@ -3,10 +3,13 @@ import { createCreateCourse } from '../application/create-course'
 import { createCreateOrganization } from '../application/create-organization'
 import { createDeletePerson } from '../application/delete-person'
 import { createEnrollPersonInCourse } from '../application/enroll-person-in-course'
+import { createGetCourse } from '../application/get-course'
 import { createGetOrganization } from '../application/get-organization'
 import { createGetPerson } from '../application/get-person'
 import { createInvitePerson } from '../application/invite-person'
 import { createListCoursePeople } from '../application/list-course-people'
+import { createListCourseStudents } from '../application/list-course-students'
+import { createListCourses } from '../application/list-courses'
 import { createListPeople } from '../application/list-people'
 import { createUnenrollPersonFromCourse } from '../application/unenroll-person-from-course'
 import { createPatchOrganization } from '../application/patch-organization'
@@ -41,8 +44,7 @@ export function createSdk(input: CreateSdkInput = {}) {
     findByTaxId: (taxId) => persons.findByTaxId(taxId),
     save: (organization) => persons.saveOrganization(organization),
   }
-  const courses =
-    input.courses ?? new InMemoryCourseRepository()
+  const courses = input.courses ?? new InMemoryCourseRepository()
   const assignedCourseCount =
     input.assignedCourseCount ?? createEnrollmentAssignedCourseCount(courses)
   const checkHealth = createPostgresHealthClient({
@@ -73,6 +75,8 @@ export function createSdk(input: CreateSdkInput = {}) {
       assignedCourseCount,
     }),
     createCourse: createCreateCourse({ organizations, courses }),
+    listCourses: createListCourses({ organizations, courses }),
+    getCourse: createGetCourse({ courses }),
     enrollPersonInCourse: createEnrollPersonInCourse({
       persons,
       courses,
@@ -83,6 +87,11 @@ export function createSdk(input: CreateSdkInput = {}) {
       enrollments: courses,
     }),
     listCoursePeople: createListCoursePeople({
+      persons,
+      courses,
+      enrollments: courses,
+    }),
+    listCourseStudents: createListCourseStudents({
       persons,
       courses,
       enrollments: courses,
