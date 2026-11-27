@@ -68,7 +68,7 @@ from data_access_python.session.update_session import (
     UpdateSessionOutput,
     update_session,
 )
-from data_access_python.shared.errors import DomainErrorId
+from data_access_python.shared.errors import ErrorId
 from data_access_python.shared.types.attendance import Attendance
 from data_access_python.shared.types.session import (
     Session,
@@ -93,7 +93,7 @@ __all__ = [
     "RemoveSessionOutput",
     "DomainError",
     "DomainErrorKind",
-    "DomainErrorId",
+    "ErrorId",
     "RetrieveSessionByIdInput",
     "RetrieveSessionByIdOutput",
     "RetrieveAllAttendancesBySessionInput",

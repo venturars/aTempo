@@ -9,7 +9,7 @@ from atempo_errors import (
 )
 
 from data_access_python.session.add_session import add_session
-from data_access_python.shared.errors import domain_error, fail
+from data_access_python.shared.errors import build_error, fail
 from data_access_python.shared.types.attendance import Attendance
 from data_access_python.shared.validation.model import validate_model
 from data_access_python.sqlite.pool import query
@@ -30,7 +30,7 @@ class CatalogTests(unittest.TestCase):
         close_memory_db()
 
     def test_builds_id_kind_entity_and_field_from_label_and_reason(self) -> None:
-        error = domain_error("attendance", "taken")
+        error = build_error("attendance", "taken")
         self.assertIsInstance(error, ConflictError)
         self.assertEqual(error.id, "attendance.taken")
         self.assertEqual(error.kind, "CONFLICT")
@@ -40,15 +40,15 @@ class CatalogTests(unittest.TestCase):
 
     def test_uses_catalog_overrides_for_special_messages(self) -> None:
         self.assertEqual(
-            str(domain_error("session.status", "format")),
+            str(build_error("session.status", "format")),
             "session.status debe ser open, closing o closed",
         )
         self.assertEqual(
-            str(domain_error("attendance.check_in_method", "format")),
+            str(build_error("attendance.check_in_method", "format")),
             "attendance.check_in_method debe ser button, qr o null",
         )
         self.assertEqual(
-            str(domain_error("session.closed_at", "required")),
+            str(build_error("session.closed_at", "required")),
             "session.closed_at es obligatorio si el estado es closed",
         )
 

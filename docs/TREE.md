@@ -108,7 +108,7 @@ data-access/
     data_access_python/
       __init__.py           # API pública
       shared/
-        errors.py           # catálogo (reasons, labels, mensajes), domain_error() y fail()
+        errors.py           # catálogo (reasons, labels, mensajes), build_error() y fail()
         types/              # contratos: modelos Pydantic estrictos e inmutables y alias Literal
           contract.py       # Contract: base común (strict, frozen, campos ausentes a None)
           session.py        # SessionCreate, Session, SessionStatus

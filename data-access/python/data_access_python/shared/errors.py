@@ -2,7 +2,7 @@ from typing import Literal, Never
 
 from atempo_errors import DomainError, ErrorReason, create_error_factory
 
-DOMAIN_ERROR_REASONS: dict[str, ErrorReason] = {
+ERROR_REASONS: dict[str, ErrorReason] = {
     "string": {
         "kind": "VALIDATION",
         "message": lambda label: f"{label} debe ser un string",
@@ -99,7 +99,7 @@ DOMAIN_ERROR_REASONS: dict[str, ErrorReason] = {
     },
 }
 
-DomainErrorReason = Literal[
+ErrorReasonName = Literal[
     "string",
     "nullable_string",
     "empty",
@@ -150,9 +150,9 @@ ErrorLabel = Literal[
     "fecha",
 ]
 
-DomainErrorId = str
+ErrorId = str
 
-DOMAIN_ERROR_MESSAGES: dict[str, str] = {
+ERROR_MESSAGES: dict[str, str] = {
     "session.status.format": "session.status debe ser open, closing o closed",
     "session.closed_at.required": (
         "session.closed_at es obligatorio si el estado es closed"
@@ -187,16 +187,16 @@ DOMAIN_ERROR_MESSAGES: dict[str, str] = {
     ),
 }
 
-_factory = create_error_factory(DOMAIN_ERROR_REASONS, DOMAIN_ERROR_MESSAGES)
+_factory = create_error_factory(ERROR_REASONS, ERROR_MESSAGES)
 
 
-def domain_error(label: ErrorLabel, reason: DomainErrorReason) -> DomainError:
+def build_error(label: ErrorLabel, reason: ErrorReasonName) -> DomainError:
     return _factory.domain_error(label, reason)
 
 
 def fail(
     label: ErrorLabel,
-    reason: DomainErrorReason,
+    reason: ErrorReasonName,
     *,
     cause: BaseException | None = None,
 ) -> Never:
