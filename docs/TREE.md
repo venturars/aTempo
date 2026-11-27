@@ -105,7 +105,6 @@ data-access/
     package.json
     pnpm-lock.yaml
     .npmrc
-    .gitignore
     .prettierrc
     eslint.config.mjs
     tsconfig.json
