@@ -5,7 +5,7 @@ import {
   PersistenceError,
   ValidationError,
 } from '@atempo/errors'
-import { domainError, fail } from '../src/shared/errors'
+import { buildError, fail } from '../src/shared/errors'
 import { assertPersonCreate } from '../src/shared/validation/person'
 import { assertRole } from '../src/shared/validation/role'
 import { query } from '../src/postgres/pool'
@@ -18,7 +18,7 @@ describe('catálogo de errores', () => {
   })
 
   it('builds id, kind, entity and field from label and reason', () => {
-    const error = domainError('person.email', 'taken')
+    const error = buildError('person.email', 'taken')
     expect(error).toBeInstanceOf(ConflictError)
     expect(error).toMatchObject({
       id: 'person.email.taken',
@@ -30,23 +30,23 @@ describe('catálogo de errores', () => {
   })
 
   it('uses catalog overrides for special messages', () => {
-    expect(domainError('course.acronym', 'taken').message).toBe(
+    expect(buildError('course.acronym', 'taken').message).toBe(
       'course.acronym ya existe en la organización',
     )
-    expect(domainError('course.contract_address', 'format').message).toBe(
+    expect(buildError('course.contract_address', 'format').message).toBe(
       'course.contract_address debe ser 0x y 40 hex',
     )
-    expect(domainError('person_role.student', 'exclusive').message).toBe(
+    expect(buildError('person_role.student', 'exclusive').message).toBe(
       'un student no puede llevar otro rol',
     )
-    expect(domainError('course.end_at', 'order').message).toBe(
+    expect(buildError('course.end_at', 'order').message).toBe(
       'course.end_at debe ser posterior a course.start_at',
     )
   })
 
   it('keeps the pg cause on an unmapped error', () => {
     const cause = new Error('connection refused')
-    const error = domainError('postgres', 'unmapped', { cause })
+    const error = buildError('postgres', 'unmapped', { cause })
     expect(error).toBeInstanceOf(PersistenceError)
     expect(error).toMatchObject({
       id: 'postgres.unmapped',

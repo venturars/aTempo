@@ -1,4 +1,4 @@
-import { fail, type DomainLabel } from '../errors'
+import { fail, type ErrorLabel } from '../errors'
 import type { Role, RoleName } from '../types/role'
 import { assertNonEmptyString, assertObject } from './assert'
 
@@ -14,7 +14,7 @@ export function isRoleName(value: string): value is RoleName {
 
 export function assertRoleName(
   value: unknown,
-  label: DomainLabel = 'role.name',
+  label: ErrorLabel = 'role.name',
 ): RoleName {
   const name = assertNonEmptyString(value, label)
   if (!isRoleName(name)) {

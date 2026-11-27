@@ -1,5 +1,5 @@
 import type { QueryResult, QueryResultRow } from 'pg'
-import { domainError } from '../../shared/errors'
+import { buildError } from '../../shared/errors'
 import type { PostgresQuery, PostgresQueryParam } from '../pool'
 
 const FOREIGN_KEY_VIOLATION = '23503'
@@ -23,7 +23,7 @@ export async function runParentDelete(
     return await run(sql, params)
   } catch (error) {
     if (isForeignKeyViolation(error)) {
-      throw domainError(parent, 'referenced', { cause: error })
+      throw buildError(parent, 'referenced', { cause: error })
     }
     throw error
   }

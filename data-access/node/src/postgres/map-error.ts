@@ -1,5 +1,5 @@
 import { DomainError } from '@atempo/errors'
-import { domainError } from '../shared/errors'
+import { buildError } from '../shared/errors'
 
 /**
  * Cada clave foránea del esquema y la tabla padre a la que apunta. Un 23503
@@ -28,38 +28,38 @@ function pgField(
   return typeof value === 'string' ? value : undefined
 }
 
-export function domainErrorFromPg(error: object): DomainError | undefined {
+export function errorFromPg(error: object): DomainError | undefined {
   const code = pgField(error, 'code')
   const constraint = pgField(error, 'constraint') ?? ''
 
   if (code === '23505') {
     if (constraint.includes('email')) {
-      return domainError('person.email', 'taken')
+      return buildError('person.email', 'taken')
     }
     if (constraint.includes('identification_document')) {
-      return domainError('person.identification_document', 'taken')
+      return buildError('person.identification_document', 'taken')
     }
     if (constraint.includes('tax_id')) {
-      return domainError('organization.tax_id', 'taken')
+      return buildError('organization.tax_id', 'taken')
     }
     if (constraint.includes('contract_address')) {
-      return domainError('course.contract_address', 'taken')
+      return buildError('course.contract_address', 'taken')
     }
     if (constraint.includes('acronym')) {
-      return domainError('course.acronym', 'taken')
+      return buildError('course.acronym', 'taken')
     }
     if (constraint === 'person_course_pkey') {
-      return domainError('person_course', 'taken')
+      return buildError('person_course', 'taken')
     }
     if (constraint === 'person_role_pkey') {
-      return domainError('person_role', 'taken')
+      return buildError('person_role', 'taken')
     }
   }
 
   if (code === '23503') {
     const parent = FOREIGN_KEY_PARENTS[constraint]
     if (parent) {
-      return domainError(parent, 'missing')
+      return buildError(parent, 'missing')
     }
   }
 
@@ -68,7 +68,7 @@ export function domainErrorFromPg(error: object): DomainError | undefined {
   if (code === 'P0001') {
     const where = pgField(error, 'where') ?? ''
     if (where.includes('person_role_student_is_exclusive')) {
-      return domainError('person_role.student', 'exclusive')
+      return buildError('person_role.student', 'exclusive')
     }
   }
 
@@ -81,14 +81,14 @@ export function rethrowPg(error: unknown): never {
   }
 
   if (typeof error === 'object' && error !== null) {
-    const mapped = domainErrorFromPg(error)
+    const mapped = errorFromPg(error)
     if (mapped) {
       throw mapped
     }
-    throw domainError('postgres', 'unmapped', {
+    throw buildError('postgres', 'unmapped', {
       cause: error instanceof Error ? error : undefined,
     })
   }
 
-  throw domainError('postgres', 'unmapped')
+  throw buildError('postgres', 'unmapped')
 }

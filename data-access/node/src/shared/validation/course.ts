@@ -1,4 +1,4 @@
-import { fail, type DomainLabel } from '../errors'
+import { fail, type ErrorLabel } from '../errors'
 import type {
   Course,
   CourseCreate,
@@ -66,7 +66,7 @@ function padUtc(value: number, width = 2): string {
   return String(value).padStart(width, '0')
 }
 
-export function normalizeInstant(value: string, label: DomainLabel): string {
+export function normalizeInstant(value: string, label: ErrorLabel): string {
   const match = INSTANT_RE.exec(value)
   if (match === null) {
     fail(label, 'instant')

@@ -1,5 +1,5 @@
 import type { QueryResult, QueryResultRow } from 'pg'
-import { fail, type DomainLabel } from '../../shared/errors'
+import { fail, type ErrorLabel } from '../../shared/errors'
 
 /**
  * Un INSERT, UPDATE o DELETE con RETURNING devuelve la fila que ha tocado. Si
@@ -8,7 +8,7 @@ import { fail, type DomainLabel } from '../../shared/errors'
  */
 export function requireRow<T>(
   result: QueryResult<QueryResultRow>,
-  label: DomainLabel,
+  label: ErrorLabel,
   reason: 'not_created' | 'not_updated' | 'missing',
 ): T {
   const row = result.rows[0]

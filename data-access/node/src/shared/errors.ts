@@ -4,7 +4,7 @@ import {
   type DomainErrorKind,
 } from '@atempo/errors'
 
-export const DOMAIN_ERROR_REASONS = {
+export const ERROR_REASONS = {
   string: {
     kind: 'VALIDATION',
     message: (label: string) => `${label} debe ser un string`,
@@ -104,9 +104,9 @@ export const DOMAIN_ERROR_REASONS = {
   { kind: DomainErrorKind; message: (label: string) => string }
 >
 
-export type DomainErrorReason = keyof typeof DOMAIN_ERROR_REASONS
+export type ErrorReasonName = keyof typeof ERROR_REASONS
 
-export const DOMAIN_LABELS = [
+export const ERROR_LABELS = [
   'organization',
   'organization.id',
   'organization.name',
@@ -140,37 +140,36 @@ export const DOMAIN_LABELS = [
   'postgres.DATABASE_URL',
 ] as const
 
-export type DomainLabel = (typeof DOMAIN_LABELS)[number]
+export type ErrorLabel = (typeof ERROR_LABELS)[number]
 
-export type DomainErrorId = `${DomainLabel}.${DomainErrorReason}`
+export type ErrorId = `${ErrorLabel}.${ErrorReasonName}`
 
-export const DOMAIN_ERROR_MESSAGES: { readonly [K in DomainErrorId]?: string } =
-  {
-    'course.acronym.taken': 'course.acronym ya existe en la organización',
-    'course.contract_address.format':
-      'course.contract_address debe ser 0x y 40 hex',
-    'course.end_at.order': 'course.end_at debe ser posterior a course.start_at',
-    'person_course.role_required':
-      'solo un student o un teacher se matricula en un curso',
-    'person.protected': 'el organization_admin no se puede borrar',
-    'person.enrolled': 'un teacher con cursos no se puede borrar',
-    'person_role.role.protected':
-      'organization_admin solo lo tiene quien registra la organización',
-    'person_role.role.format':
-      'person_role.role debe ser organization_admin, teacher o student',
-    'role.name.format':
-      'role.name debe ser organization_admin, teacher o student',
-  }
+export const ERROR_MESSAGES: { readonly [K in ErrorId]?: string } = {
+  'course.acronym.taken': 'course.acronym ya existe en la organización',
+  'course.contract_address.format':
+    'course.contract_address debe ser 0x y 40 hex',
+  'course.end_at.order': 'course.end_at debe ser posterior a course.start_at',
+  'person_course.role_required':
+    'solo un student o un teacher se matricula en un curso',
+  'person.protected': 'el organization_admin no se puede borrar',
+  'person.enrolled': 'un teacher con cursos no se puede borrar',
+  'person_role.role.protected':
+    'organization_admin solo lo tiene quien registra la organización',
+  'person_role.role.format':
+    'person_role.role debe ser organization_admin, teacher o student',
+  'role.name.format':
+    'role.name debe ser organization_admin, teacher o student',
+}
 
 const factory = createErrorFactory({
-  labels: DOMAIN_LABELS,
-  reasons: DOMAIN_ERROR_REASONS,
-  messages: DOMAIN_ERROR_MESSAGES,
+  labels: ERROR_LABELS,
+  reasons: ERROR_REASONS,
+  messages: ERROR_MESSAGES,
 })
 
-export const domainError: (
-  label: DomainLabel,
-  reason: DomainErrorReason,
+export const buildError: (
+  label: ErrorLabel,
+  reason: ErrorReasonName,
   options?: { cause?: Error },
 ) => DomainError = factory.domainError
 
@@ -179,7 +178,7 @@ export const domainError: (
  * devuelve `never` si la función tiene un tipo explícito.
  */
 export const fail: (
-  label: DomainLabel,
-  reason: DomainErrorReason,
+  label: ErrorLabel,
+  reason: ErrorReasonName,
   options?: { cause?: Error },
 ) => never = factory.fail

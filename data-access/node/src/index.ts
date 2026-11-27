@@ -7,7 +7,7 @@ export {
   ValidationError,
   type DomainErrorKind,
 } from '@atempo/errors'
-export type { DomainErrorId, DomainErrorReason } from './shared/errors'
+export type { ErrorId, ErrorReasonName } from './shared/errors'
 
 export type {
   Organization,
