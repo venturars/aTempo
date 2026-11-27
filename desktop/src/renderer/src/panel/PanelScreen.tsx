@@ -503,15 +503,23 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
           <thead>
             <tr>
               <th rowSpan={2}>Fecha</th>
-              <th rowSpan={2}>Asistencia</th>
-              <th colSpan={3} scope="colgroup">
+              <th rowSpan={2} className="text-center">
+                Asistencia
+              </th>
+              <th colSpan={3} scope="colgroup" className="text-center">
                 Alumnos
               </th>
             </tr>
             <tr>
-              <th scope="col">Presentes</th>
-              <th scope="col">Tarde</th>
-              <th scope="col">Ausentes</th>
+              <th scope="col" className="text-center">
+                Presentes
+              </th>
+              <th scope="col" className="text-center">
+                Tarde
+              </th>
+              <th scope="col" className="text-center">
+                Ausentes
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -540,18 +548,20 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
                       <SessionDate label={sessionTitle(session.id)} strong />
                     </button>
                   </td>
-                  <td className="tabular-nums text-base-content/50">{attendance}</td>
-                  <td>
+                  <td className="text-center tabular-nums text-base-content/50">{attendance}</td>
+                  <td className="text-center">
                     {counts === null ? (
                       <span className="text-base-content/50">—</span>
                     ) : (
                       <SessionCount value={counts.p} tone="muted" />
                     )}
                   </td>
-                  <td>
+                  <td className="text-center">
                     {counts === null ? '—' : <SessionCount value={counts.r} tone="warning" />}
                   </td>
-                  <td>{counts === null ? '—' : <SessionCount value={counts.a} tone="error" />}</td>
+                  <td className="text-center">
+                    {counts === null ? '—' : <SessionCount value={counts.a} tone="error" />}
+                  </td>
                 </tr>
               )
             })}
