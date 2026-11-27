@@ -25,8 +25,8 @@ import { personFromRow } from '../src/postgres/rows/person'
 import type { Person, PersonCreate } from '../src/shared/types/person'
 import { assertPersonCourse } from '../src/shared/validation/person-course'
 import { assertPersonRole } from '../src/shared/validation/person-role'
-import { assertRole } from '../src/shared/validation/role'
-import type { Role } from '../src/shared/types/role'
+import { ROLE_NAMES, assertRole } from '../src/shared/validation/role'
+import type { Role, RoleName } from '../src/shared/types/role'
 import {
   validCourse,
   validOrganization,
@@ -235,6 +235,17 @@ describe('assert*', () => {
         end_at: '2026-01-01T10:00:00.0009Z',
       }),
     ).toThrow('course.end_at debe ser posterior a course.start_at')
+  })
+
+  it('ROLE_NAMES lists every RoleName', () => {
+    // Si un RoleName no está en ROLE_NAMES, MissingRoleName es ese nombre y
+    // asignar `true` no compila: typecheck y ts-jest fallan.
+    type MissingRoleName = Exclude<RoleName, (typeof ROLE_NAMES)[number]>
+    const roleNamesCoverRoleName: [MissingRoleName] extends [never]
+      ? true
+      : MissingRoleName = true
+
+    expect(roleNamesCoverRoleName).toBe(true)
   })
 
   it('rejects an invented role name', () => {
