@@ -145,6 +145,13 @@
 :where(.teacher-panel) .table :where(tr > :last-child) {
   width: auto;
 }
+:where(.teacher-panel) .table thead:has(tr + tr) :where(th) {
+  vertical-align: bottom;
+}
+:where(.teacher-panel) .table thead tr:not(:last-child) :where(th:not([rowspan])) {
+  height: auto;
+  padding-bottom: 6px;
+}
 /* Las columnas repartidas ocupan el ancho a partes iguales. */
 .table.table-spread {
   table-layout: fixed;
