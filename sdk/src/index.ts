@@ -17,6 +17,16 @@ export type {
 } from './application/create-course'
 export { createGetCourse } from './application/get-course'
 export type { GetCourseDeps, GetCourseInput } from './application/get-course'
+export { createUpdateCourse } from './application/update-course'
+export type {
+  UpdateCourseDeps,
+  UpdateCourseInput,
+} from './application/update-course'
+export { createDeleteCourse } from './application/delete-course'
+export type {
+  DeleteCourseDeps,
+  DeleteCourseInput,
+} from './application/delete-course'
 export { createListCourses } from './application/list-courses'
 export type {
   ListCoursesDeps,

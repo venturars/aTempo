@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common'
 import { Pool } from 'pg'
 import type { CourseResponseDto } from '../course/course-response.dto'
@@ -24,6 +25,36 @@ type PersonRow = {
   birth_date: string | null
   phone: string | null
 }
+
+type CourseRow = {
+  id: string
+  organization_id: string
+  name: string
+  acronym: string
+  start_at: Date | string
+  end_at: Date | string
+  contract_address: string
+}
+
+type InsertCourseInput = {
+  organization_id: string
+  name: string
+  acronym: string
+  start_at: string
+  end_at: string
+  contract_address: string
+}
+
+type UpdateCourseInput = {
+  name?: string
+  acronym?: string
+  start_at?: string
+  end_at?: string
+  contract_address?: string
+}
+
+const COURSE_COLUMNS =
+  'id, organization_id, name, acronym, start_at, end_at, contract_address'
 
 // birth_date se formatea en SQL: pg lo convierte en medianoche local y
 // toISOString() lo pasaría a UTC, restando un día en zonas al este de UTC.
@@ -77,22 +108,137 @@ export class PostgresService implements OnModuleDestroy {
 
   async listCourses(): Promise<CourseResponseDto[]> {
     if (this.usesMock()) return POSTGRES_MOCK_COURSES
-    const result = await this.poolFor(process.env.DATABASE_URL!).query<{
-      id: string
-      organization_id: string
-      name: string
-      acronym: string
-      start_at: Date | string
-      end_at: Date | string
-      contract_address: string
-    }>(
-      'SELECT id, organization_id, name, acronym, start_at, end_at, contract_address FROM course',
+    const result = await this.poolFor(process.env.DATABASE_URL!).query<CourseRow>(
+      `SELECT ${COURSE_COLUMNS} FROM course`,
     )
-    return result.rows.map((row) => ({
-      ...row,
-      start_at: formatTimestamp(row.start_at),
-      end_at: formatTimestamp(row.end_at),
-    }))
+    return result.rows.map(toCourseDto)
+  }
+
+  async findCourseById(id: string): Promise<CourseResponseDto | null> {
+    if (this.usesMock()) {
+      return POSTGRES_MOCK_COURSES.find((course) => course.id === id) ?? null
+    }
+    const result = await this.poolFor(process.env.DATABASE_URL!).query<CourseRow>(
+      `SELECT ${COURSE_COLUMNS} FROM course WHERE id = $1`,
+      [id],
+    )
+    const row = result.rows[0]
+    return row ? toCourseDto(row) : null
+  }
+
+  async insertCourse(input: InsertCourseInput): Promise<CourseResponseDto> {
+    if (this.usesMock()) {
+      const organizationExists = POSTGRES_MOCK_ORGANIZATIONS.some(
+        (organization) => organization.id === input.organization_id,
+      )
+      if (!organizationExists) {
+        throw postgresError('23503', 'organization does not exist')
+      }
+      const duplicate = POSTGRES_MOCK_COURSES.some(
+        (course) =>
+          (course.organization_id === input.organization_id &&
+            course.acronym === input.acronym) ||
+          course.contract_address.toLowerCase() ===
+            input.contract_address.toLowerCase(),
+      )
+      if (duplicate) {
+        throw postgresError('23505', 'course already exists')
+      }
+      return {
+        id: randomUUID(),
+        organization_id: input.organization_id,
+        name: input.name,
+        acronym: input.acronym,
+        start_at: input.start_at,
+        end_at: input.end_at,
+        contract_address: input.contract_address,
+      }
+    }
+
+    const result = await this.poolFor(process.env.DATABASE_URL!).query<CourseRow>(
+      `INSERT INTO course (organization_id, name, acronym, start_at, end_at, contract_address)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING ${COURSE_COLUMNS}`,
+      [
+        input.organization_id,
+        input.name,
+        input.acronym,
+        input.start_at,
+        input.end_at,
+        input.contract_address,
+      ],
+    )
+    return toCourseDto(result.rows[0]!)
+  }
+
+  async updateCourse(
+    id: string,
+    patch: UpdateCourseInput,
+  ): Promise<CourseResponseDto | null> {
+    if (this.usesMock()) {
+      const existing = POSTGRES_MOCK_COURSES.find((course) => course.id === id)
+      if (!existing) return null
+      const next: CourseResponseDto = {
+        ...existing,
+        ...(patch.name !== undefined ? { name: patch.name } : {}),
+        ...(patch.acronym !== undefined ? { acronym: patch.acronym } : {}),
+        ...(patch.start_at !== undefined ? { start_at: patch.start_at } : {}),
+        ...(patch.end_at !== undefined ? { end_at: patch.end_at } : {}),
+        ...(patch.contract_address !== undefined
+          ? { contract_address: patch.contract_address }
+          : {}),
+      }
+      const duplicate = POSTGRES_MOCK_COURSES.some(
+        (course) =>
+          course.id !== id &&
+          ((course.organization_id === next.organization_id &&
+            course.acronym === next.acronym) ||
+            course.contract_address.toLowerCase() ===
+              next.contract_address.toLowerCase()),
+      )
+      if (duplicate) {
+        throw postgresError('23505', 'course already exists')
+      }
+      return next
+    }
+
+    const assignments: string[] = []
+    const values: unknown[] = []
+    const add = (column: string, value: string | undefined) => {
+      if (value === undefined) return
+      values.push(value)
+      assignments.push(`${column} = $${values.length}`)
+    }
+    add('name', patch.name)
+    add('acronym', patch.acronym)
+    add('start_at', patch.start_at)
+    add('end_at', patch.end_at)
+    add('contract_address', patch.contract_address)
+
+    if (assignments.length === 0) {
+      return this.findCourseById(id)
+    }
+
+    values.push(id)
+    const result = await this.poolFor(process.env.DATABASE_URL!).query<CourseRow>(
+      `UPDATE course SET ${assignments.join(', ')} WHERE id = $${values.length}
+RETURNING ${COURSE_COLUMNS}`,
+      values,
+    )
+    const row = result.rows[0]
+    return row ? toCourseDto(row) : null
+  }
+
+  async deleteCourse(id: string): Promise<boolean> {
+    if (this.usesMock()) {
+      return POSTGRES_MOCK_COURSES.some((course) => course.id === id)
+    }
+
+    const result = await this.poolFor(process.env.DATABASE_URL!).query(
+      'DELETE FROM course WHERE id = $1',
+      [id],
+    )
+    return (result.rowCount ?? 0) > 0
   }
 
   async listOrganizations(): Promise<OrganizationResponseDto[]> {
@@ -177,6 +323,18 @@ RETURNING person_id, course_id`,
 
 function formatTimestamp(value: Date | string): string {
   return value instanceof Date ? value.toISOString() : value
+}
+
+function toCourseDto(row: CourseRow): CourseResponseDto {
+  return {
+    id: row.id,
+    organization_id: row.organization_id,
+    name: row.name,
+    acronym: row.acronym,
+    start_at: formatTimestamp(row.start_at),
+    end_at: formatTimestamp(row.end_at),
+    contract_address: row.contract_address,
+  }
 }
 
 function postgresError(code: string, message: string): Error & { code: string } {

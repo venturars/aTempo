@@ -11,9 +11,11 @@ import { createListCoursePeople } from '../application/list-course-people'
 import { createListCourseStudents } from '../application/list-course-students'
 import { createListCourses } from '../application/list-courses'
 import { createListPeople } from '../application/list-people'
-import { createUnenrollPersonFromCourse } from '../application/unenroll-person-from-course'
 import { createPatchOrganization } from '../application/patch-organization'
 import { createPatchPerson } from '../application/patch-person'
+import { createUnenrollPersonFromCourse } from '../application/unenroll-person-from-course'
+import { createDeleteCourse } from '../application/delete-course'
+import { createUpdateCourse } from '../application/update-course'
 import {
   createEnrollmentAssignedCourseCount,
   type AssignedCourseCount,
@@ -77,6 +79,8 @@ export function createSdk(input: CreateSdkInput = {}) {
     createCourse: createCreateCourse({ organizations, courses }),
     listCourses: createListCourses({ organizations, courses }),
     getCourse: createGetCourse({ courses }),
+    updateCourse: createUpdateCourse({ courses }),
+    deleteCourse: createDeleteCourse({ courses }),
     enrollPersonInCourse: createEnrollPersonInCourse({
       persons,
       courses,

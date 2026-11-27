@@ -14,4 +14,5 @@ export type CourseRepository = {
   ): Promise<Course | null>
   listByOrganization(organizationId: Uuid): Promise<Course[]>
   save(course: Course): Promise<void>
+  delete(courseId: Uuid): Promise<void>
 }
