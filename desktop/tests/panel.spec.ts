@@ -167,6 +167,16 @@ function headerStaysInTheCard(scroll: AttendanceScroll): void {
   expect(scroll.headerBottom).toBeLessThanOrEqual(scroll.boxBottom)
 }
 
+test('lists every sample session in Sesiones without pages', async () => {
+  await withPanel(async (window) => {
+    await window.getByRole('button', { name: 'Sesiones' }).click()
+    await expect(window.getByRole('heading', { level: 1, name: 'Sesiones' })).toBeVisible()
+    await expect(window.locator('tbody tr')).toHaveCount(7)
+    await expect(window.getByRole('navigation', { name: 'Páginas de sesiones' })).toHaveCount(0)
+    await expect(window.getByText(/de 7 sesiones/)).toHaveCount(0)
+  })
+})
+
 test('shows the cancelled session in Sesiones without opening the roll call', async () => {
   await withPanel(async (window) => {
     await window.getByRole('button', { name: 'Sesiones' }).click()

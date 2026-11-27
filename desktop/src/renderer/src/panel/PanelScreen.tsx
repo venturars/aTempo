@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import { Pagination, usePagination } from 'atempo-ui'
 import { checkedInByStudent } from '../api/attendanceRules'
 import { getDemoControls } from '../api/client'
 import { clockTime } from '../api/isoTime'
@@ -61,6 +62,8 @@ function useTeacherName(): string {
 function useSigner(): string | null {
   return useSessionStore((state) => (state.profile === 'teacher' ? state.name : null))
 }
+
+const sessionsPerPage = 20
 
 const noSignerText = 'Entra con tu cuenta de profesor para guardar el cambio.'
 const notSavedText = 'No se ha podido guardar el cambio.'
@@ -495,6 +498,7 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
   const changes = usePanelStore((state) => state.changes)
   const signer = useSigner()
   const [draft, setDraft] = useState<CorrectionDraft | null>(null)
+  const sessionsPage = usePagination(classSessions, sessionsPerPage)
 
   if (selected === null) {
     return (
@@ -510,7 +514,7 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
             </tr>
           </thead>
           <tbody>
-            {classSessions.map((session) => {
+            {sessionsPage.items.map((session) => {
               const rows = rowsWithMarks(session.rows, sessionMarks[session.id])
               const counts = session.rows === null ? null : sessionCounts(rows)
               const linked = !session.cancel && counts !== null
@@ -552,6 +556,20 @@ function ClassesView({ selected }: { selected: ClassSession | null }): React.JSX
             })}
           </tbody>
         </table>
+        {sessionsPage.pageCount > 1 ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-base-content/4 px-5 py-3">
+            <p className="text-sm tabular-nums text-base-content/60">
+              {sessionsPage.from}–{sessionsPage.to} de {sessionsPage.total} sesiones
+            </p>
+            <Pagination
+              page={sessionsPage.page}
+              pageCount={sessionsPage.pageCount}
+              onPageChange={sessionsPage.setPage}
+              size="sm"
+              labels={{ navigation: 'Páginas de sesiones' }}
+            />
+          </div>
+        ) : null}
       </section>
     )
   }

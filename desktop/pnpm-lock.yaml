@@ -20,6 +20,9 @@ importers:
       '@tanstack/react-router':
         specifier: 1.170.46
         version: 1.170.46(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      atempo-ui:
+        specifier: file:../ui
+        version: file:../ui(react@19.3.1)
       daisyui:
         specifier: 5.7.50
         version: 5.7.50
@@ -858,6 +861,11 @@ packages:
   at-least-node@1.0.0:
     resolution: {integrity: sha512-+q/t7Ekv1EDY2l6Gda6LLiX14rU9TV20Wa3ofeQmwPFZbOMo9DXrLbOjFaaclkXKWidIaopwAObQDqwWtGUjqg==}
     engines: {node: '>= 4.0.0'}
+
+  atempo-ui@file:../ui:
+    resolution: {directory: ../ui, type: directory}
+    peerDependencies:
+      react: ^19.0.0
 
   available-typed-arrays@1.0.7:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
@@ -3556,6 +3564,10 @@ snapshots:
   asynckit@0.4.0: {}
 
   at-least-node@1.0.0: {}
+
+  atempo-ui@file:../ui(react@19.3.1):
+    dependencies:
+      react: 19.3.1
 
   available-typed-arrays@1.0.7:
     dependencies:
