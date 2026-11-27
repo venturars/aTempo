@@ -62,7 +62,11 @@ export function Pagination({
         </button>
         {pageItems(current, pageCount, siblings).map((item, index) =>
           item === 'gap' ? (
-            <span key={`gap-${index}`} className={`${button} btn-disabled`} aria-hidden="true">
+            <span
+              key={`gap-${index}`}
+              className={`${button} pointer-events-none text-base-content/50`}
+              aria-hidden="true"
+            >
               …
             </span>
           ) : (
