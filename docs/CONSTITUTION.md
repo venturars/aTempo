@@ -20,7 +20,7 @@ aTempo de escritorio es la aplicación del profesor. Sirve para registrar la asi
 
 ## 3. Stack de `data-access/`
 
-`data-access/` es la SDK: carpeta en la raíz, hermana de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. Dentro hay un paquete Python. No es un servicio HTTP: sin servidor, sin Swagger y sin Docker Compose.
+`data-access/` es la SDK de SQLite: carpeta en la raíz, hermana de `desktop/`, `sdk/` y `api-sqlite/`. Dentro hay un paquete Python. No es un servicio HTTP: sin servidor, sin Swagger y sin Docker Compose.
 
 ### `data-access/python/`
 
@@ -40,7 +40,7 @@ Fija los tipos de `session` y `attendance`, las lecturas, las escrituras y las r
 - **TypeScript** escribe el servicio.
 - **pnpm** es el gestor de paquetes de `api-router/`. Las versiones van fijas, sin `^`.
 
-El API-router no implementa reglas de negocio.
+La SDK de lógica de negocio es el paquete `atempo-sdk` en `sdk/`, al mismo nivel que `desktop/` y `api-router/`. Capas: shared (`Result`, `AppError`), dominio, aplicación, infraestructura mock y composición. Expone `afterAuth({ email })`: el health de `api-postgresql` se inyecta (`fetch`); si no hay persona en el mock, el resultado es ok y no crea. Auth0 permanece en `AuthService`. Tras login, register o `me` correctos, el router llama a `afterAuth`. `GET /auth/me` sigue `{ email }` (Bearer) o `{ email, profile }` (cookie). 503 `POSTGRES_API_UNAVAILABLE` solo si `afterAuth` falla con `CONFIGURATION` o `PERSISTENCE`; `VALIDATION` → 400. El CRUD HTTP de organización y personas sale de módulos Nest `organization/` y `person/` (controller → service → SDK). Cursos y matrículas (`course/`) siguen el mismo patrón en memoria. No hay GET del Resumen. El API-router no implementa reglas de negocio; las delega en esta SDK.
 
 ## 5. Stack de `api-postgresql/`
 
@@ -75,5 +75,5 @@ El API-router no accede a RustFS; la SDK consumirá este servicio cuando exista.
 ## 8. Dónde seguir
 
 - [STYLE.md](STYLE.md): los dos temas y el enlace a la guía visual.
-- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, flujo Frontend → `api-sqlite` → `data-access/python` → SQLite, y los almacenes.
-- [TREE.md](TREE.md): árboles de `desktop/`, `data-access/python/`, `errors/python/`, `api-router/`, `api-postgresql/`, `api-rustfs/`, `api-sqlite/` y los almacenes.
+- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, flujo de `api-router/` y `sdk/`, flujo Frontend → `api-sqlite` → `data-access/python` → SQLite, las APIs de persistencia y los almacenes.
+- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/`, `sdk/`, `data-access/python/`, `errors/python/`, `api-postgresql/`, `api-rustfs/`, `api-sqlite/` y los almacenes.

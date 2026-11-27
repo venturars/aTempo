@@ -68,6 +68,12 @@ async function openTab(window: Page, label: string, title: string): Promise<void
   await expect(window.getByRole('heading', { level: 1, name: title })).toBeVisible()
 }
 
+async function openSettings(window: Page): Promise<void> {
+  await window.locator('aside details.dropdown > summary').click()
+  await window.getByRole('button', { name: 'Ajustes', exact: true }).click()
+  await expect(window.getByRole('heading', { level: 1, name: 'Ajustes' })).toBeVisible()
+}
+
 // El ratón sale de la barra lateral para que ningún botón quede en hover en la captura.
 async function expectScreen(window: Page, name: string): Promise<void> {
   const size = window.viewportSize()
@@ -181,6 +187,47 @@ test('shows the cancelled session in Sesiones without opening the roll call', as
     await expect(window.getByRole('heading', { level: 1, name: 'Sesiones' })).toBeVisible()
     await expect(window.getByRole('heading', { level: 1, name: 'Mié 4 nov 2026' })).toHaveCount(0)
     await expect(window.getByRole('columnheader', { name: 'Estado' })).toHaveCount(0)
+  })
+})
+
+test('groups the Sesiones counts under Alumnos and lines up the dates', async () => {
+  await withPanel(async (window) => {
+    await window.getByRole('button', { name: 'Sesiones' }).click()
+    await expect(window.getByRole('heading', { level: 1, name: 'Sesiones' })).toBeVisible()
+
+    const group = window.getByRole('columnheader', { name: 'Alumnos', exact: true })
+    await expect(group).toHaveAttribute('colspan', '5')
+    await expect(group).toHaveAttribute('scope', 'colgroup')
+    const groupBox = await group.boundingBox()
+    for (const name of ['Fecha', 'Asistencia', 'Presentes', 'Tarde', 'Ausentes']) {
+      const column = await window.getByRole('columnheader', { name, exact: true }).boundingBox()
+      expect(groupBox).not.toBeNull()
+      expect(column).not.toBeNull()
+      if (groupBox && column) {
+        expect(column.y).toBeGreaterThanOrEqual(groupBox.y + groupBox.height - 1)
+        expect(column.x).toBeGreaterThanOrEqual(groupBox.x - 1)
+        expect(column.x + column.width).toBeLessThanOrEqual(groupBox.x + groupBox.width + 1)
+      }
+    }
+
+    const days = window.locator('tbody tr td:first-child button > span:nth-child(2)')
+    await expect(days).toHaveCount(7)
+    const starts = await days.evaluateAll((spans) =>
+      spans.map((span) => Math.round(span.getBoundingClientRect().left))
+    )
+    expect(new Set(starts).size).toBe(1)
+    const overflowing = await days.first().evaluate((day) => {
+      const weekday = day.previousElementSibling as HTMLElement
+      const probe = weekday.cloneNode() as HTMLElement
+      weekday.parentElement?.append(probe)
+      const wide = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].filter((name) => {
+        probe.textContent = name
+        return probe.scrollWidth > probe.clientWidth
+      })
+      probe.remove()
+      return wide
+    })
+    expect(overflowing).toEqual([])
   })
 })
 
@@ -375,7 +422,7 @@ test('matches the desktop panel screens with their snapshots', async () => {
     await expect(window.getByRole('status')).toContainText('Manuel Diaz')
     await expectScreen(window, 'panel-estadisticas.png')
 
-    await openTab(window, 'Ajustes', 'Ajustes')
+    await openSettings(window)
     await expectScreen(window, 'panel-ajustes.png')
   })
 })
@@ -440,12 +487,14 @@ test('goes back to Estadísticas from a student file', async () => {
     for (const [label, title] of [
       ['Dashboard', 'Hoy'],
       ['Sesiones', 'Sesiones'],
-      ['Ajustes', 'Ajustes'],
       ['Estadísticas', 'Estadísticas']
     ]) {
       await openTab(window, label, title)
       await expect(window.getByRole('button', { name: /^Volver a/ }), title).toHaveCount(0)
     }
+    await openSettings(window)
+    await expect(window.getByRole('button', { name: /^Volver a/ })).toHaveCount(0)
+    await openTab(window, 'Estadísticas', 'Estadísticas')
     await window
       .getByRole('region', { name: /^Asistencia por fecha/ })
       .getByRole('button', { name: 'Diego Torres', exact: true })
@@ -568,7 +617,7 @@ for (const theme of ['atempo-oscuro', 'atempo-claro']) {
       })
       await menu.getByRole('button', { name: 'Ausente', exact: true }).click()
       const reason = window.getByRole('dialog', { name: /^Cambiar / })
-      await reason.getByLabel('Motivo', { exact: true }).fill('Corrección en clase')
+      await reason.getByLabel('Motivo').fill('Corrección en clase')
       await reason.getByRole('button', { name: 'Guardar', exact: true }).click()
       await expect(reason).toHaveCount(0)
       const absent = window
@@ -602,7 +651,7 @@ for (const theme of ['atempo-oscuro', 'atempo-claro']) {
         'letter-spacing',
         /^(normal|0px)$/
       )
-      await openTab(window, 'Ajustes', 'Ajustes')
+      await openSettings(window)
       await expectInheritedType(headings(), inherited.tracking, inherited.family)
       await expect(window.locator('html')).toHaveAttribute('data-theme', theme)
       await openTab(window, 'Dashboard', 'Hoy')

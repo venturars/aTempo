@@ -5,6 +5,6 @@ import { WebSessionService } from './web-session.service'
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, WebSessionService]
+  providers: [AuthService, WebSessionService],
 })
 export class AuthModule {}

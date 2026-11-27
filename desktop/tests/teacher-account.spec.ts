@@ -321,6 +321,38 @@ test('the account menu opens from the name and closes on a second click, outside
   }
 })
 
+test('opens Ajustes from the account menu, not from the sections', async () => {
+  const app = await launchHiddenElectron()
+  try {
+    const window = await app.firstWindow()
+    await window.setViewportSize({ width: 1280, height: 900 })
+    await enter(window, 'profesor@atempo.test', 'Profesor123!')
+    const sections = window.getByRole('navigation', { name: 'Secciones' })
+    await expect(sections.getByRole('button')).toHaveText(['Dashboard', 'Sesiones', 'Estadísticas'])
+
+    await sections.getByRole('button', { name: 'Sesiones', exact: true }).click()
+    await accountName(window).click()
+    const menu = window.locator('aside details.dropdown')
+    await expect(menu.getByRole('listitem').first()).toHaveText('Ajustes')
+    await menu.getByRole('button', { name: 'Ajustes', exact: true }).click()
+
+    await expect(window.getByRole('heading', { level: 1, name: 'Ajustes' })).toBeVisible()
+    await expect(menu).not.toHaveAttribute('open')
+    await expect(sections.locator('[aria-current="page"]')).toHaveCount(0)
+    await expect(window.getByRole('button', { name: /^Volver a/ })).toHaveCount(0)
+
+    await sections.getByRole('button', { name: 'Dashboard', exact: true }).click()
+    await window.getByRole('button', { name: 'Meghan Martin', exact: true }).click()
+    await expect(window.getByRole('heading', { level: 1, name: 'Meghan Martin' })).toBeVisible()
+    await accountName(window).click()
+    await menu.getByRole('button', { name: 'Ajustes', exact: true }).click()
+    await expect(window.getByRole('heading', { level: 1, name: 'Ajustes' })).toBeVisible()
+    await expect(window.getByRole('heading', { level: 1, name: 'Meghan Martin' })).toHaveCount(0)
+  } finally {
+    await app.close()
+  }
+})
+
 test('teacher can change password, sign out and sign back in with the new password', async () => {
   const app = await launchHiddenElectron()
   try {

@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useRef, useState } from 'react'
 import { markLabel } from './marks'
 import type { Attendance } from './roster'
 
-// Un cambio de estado pendiente de motivo, con la lista ya cerrada.
+// Un cambio de estado con la lista ya cerrada. El motivo es opcional.
 export type CorrectionDraft = {
   person: string
   when: string
@@ -43,10 +43,6 @@ function CorrectionForm({
 
   function save(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault()
-    if (reason.trim() === '') {
-      setError('Escribe el motivo del cambio.')
-      return
-    }
     if (!draft.save(reason)) {
       setError(draft.failText)
       return
@@ -66,7 +62,9 @@ function CorrectionForm({
           </p>
         </div>
         <div className="flex flex-col gap-2">
-          <label htmlFor="correction-reason">Motivo</label>
+          <label htmlFor="correction-reason">
+            Motivo <span className="field-optional">· recomendado</span>
+          </label>
           <textarea
             id="correction-reason"
             className={error !== '' ? 'textarea textarea-error w-full' : 'textarea w-full'}

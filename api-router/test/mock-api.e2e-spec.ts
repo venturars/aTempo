@@ -134,15 +134,47 @@ describe('Mock API v1 (e2e)', () => {
     expect(marks['student-diego-molero']).toBe('absent')
   })
 
-  it('PUT attendances requires a reason', async () => {
-    const response = await request(app.getHttpServer())
+  it('PUT attendances saves a correction without a reason', async () => {
+    const server = app.getHttpServer()
+    await request(server)
+      .post(`/sessions/${sessionId}/open`)
+      .set(auth)
+      .expect(200)
+
+    const withoutReason = await request(server)
       .put(`/sessions/${sessionId}/attendances/${studentId}`)
       .set(auth)
       .send({ status: 'present' })
+      .expect(200)
+    expect(withoutReason.body).toMatchObject({
+      status: 'present',
+      reason: null,
+    })
+
+    const blankReason = await request(server)
+      .put(`/sessions/${sessionId}/attendances/${studentId}`)
+      .set(auth)
+      .send({ status: 'absent', reason: '  ' })
+      .expect(200)
+    expect(blankReason.body).toMatchObject({ status: 'absent', reason: null })
+
+    const nullReason = await request(server)
+      .put(`/sessions/${sessionId}/attendances/${studentId}`)
+      .set(auth)
+      .send({ status: 'late', reason: null })
+      .expect(200)
+    expect(nullReason.body).toMatchObject({ status: 'late', reason: null })
+  })
+
+  it('PUT attendances rejects a reason that is not text', async () => {
+    const response = await request(app.getHttpServer())
+      .put(`/sessions/${sessionId}/attendances/${studentId}`)
+      .set(auth)
+      .send({ status: 'present', reason: 42 })
       .expect(400)
     expect(response.body.code).toBe('VALIDATION_FAILED')
     expect(response.body.details).toEqual([
-      { field: 'reason', message: 'El motivo es obligatorio.' },
+      { field: 'reason', message: 'El motivo tiene que ser texto.' },
     ])
   })
 
