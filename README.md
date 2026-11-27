@@ -106,11 +106,12 @@ Abre <http://localhost:5191/> para el alumno o <http://localhost:5191/admin> par
 | --- | --- |
 | `desktop/` | Prototipo para profesor y alumno con Electron y React; las demos usan datos en memoria. La pantalla de arranque es el login. Cada pantalla tiene su dirección en el hash, por ejemplo `#/student/dashboard` para el dashboard del alumno. |
 | `web/` | Web del alumno y demo de administración con Vite y React, en el puerto 5191. |
-| `domain/` | SDK: `python/` (Python, SQLite de fichaje). No es un servicio HTTP. |
+| `data-access/` | SDK: `python/` (Python, SQLite de fichaje). No es un servicio HTTP. |
+| `errors/` | `python/` es el paquete local `atempo-errors`: clases de error y fábrica `create_error_factory`. Lo enlaza `data-access/python/` con uv (`[tool.uv.sources]`). No se publica en PyPI. |
 | `api-router/` | API REST con NestJS entre los frontends y la SDK de lógica de negocio (pendiente). |
 | `api-postgresql/` | API REST con NestJS entre la SDK y PostgreSQL. |
 | `api-rustfs/` | API REST con Express entre la SDK y RustFS (persistencia de objetos). |
-| `api-sqlite/` | Servicio Flask con Pydantic que transforma HTTP y delegará en `domain/python/` el acceso a SQLite. |
+| `api-sqlite/` | Servicio Flask con Pydantic que transforma HTTP y delegará en `data-access/python/` el acceso a SQLite. |
 | `postgres/` | Core PostgreSQL y Drizzle Studio para ver sus tablas. No se abre desde el escritorio ni desde el API-router. |
 | `sqlite/` | SQLite operativo de fichaje y Datasette. Distinto del `atempo.sqlite` del escritorio. |
 | `rustfs/` | Justificantes (bucket `justifications`) y consola de RustFS. |
@@ -120,7 +121,7 @@ Abre <http://localhost:5191/> para el alumno o <http://localhost:5191/admin> par
 | `docs/` | Cómo se construye: constitución, arquitectura, estilo, árbol y modelo de cada almacén. |
 | `permanent-data.md` | Enlaces entre las cuatro bases. No es un quinto almacén. |
 
-Cada servicio tiene sus dependencias propias y no hay workspace en la raíz. Los paquetes JavaScript usan pnpm 10.33.0 y versiones fijas. `api-sqlite/` y `domain/python/` usan Python y dependencias fijadas en su `pyproject.toml`. `postgres/`, `sqlite/`, `blockend/` y `rustfs/` se instalan y arrancan en el ordenador. Compose de la raíz orquesta los mismos procesos, cada uno con su perfil (`db`, `sqlite`, `blockend` y `rustfs`); no es requisito. Ninguno entra en el compose de instalación. El modelo de cada una está en `docs/` (nombres en MAYÚSCULAS) y el arranque nativo en su `README.md`.
+Cada servicio tiene sus dependencias propias y no hay workspace en la raíz. Los paquetes JavaScript usan pnpm 10.33.0 y versiones fijas. `api-sqlite/`, `data-access/python/` y `errors/python/` usan Python y dependencias fijadas en su `pyproject.toml`; `data-access/python/` y `errors/python/` se instalan con uv 0.12.15 y su `uv.lock`. `postgres/`, `sqlite/`, `blockend/` y `rustfs/` se instalan y arrancan en el ordenador. Compose de la raíz orquesta los mismos procesos, cada uno con su perfil (`db`, `sqlite`, `blockend` y `rustfs`); no es requisito. Ninguno entra en el compose de instalación. El modelo de cada una está en `docs/` (nombres en MAYÚSCULAS) y el arranque nativo en su `README.md`.
 
 | Almacén | Visor | URL |
 | --- | --- | --- |
@@ -433,7 +434,7 @@ La API queda en <http://localhost:3001> y PostgreSQL en <http://localhost:5433> 
 
 ## API-sqlite
 
-`api-sqlite/` importará `domain/python/` para leer y escribir en SQLite. Todavía no hay integración entre estos paquetes. Su base SQLite es distinta de la base local de Electron.
+`api-sqlite/` importará `data-access/python/` para leer y escribir en SQLite. Todavía no hay integración entre estos paquetes. Su base SQLite es distinta de la base local de Electron.
 
 Para usar el servicio en Docker, primero ejecuta `docker compose run --rm setup` y después:
 

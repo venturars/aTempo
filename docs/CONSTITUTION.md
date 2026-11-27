@@ -18,17 +18,20 @@ aTempo de escritorio es la aplicación del profesor. Sirve para registrar la asi
 - **SQLite** es la base local. Se abre con `node:sqlite` y la clase `DatabaseSync` en el proceso principal.
 - **pnpm** es el gestor de paquetes de `desktop/`. Las versiones van fijas, sin `^`.
 
-## 3. Stack de `domain/`
+## 3. Stack de `data-access/`
 
-`domain/` es la SDK: carpeta en la raíz, hermana de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. Dentro hay un paquete Python. No es un servicio HTTP: sin servidor, sin Swagger y sin Docker Compose.
+`data-access/` es la SDK: carpeta en la raíz, hermana de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. Dentro hay un paquete Python. No es un servicio HTTP: sin servidor, sin Swagger y sin Docker Compose.
 
-### `domain/python/`
+### `data-access/python/`
 
 - **Python** escribe el paquete.
 - **SQLAlchemy Core 2.0.44** abre SQLite (`SQLITE_DATABASE_URL`).
-- Las dependencias van fijadas en `domain/python/pyproject.toml`.
+- **Pydantic 2.14.4** define los contratos de `session` y `attendance` en `shared/types/`: modelos con `strict=True` y `frozen=True`. Cada campo valida con un `assert_*` de `shared/validation/` y lanza el error del catálogo.
+- **atempo-errors** (`errors/python/`) da las clases de error y `create_error_factory`. Se enlaza como editable con `[tool.uv.sources]` y no se publica en PyPI.
+- **uv 0.12.15** instala el paquete y fija las versiones en `uv.lock` (`uv sync --locked`).
+- Las dependencias van fijadas en `data-access/python/pyproject.toml`.
 
-Fija los tipos de `session` y `attendance`, las lecturas, las escrituras y las reglas que copia de SQLite: `end_at > start_at`, `status` `open`/`closing`/`closed`, `closed_at` solo en `closed`, estados de asistencia y `check_in_method`. `start_at`, `end_at`, `closed_at` y `checked_in_at` entran con `Z` o un desfase y se guardan en ISO UTC (`2026-09-01T08:00:00.000Z`). Los UUID se guardan en minúsculas. `present` y `present_late` llevan `check_in_method` y `checked_in_at` dentro de la sesión; `absent` y `notified_absence` van sin fichaje. No comprueba la matrícula: `course_id` y `student_id` son referencias lógicas al core, sin FK. Un delete de sesión quita en la misma transacción las filas de `attendance`. Si un objeto no cumple esos campos o reglas, o si la sesión no existe o la asistencia ya está, lanza y no escribe. `api-sqlite/` importará este paquete: Flask transforma HTTP, delega en `domain/python/` y no escribe SQL.
+Fija los tipos de `session` y `attendance`, las lecturas, las escrituras y las reglas que copia de SQLite: `end_at > start_at`, `status` `open`/`closing`/`closed`, `closed_at` solo en `closed`, estados de asistencia y `check_in_method`. `start_at`, `end_at`, `closed_at` y `checked_in_at` entran con `Z` o un desfase y se guardan en ISO UTC (`2026-09-01T08:00:00.000Z`). Los UUID se guardan en minúsculas. `present` y `present_late` llevan `check_in_method` y `checked_in_at` dentro de la sesión; `absent` y `notified_absence` van sin fichaje. No comprueba la matrícula: `course_id` y `student_id` son referencias lógicas al core, sin FK. Un delete de sesión quita en la misma transacción las filas de `attendance`. Si un objeto no cumple esos campos o reglas, o si la sesión no existe o la asistencia ya está, lanza y no escribe. `api-sqlite/` importará este paquete: Flask transforma HTTP, delega en `data-access/python/` y no escribe SQL.
 
 ## 4. Stack de `api-router/`
 
@@ -67,10 +70,10 @@ El API-router no accede a RustFS; la SDK consumirá este servicio cuando exista.
 - **Flasgger** sirve Swagger UI y OpenAPI para comprobar el servicio.
 - **Python** ejecuta el paquete, que tiene sus dependencias fijadas en `api-sqlite/pyproject.toml`.
 
-`api-sqlite/` delegará en `domain/python/` las lecturas y escrituras. La SQLite de este servicio es independiente de `desktop/atempo.sqlite`.
+`api-sqlite/` delegará en `data-access/python/` las lecturas y escrituras. La SQLite de este servicio es independiente de `desktop/atempo.sqlite`.
 
 ## 8. Dónde seguir
 
 - [STYLE.md](STYLE.md): los dos temas y el enlace a la guía visual.
-- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, flujo Frontend → `api-sqlite` → `domain/python` → SQLite, y los almacenes.
-- [TREE.md](TREE.md): árboles de `desktop/`, `domain/python/`, `api-router/`, `api-postgresql/`, `api-rustfs/`, `api-sqlite/` y los almacenes.
+- [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, flujo Frontend → `api-sqlite` → `data-access/python` → SQLite, y los almacenes.
+- [TREE.md](TREE.md): árboles de `desktop/`, `data-access/python/`, `errors/python/`, `api-router/`, `api-postgresql/`, `api-rustfs/`, `api-sqlite/` y los almacenes.

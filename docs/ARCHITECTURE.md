@@ -2,15 +2,15 @@
 
 ## API, SDK y persistencia
 
-Carpeta de la SDK: `domain/`, con `python/` (Python). HTTP de PostgreSQL: `api-postgresql/`. Persistencia SQLite: `api-sqlite/`. Objetos S3-compatible: `api-rustfs/`. `api-router/` sigue en el repositorio.
+Carpeta de la SDK: `data-access/`, con `python/` (Python). Clases de error y fábrica `create_error_factory`: `errors/python/` (`atempo-errors`), que `data-access/python/` enlaza como editable con uv y que no conoce aTempo. HTTP de PostgreSQL: `api-postgresql/`. Persistencia SQLite: `api-sqlite/`. Objetos S3-compatible: `api-rustfs/`. `api-router/` sigue en el repositorio.
 
-Los frontends son Electron en `desktop/` y el portal web en `web/`. La web envía sus peticiones al API-router NestJS mediante el proxy de desarrollo Vite `/api`; Electron usa su integración Auth0 desde el proceso principal. El flujo de producto con SQLite es Frontend → `api-sqlite` → `domain/python` → SQLite. `api-sqlite` transforma HTTP. `domain/python` valida los tipos y las reglas de fichaje y abre SQLite. Flask no escribe SQL.
+Los frontends son Electron en `desktop/` y el portal web en `web/`. La web envía sus peticiones al API-router NestJS mediante el proxy de desarrollo Vite `/api`; Electron usa su integración Auth0 desde el proceso principal. El flujo de producto con SQLite es Frontend → `api-sqlite` → `data-access/python` → SQLite. `api-sqlite` transforma HTTP. `data-access/python` valida los tipos y las reglas de fichaje y abre SQLite. Flask no escribe SQL.
 
-`domain/` es la carpeta de la SDK, hermana de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. `domain/python/` cubre `session` y `attendance` en SQLite: instantes a ISO UTC, UUID en minúsculas, fichaje coherente con el estado. `api-sqlite/` lo importará.
+`data-access/` es la carpeta de la SDK, hermana de `desktop/` y `api-postgresql/`. No hay carpeta `sdk/`. `data-access/python/` cubre `session` y `attendance` en SQLite: instantes a ISO UTC, UUID en minúsculas, fichaje coherente con el estado. `api-sqlite/` lo importará.
 
 `api-router/` expone `GET /health`, `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout` y `GET /auth/me`. Electron y web usan esos mismos paths. El login y el alta intercambian credenciales con Auth0 mediante Resource Owner Password Grant (`offline_access`). `/auth/refresh` renueva el access token; `/auth/logout` revoca el refresh token; `/auth/me` valida el Bearer mediante JWKS, emisor, audiencia y caducidad, o la cookie de access en la web. Con origen `ATEMPO_WEB_ORIGIN` (por defecto `http://localhost:5191`) el login fija cookies HttpOnly `atempo_access` y `atempo_refresh` (SameSite=Lax, Path=/, sin Max-Age, Secure en HTTPS) y no devuelve tokens en JSON. Las funciones de cookie viven en `api-router/src/shared/`. El navegador llama a los mismos endpoints con `credentials: 'include'` y usa `/auth/refresh` cuando `/auth/me` responde 401. La web llama al router a través del proxy Vite `/api`; Electron gestiona Auth0 desde su proceso principal. El secreto de cliente solo vive en el router. Con `API_MOCK=true`, el router sirve además, con datos en memoria, los ocho endpoints del contrato API v1 que usa la pestaña Hoy (`src/mock-api/`); requieren un encabezado `Authorization: Bearer` no vacío. Compose lo arranca así y lo publica solo en `127.0.0.1`. La pestaña Hoy llama al router desde main solo con `--api-transport=http`; sin ese flag usa el transporte mock, descrito en «Renderer». `api-postgresql/` expone `GET /health`, los listados `GET /person`, `GET /course`, `GET /organization`, `GET /person-role` y `GET /person-course`, `GET /person/:id` (una fila de `person` por UUID: 200, 404 o 503), `POST /person-course` (una matrícula: 201, 404, 409 o 503) y `DELETE /person-course/:personId/:courseId` (una matrícula: 204, 404 o 503); con `DATABASE_URL` consulta PostgreSQL y sin ella usa un mock de prueba. `api-rustfs/` solo expone `GET /health`, que confirma que el servicio HTTP responde; su conexión S3 se comprueba aparte. `api-sqlite/` solo expone `GET /health`, que ejecuta `SELECT 1`. La activación de invitaciones no llama a estas APIs. Compose publica las cuatro APIs en 3000–3003. Las APIs se conectan por la red interna a PostgreSQL (`postgres:5432`) y RustFS (`rustfs:9000`); los mismos servicios también sirven al almacén operativo. PostgreSQL se publica en el host por `5433` y RustFS por `9000`/`9001`. Los volúmenes compartidos `postgres-data` y `rustfs-data`, junto con `api-sqlite-data`, conservan sus datos.
 
-Hoy `domain/python/` existe y se prueba con SQLite en memoria. `api-sqlite/` aún no lo importa. `domain/` no está en Docker Compose.
+Hoy `data-access/python/` existe y se prueba con SQLite en memoria. `api-sqlite/` aún no lo importa. `data-access/` no está en Docker Compose.
 
 La documentación interactiva (OpenAPI y Swagger UI) de cada servicio HTTP vive en **`/docs`**. Compose publica `api-router/` en el puerto **3000**, `api-postgresql/` en el **3001**, `api-sqlite/` en el **3002** y `api-rustfs/` en el **3003**.
 
@@ -36,13 +36,13 @@ flowchart LR
   objectApi --> rustfs
 ```
 
-El flujo de producto con SQLite es Frontend → `api-sqlite` → `domain/python` → SQLite. Las flechas discontinuas son ese flujo previsto: hoy los frontends no llaman a `api-sqlite/` y ese servicio no importa `domain/python/`. El login de Electron y de la web y las peticiones de la pestaña Hoy van al `api-router/`. Redis y el resto de microservicios del backend quedan fuera del escritorio.
+El flujo de producto con SQLite es Frontend → `api-sqlite` → `data-access/python` → SQLite. Las flechas discontinuas son ese flujo previsto: hoy los frontends no llaman a `api-sqlite/` y ese servicio no importa `data-access/python/`. El login de Electron y de la web y las peticiones de la pestaña Hoy van al `api-router/`. Redis y el resto de microservicios del backend quedan fuera del escritorio.
 
 ## api-sqlite
 
 Carpeta: `api-sqlite/`.
 
-Servicio Flask con modelos Pydantic. El flujo de producto es Frontend → `api-sqlite` → `domain/python` → SQLite. Este servicio aún no importa el paquete. Solo expone `GET /health`, que ejecuta `SELECT 1`; responde `200` si SQLite funciona y `503` si falla la conexión. Un cuerpo JSON inválido se rechaza antes de consultar la base. Swagger UI está en `/docs` y OpenAPI en `/docs-json`. Compose sirve en el puerto **3002** y ejecuta Flask escuchando en `0.0.0.0`. `SQLITE_DATABASE_URL` apunta a `sqlite:////var/lib/atempo/api-sqlite.sqlite`; el archivo persiste en el volumen `api-sqlite-data`. El entorno virtual Linux está en `api-sqlite-venv`; ambos son independientes de `.venv` y de la base de Electron.
+Servicio Flask con modelos Pydantic. El flujo de producto es Frontend → `api-sqlite` → `data-access/python` → SQLite. Este servicio aún no importa el paquete. Solo expone `GET /health`, que ejecuta `SELECT 1`; responde `200` si SQLite funciona y `503` si falla la conexión. Un cuerpo JSON inválido se rechaza antes de consultar la base. Swagger UI está en `/docs` y OpenAPI en `/docs-json`. Compose sirve en el puerto **3002** y ejecuta Flask escuchando en `0.0.0.0`. `SQLITE_DATABASE_URL` apunta a `sqlite:////var/lib/atempo/api-sqlite.sqlite`; el archivo persiste en el volumen `api-sqlite-data`. El entorno virtual Linux está en `api-sqlite-venv`; ambos son independientes de `.venv` y de la base de Electron.
 
 ## api-rustfs
 
@@ -76,7 +76,7 @@ Son almacenes y cadena, no una capa del escritorio ni del API-router. Cada una t
 
 El modelo y los enlaces están en `docs/POSTGRES.md`, `docs/SQLITE.md`, `docs/RUSTFS.md`, `docs/BLOCKEND.md` y `permanent-data.md`.
 
-`api-postgresql/` comprueba la conexión con `GET /health`, ofrece cinco listados (incluidos `GET /organization` y `GET /person-course`), `GET /person/:id`, `POST /person-course` y `DELETE /person-course/:personId/:courseId`. `api-rustfs/` no abre RustFS en el health. El renderer y el API-router no abren estas bases. `domain/python/` abre SQLite; `api-sqlite/` aún no lo importa.
+`api-postgresql/` comprueba la conexión con `GET /health`, ofrece cinco listados (incluidos `GET /organization` y `GET /person-course`), `GET /person/:id`, `POST /person-course` y `DELETE /person-course/:personId/:courseId`. `api-rustfs/` no abre RustFS en el health. El renderer y el API-router no abren estas bases. `data-access/python/` abre SQLite; `api-sqlite/` aún no lo importa.
 
 ## aTempo de escritorio
 

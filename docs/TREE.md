@@ -96,32 +96,36 @@ docs/BLOCKEND.md
 permanent-data.md
 ```
 
-# Árbol de `domain/`
+# Árbol de `data-access/`
 
 ```text
-domain/
+data-access/
   README.md
   python/
-    pyproject.toml
+    pyproject.toml          # data-access-python; atempo-errors editable desde ../../errors/python
+    uv.lock
     README.md
-    python_domain/
-      __init__.py
-      errors/
-        __init__.py
-        catalog.py          # reasons, labels, mensajes
-        fail.py             # fail(label, reason) y domain_error()
-        domain_error.py     # DomainError, id y subclases
-        map_error.py        # UNIQUE/FK a errores de dominio
-      types/
-        assert_values.py
-        session.py
-        attendance.py
+    data_access_python/
+      __init__.py           # API pública
+      shared/
+        errors.py           # catálogo (reasons, labels, mensajes), domain_error() y fail()
+        types/              # contratos: modelos Pydantic estrictos e inmutables y alias Literal
+          contract.py       # Contract: base común (strict, frozen, campos ausentes a None)
+          session.py        # SessionCreate, Session, SessionStatus
+          attendance.py     # Attendance, AttendanceStatus, PresentStatus, AbsentStatus
+        validation/
+          assert_values.py  # assert_* genéricos: string, uuid, instante, entero
+          fields.py         # tipos de campo (Uuid, Instant…) que validan con assert_*
+          model.py          # validate_model(Modelo, valor): valida y nunca deja salir un error de Pydantic
+          attendance.py     # assert_checked_in_at_in_session: fichaje dentro de la sesión
       sqlite/
         columns.py
         pool.py             # SQLITE_DATABASE_URL, BEGIN y BEGIN IMMEDIATE
         check.py            # check(): SELECT 1
+        map_error.py        # UNIQUE/FK a errores de dominio
         queries/            # SQL por entidad
         executors/          # Ejecutan las queries
+        rows/               # session_from_row, attendance_from_row: forma de la fila leída
       session/
       attendance/
     tests/
@@ -133,6 +137,23 @@ domain/
       test_filters.py
       test_writes.py
       test_rules.py
+      test_structure.py     # shared/types solo con modelos y alias; API pública
+```
+
+# Árbol de `errors/`
+
+```text
+errors/
+  python/
+    pyproject.toml          # atempo-errors, sin dependencias
+    uv.lock
+    README.md
+    atempo_errors/
+      __init__.py
+      errors.py             # DomainError, subclases por kind y label_parts()
+      fail.py               # create_error_factory(reasons, messages): domain_error() y fail()
+    tests/
+      test_errors.py
 ```
 
 # Árbol de `api-sqlite/`
