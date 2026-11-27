@@ -120,6 +120,7 @@ Abre <http://localhost:5191/> para el alumno o <http://localhost:5191/admin> par
 | `api-postgresql/` | API REST con NestJS entre la SDK y PostgreSQL. |
 | `api-rustfs/` | API REST con Express entre la SDK y RustFS (persistencia de objetos). Aún no importa `data-access/rustfs`. |
 | `data-access/rustfs/` | SDK TypeScript (`atempo-domain-rustfs`) de justificantes con `@aws-sdk/client-s3` 3.943.0. No es un servicio HTTP. |
+| `errors/` | `node/` es el paquete local `@atempo/errors`: clases de error y fábrica `createErrorFactory`. Lo enlaza `data-access/rustfs/` con `link:../../errors/node`. No se publica en npm. |
 | `api-sqlite/` | Servicio Flask con Pydantic y SQLAlchemy Core entre la SDK y SQLite. Aún no hay integración. |
 | `postgres/` | Core PostgreSQL y Drizzle Studio para ver sus tablas. No se abre desde el escritorio ni desde el API-router. |
 | `sqlite/` | SQLite operativo de fichaje y Datasette. Distinto del `atempo.sqlite` del escritorio. |

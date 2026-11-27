@@ -51,6 +51,7 @@ El flujo de producto es Frontend → `api-rustfs` → `data-access/rustfs` → R
 
 - **Paquete librería** `atempo-domain-rustfs` en `data-access/rustfs/`. No es un servicio HTTP.
 - **TypeScript** escribe el SDK.
+- **@atempo/errors** (`errors/node/`) da las clases de error y `createErrorFactory`. Se enlaza con `link:../../errors/node` y no se publica en npm.
 - **`@aws-sdk/client-s3` 3.943.0** habla con RustFS (`forcePathStyle: true`, `region: "us-east-1"`). El paquete npm `minio` no entra en este SDK.
 - **pnpm** 10.33.0. Las versiones van fijas, sin `^`.
 
@@ -70,5 +71,5 @@ El flujo de producto es Frontend → `api-rustfs` → `data-access/rustfs` → R
 
 - [STYLE.md](STYLE.md): los dos temas y el enlace a la guía visual.
 - [ARCHITECTURE.md](ARCHITECTURE.md): capas del escritorio, flujo de `api-router/` y `sdk/`, las APIs de persistencia, `data-access/rustfs/` y los almacenes.
-- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/`, `sdk/`, `api-postgresql/`, `api-rustfs/`, `data-access/rustfs/`, `api-sqlite/` y los almacenes.
+- [TREE.md](TREE.md): árboles de `desktop/`, `api-router/`, `sdk/`, `api-postgresql/`, `api-rustfs/`, `data-access/rustfs/`, `errors/node/`, `api-sqlite/` y los almacenes.
 - [data-access/README.md](../data-access/README.md): paquetes librería de acceso a datos.

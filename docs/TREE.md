@@ -112,11 +112,8 @@ data-access/
     README.md
     src/
       index.ts
-      errors/
-        index.ts
-        catalog.ts          # reasons, labels, mensajes
-        fail.ts             # fail(label, reason) y domainError()
-        domain-error.ts     # DomainError, id y subclases
+      shared/
+        errors.ts           # catálogo (reasons, labels, mensajes), buildError() y fail()
       types/
         assert.ts
         justification.ts
@@ -193,6 +190,27 @@ sdk/
       in-memory-course-repository.ts
     composition/
       create-sdk.ts
+```
+
+# Árbol de `errors/`
+
+```text
+errors/
+  node/
+    package.json            # @atempo/errors, main y types en dist/
+    pnpm-lock.yaml
+    .npmrc
+    tsconfig.json
+    tsconfig.build.json
+    eslint.config.mjs
+    README.md
+    src/
+      index.ts
+      errors.ts             # DomainError, subclases por kind y labelParts()
+      fail.ts               # createErrorFactory(catalog): domainError() y fail()
+    test/
+      jest.json
+      errors.spec.ts
 ```
 
 # Árbol de `api-sqlite/`

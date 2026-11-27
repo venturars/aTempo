@@ -10,4 +10,6 @@ El flujo de producto es Frontend → `api-rustfs` → `data-access/rustfs` → R
 
 La API pública es RORO: `check()`, `putJustification()`, `getJustification()` y `justificationExists()`. El `S3Client` no se exporta. Los tests sustituyen el driver S3: RustFS no tiene que estar en marcha.
 
+Las clases de error y `createErrorFactory` vienen de `@atempo/errors` (`errors/node/`), que el paquete enlaza con `"@atempo/errors": "link:../../errors/node"`. Su `pnpm install` compila `errors/node/` con el script `prepare`. El catálogo de errores del paquete vive en `src/shared/errors.ts`.
+
 Instalación y comprobaciones: [data-access/rustfs/README.md](rustfs/README.md).
