@@ -54,7 +54,7 @@ RUN git config --system --add safe.directory '*'
 # Los node_modules de Linux viven en volúmenes, nunca en la carpeta del proyecto.
 # Compose crea esos volúmenes vacíos y de root: el entrypoint los deja de node en cada arranque.
 COPY docker/entrypoint.sh /usr/local/bin/atempo-entrypoint
-RUN mkdir -p /work/desktop/node_modules /work/docs/storybook/node_modules /work/sdk/node_modules /work/api-router/node_modules /work/blockend/node_modules /work/postgres/node_modules \
+RUN mkdir -p /work/desktop/node_modules /work/docs/storybook/node_modules /work/sdk/node_modules /work/ui/node_modules /work/api-router/node_modules /work/blockend/node_modules /work/postgres/node_modules \
     /work/api-postgresql/node_modules /work/api-rustfs/node_modules /work/api-sqlite/.venv \
     /var/lib/atempo /pnpm-store \
   && chown -R node:node /work /var/lib/atempo /pnpm-store \
