@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      atempo-ui:
+        specifier: file:../../ui
+        version: file:../../ui(react@19.3.1)
       react:
         specifier: 19.3.1
         version: 19.3.1
@@ -955,6 +958,11 @@ packages:
   ast-types@0.16.3:
     resolution: {integrity: sha512-FvWoWYfSCM6kRxCSH+MGLHIKKGRL6A6AW7Zek2O32REPQRdg131428uRTKMBYAeRd3XXAaHDS60Wpri7CdKDrA==}
     engines: {node: '>=4'}
+
+  atempo-ui@file:../../ui:
+    resolution: {directory: ../../ui, type: directory}
+    peerDependencies:
+      react: ^19.0.0
 
   balanced-match@4.0.4:
     resolution: {integrity: sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==}
@@ -2246,6 +2254,10 @@ snapshots:
   ast-types@0.16.3:
     dependencies:
       tslib: 2.9.1
+
+  atempo-ui@file:../../ui(react@19.3.1):
+    dependencies:
+      react: 19.3.1
 
   balanced-match@4.0.4: {}
 

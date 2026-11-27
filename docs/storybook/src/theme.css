@@ -3,6 +3,7 @@
   themes: false;
 }
 @import "./system.css";
+@source "../../../ui/src";
 
 /* Fuentes en el repo, bajo SIL OFL. Ver fonts/OFL.txt. */
 @font-face { font-family: "Geist"; font-style: normal; font-weight: 400; font-display: swap; src: url("./fonts/geist-400.woff2") format("woff2"); }
