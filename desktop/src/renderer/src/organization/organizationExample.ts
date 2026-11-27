@@ -1,7 +1,6 @@
 import type { TextKey } from '../lang/messages'
 import type { TextValues } from '../lang/useText'
 
-// El porcentaje es un número («7.7»); la pantalla lo escribe en el idioma elegido.
 export type CourseMetric = {
   count: number | null
   base: number | null
@@ -29,12 +28,10 @@ export type ReviewStudent = {
 
 export type PendingKind = 'justifications' | 'corrections' | 'openSessions'
 
-// Un aviso de calidad: la clave de su texto y los valores que lo completan.
 export type QualityNote = { key: TextKey; values?: TextValues }
 
 export type OrganizationDashboard = {
   organization: string
-  // Días «AAAA-MM-DD» del primero y el último del periodo.
   period: { from: string; to: string }
   profile: { name: string; initials: string; role: TextKey }
   reviewStudentCount: number

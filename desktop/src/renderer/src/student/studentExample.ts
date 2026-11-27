@@ -1,7 +1,6 @@
 import type { TextKey } from '../lang/messages'
 import type { AttendanceStatus } from './attendanceStatus'
 
-// date es la fecha de la clase, «2026-11-10». La pantalla la enseña como «Mar 10 nov».
 export type ClassEntry = {
   date: string
   arrival: string | null
@@ -21,7 +20,6 @@ export type TodayClass = {
   code: string
 }
 
-// labelKey es el texto del botón del lector; {time} se rellena con arrival.
 export type SampleReading = {
   labelKey: TextKey
   code: string

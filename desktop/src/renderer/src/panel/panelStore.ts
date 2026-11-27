@@ -48,11 +48,8 @@ function signerName(): string {
   return useSessionStore.getState().name ?? teacherDemoAccount.name
 }
 
-// El error de una corrección: la clave de su texto o, si la API explica qué campo falla,
-// esa explicación tal cual.
 export type CorrectionError = { key: TextKey } | { apiText: string }
 
-// Se llama al pintar, desde un componente con useText().
 export function correctionErrorText(error: CorrectionError): string {
   return 'key' in error ? text(error.key) : error.apiText
 }

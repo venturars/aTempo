@@ -8,7 +8,6 @@ import { useCurrentStudent } from '../studentAccounts'
 type DashboardActionId =
   'registrar-asistencia' | 'avisar-retrasos-ausencias' | 'proxima-clase' | 'resumen-asistencia'
 
-// Cada línea es la clave de un texto: el botón lo parte en dos si no cabe en una.
 type DashboardAction = {
   id: DashboardActionId
   lines: TextKey[]

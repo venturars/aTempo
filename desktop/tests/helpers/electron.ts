@@ -85,7 +85,6 @@ export async function launchHiddenElectron(flags: string[] = []): Promise<Electr
       executablePath: wrapper,
       env: {
         ...process.env,
-        // Las fechas de los tests no dependen de la zona horaria del ordenador.
         TZ: 'Europe/Madrid',
         ATEMPO_PID_FILE: path.join(directory, 'pid'),
         ATEMPO_ELECTRON_BINARY: executable,

@@ -5,7 +5,6 @@ import { launchHiddenElectron } from './helpers/electron'
 
 type Tree = { [key: string]: string | Tree }
 
-// Cada texto de un JSON con su ruta: «panel.today.openList» → «Abrir lista».
 function leaves(tree: Tree, path = ''): Map<string, string | Tree> {
   const found = new Map<string, string | Tree>()
   for (const [key, value] of Object.entries(tree)) {
@@ -47,7 +46,6 @@ async function logIn(window: Page, email: string, password: string, submit: stri
   await window.getByRole('button', { name: submit, exact: true }).click()
 }
 
-// Ajustes está en el menú de la cuenta, no en las secciones.
 async function openSettings(window: Page, label: string): Promise<void> {
   await window.locator('aside details.dropdown > summary').click()
   await window

@@ -14,7 +14,6 @@ import {
   type StudentAccount
 } from '../studentExample'
 
-// El resultado guarda los datos; el texto se escribe al pintar, en el idioma elegido.
 type ScanResult =
   | { kind: 'confirmed'; arrival: string; status: AttendanceStatus }
   | { kind: 'repeated'; arrival: string }

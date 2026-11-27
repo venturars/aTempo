@@ -20,7 +20,6 @@ function sessionDay(startsAt: string | undefined): string {
   const date = new Date(year, month - 1, day)
   const weekday = formatDate(date, { weekday: 'short' }).replace('.', '')
   const monthName = formatDate(date, { month: 'short' }).replace('.', '')
-  // «Mar 10 nov 2026»: Intl escribe el día de la semana en minúscula.
   return text('panel.correction.sessionDay', {
     weekday: `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)}`,
     day,

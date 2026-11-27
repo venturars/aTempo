@@ -13,7 +13,6 @@ const emptyActivateForm: { password: string; passwordError: TextKey | '' } = {
 
 type ActivateState = {
   password: string
-  // La clave del error, o '' si no hay. El componente la traduce.
   passwordError: TextKey | ''
   setPassword: (password: string) => void
   submit: (code: string) => boolean

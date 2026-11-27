@@ -13,7 +13,6 @@ const markLabelKey: Record<MarkName, TextKey> = {
   'sin-registro': 'panel.marks.noRecord'
 }
 
-// El nombre de la marca en el idioma elegido. Se llama al pintar, desde un componente con useText().
 export function markLabel(mark: MarkName): string {
   return text(markLabelKey[mark])
 }

@@ -14,7 +14,6 @@ function weekMarks(presentCount: number, otherMarks: AttendanceMark[]): Attendan
   return marks
 }
 
-// La misma semana que el trimestre de ejemplo, de lunes a viernes.
 export const weekDays: TrimesterDay[] = [
   { date: '2026-11-09', marks: weekMarks(10, ['retraso', 'ausencia']) },
   { date: '2026-11-10', marks: weekMarks(10, ['ausencia', 'ausencia']) },
@@ -24,7 +23,6 @@ export const weekDays: TrimesterDay[] = [
 ]
 
 // El porcentaje sale del mismo gráfico, para que cuadren: Presente entre todas las marcas.
-// Es un número; la pantalla escribe «87 % presentes» en el idioma elegido.
 const allMarks = weekDays.flatMap((day) => day.marks)
 const presentMarks = allMarks.filter((mark) => mark === 'presente').length
 

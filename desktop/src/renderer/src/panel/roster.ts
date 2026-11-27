@@ -77,17 +77,17 @@ function capitalized(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
-// Día corto de la semana: «Mar», «Tue». Intl lo escribe en minúscula en español.
+// Día corto de la semana: «Mar».
 export function sessionShortWeekday(id: string): string {
   return capitalized(formatDate(sessionDate(id), { weekday: 'short' }))
 }
 
-// Día de la semana: «Martes», «Tuesday».
+// Día de la semana: «Martes».
 export function sessionWeekday(id: string): string {
   return capitalized(formatDate(sessionDate(id), { weekday: 'long' }))
 }
 
-// Fecha de una sesión: «10 nov 2026», «Nov 10, 2026».
+// Fecha de una sesión: «10 nov 2026».
 export function sessionDateLabel(id: string): string {
   return formatDate(sessionDate(id), {
     day: 'numeric',
@@ -96,7 +96,7 @@ export function sessionDateLabel(id: string): string {
   })
 }
 
-// Título de una sesión: «Mar 10 nov 2026», «Tue Nov 10, 2026».
+// Título de una sesión: «Mar 10 nov 2026».
 export function sessionTitle(id: string): string {
   return text('roster.sessionTitle', {
     weekday: sessionShortWeekday(id),
@@ -104,21 +104,17 @@ export function sessionTitle(id: string): string {
   })
 }
 
-// Un horario guardado como «09:00–18:00», con las horas en el formato de la región.
 export function timeRangeLabel(range: string): string {
   const [start, end] = range.split('–')
   return `${formatTime(start)}–${formatTime(end)}`
 }
 
-// Un porcentaje ya redondeado: «83 %» en español, «83%» en inglés.
 export function percentLabel(value: number): string {
   return text('roster.percent', { value })
 }
 
-// La clase del Dashboard. Si es la de hoy, el título es Hoy. Si no, es la próxima.
 const dashboardSessionId = todaySessionId
 
-// Fecha de la clase del Dashboard: «Mié 11 nov 2026».
 export function dashboardDate(): string {
   return sessionTitle(dashboardSessionId)
 }
@@ -280,7 +276,6 @@ export function sessionCounts(rows: RosterRow[]): { p: number; r: number; a: num
   }
 }
 
-// Los textos se traducen al pedir el aviso, durante el pintado: no se guardan.
 export type RiskNotice = {
   tone: 'warning' | 'info'
   label: string

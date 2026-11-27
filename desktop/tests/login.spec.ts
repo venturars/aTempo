@@ -183,7 +183,6 @@ test('shows the claim panel beside the form', async () => {
     await expectTrimester(window)
     await expectLegend(window)
     await expectLoginFields(window)
-    // Sin aviso de invitación, la tarjeta empieza por el idioma y después «Correo».
     await expect(window.getByText('Entra con tu correo.')).toHaveCount(0)
     const card = window.locator('section').filter({ has: window.locator('form') })
     await expect(card.locator(':scope > :first-child').getByRole('group')).toHaveAccessibleName(

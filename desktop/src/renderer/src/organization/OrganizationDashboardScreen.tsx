@@ -32,7 +32,6 @@ const pendingTexts: Record<PendingKind, { label: TextKey; description: TextKey }
   }
 }
 
-// «1–30 de noviembre de 2026», «November 1 – 30, 2026»: el periodo en el idioma elegido.
 function periodLabel(period: OrganizationDashboard['period']): string {
   const from = new Date(`${period.from}T00:00:00`)
   const to = new Date(`${period.to}T00:00:00`)

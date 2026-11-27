@@ -72,7 +72,6 @@ function useSigner(): string | null {
 const noSignerText: TextKey = 'panel.correction.noSigner'
 const notSavedText: TextKey = 'panel.correction.notSaved'
 
-// Una hora «HH:MM» con el formato de la región. «—» (sin entrada) se queda igual.
 function shownTime(time: string): string {
   return time === '—' ? time : formatTime(time)
 }

@@ -2,7 +2,6 @@ import type { TextKey } from '../lang/messages'
 
 export type AttendanceStatus = 'presente' | 'tarde' | 'ausente'
 
-// La clave del texto de cada estado. El componente la traduce con t().
 export const statusLabelKey: Record<AttendanceStatus, TextKey> = {
   presente: 'student.status.present',
   tarde: 'student.status.late',

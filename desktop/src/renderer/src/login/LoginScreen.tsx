@@ -22,7 +22,6 @@ import { useText } from '../lang/useText'
 const legendMarks: AttendanceMark[] = ['presente', 'retraso', 'ausencia']
 
 // El aviso del login normal cuando se llega con un enlace de invitación que no sirve.
-// Devuelve la clave del aviso, o '' si no hay aviso.
 function linkNotice(
   code: string | undefined,
   invitation: Invitation | undefined,
@@ -320,7 +319,6 @@ function Field({
   type: 'email' | 'password'
   autoComplete: string
   value: string
-  // La clave del error, o '' si no hay.
   error: TextKey | ''
   onChange: (value: string) => void
 }): React.JSX.Element {

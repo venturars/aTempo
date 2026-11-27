@@ -14,7 +14,6 @@ export type TeacherAccount = {
 type TeacherAccountsState = {
   accounts: TeacherAccount[]
   findByEmail: (email: string) => TeacherAccount | undefined
-  // Devuelve la clave del error, o '' si la contraseña ha cambiado.
   changePassword: (current: string, next: string, confirmation: string) => TextKey | ''
   addAccount: (name: string, email: string, password: string) => TeacherAccount
 }

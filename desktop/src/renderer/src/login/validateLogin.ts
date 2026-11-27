@@ -1,6 +1,5 @@
 import type { TextKey } from '../lang/messages'
 
-// La clave del error de cada campo, o '' si el campo vale.
 export type LoginErrors = {
   email: TextKey | ''
   password: TextKey | ''

@@ -8,10 +8,8 @@ import { useTeacherAccountsStore } from './teacherAccounts'
 import { validateLogin } from './validateLogin'
 
 // Mismo aviso para cualquier fallo: así no se sabe qué correos tienen cuenta.
-// Los errores se guardan como clave del texto y el componente los traduce.
 const loginErrorKey: TextKey = 'login.errors.noMatch'
 const authLoginErrorKey: TextKey = 'login.errors.invalid'
-// Los errores del proceso principal llegan como código, por ejemplo SECURE_STORAGE_UNAVAILABLE.
 const secureStorageErrorKey: TextKey = 'login.errors.secureStorage'
 
 type LoginForm = {

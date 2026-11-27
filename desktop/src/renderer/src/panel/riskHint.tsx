@@ -10,7 +10,6 @@ const riskClass = {
 } as const
 
 export function RiskHint({ name }: { name: string }): React.JSX.Element | null {
-  // Los textos del aviso salen de roster.ts: useText vuelve a pintarlos al cambiar el idioma.
   useText()
   const sessionMarks = usePanelStore((state) => state.sessionMarks)
   const risk = studentRisk(name, sessionMarks)

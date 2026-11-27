@@ -2,8 +2,6 @@ import { useLanguageStore, type LanguageChoice } from './languageStore'
 import { languages, messages } from './messages'
 import { useText } from './useText'
 
-// Del dispositivo, Español, English. Cada idioma se escribe en su propia lengua para que
-// lo encuentre quien no lee el idioma de ahora.
 export function LanguagePicker({ size = 'sm' }: { size?: 'sm' | 'xs' }): React.JSX.Element {
   const t = useText()
   const choice = useLanguageStore((state) => state.choice)
