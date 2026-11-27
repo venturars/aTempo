@@ -11,7 +11,7 @@ describe('Pagination', () => {
     expect(nav.textContent).toBe('«1…456…10»')
     const current = screen.getByRole('button', { name: 'Página 5' })
     expect(current.getAttribute('aria-current')).toBe('page')
-    expect(current.className).toContain('btn-active')
+    expect(current.className).toContain('btn-primary')
     expect(screen.getByRole('button', { name: 'Página 4' }).getAttribute('aria-current')).toBeNull()
   })
 

@@ -69,7 +69,7 @@ export function Pagination({
             <button
               key={item}
               type="button"
-              className={item === current ? `${button} btn-active` : button}
+              className={item === current ? `${button} btn-primary` : button}
               aria-label={text.page(item)}
               aria-current={item === current ? 'page' : undefined}
               onClick={() => onPageChange(item)}
