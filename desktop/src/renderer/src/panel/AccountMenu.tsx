@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { useText } from '../language/useText'
+import { useText } from '../lang/useText'
 import { Avatar } from './avatar'
 
 // El menú de la cuenta, abajo en la barra lateral: un <details> que se abre al pulsar el nombre y

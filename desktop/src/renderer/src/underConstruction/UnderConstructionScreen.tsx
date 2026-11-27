@@ -1,4 +1,4 @@
-import { useText } from '../language/useText'
+import { useText } from '../lang/useText'
 
 type UnderConstructionScreenProps = {
   title: string

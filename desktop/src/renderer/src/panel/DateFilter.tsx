@@ -1,8 +1,8 @@
 import { useId, useRef, useState } from 'react'
 import { DayPicker, type DateRange } from 'react-day-picker'
 import 'react-day-picker/style.css'
-import { calendarLocale, formatDate } from '../language/format'
-import { useText } from '../language/useText'
+import { calendarLocale, formatDate } from '../lang/format'
+import { useText } from '../lang/useText'
 import { usePanelStore } from './panelStore'
 
 const parseDate = (date: string): Date => new Date(`${date}T12:00:00`)

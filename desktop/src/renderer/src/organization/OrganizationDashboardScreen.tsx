@@ -1,6 +1,6 @@
-import { formatDateRange, formatNumber } from '../language/format'
-import type { TextKey } from '../language/messages'
-import { useText } from '../language/useText'
+import { formatDateRange, formatNumber } from '../lang/format'
+import type { TextKey } from '../lang/messages'
+import { useText } from '../lang/useText'
 import {
   organizationExample,
   type CourseMetric,

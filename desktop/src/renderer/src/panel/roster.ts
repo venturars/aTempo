@@ -1,5 +1,5 @@
-import { compareText, formatDate, formatTime } from '../language/format'
-import { text } from '../language/useText'
+import { compareText, formatDate, formatTime } from '../lang/format'
+import { text } from '../lang/useText'
 
 export const rosterNames = [
   'Diego Molero',

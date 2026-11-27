@@ -1,4 +1,4 @@
-import type { TextKey } from '../language/messages'
+import type { TextKey } from '../lang/messages'
 import type { AttendanceStatus } from './attendanceStatus'
 
 // date es la fecha de la clase, «2026-11-10». La pantalla la enseña como «Mar 10 nov».

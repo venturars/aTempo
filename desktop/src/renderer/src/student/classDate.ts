@@ -1,4 +1,4 @@
-import { formatDate } from '../language/format'
+import { formatDate } from '../lang/format'
 
 // Una clase se guarda con su fecha, «2026-11-10». Se lee como fecha local: con
 // new Date('2026-11-10') sería medianoche en UTC y, al oeste de Greenwich, el día anterior.

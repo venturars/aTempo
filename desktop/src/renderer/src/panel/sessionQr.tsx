@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { encode } from 'uqr'
-import { useText } from '../language/useText'
+import { useText } from '../lang/useText'
 import { checkInUrlFor } from './classCode'
 import { studentSiteUrl } from './studentSite'
 

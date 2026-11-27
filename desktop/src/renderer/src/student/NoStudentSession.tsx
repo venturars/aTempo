@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { useText } from '../language/useText'
+import { useText } from '../lang/useText'
 
 // Se muestra cuando la sesión abierta no es de un alumno con cuenta.
 export function NoStudentSession(): React.JSX.Element {

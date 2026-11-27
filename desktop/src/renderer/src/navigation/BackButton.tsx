@@ -1,4 +1,4 @@
-import { useText } from '../language/useText'
+import { useText } from '../lang/useText'
 
 // Vuelve a la pantalla anterior y dice a cuál: «‹ Sesiones».
 // to es el nombre de esa pantalla, ya traducido por quien usa el botón.

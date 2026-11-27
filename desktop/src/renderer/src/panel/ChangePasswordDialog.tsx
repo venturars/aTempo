@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import type { TextKey } from '../language/messages'
-import { useText } from '../language/useText'
+import type { TextKey } from '../lang/messages'
+import { useText } from '../lang/useText'
 import { useTeacherAccountsStore } from '../login/teacherAccounts'
 
 export function ChangePasswordDialog({

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { TextKey } from '../language/messages'
+import type { TextKey } from '../lang/messages'
 import { afterPendingLogout, useSessionStore } from '../session/sessionStore'
 import { normalizeEmail, useStudentAccountsStore } from '../student/studentAccounts'
 import { exampleStudent } from '../student/studentExample'

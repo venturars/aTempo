@@ -1,4 +1,4 @@
-import type { TextKey } from '../language/messages'
+import type { TextKey } from '../lang/messages'
 
 // La contraseña nueva de una invitación tiene que tener 8 caracteres o más.
 // Devuelve la clave del error, o '' si la contraseña vale.

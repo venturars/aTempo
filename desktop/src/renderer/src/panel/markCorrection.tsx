@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
-import type { TextKey } from '../language/messages'
-import { useText } from '../language/useText'
+import type { TextKey } from '../lang/messages'
+import { useText } from '../lang/useText'
 import { markLabel } from './marks'
 import type { Attendance } from './roster'
 

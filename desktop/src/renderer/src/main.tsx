@@ -9,7 +9,7 @@ import {
   useRouterState
 } from '@tanstack/react-router'
 import { routeTree } from './routeTree.gen'
-import { useText } from './language/useText'
+import { useText } from './lang/useText'
 import { teacherDemoAccount } from './login/teacherDemoAccount'
 import { useSessionStore } from './session/sessionStore'
 import { applySavedTheme } from './theme'

@@ -14,10 +14,10 @@ import {
   type TrimesterDay
 } from './trimesterExample'
 import { weekDays, weekPresencePercent } from './weekExample'
-import { LanguagePicker } from '../language/LanguagePicker'
-import { formatNumber } from '../language/format'
-import type { TextKey } from '../language/messages'
-import { useText } from '../language/useText'
+import { LanguagePicker } from '../lang/LanguagePicker'
+import { formatNumber } from '../lang/format'
+import type { TextKey } from '../lang/messages'
+import { useText } from '../lang/useText'
 
 const legendMarks: AttendanceMark[] = ['presente', 'retraso', 'ausencia']
 

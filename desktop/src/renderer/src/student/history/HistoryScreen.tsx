@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
-import { formatTime } from '../../language/format'
-import { useText } from '../../language/useText'
+import { formatTime } from '../../lang/format'
+import { useText } from '../../lang/useText'
 import { markClass } from '../../login/trimesterExample'
 import { statusLabelKey, type AttendanceStatus } from '../attendanceStatus'
 import { classDayLabel } from '../classDate'

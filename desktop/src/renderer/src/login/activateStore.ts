@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { TextKey } from '../language/messages'
+import type { TextKey } from '../lang/messages'
 import { useSessionStore } from '../session/sessionStore'
 import { useStudentAccountsStore } from '../student/studentAccounts'
 import { findInvitation, type Invitation } from './invitations'

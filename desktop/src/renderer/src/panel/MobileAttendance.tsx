@@ -1,5 +1,5 @@
-import { formatTime } from '../language/format'
-import { useText } from '../language/useText'
+import { formatTime } from '../lang/format'
+import { useText } from '../lang/useText'
 import { Avatar } from './avatar'
 import { markBadge, markLabel } from './marks'
 import { percentLabel, sessionDateLabel, type ClassSession } from './roster'

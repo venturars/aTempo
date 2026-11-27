@@ -1,5 +1,5 @@
-import { formatDate } from '../language/format'
-import type { TextKey } from '../language/messages'
+import { formatDate } from '../lang/format'
+import type { TextKey } from '../lang/messages'
 import { classDate } from '../student/classDate'
 
 export type AttendanceMark = 'presente' | 'retraso' | 'ausencia'

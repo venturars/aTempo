@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
-import { formatTime } from '../language/format'
-import { useText } from '../language/useText'
+import { formatTime } from '../lang/format'
+import { useText } from '../lang/useText'
 import { markBadge, markLabel } from './marks'
 import { sessionDateLabel, sessionWeekday, timeRangeLabel, type HistoryEntry } from './roster'
 

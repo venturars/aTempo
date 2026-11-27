@@ -1,6 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
-import type { TextKey } from '../../language/messages'
-import { useText } from '../../language/useText'
+import type { TextKey } from '../../lang/messages'
+import { useText } from '../../lang/useText'
 import { useSessionStore } from '../../session/sessionStore'
 import { NoStudentSession } from '../NoStudentSession'
 import { useCurrentStudent } from '../studentAccounts'

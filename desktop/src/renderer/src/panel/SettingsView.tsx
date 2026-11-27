@@ -2,8 +2,8 @@ import { useEffect, useId, useState } from 'react'
 import { useSettingsStore } from './settingsStore'
 import { rosterNames, todayEntry } from './roster'
 import { saveTheme } from '../theme'
-import { LanguagePicker } from '../language/LanguagePicker'
-import { useText } from '../language/useText'
+import { LanguagePicker } from '../lang/LanguagePicker'
+import { useText } from '../lang/useText'
 
 function Bell(): React.JSX.Element {
   return (

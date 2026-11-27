@@ -1,5 +1,5 @@
-import type { TextKey } from '../language/messages'
-import type { TextValues } from '../language/useText'
+import type { TextKey } from '../lang/messages'
+import type { TextValues } from '../lang/useText'
 
 // El porcentaje es un número («7.7»); la pantalla lo escribe en el idioma elegido.
 export type CourseMetric = {

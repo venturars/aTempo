@@ -395,7 +395,7 @@ desktop/
           validateActivation.ts
           trimesterExample.ts
           weekExample.ts        # semana de ejemplo del panel de la invitación
-        language/
+        lang/
           languageStore.ts      # idioma elegido, idioma y región resueltos, <html lang>
           messages.ts           # textos de cada idioma y tipo TextKey
           useText.ts            # text() y useText(): huecos y plurales

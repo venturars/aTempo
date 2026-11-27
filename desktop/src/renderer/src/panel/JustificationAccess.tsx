@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { useText } from '../language/useText'
+import { useText } from '../lang/useText'
 import { classSessions, compareStudentNames, sessionDateLabel } from './roster'
 import { usePanelStore } from './panelStore'
 

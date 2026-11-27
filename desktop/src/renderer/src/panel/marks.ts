@@ -1,5 +1,5 @@
-import type { TextKey } from '../language/messages'
-import { text } from '../language/useText'
+import type { TextKey } from '../lang/messages'
+import { text } from '../lang/useText'
 import type { Attendance } from './roster'
 
 export type MarkName = Attendance | 'cancelada' | 'sin-registro'
