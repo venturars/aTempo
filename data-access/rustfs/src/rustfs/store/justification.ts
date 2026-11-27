@@ -6,7 +6,7 @@ import { fail } from '../../shared/errors'
 import type {
   Justification,
   JustificationCreate,
-} from '../../types/justification'
+} from '../../shared/types/justification'
 import { send } from '../client'
 import {
   getJustificationCommand,

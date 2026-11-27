@@ -1,4 +1,4 @@
-import { fail, type ErrorLabel } from '../shared/errors'
+import { fail, type ErrorLabel } from '../errors'
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i

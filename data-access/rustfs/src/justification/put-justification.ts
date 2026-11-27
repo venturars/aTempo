@@ -1,9 +1,9 @@
 import { insertJustification } from '../rustfs/store/justification'
-import {
-  assertJustificationCreate,
-  type Justification,
-  type JustificationCreate,
-} from '../types/justification'
+import type {
+  Justification,
+  JustificationCreate,
+} from '../shared/types/justification'
+import { assertJustificationCreate } from '../shared/validation/justification'
 
 export type PutJustificationInput = {
   justification: JustificationCreate

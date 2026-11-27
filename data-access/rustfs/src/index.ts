@@ -16,13 +16,15 @@ export {
   assertString,
   assertUuid,
   normalizeUuid,
-} from './types/assert'
+} from './shared/validation/assert'
 export {
   assertJustification,
   assertJustificationCreate,
-  type Justification,
-  type JustificationCreate,
-} from './types/justification'
+} from './shared/validation/justification'
+export type {
+  Justification,
+  JustificationCreate,
+} from './shared/types/justification'
 
 export { check } from './rustfs/check'
 

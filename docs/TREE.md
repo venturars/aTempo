@@ -114,9 +114,11 @@ data-access/
       index.ts
       shared/
         errors.ts           # catálogo (reasons, labels, mensajes), buildError() y fail()
-      types/
-        assert.ts
-        justification.ts
+        types/
+          justification.ts  # interface Justification y JustificationCreate; solo tipos
+        validation/
+          assert.ts         # assert* genéricos y normalizeUuid
+          justification.ts  # assertJustificationCreate y assertJustification
       rustfs/
         client.ts
         map-error.ts
@@ -134,9 +136,11 @@ data-access/
       helpers.ts
       check.spec.ts
       client.spec.ts
+      errors.spec.ts
       types.spec.ts
       writes.spec.ts
       reads.spec.ts
+      structure.spec.ts   # shared/types sin valores; API pública
 ```
 
 # Árbol de `sdk/`

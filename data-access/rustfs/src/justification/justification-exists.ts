@@ -1,5 +1,5 @@
 import { justificationKeyExists } from '../rustfs/store/justification'
-import { assertUuid, normalizeUuid } from '../types/assert'
+import { assertUuid, normalizeUuid } from '../shared/validation/assert'
 
 export type JustificationExistsInput = {
   id: string

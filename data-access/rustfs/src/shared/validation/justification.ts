@@ -6,14 +6,7 @@ import {
   assertUuid,
   normalizeUuid,
 } from './assert'
-
-export type JustificationCreate = {
-  document_id: string
-  content_type: string
-  body: Uint8Array
-}
-
-export type Justification = JustificationCreate & { etag: string }
+import type { Justification, JustificationCreate } from '../types/justification'
 
 export function assertJustificationCreate(
   value: JustificationCreate,

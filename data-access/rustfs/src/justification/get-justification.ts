@@ -1,6 +1,6 @@
 import { findJustificationById } from '../rustfs/store/justification'
-import { assertUuid, normalizeUuid } from '../types/assert'
-import type { Justification } from '../types/justification'
+import { assertUuid, normalizeUuid } from '../shared/validation/assert'
+import type { Justification } from '../shared/types/justification'
 
 export type GetJustificationInput = {
   id: string

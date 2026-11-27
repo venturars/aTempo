@@ -12,7 +12,7 @@ import {
   justificationExists,
   putJustification,
 } from '../src'
-import { assertUuid } from '../src/types/assert'
+import { assertUuid } from '../src/shared/validation/assert'
 import { endpointFromEnv } from '../src/rustfs/client'
 import {
   DOCUMENT_ID,
