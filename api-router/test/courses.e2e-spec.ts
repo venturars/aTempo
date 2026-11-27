@@ -95,5 +95,171 @@ describe('Courses HTTP (e2e)', () => {
       .post('/organizations/foo/courses')
       .send(courseBody)
       .expect(401)
+
+    await request(app.getHttpServer())
+      .get('/organizations/foo/courses')
+      .expect(401)
+
+    await request(app.getHttpServer())
+      .get('/organizations/foo/courses/bar')
+      .expect(401)
+
+    await request(app.getHttpServer())
+      .get('/organizations/foo/courses/bar/students')
+      .expect(401)
+  })
+
+  it('lists courses of an organization and reads one', async () => {
+    const created = await request(app.getHttpServer())
+      .post('/organizations')
+      .set(auth)
+      .send(adminBody)
+      .expect(201)
+
+    const organizationId = created.body.organization.id as string
+
+    const other = await request(app.getHttpServer())
+      .post('/organizations')
+      .set(auth)
+      .send({
+        ...adminBody,
+        name: 'Otra',
+        tax_id: 'A12345678',
+        identification_document: '11111111C',
+        email: 'otra@atempo.test',
+      })
+      .expect(201)
+
+    const first = await request(app.getHttpServer())
+      .post(`/organizations/${organizationId}/courses`)
+      .set(auth)
+      .send(courseBody)
+      .expect(201)
+
+    const second = await request(app.getHttpServer())
+      .post(`/organizations/${organizationId}/courses`)
+      .set(auth)
+      .send({
+        ...courseBody,
+        name: 'Francés A2',
+        acronym: 'A2',
+        contract_address: '0x0000000000000000000000000000000000000002',
+      })
+      .expect(201)
+
+    const foreignCourse = await request(app.getHttpServer())
+      .post(`/organizations/${other.body.organization.id}/courses`)
+      .set(auth)
+      .send({
+        ...courseBody,
+        contract_address: '0x0000000000000000000000000000000000000003',
+      })
+      .expect(201)
+
+    const list = await request(app.getHttpServer())
+      .get(`/organizations/${organizationId}/courses`)
+      .set(auth)
+      .expect(200)
+
+    expect(list.body.map((course: { id: string }) => course.id).sort()).toEqual(
+      [first.body.id, second.body.id].sort(),
+    )
+
+    const one = await request(app.getHttpServer())
+      .get(`/organizations/${organizationId}/courses/${first.body.id}`)
+      .set(auth)
+      .expect(200)
+
+    expect(one.body).toMatchObject({
+      id: first.body.id,
+      organization_id: organizationId,
+      name: 'Inglés B1',
+      acronym: 'B1',
+      start_at: courseBody.start_at,
+      end_at: courseBody.end_at,
+      contract_address: courseBody.contract_address,
+    })
+
+    await request(app.getHttpServer())
+      .get(`/organizations/${organizationId}/courses/${foreignCourse.body.id}`)
+      .set(auth)
+      .expect(404)
+
+    await request(app.getHttpServer())
+      .get(
+        `/organizations/${organizationId}/courses/${foreignCourse.body.id}/students`,
+      )
+      .set(auth)
+      .expect(404)
+  })
+
+  it('lists only students on students and everyone on people', async () => {
+    const created = await request(app.getHttpServer())
+      .post('/organizations')
+      .set(auth)
+      .send(adminBody)
+      .expect(201)
+
+    const organizationId = created.body.organization.id as string
+
+    const student = await request(app.getHttpServer())
+      .post(`/organizations/${organizationId}/people`)
+      .set(auth)
+      .send({
+        first_name: 'Ada',
+        last_name: 'López',
+        identification_document: '11223344C',
+        email: 'ada.lopez@clase.test',
+        role: 'student',
+      })
+      .expect(201)
+
+    const teacher = await request(app.getHttpServer())
+      .post(`/organizations/${organizationId}/people`)
+      .set(auth)
+      .send({
+        first_name: 'Lucía',
+        last_name: 'García',
+        identification_document: '87654321B',
+        email: 'lucia@neoland.example',
+        role: 'teacher',
+      })
+      .expect(201)
+
+    const course = await request(app.getHttpServer())
+      .post(`/organizations/${organizationId}/courses`)
+      .set(auth)
+      .send(courseBody)
+      .expect(201)
+
+    await request(app.getHttpServer())
+      .post(`/organizations/${organizationId}/courses/${course.body.id}/people`)
+      .set(auth)
+      .send({ person_id: student.body.id })
+      .expect(201)
+
+    await request(app.getHttpServer())
+      .post(`/organizations/${organizationId}/courses/${course.body.id}/people`)
+      .set(auth)
+      .send({ person_id: teacher.body.id })
+      .expect(201)
+
+    const students = await request(app.getHttpServer())
+      .get(
+        `/organizations/${organizationId}/courses/${course.body.id}/students`,
+      )
+      .set(auth)
+      .expect(200)
+
+    const people = await request(app.getHttpServer())
+      .get(`/organizations/${organizationId}/courses/${course.body.id}/people`)
+      .set(auth)
+      .expect(200)
+
+    expect(students.body).toHaveLength(1)
+    expect(students.body[0].id).toBe(student.body.id)
+    expect(
+      people.body.map((person: { id: string }) => person.id).sort(),
+    ).toEqual([student.body.id, teacher.body.id].sort())
   })
 })

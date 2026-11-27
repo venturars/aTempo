@@ -12,5 +12,6 @@ export type CourseRepository = {
   findByContractAddress(
     contractAddress: ContractAddress,
   ): Promise<Course | null>
+  listByOrganization(organizationId: Uuid): Promise<Course[]>
   save(course: Course): Promise<void>
 }
