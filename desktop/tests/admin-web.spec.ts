@@ -88,7 +88,8 @@ async function invite(
   page: Page,
   name: string,
   email: string,
-  role: 'teacher' | 'student'
+  role: 'teacher' | 'student',
+  document?: string
 ): Promise<void> {
   const [firstName, ...lastNames] = name.split(' ')
   documentNumber += 1
@@ -98,7 +99,7 @@ async function invite(
   await page.getByLabel('Apellidos', { exact: true }).fill(lastNames.join(' '))
   await page
     .getByLabel('Documento de identidad', { exact: true })
-    .fill(`Y${String(documentNumber).padStart(7, '0')}`)
+    .fill(document ?? `Y${String(documentNumber).padStart(7, '0')}`)
   await page.getByLabel('Correo', { exact: true }).fill(email)
   await page.getByLabel('Rol', { exact: true }).selectOption(role)
   await page.getByRole('button', { name: 'Preparar invitación', exact: true }).click()
@@ -364,6 +365,86 @@ test('invites a person with every field and shows their document in the table', 
   await expect(page.getByLabel('Teléfono (opcional)', { exact: true })).toHaveValue(
     '+34 611 222 333'
   )
+})
+
+async function expectPeople(page: Page, names: string[]): Promise<void> {
+  const nameCells = page.getByRole('table').locator('tbody tr td:first-child')
+  await expect(nameCells).toHaveCount(names.length)
+  await expect(nameCells).toContainText(names)
+}
+
+async function inviteStudents(page: Page, count: number): Promise<string[]> {
+  const names = Array.from({ length: count }, (_, index) => `Alumno Prueba${index + 1}`)
+  for (const [index, name] of names.entries()) {
+    // Documento fijo: la captura no depende de cuántas pruebas invitaron antes.
+    await invite(page, name, `prueba${index + 1}@clase.test`, 'student', `Y900000${index + 1}`)
+  }
+  return names
+}
+
+test('filters people by name ignoring case and accents', async ({ page }) => {
+  await enterAdmin(page)
+  await adminNav(page, 'Personas')
+  await page.getByLabel('Nombre', { exact: true }).fill('  LUCIA ')
+  await expectPeople(page, ['Lucía García'])
+})
+
+test('filters people by role', async ({ page }) => {
+  await enterAdmin(page)
+  await adminNav(page, 'Personas')
+  await page.getByLabel('Rol', { exact: true }).selectOption({ label: 'Alumno' })
+  await expectPeople(page, ['Ana López', 'Luis Martín'])
+  await page.getByLabel('Rol', { exact: true }).selectOption({ label: 'Profesor' })
+  await expectPeople(page, ['Ventura Rodríguez', 'Lucía García'])
+})
+
+test('filters people by course and combines filters', async ({ page }) => {
+  await enterAdmin(page)
+  await adminNav(page, 'Personas')
+  await page.getByLabel('Curso', { exact: true }).selectOption({ label: 'Diseño UX/UI' })
+  await expectPeople(page, ['Lucía García', 'Ana López'])
+  await page.getByLabel('Rol', { exact: true }).selectOption({ label: 'Alumno' })
+  await expectPeople(page, ['Ana López'])
+})
+
+test('fits the people table at 1280 px with pending invitations', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await enterAdmin(page)
+  await inviteStudents(page, 2)
+  const table = page.getByRole('table')
+  await expect(table.locator('tbody tr')).toHaveCount(6)
+  expect(
+    await table.evaluate((element) => {
+      const card = element.parentElement!
+      return card.scrollWidth <= card.clientWidth
+    })
+  ).toBe(true)
+})
+
+test('keeps filters after closing a form', async ({ page }) => {
+  await enterAdmin(page)
+  await adminNav(page, 'Personas')
+  await page.getByLabel('Curso', { exact: true }).selectOption({ label: 'Diseño UX/UI' })
+  await page.getByLabel('Rol', { exact: true }).selectOption({ label: 'Alumno' })
+  await expectPeople(page, ['Ana López'])
+
+  await page.getByRole('button', { name: 'Editar Ana López', exact: true }).click()
+  await expect(page.getByRole('table')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Cancelar', exact: true }).click()
+  await expect(page.getByLabel('Rol', { exact: true })).toHaveValue('student')
+  await expect(page.getByLabel('Curso', { exact: true })).toHaveValue('course-design')
+  await expectPeople(page, ['Ana López'])
+})
+
+test('shows a clear empty state when nobody matches', async ({ page }) => {
+  await enterAdmin(page)
+  await adminNav(page, 'Personas')
+  await page.getByLabel('Nombre', { exact: true }).fill('nadie se llama así')
+  await expect(page.getByRole('table')).toHaveCount(0)
+  await expect(page.getByText('Nadie coincide con los filtros.', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Quitar filtros', exact: true }).click()
+  await expect(page.getByLabel('Nombre', { exact: true })).toHaveValue('')
+  await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(4)
 })
 
 test('admin logout ends the server session and protects student routes', async ({ page }) => {
@@ -912,6 +993,10 @@ test('matches the people table, the invitation form and the admin account form a
   await adminNav(page, 'Personas')
   await expect(page.getByRole('row')).toHaveCount(5)
   await screen('admin-people-1280.png')
+  await page.getByLabel('Curso', { exact: true }).selectOption({ label: 'Diseño UX/UI' })
+  await expectPeople(page, ['Lucía García', 'Ana López'])
+  await screen('admin-people-filters-1280.png')
+  await page.getByLabel('Curso', { exact: true }).selectOption({ label: 'Todos' })
 
   await page.getByRole('button', { name: 'Invitar persona', exact: true }).click()
   await expect(page.getByRole('table')).toHaveCount(0)
@@ -921,4 +1006,9 @@ test('matches the people table, the invitation form and the admin account form a
   await page.getByRole('button', { name: 'Editar Ventura Rodríguez', exact: true }).click()
   await expect(page.getByRole('switch', { name: 'También soy profesor' })).toBeChecked()
   await screen('admin-person-own-account-1280.png')
+
+  await page.getByRole('button', { name: 'Cancelar', exact: true }).click()
+  await inviteStudents(page, 2)
+  await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(6)
+  await screen('admin-people-invited-1280.png')
 })

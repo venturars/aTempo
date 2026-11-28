@@ -3,6 +3,7 @@ import { useAdminStore, type Person } from './adminStore'
 import { PersonForm } from './PersonForm'
 import { DeleteConfirmation } from './DeleteConfirmation'
 import { PageHeading, PersonState, personRole } from './adminUi'
+import { filterPeople, noPeopleFilters, type PeopleFilters } from './peopleFilters'
 
 export function PeopleScreen(): React.JSX.Element {
   const people = useAdminStore((state) => state.people)
@@ -11,7 +12,18 @@ export function PeopleScreen(): React.JSX.Element {
   const [notice, setNotice] = useState('')
   const [editing, setEditing] = useState<Person | null>(null)
   const [deleting, setDeleting] = useState<Person | null>(null)
+  const [filters, setFilters] = useState<PeopleFilters>(noPeopleFilters)
   const { courses, currentPersonId, deletePerson } = useAdminStore()
+  const organizationCourses = courses.filter((course) => course.organizationId === organization.id)
+  const visiblePeople = filterPeople(
+    people.filter((person) => person.organizationId === organization.id),
+    organizationCourses,
+    filters
+  )
+
+  function changeFilters(change: Partial<PeopleFilters>): void {
+    setFilters({ ...filters, ...change })
+  }
 
   return (
     <>
@@ -72,6 +84,62 @@ export function PeopleScreen(): React.JSX.Element {
         </p>
       ) : null}
       {creating || editing ? null : (
+        <div className="flex min-w-0 flex-col gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row">
+          <div className="field sm:flex-1">
+            <label htmlFor="people-filter-name">Nombre</label>
+            <input
+              id="people-filter-name"
+              className="input w-full"
+              type="search"
+              value={filters.name}
+              onChange={(event) => changeFilters({ name: event.target.value })}
+            />
+          </div>
+          <div className="field sm:w-48">
+            <label htmlFor="people-filter-role">Rol</label>
+            <select
+              id="people-filter-role"
+              className="select w-full"
+              value={filters.role}
+              onChange={(event) =>
+                changeFilters({ role: event.target.value as PeopleFilters['role'] })
+              }
+            >
+              <option value="">Todos</option>
+              <option value="teacher">Profesor</option>
+              <option value="student">Alumno</option>
+            </select>
+          </div>
+          <div className="field sm:w-56">
+            <label htmlFor="people-filter-course">Curso</label>
+            <select
+              id="people-filter-course"
+              className="select w-full"
+              value={filters.courseId}
+              onChange={(event) => changeFilters({ courseId: event.target.value })}
+            >
+              <option value="">Todos</option>
+              {organizationCourses.map((course) => (
+                <option key={course.id} value={course.id}>
+                  {course.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        {visiblePeople.length === 0 ? (
+          <div className="flex flex-col items-start gap-3">
+            <p className="text-base-content/60">Nadie coincide con los filtros.</p>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => changeFilters(noPeopleFilters)}
+            >
+              Quitar filtros
+            </button>
+          </div>
+        ) : (
         <div className="panel-card min-w-0 overflow-x-auto rounded-box">
         <table className="table panel-table">
           <caption className="sr-only">Personas de la organización</caption>
@@ -88,9 +156,7 @@ export function PeopleScreen(): React.JSX.Element {
             </tr>
           </thead>
           <tbody>
-            {people
-              .filter((person) => person.organizationId === organization.id)
-              .map((person) => (
+            {visiblePeople.map((person) => (
                 <tr key={person.id}>
                   <td>
                     <span className="font-medium">{person.name}</span>
@@ -103,8 +169,11 @@ export function PeopleScreen(): React.JSX.Element {
                   <td>{person.identificationDocument}</td>
                   <td>{person.email}</td>
                   <td>{personRole(person)}</td>
+                  {/* «Invitación pendiente» parte línea si no cabe, para que Eliminar no se salga a 1280 px. */}
                   <td>
-                    <PersonState person={person} />
+                    <span className="whitespace-normal">
+                      <PersonState person={person} />
+                    </span>
                   </td>
                   <td>
                     <div className="flex gap-2">
@@ -136,6 +205,8 @@ export function PeopleScreen(): React.JSX.Element {
               ))}
           </tbody>
         </table>
+        </div>
+        )}
         </div>
       )}
     </>
